@@ -1,0 +1,30 @@
+# Target directories
+target/
+**/target/
+dist/
+**/dist/
+.angular/
+node_modules/
+**/node_modules/
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# Environment and Secrets
+.env
+.env.local
+*.secret
+*.pem
+*.key
+
+# Playwright & Test reports
+playwright-report/
+test-results/
+coverage/
+**/coverage/

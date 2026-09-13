@@ -1,0 +1,100 @@
+.viewer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  background-color: var(--surface);
+  color: var(--text);
+  padding-bottom: 2rem;
+}
+
+.viewer-status {
+  margin-top: 2rem;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.viewer-toolbar {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--surface-2);
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+}
+
+.chapter-title {
+  font-size: 1.1rem;
+  margin-bottom: 0.2rem;
+}
+
+.viewer-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.viewer-actions [ngToolbarWidgetGroup] {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.viewer-actions button {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #475569;
+  background: #334155;
+  color: white;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.viewer-actions button.active {
+  background: #3b82f6;
+  border-color: #2563eb;
+}
+
+.sync-hint {
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.viewer-body {
+  transform-origin: top center;
+  transition: transform 0.2s ease;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.vertical-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.page-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+.paged-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 2rem 0;
+}
+
+.paged-nav {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+}

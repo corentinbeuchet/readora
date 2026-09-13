@@ -1,0 +1,41 @@
+<div class="comments-container">
+  <h3 class="comments-heading">Community Discussion ({{ comments().length }})</h3>
+
+  <div class="comment-list">
+    @for (comment of comments(); track comment.id) {
+      <div class="comment-node" [style.margin-left.rem]="(comment.depth - 1) * 1.5">
+        <div class="comment-header">
+          <span class="comment-author">{{ comment.authorUsername }}</span>
+          @if (comment.pageReference) {
+            <span class="badge-page">Page {{ comment.pageReference }}</span>
+          }
+          <span class="comment-date">{{ comment.createdAt | date:'short' }}</span>
+        </div>
+
+        <div class="comment-content" [class.spoiler-blur]="comment.isSpoiler && !revealedSpoilers.has(comment.id)">
+          {{ comment.content }}
+        </div>
+        @if (comment.isSpoiler && !revealedSpoilers.has(comment.id)) {
+          <button type="button" (click)="revealSpoiler(comment.id)" class="btn-spoiler">
+            Show Spoiler
+          </button>
+        }
+
+        <div class="comment-footer">
+          @if (canUpvote()) {
+            <button type="button" (click)="upvote.emit(comment.id)" class="btn-action btn-upvote" [attr.aria-label]="'Upvote, ' + comment.upvotes + ' votes'">
+              ▲ {{ comment.upvotes }}
+            </button>
+          } @else {
+            <span class="btn-action muted">▲ {{ comment.upvotes }}</span>
+          }
+          @if (canReply()) {
+            <button type="button" (click)="reply.emit(comment)" class="btn-action btn-reply">
+              Reply
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

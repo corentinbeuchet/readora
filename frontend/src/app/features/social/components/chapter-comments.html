@@ -1,0 +1,66 @@
+<section class="chapter-comments" aria-labelledby="comments-heading">
+  <h2 id="comments-heading" class="sr-only">Comments</h2>
+
+  @if (comments.isLoading()) {
+    <p class="muted" role="status">Loading comments…</p>
+  } @else if (comments.error()) {
+    <p class="form-error" role="alert">Could not load comments.</p>
+  } @else {
+    <app-comment-tree
+      [comments]="comments.value()"
+      [canUpvote]="canUpvote()"
+      [canReply]="canWrite()"
+      (upvote)="upvote($event)"
+      (reply)="startReply($event)"
+    />
+  }
+
+  <ng-container *appHasPermission="'COMMENT_WRITE'; else loginHint">
+    <form class="form card compose" (submit)="onSubmit($event)" novalidate>
+      @if (replyTo(); as parent) {
+        <p class="reply-banner">
+          Replying to <strong>{{ parent.authorUsername }}</strong>
+          <button type="button" class="btn btn-link" (click)="cancelReply()">Cancel</button>
+        </p>
+      }
+      @if (submitError(); as error) {
+        <p class="form-error" role="alert">{{ error }}</p>
+      }
+
+      <div class="field">
+        <label for="comment-content">{{ replyTo() ? 'Your reply' : 'Add a comment' }}</label>
+        <textarea id="comment-content" [formField]="commentForm.content"
+                  [attr.aria-invalid]="errors(commentForm.content).length > 0" aria-describedby="comment-content-error"></textarea>
+        @for (msg of errors(commentForm.content); track $index) {
+          <span id="comment-content-error" class="field-error">{{ msg }}</span>
+        }
+      </div>
+
+      <div class="compose-options">
+        @if (!replyTo()) {
+          <div class="field field-inline">
+            <label for="comment-page">Page (optional)</label>
+            <input id="comment-page" type="number" [formField]="commentForm.pageReference"
+                   [attr.aria-invalid]="errors(commentForm.pageReference).length > 0" aria-describedby="comment-page-error" />
+            @for (msg of errors(commentForm.pageReference); track $index) {
+              <span id="comment-page-error" class="field-error">{{ msg }}</span>
+            }
+          </div>
+        }
+        <label class="checkbox" for="comment-spoiler">
+          <input id="comment-spoiler" type="checkbox" [formField]="commentForm.isSpoiler" />
+          Contains spoilers
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+        {{ submitting() ? 'Posting…' : replyTo() ? 'Post reply' : 'Post comment' }}
+      </button>
+    </form>
+  </ng-container>
+  <ng-template #loginHint>
+    <p class="muted compose-hint">
+      <a routerLink="/login">Log in</a> or <a routerLink="/register">create an account</a> to join the discussion.
+    </p>
+  </ng-template>
+</section>

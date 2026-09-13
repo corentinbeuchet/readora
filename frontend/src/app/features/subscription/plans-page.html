@@ -1,0 +1,52 @@
+<section class="page">
+  <h1>Choose your plan</h1>
+  <p class="muted">Reading is always free. Premium unlocks bookmarks and synced reading progress.</p>
+
+  @if (error(); as message) {
+    <p class="form-error" role="alert">{{ message }}</p>
+  }
+
+  <div class="plans">
+    <article class="card plan" [class.plan-current]="!isPremium()">
+      <h2>Free</h2>
+      <p class="price">€0<span class="muted">/month</span></p>
+      <ul>
+        @for (feature of freeFeatures; track feature) {
+          <li>{{ feature }}</li>
+        }
+      </ul>
+      @if (!auth.isAuthenticated()) {
+        <a routerLink="/register" class="btn">Create a free account</a>
+      } @else if (!isPremium()) {
+        <span class="badge">Current plan</span>
+      }
+    </article>
+
+    <article class="card plan plan-premium" [class.plan-current]="isPremium()">
+      <h2>Premium <span class="badge badge-premium">Popular</span></h2>
+      <p class="price">€4.99<span class="muted">/month</span></p>
+      <ul>
+        @for (feature of premiumFeatures; track feature) {
+          <li>{{ feature }}</li>
+        }
+      </ul>
+
+      @if (isPremium()) {
+        <span class="badge badge-premium">Current plan</span>
+        @if (subscription()?.currentPeriodEnd; as periodEnd) {
+          <p class="muted">Renews {{ periodEnd | date: 'mediumDate' }}</p>
+        }
+        @if (canCancel()) {
+          <button type="button" class="btn btn-danger" (click)="cancel()" [disabled]="busy() !== null">
+            {{ busy() === 'cancel' ? 'Cancelling…' : 'Cancel subscription' }}
+          </button>
+        }
+      } @else {
+        <button type="button" class="btn btn-primary btn-subscribe" (click)="subscribe()" [disabled]="busy() !== null">
+          {{ busy() === 'checkout' ? 'Redirecting to Stripe…' : 'Subscribe with Stripe' }}
+        </button>
+        <p class="muted small">Secure payment by Stripe. Cancel anytime.</p>
+      }
+    </article>
+  </div>
+</section>

@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: readora-test
+  datasource:
+    url: jdbc:h2:mem:readoratest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  flyway:
+    enabled: false
+
+aws:
+  s3:
+    bucket-name: test-media-bucket
+    region: us-east-1
+  cloudfront:
+    domain: https://cdn-test.readora.com
+
+readora:
+  frontend:
+    base-url: http://localhost:4200
+  cors:
+    allowed-origins: http://localhost:4200
+  security:
+    cookie-secure: false
+    jwt:
+      secret: test-only-readora-jwt-secret-0123456789abcdef0123456789
+      access-ttl: PT15M
+      refresh-ttl: P30D
+  stripe:
+    secret-key: sk_test_dummy
+    webhook-secret: whsec_test_dummy
+    premium-price-id: price_test_premium

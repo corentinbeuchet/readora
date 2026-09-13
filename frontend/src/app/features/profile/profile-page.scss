@@ -1,0 +1,49 @@
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin-bottom: 0.25rem;
+  }
+
+  .badge {
+    margin-right: 0.35rem;
+  }
+}
+
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-avatar-placeholder {
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  color: var(--accent);
+  font-size: 1.75rem;
+  font-weight: 800;
+}
+
+:host ::ng-deep .bookmark-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+:host ::ng-deep .bookmark-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+:host ::ng-deep .bookmark-actions {
+  display: flex;
+  gap: 0.5rem;
+}

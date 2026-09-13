@@ -1,0 +1,47 @@
+<section class="page">
+  <header class="catalog-header">
+    <h1>Catalog</h1>
+    <p class="muted">Browse manga, manhwa, manhua and comics published by scanlation teams.</p>
+  </header>
+
+  @if (works.isLoading()) {
+    <p class="muted" role="status">Loading works…</p>
+  } @else if (works.error()) {
+    <p class="form-error" role="alert">
+      Could not load the catalog.
+      <button type="button" class="btn btn-link" (click)="reload()">Retry</button>
+    </p>
+  } @else if (works.value(); as workList) {
+    @if (workList.items.length === 0) {
+      <p class="muted">No works have been published yet.</p>
+    } @else {
+      <ul class="work-grid">
+        @for (work of workList.items; track work.id) {
+          <li class="work-card">
+            <a [routerLink]="['/works', work.id]" class="work-link">
+              <img
+                class="work-cover"
+                [src]="work.coverImageUrl"
+                [alt]="'Cover of ' + work.title"
+                width="200"
+                height="280"
+                loading="lazy"
+              />
+              <h2 class="work-title">{{ work.title }}</h2>
+              <p class="work-meta">
+                <span class="badge">{{ work.type }}</span>
+                <span class="badge">{{ work.status }}</span>
+              </p>
+            </a>
+          </li>
+        }
+      </ul>
+
+      <nav class="pager" aria-label="Catalog pagination">
+        <button type="button" class="btn" (click)="previous()" [disabled]="!hasPrevious()">&larr; Previous</button>
+        <span class="muted">Page {{ workList.page + 1 }} / {{ workList.totalPages || 1 }}</span>
+        <button type="button" class="btn" (click)="next()" [disabled]="!hasNext()">Next &rarr;</button>
+      </nav>
+    }
+  }
+</section>

@@ -1,0 +1,32 @@
+.chapter-comments {
+  width: 100%;
+  max-width: 900px;
+  margin: 2rem auto 0;
+  padding: 0 1rem;
+}
+
+.compose {
+  margin-top: 1.5rem;
+}
+
+.reply-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted);
+}
+
+.compose-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1.25rem;
+}
+
+.field-inline input {
+  width: 8rem;
+}
+
+.compose-hint {
+  margin-top: 1.5rem;
+}

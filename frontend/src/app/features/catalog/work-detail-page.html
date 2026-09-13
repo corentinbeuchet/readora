@@ -1,0 +1,62 @@
+<section class="page">
+  @if (work.isLoading()) {
+    <p class="muted" role="status">Loading…</p>
+  } @else if (work.error()) {
+    <p class="form-error" role="alert">
+      This work could not be loaded.
+      <button type="button" class="btn btn-link" (click)="reload()">Retry</button>
+      <a routerLink="/works" class="btn btn-link">Back to catalog</a>
+    </p>
+  } @else if (work.value(); as w) {
+    <article class="work-detail">
+      <img class="work-cover" [src]="w.coverImageUrl" [alt]="'Cover of ' + w.title" width="240" height="336" />
+      <div class="work-body">
+        <h1>{{ w.title }}</h1>
+        <p class="work-meta">
+          <span class="badge">{{ w.type }}</span>
+          <span class="badge">{{ w.status }}</span>
+          @for (genre of w.genres; track genre) {
+            <span class="badge">{{ genre }}</span>
+          }
+        </p>
+        <p class="synopsis">{{ w.synopsis }}</p>
+
+        <div class="work-actions">
+          @if (bookmark(); as bm) {
+            @if (bm.lastReadChapterId) {
+              <a [routerLink]="['/read', bm.lastReadChapterId]" class="btn btn-primary">Continue reading (page {{ bm.lastReadPageIndex }})</a>
+            }
+          } @else if (firstChapterId(); as first) {
+            <a [routerLink]="['/read', first]" class="btn btn-primary">Start reading</a>
+          }
+        </div>
+      </div>
+    </article>
+
+    <section class="chapters" aria-labelledby="chapters-heading">
+      <h2 id="chapters-heading">Chapters</h2>
+      @if (chapters.isLoading()) {
+        <p class="muted" role="status">Loading chapters…</p>
+      } @else if (!chapters.value() || chapters.value().length === 0) {
+        <p class="muted">No chapters have been published yet.</p>
+      } @else {
+        <ol class="chapter-list">
+          @for (chapter of chapters.value(); track chapter.id) {
+            <li>
+              <a [routerLink]="['/read', chapter.id]" class="chapter-link">
+                <span class="chapter-number">Ch. {{ chapter.chapterNumber }}</span>
+                <span class="chapter-title">{{ chapter.title }}</span>
+                <span class="muted chapter-info">
+                  {{ chapter.pageCount }} pages
+                  @if (chapter.publishedAt) {
+                    · {{ chapter.publishedAt | date: 'mediumDate' }}
+                  }
+                </span>
+              </a>
+            </li>
+          }
+        </ol>
+      }
+    </section>
+  }
+</section>

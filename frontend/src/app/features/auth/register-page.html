@@ -1,0 +1,52 @@
+<section class="page-narrow">
+  <h1>Create your account</h1>
+  <p class="muted">Free forever. Upgrade to Premium anytime for bookmarks and reading progress.</p>
+
+  <form class="form card" (submit)="onSubmit($event)" novalidate>
+    @if (submitError(); as error) {
+      <p class="form-error" role="alert">{{ error }}</p>
+    }
+
+    <div class="field">
+      <label for="reg-email">Email</label>
+      <input id="reg-email" type="email" autocomplete="email" [formField]="registerForm.email"
+             [attr.aria-invalid]="errors(registerForm.email).length > 0" aria-describedby="reg-email-error" />
+      @for (msg of errors(registerForm.email); track $index) {
+        <span id="reg-email-error" class="field-error">{{ msg }}</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="reg-username">Username</label>
+      <input id="reg-username" type="text" autocomplete="username" [formField]="registerForm.username"
+             [attr.aria-invalid]="errors(registerForm.username).length > 0" aria-describedby="reg-username-error" />
+      @for (msg of errors(registerForm.username); track $index) {
+        <span id="reg-username-error" class="field-error">{{ msg }}</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="reg-password">Password</label>
+      <input id="reg-password" type="password" autocomplete="new-password" [formField]="registerForm.password"
+             [attr.aria-invalid]="errors(registerForm.password).length > 0" aria-describedby="reg-password-error" />
+      @for (msg of errors(registerForm.password); track $index) {
+        <span id="reg-password-error" class="field-error">{{ msg }}</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="reg-confirm">Confirm password</label>
+      <input id="reg-confirm" type="password" autocomplete="new-password" [formField]="registerForm.confirmPassword"
+             [attr.aria-invalid]="errors(registerForm.confirmPassword).length > 0" aria-describedby="reg-confirm-error" />
+      @for (msg of errors(registerForm.confirmPassword); track $index) {
+        <span id="reg-confirm-error" class="field-error">{{ msg }}</span>
+      }
+    </div>
+
+    <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+      {{ submitting() ? 'Creating account…' : 'Sign up' }}
+    </button>
+
+    <p class="muted">Already registered? <a routerLink="/login">Log in</a></p>
+  </form>
+</section>

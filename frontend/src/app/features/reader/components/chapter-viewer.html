@@ -1,0 +1,84 @@
+<div class="viewer-container">
+  @if (chapter.isLoading()) {
+    <p class="muted viewer-status" role="status">Loading chapter…</p>
+  } @else if (chapter.error()) {
+    <div class="card viewer-status" role="alert">
+      <h1>Chapter unavailable</h1>
+      <p class="muted">This chapter could not be loaded. It may have been unpublished or the link is wrong.</p>
+      <button type="button" class="btn" (click)="reload()">Retry</button>
+      <a routerLink="/works" class="btn btn-primary">Browse the catalog</a>
+    </div>
+  } @else {
+    <!-- Toolbar Controls -->
+    <header class="viewer-toolbar">
+      <div class="chapter-info">
+        <h1 class="chapter-title">{{ state.currentChapter()?.title || 'No Chapter Loaded' }}</h1>
+        <span class="page-indicator" aria-live="polite">
+          Page {{ state.currentPageIndex() + 1 }} / {{ state.totalPages() }}
+        </span>
+      </div>
+
+      <div class="viewer-actions" ngToolbar aria-label="Reader controls">
+        <div ngToolbarWidgetGroup>
+          <button type="button" ngToolbarWidget value="VERTICAL" (click)="state.setViewMode('VERTICAL')"
+                  [class.active]="state.viewMode() === 'VERTICAL'" [attr.aria-pressed]="state.viewMode() === 'VERTICAL'">
+            Vertical
+          </button>
+          <button type="button" ngToolbarWidget value="PAGED" (click)="state.setViewMode('PAGED')"
+                  [class.active]="state.viewMode() === 'PAGED'" [attr.aria-pressed]="state.viewMode() === 'PAGED'">
+            Paged
+          </button>
+        </div>
+        <div ngToolbarWidgetGroup>
+          <button type="button" ngToolbarWidget value="zoom-in" (click)="zoomIn()" aria-label="Zoom in">Zoom +</button>
+          <button type="button" ngToolbarWidget value="zoom-out" (click)="zoomOut()" aria-label="Zoom out">Zoom -</button>
+        </div>
+      </div>
+    </header>
+
+    <p class="sync-hint muted">
+      <ng-container *appHasPermission="'BOOKMARK_WRITE'; else upsell">
+        @switch (syncStatus()) {
+          @case ('saving') { Saving progress… }
+          @case ('saved') { Progress saved }
+          @case ('error') { Could not save progress }
+          @default { Progress is saved automatically }
+        }
+      </ng-container>
+      <ng-template #upsell>
+        <a routerLink="/subscription">Go Premium</a> to save your reading progress.
+      </ng-template>
+    </p>
+
+    <!-- Viewer Content -->
+    <div class="viewer-body" [style.transform]="'scale(' + state.zoomLevel() / 100 + ')'">
+      @if (state.viewMode() === 'VERTICAL') {
+        <div class="vertical-flow">
+          @for (page of state.currentChapter()?.pages; track page.pageNumber) {
+            <div class="page-wrapper" [attr.data-page]="page.pageNumber">
+              <img [src]="page.cdnUrl" [alt]="'Page ' + page.pageNumber" class="page-image" loading="lazy" />
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="paged-flow">
+          @if (state.currentPage(); as page) {
+            <img [src]="page.cdnUrl" [alt]="'Page ' + page.pageNumber" class="page-image active-page" />
+          }
+          <nav class="paged-nav" aria-label="Page navigation">
+            <button type="button" (click)="state.previousPage()" [disabled]="state.isFirstPage()" class="btn btn-prev">
+              &larr; Prev
+            </button>
+            <button type="button" (click)="state.nextPage()" [disabled]="state.isLastPage()" class="btn btn-next">
+              Next &rarr;
+            </button>
+          </nav>
+        </div>
+      }
+    </div>
+
+    @if (state.currentChapter(); as current) {
+      <app-chapter-comments [chapterId]="current.id" />
+    }
+  }
+</div>

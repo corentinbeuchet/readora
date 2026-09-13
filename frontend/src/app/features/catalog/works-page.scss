@@ -1,0 +1,50 @@
+.catalog-header {
+  margin-bottom: 1.5rem;
+}
+
+.work-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1.25rem;
+}
+
+.work-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius);
+  outline-offset: 3px;
+
+  &:hover .work-title {
+    color: var(--accent);
+  }
+}
+
+.work-cover {
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  object-fit: cover;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.work-title {
+  font-size: 1rem;
+  margin-top: 0.6rem;
+  line-height: 1.3;
+}
+
+.work-meta {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.pager {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}

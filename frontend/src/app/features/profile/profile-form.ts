@@ -1,0 +1,68 @@
+import { ChangeDetectionStrategy, Component, effect, inject, input, output, signal } from '@angular/core';
+import { FieldTree, FormField, form, maxLength, pattern, required, submit } from '@angular/forms/signals';
+import { firstValueFrom } from 'rxjs';
+import { ProfileApi } from '@app/core/api/profile-api';
+import { AuthStore } from '@app/core/auth/auth-store';
+import { UserProfile } from '@app/core/models/readora.models';
+import { apiErrorMessage, visibleErrors } from '@app/features/auth/auth-form.utils';
+
+interface ProfileModel {
+  displayName: string;
+  bio: string;
+  avatarUrl: string;
+}
+
+@Component({
+  selector: 'app-profile-form',
+  imports: [FormField],
+  templateUrl: './profile-form.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class ProfileForm {
+  private readonly profileApi = inject(ProfileApi);
+  private readonly auth = inject(AuthStore);
+
+  readonly profile = input.required<UserProfile>();
+  readonly saved = output<UserProfile>();
+
+  protected readonly model = signal<ProfileModel>({ displayName: '', bio: '', avatarUrl: '' });
+  protected readonly profileForm = form(this.model, (path) => {
+    required(path.displayName, { message: 'Display name is required' });
+    maxLength(path.displayName, 100, { message: 'Display name must be at most 100 characters' });
+    maxLength(path.bio, 1000, { message: 'Bio must be at most 1000 characters' });
+    pattern(path.avatarUrl, /^(https?:\/\/\S+)?$/, { message: 'Avatar must be an http(s) URL' });
+  });
+
+  protected readonly status = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  protected readonly errorMessage = signal<string | null>(null);
+
+  constructor() {
+    // Pre-fill the form whenever the bound profile changes.
+    effect(() => {
+      const p = this.profile();
+      this.model.set({ displayName: p.displayName, bio: p.bio ?? '', avatarUrl: p.avatarUrl ?? '' });
+    });
+  }
+
+  protected errors(field: FieldTree<string>): string[] {
+    return visibleErrors(field);
+  }
+
+  protected async onSubmit(event: Event): Promise<void> {
+    event.preventDefault();
+    this.errorMessage.set(null);
+    await submit(this.profileForm, async (f) => {
+      this.status.set('saving');
+      try {
+        const { displayName, bio, avatarUrl } = f().value();
+        const updated = await firstValueFrom(this.profileApi.update({ displayName, bio, avatarUrl: avatarUrl || null }));
+        this.auth.setUser(updated);
+        this.saved.emit(updated);
+        this.status.set('saved');
+      } catch (error) {
+        this.errorMessage.set(apiErrorMessage(error, 'Could not save your profile'));
+        this.status.set('error');
+      }
+    });
+  }
+}

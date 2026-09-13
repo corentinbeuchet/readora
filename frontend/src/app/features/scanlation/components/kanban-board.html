@@ -1,0 +1,156 @@
+<div class="kanban-container">
+  @if (project.isLoading()) {
+    <p class="muted" role="status">Loading project…</p>
+  } @else if (project.error()) {
+    <div class="card" role="alert">
+      <h1>Project unavailable</h1>
+      <p class="muted">You may not be a member of this project, or it does not exist.</p>
+      <button type="button" class="btn" (click)="reload()">Retry</button>
+      <a routerLink="/" class="btn btn-primary">Back to home</a>
+    </div>
+  } @else {
+    <header class="kanban-header">
+      <div class="header-info">
+        <h1>{{ state.currentProject()?.name || 'Scanlation Workspace' }}</h1>
+        @if (state.currentProject(); as p) {
+          <p class="muted">{{ p.members.length }} members · {{ p.tasks.length }} tasks</p>
+        }
+      </div>
+      <div class="header-actions">
+        <button *appHasPermission="'TASK_CLAIM'" type="button" class="btn btn-primary btn-upload" (click)="openUpload()">
+          Upload Chapter
+        </button>
+      </div>
+    </header>
+
+    @if (actionError(); as error) {
+      <p class="form-error" role="alert">{{ error }}</p>
+    }
+
+    <div class="kanban-board">
+      @for (stage of stages; track stage.key) {
+        <section class="kanban-column" [attr.data-stage]="stage.key" [attr.aria-label]="stage.label">
+          <div class="column-header">
+            <span class="stage-label">{{ stage.label }}</span>
+            <span class="count-badge">{{ state.tasksByStage()[stage.key].length }}</span>
+          </div>
+
+          <div class="task-list">
+            @for (task of state.tasksByStage()[stage.key]; track task.id) {
+              <article class="task-card" [class.task-mine]="isMine(task)">
+                <div class="task-card-header">
+                  <strong>Chapter {{ task.chapterNumber }}</strong>
+                  <span class="status-pill" [class]="task.status.toLowerCase()">{{ task.status }}</span>
+                </div>
+                <p class="task-meta">Pages: {{ task.pageCount }}</p>
+                @if (task.assigneeId) {
+                  <p class="task-assignee">Assigned: {{ isMine(task) ? 'you' : task.assigneeId }}</p>
+                }
+
+                <div class="task-actions">
+                  @if (canClaim(task)) {
+                    <button *appHasPermission="'TASK_CLAIM'" type="button" class="btn btn-claim"
+                            (click)="claim(task)" [disabled]="busyTaskId() === task.id">
+                      Claim
+                    </button>
+                  }
+                  @if (canSubmit(task)) {
+                    <button *appHasPermission="'TASK_SUBMIT'" type="button" class="btn btn-submit"
+                            (click)="openSubmit(task)" [disabled]="busyTaskId() === task.id">
+                      Submit work
+                    </button>
+                  }
+                  @if (canPublish(task)) {
+                    <button *appHasPermission="'CHAPTER_PUBLISH'" type="button" class="btn btn-primary btn-publish"
+                            (click)="publish(task)" [disabled]="busyTaskId() === task.id">
+                      Publish
+                    </button>
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+      }
+    </div>
+
+    @if (submitTarget(); as task) {
+      <div class="dialog-backdrop">
+        <form class="card form submit-dialog" role="dialog" aria-modal="true" aria-labelledby="submit-title"
+              (submit)="onSubmitWork($event)" novalidate>
+          <h2 id="submit-title">Submit work for chapter {{ task.chapterNumber }}</h2>
+          <p class="muted">Stage: {{ task.stage }}</p>
+
+          <div class="field">
+            <label for="submit-asset-url">Asset package URL</label>
+            <input id="submit-asset-url" type="url" [formField]="submitForm.assetUrl"
+                   [attr.aria-invalid]="errors(submitForm.assetUrl).length > 0" aria-describedby="submit-asset-url-error" />
+            @for (msg of errors(submitForm.assetUrl); track $index) {
+              <span id="submit-asset-url-error" class="field-error">{{ msg }}</span>
+            }
+          </div>
+
+          <div class="field">
+            <label for="submit-page-count">Page count</label>
+            <input id="submit-page-count" type="number" [formField]="submitForm.pageCount"
+                   [attr.aria-invalid]="errors(submitForm.pageCount).length > 0" aria-describedby="submit-page-count-error" />
+            @for (msg of errors(submitForm.pageCount); track $index) {
+              <span id="submit-page-count-error" class="field-error">{{ msg }}</span>
+            }
+          </div>
+
+          <div class="dialog-actions">
+            <button type="button" class="btn" (click)="closeSubmit()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="busyTaskId() === task.id">
+              {{ busyTaskId() === task.id ? 'Submitting…' : 'Submit & advance' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+
+    @if (showUploadDialog()) {
+      <div class="dialog-backdrop">
+        <form class="card form upload-dialog" role="dialog" aria-modal="true" aria-labelledby="upload-title"
+              (submit)="onUploadChapter($event)" novalidate>
+          <h2 id="upload-title">Upload new chapter</h2>
+          <p class="muted">Upload raw chapter package to initialize workflow</p>
+
+          <div class="field">
+            <label for="upload-chapter-num">Chapter number</label>
+            <input id="upload-chapter-num" type="number" step="any" [formField]="uploadForm.chapterNumber"
+                   [attr.aria-invalid]="errors(uploadForm.chapterNumber).length > 0" aria-describedby="upload-chapter-num-error" />
+            @for (msg of errors(uploadForm.chapterNumber); track $index) {
+              <span id="upload-chapter-num-error" class="field-error">{{ msg }}</span>
+            }
+          </div>
+
+          <div class="field">
+            <label for="upload-asset-url">Asset package URL</label>
+            <input id="upload-asset-url" type="url" [formField]="uploadForm.assetUrl"
+                   [attr.aria-invalid]="errors(uploadForm.assetUrl).length > 0" aria-describedby="upload-asset-url-error" />
+            @for (msg of errors(uploadForm.assetUrl); track $index) {
+              <span id="upload-asset-url-error" class="field-error">{{ msg }}</span>
+            }
+          </div>
+
+          <div class="field">
+            <label for="upload-page-count">Page count</label>
+            <input id="upload-page-count" type="number" [formField]="uploadForm.pageCount"
+                   [attr.aria-invalid]="errors(uploadForm.pageCount).length > 0" aria-describedby="upload-page-count-error" />
+            @for (msg of errors(uploadForm.pageCount); track $index) {
+              <span id="upload-page-count-error" class="field-error">{{ msg }}</span>
+            }
+          </div>
+
+          <div class="dialog-actions">
+            <button type="button" class="btn" (click)="closeUpload()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="isUploading()">
+              {{ isUploading() ? 'Uploading…' : 'Upload RAWs' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+  }
+</div>

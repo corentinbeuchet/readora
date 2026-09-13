@@ -1,0 +1,71 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: readora-postgres
+    environment:
+      POSTGRES_DB: readoradb
+      POSTGRES_USER: readora_user
+      POSTGRES_PASSWORD: readora_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U readora_user -d readoradb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: readora-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadminpassword
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: readora-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: staging
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/readoradb
+      SPRING_DATASOURCE_USERNAME: readora_user
+      SPRING_DATASOURCE_PASSWORD: readora_pass
+
+      AWS_S3_BUCKET_NAME: readora-media-dev
+
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:4200}
+      READORA_CORS_ALLOWED_ORIGINS: ${READORA_CORS_ALLOWED_ORIGINS:-http://localhost:4200}
+      READORA_COOKIE_SECURE: "false"
+
+      READORA_JWT_SECRET: ${READORA_JWT_SECRET:-local-compose-readora-jwt-secret-change-me-0123456789}
+
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PREMIUM_PRICE_ID: ${STRIPE_PREMIUM_PRICE_ID:-}
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  minio_data:

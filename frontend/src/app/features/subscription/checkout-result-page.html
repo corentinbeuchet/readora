@@ -1,0 +1,24 @@
+<section class="page-narrow">
+  @if (outcome() === 'success') {
+    <div class="card">
+      <h1>Thank you!</h1>
+      @if (isPremium()) {
+        <p class="form-success" role="status">Your Premium subscription is active. Bookmarks are now enabled.</p>
+        <a routerLink="/profile" class="btn btn-primary">Go to my profile</a>
+      } @else {
+        <p class="muted" role="status">
+          We're confirming your payment with Stripe. This usually takes a few seconds.
+        </p>
+        <button type="button" class="btn btn-primary" (click)="syncSession()" [disabled]="refreshing()">
+          {{ refreshing() ? 'Checking…' : 'Check again' }}
+        </button>
+      }
+    </div>
+  } @else {
+    <div class="card">
+      <h1>Checkout cancelled</h1>
+      <p class="muted">No charge was made. You can subscribe whenever you're ready.</p>
+      <a routerLink="/subscription" class="btn">Back to plans</a>
+    </div>
+  }
+</section>

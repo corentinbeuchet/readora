@@ -1,0 +1,33 @@
+@if (!canRead()) {
+  <div class="card">
+    <h3>Bookmarks are a Premium feature</h3>
+    <p class="muted">Upgrade to save your reading progress on every work and pick up where you left off.</p>
+    <a routerLink="/subscription" class="btn btn-primary">See plans</a>
+  </div>
+} @else if (bookmarks.isLoading()) {
+  <p class="muted" role="status">Loading your bookmarks…</p>
+} @else if (bookmarks.error()) {
+  <p class="form-error" role="alert">
+    Could not load bookmarks.
+    <button type="button" class="btn btn-link" (click)="reload()">Retry</button>
+  </p>
+} @else if (!bookmarks.value() || bookmarks.value().length === 0) {
+  <p class="muted">You have no bookmarks yet. Start reading a chapter and your progress will be saved here.</p>
+} @else {
+  <ul class="bookmark-list">
+    @for (bookmark of bookmarks.value(); track bookmark.workId) {
+      <li class="card bookmark-item">
+        <div>
+          <span class="badge">{{ bookmark.status }}</span>
+          <p>Page {{ bookmark.lastReadPageIndex }} · updated {{ bookmark.updatedAt | date: 'medium' }}</p>
+        </div>
+        <div class="bookmark-actions">
+          <a [routerLink]="['/works', bookmark.workId]" class="btn">Work</a>
+          @if (bookmark.lastReadChapterId) {
+            <a [routerLink]="['/read', bookmark.lastReadChapterId]" class="btn btn-primary">Continue reading</a>
+          }
+        </div>
+      </li>
+    }
+  </ul>
+}

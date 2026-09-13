@@ -1,0 +1,77 @@
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: #082f49;
+  border-radius: 8px;
+  z-index: 100;
+
+  &:focus {
+    left: 0.5rem;
+  }
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 0.85rem 2rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.logo {
+  text-decoration: none;
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.05em;
+}
+
+.app-nav {
+  flex: 1;
+}
+
+.user-area {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.user-trigger {
+  gap: 0.6rem;
+}
+
+.avatar {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-menu {
+  right: 0;
+  top: calc(100% + 0.4rem);
+}
+
+.app-main {
+  flex: 1;
+  outline: none;
+}
+
+.app-footer {
+  padding: 1.25rem 2rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+}

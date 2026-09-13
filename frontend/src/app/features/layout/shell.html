@@ -1,0 +1,59 @@
+<div class="app-layout">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header class="app-header">
+    <a routerLink="/" class="logo" aria-label="Readora home">
+      <span class="logo-text">Readora</span>
+    </a>
+
+    <nav class="app-nav" aria-label="Primary">
+      <div ngMenuBar (itemSelected)="onNavSelected($event)">
+        <a ngMenuItem value="/" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
+        <a ngMenuItem value="/works" routerLink="/works" routerLinkActive="active">Catalog</a>
+        <ng-container *appHasPermission="'PROJECT_VIEW'">
+          <a ngMenuItem value="/scanlation" routerLink="/scanlation" routerLinkActive="active">Scanlation</a>
+        </ng-container>
+      </div>
+    </nav>
+
+    <div class="user-area">
+      @if (auth.restoring()) {
+        <span class="muted">…</span>
+      } @else if (auth.isAuthenticated()) {
+        <button
+          type="button"
+          class="btn user-trigger"
+          ngMenuTrigger
+          [menu]="userMenu"
+          aria-label="Account menu"
+        >
+          @if (auth.user()?.avatarUrl; as avatar) {
+            <img class="avatar" [src]="avatar" alt="" width="24" height="24" />
+          }
+          <span>{{ auth.user()?.displayName }}</span>
+          @if (auth.isPremium()) {
+            <span class="badge badge-premium">Premium</span>
+          }
+        </button>
+        <div ngMenu #userMenu="ngMenu" (itemSelected)="onUserMenuSelected($event)" class="user-menu">
+          <ng-template ngMenuContent>
+            <button type="button" ngMenuItem value="/profile">Profile</button>
+            <button type="button" ngMenuItem value="/subscription">Subscription</button>
+            <button type="button" ngMenuItem value="logout">Log out</button>
+          </ng-template>
+        </div>
+      } @else {
+        <a routerLink="/login" class="btn">Log in</a>
+        <a routerLink="/register" class="btn btn-primary">Sign up</a>
+      }
+    </div>
+  </header>
+
+  <main id="main-content" class="app-main" tabindex="-1">
+    <router-outlet />
+  </main>
+
+  <footer class="app-footer">
+    <p class="muted">© {{ year }} Readora — read manga, manhwa and comics.</p>
+  </footer>
+</div>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.1</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.readora</groupId>
+    <artifactId>readora-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Readora Platform Parent</name>
+    <description>Hexagonal DDD Multi-Module Backend for Readora Platform</description>
+
+    <modules>
+        <module>readora-domain</module>
+        <module>readora-application</module>
+        <module>readora-infrastructure</module>
+        <module>readora-web</module>
+        <module>readora-acceptance</module>
+    </modules>
+
+    <properties>
+        <java.version>25</java.version>
+        <maven.compiler.release>25</maven.compiler.release>
+        <maven.compiler.parameters>true</maven.compiler.parameters>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <archunit.version>1.5.0</archunit.version>
+        <cucumber.version>7.34.7</cucumber.version>
+        <springdoc.version>3.1.0</springdoc.version>
+        <aws.sdk.version>2.54.17</aws.sdk.version>
+        <stripe.version>33.4.2</stripe.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Internal Modules -->
+            <dependency>
+                <groupId>com.readora</groupId>
+                <artifactId>readora-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.readora</groupId>
+                <artifactId>readora-application</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.readora</groupId>
+                <artifactId>readora-infrastructure</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.readora</groupId>
+                <artifactId>readora-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- ArchUnit for Hexagonal boundary tests -->
+            <dependency>
+                <groupId>com.tngtech.archunit</groupId>
+                <artifactId>archunit-junit5</artifactId>
+                <version>${archunit.version}</version>
+            </dependency>
+
+            <!-- Cucumber BDD -->
+            <dependency>
+                <groupId>io.cucumber</groupId>
+                <artifactId>cucumber-java</artifactId>
+                <version>${cucumber.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.cucumber</groupId>
+                <artifactId>cucumber-junit-platform-engine</artifactId>
+                <version>${cucumber.version}</version>
+            </dependency>
+
+            <!-- OpenAPI Documentation -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+
+            <!-- Stripe payments -->
+            <dependency>
+                <groupId>com.stripe</groupId>
+                <artifactId>stripe-java</artifactId>
+                <version>${stripe.version}</version>
+            </dependency>
+
+            <!-- AWS S3 SDK -->
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>${aws.sdk.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>

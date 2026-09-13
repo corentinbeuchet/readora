@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Allow: /works
+Allow: /read/
+
+# Private / session-dependent pages
+Disallow: /login
+Disallow: /register
+Disallow: /profile
+Disallow: /subscription
+Disallow: /scanlation
+Disallow: /forbidden
+
+Sitemap: https://readora.com/sitemap.xml

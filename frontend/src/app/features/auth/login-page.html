@@ -1,0 +1,46 @@
+<section class="page-narrow">
+  <h1>Log in</h1>
+  <p class="muted">Welcome back to Readora.</p>
+
+  <form class="form card" (submit)="onSubmit($event)" novalidate aria-describedby="login-error">
+    @if (submitError(); as error) {
+      <p id="login-error" class="form-error" role="alert">{{ error }}</p>
+    }
+
+    <div class="field">
+      <label for="login-email">Email</label>
+      <input
+        id="login-email"
+        type="email"
+        autocomplete="email"
+        [formField]="loginForm.email"
+        [attr.aria-invalid]="errors(loginForm.email).length > 0"
+        aria-describedby="login-email-error"
+      />
+      @for (msg of errors(loginForm.email); track $index) {
+        <span id="login-email-error" class="field-error">{{ msg }}</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="login-password">Password</label>
+      <input
+        id="login-password"
+        type="password"
+        autocomplete="current-password"
+        [formField]="loginForm.password"
+        [attr.aria-invalid]="errors(loginForm.password).length > 0"
+        aria-describedby="login-password-error"
+      />
+      @for (msg of errors(loginForm.password); track $index) {
+        <span id="login-password-error" class="field-error">{{ msg }}</span>
+      }
+    </div>
+
+    <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+      {{ submitting() ? 'Logging in…' : 'Log in' }}
+    </button>
+
+    <p class="muted">No account yet? <a routerLink="/register">Create one</a></p>
+  </form>
+</section>

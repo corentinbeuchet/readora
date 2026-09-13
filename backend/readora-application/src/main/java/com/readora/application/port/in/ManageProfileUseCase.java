@@ -1,0 +1,9 @@
+package com.readora.application.port.in;
+
+import com.readora.domain.identity.UserAccount;
+import com.readora.domain.work.UserId;
+
+public interface ManageProfileUseCase {
+    UserAccount getProfile(UserId userId);
+    UserAccount updateProfile(UserId userId, String displayName, String bio, String avatarUrl);
+}
