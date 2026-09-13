@@ -12,7 +12,8 @@ public enum Role {
             Permission.PROJECT_VIEW,
             Permission.TASK_CLAIM,
             Permission.TASK_SUBMIT,
-            Permission.CHAPTER_PUBLISH
+            Permission.CHAPTER_PUBLISH,
+            Permission.WORK_CREATE
     )),
     ADMIN(EnumSet.allOf(Permission.class));
 

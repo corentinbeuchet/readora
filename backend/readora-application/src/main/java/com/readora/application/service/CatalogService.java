@@ -51,4 +51,9 @@ public class CatalogService implements BrowseCatalogUseCase {
     public Optional<ScanlationProject> getProject(ProjectId projectId) {
         return projectRepository.findById(projectId);
     }
+
+    @Override
+    public List<ScanlationProject> listProjectsByWork(WorkId workId) {
+        return projectRepository.findByWorkId(workId);
+    }
 }

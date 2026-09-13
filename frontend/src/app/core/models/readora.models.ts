@@ -1,11 +1,40 @@
+export type WorkType = 'MANGA' | 'MANHWA' | 'MANHUA' | 'COMIC';
+export type WorkStatus = 'ONGOING' | 'COMPLETED' | 'HIATUS';
+
 export interface Work {
   id: string;
   title: string;
   synopsis: string;
-  type: 'MANGA' | 'MANHWA' | 'MANHUA' | 'COMIC';
-  status: 'ONGOING' | 'COMPLETED' | 'HIATUS';
+  type: WorkType;
+  status: WorkStatus;
   coverImageUrl: string;
   genres: string[];
+}
+
+export interface CreateWorkPayload {
+  title: string;
+  synopsis: string;
+  type: WorkType;
+  status: WorkStatus;
+  coverImageUrl?: string;
+  genres: string[];
+}
+
+export interface DirectPublishChapterPayload {
+  chapterNumber: string;
+  title?: string;
+  pages: {
+    pageNumber: number;
+    storageKey: string;
+    cdnUrl?: string;
+    width?: number;
+    height?: number;
+  }[];
+}
+
+export interface StorageUploadResult {
+  storageKey: string;
+  cdnUrl: string;
 }
 
 export interface PageAsset {
@@ -96,7 +125,8 @@ export const PERMISSIONS = [
   'CHAPTER_PUBLISH',
   'PROJECT_VIEW',
   'PROJECT_MANAGE',
-  'USER_MANAGE'
+  'USER_MANAGE',
+  'WORK_CREATE'
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

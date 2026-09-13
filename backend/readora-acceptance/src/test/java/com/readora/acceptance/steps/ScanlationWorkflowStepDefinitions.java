@@ -44,6 +44,11 @@ public class ScanlationWorkflowStepDefinitions {
             }
 
             @Override
+            public List<ScanlationProject> findByWorkId(WorkId workId) {
+                return projectStore.values().stream().filter(p -> p.getWorkId().equals(workId)).toList();
+            }
+
+            @Override
             public ScanlationProject save(ScanlationProject project) {
                 projectStore.put(project.getId(), project);
                 return project;

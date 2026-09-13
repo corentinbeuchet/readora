@@ -7,6 +7,7 @@ import com.readora.infrastructure.persistence.repository.SpringDataWorkRepositor
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -40,10 +41,24 @@ public class WorkRepositoryAdapter implements WorkRepositoryPort {
     }
 
     @Override
+    @Transactional
     public Work save(Work work) {
-        WorkJpaEntity entity = toEntity(work);
-        WorkJpaEntity saved = springDataRepository.save(entity);
-        return toDomain(saved);
+        WorkJpaEntity existing = springDataRepository.findById(work.getId().value()).orElse(null);
+        if (existing != null) {
+            existing.setTitle(work.getTitle());
+            existing.setSynopsis(work.getSynopsis());
+            existing.setWorkType(work.getType().name());
+            existing.setStatus(work.getStatus().name());
+            existing.setCoverImageUrl(work.getCoverImageUrl());
+            existing.setGenres(new ArrayList<>(work.getGenres()));
+            existing.setUpdatedAt(work.getUpdatedAt());
+            WorkJpaEntity saved = springDataRepository.save(existing);
+            return toDomain(saved);
+        } else {
+            WorkJpaEntity entity = toEntity(work);
+            WorkJpaEntity saved = springDataRepository.save(entity);
+            return toDomain(saved);
+        }
     }
 
     private Work toDomain(WorkJpaEntity entity) {

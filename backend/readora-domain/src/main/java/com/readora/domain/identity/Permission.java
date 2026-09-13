@@ -10,5 +10,6 @@ public enum Permission {
     CHAPTER_PUBLISH,
     PROJECT_VIEW,
     PROJECT_MANAGE,
-    USER_MANAGE
+    USER_MANAGE,
+    WORK_CREATE
 }

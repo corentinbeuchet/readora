@@ -13,6 +13,9 @@
         <ng-container *appHasPermission="'PROJECT_VIEW'">
           <a ngMenuItem value="/scanlation" routerLink="/scanlation" routerLinkActive="active">Scanlation</a>
         </ng-container>
+        <ng-container *appHasPermission="'WORK_CREATE'">
+          <a ngMenuItem value="/upload" routerLink="/upload" routerLinkActive="active">Upload Studio</a>
+        </ng-container>
       </div>
     </nav>
 

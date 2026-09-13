@@ -30,6 +30,8 @@
     "@angular/platform-server": "^22.1.0",
     "@angular/router": "^22.1.0",
     "@angular/ssr": "^22.1.8",
+    "@types/jszip": "^3.4.0",
+    "jszip": "^3.10.2",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

@@ -22,6 +22,12 @@ export const routes: Routes = [
     path: 'works/:workId',
     loadComponent: () => import('./features/catalog/work-detail-page').then((m) => m.WorkDetailPage)
   },
+  {
+    path: 'upload',
+    loadComponent: () => import('./features/upload/upload-studio-page').then((m) => m.UploadStudioPage),
+    canActivate: [permissionGuard],
+    data: { permission: 'WORK_CREATE' }
+  },
   { path: 'read', redirectTo: 'works', pathMatch: 'full' },
   { path: 'read/:chapterId', component: ChapterViewer },
   {

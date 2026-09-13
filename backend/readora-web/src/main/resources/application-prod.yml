@@ -22,6 +22,10 @@ aws:
   s3:
     bucket-name: ${AWS_S3_BUCKET_NAME:readora-media-prod}
     region: ${AWS_REGION:eu-west-1}
+    endpoint: ${AWS_S3_ENDPOINT:}
+    access-key-id: ${AWS_ACCESS_KEY_ID:}
+    secret-access-key: ${AWS_SECRET_ACCESS_KEY:}
+    path-style-access-enabled: ${AWS_S3_PATH_STYLE_ACCESS_ENABLED:false}
   cloudfront:
     domain: ${CLOUDFRONT_DOMAIN:https://cdn.readora.com}
 

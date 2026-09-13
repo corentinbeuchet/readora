@@ -1,7 +1,12 @@
 <section class="page">
   <header class="catalog-header">
-    <h1>Catalog</h1>
-    <p class="muted">Browse manga, manhwa, manhua and comics published by scanlation teams.</p>
+    <div class="catalog-title-group">
+      <h1>Catalog</h1>
+      <p class="muted">Browse manga, manhwa, manhua and comics published by scanlation teams.</p>
+    </div>
+    <ng-container *appHasPermission="'WORK_CREATE'">
+      <a routerLink="/upload" class="btn btn-primary upload-cta">+ Upload Series</a>
+    </ng-container>
   </header>
 
   @if (works.isLoading()) {
@@ -21,8 +26,9 @@
             <a [routerLink]="['/works', work.id]" class="work-link">
               <img
                 class="work-cover"
-                [src]="work.coverImageUrl"
+                [src]="work.coverImageUrl || fallbackCover"
                 [alt]="'Cover of ' + work.title"
+                (error)="handleCoverError($event, fallbackCover)"
                 width="200"
                 height="280"
                 loading="lazy"

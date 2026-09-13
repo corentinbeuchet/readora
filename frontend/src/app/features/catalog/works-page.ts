@@ -1,13 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CatalogApi } from '@app/core/api/catalog-api';
+import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { SeoService } from '@app/core/seo/seo.service';
+import { FALLBACK_COVER_IMAGE, onImageError } from '@app/core/utils/image-utils';
 
 const PAGE_SIZE = 24;
 
 @Component({
   selector: 'app-works-page',
-  imports: [RouterLink],
+  imports: [RouterLink, HasPermissionDirective],
   templateUrl: './works-page.html',
   styleUrl: './works-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -15,6 +17,8 @@ const PAGE_SIZE = 24;
 export class WorksPage {
   private readonly catalogApi = inject(CatalogApi);
   private readonly seo = inject(SeoService);
+  protected readonly fallbackCover = FALLBACK_COVER_IMAGE;
+  protected readonly handleCoverError = onImageError;
 
   protected readonly page = signal(0);
   protected readonly pageSize = signal(PAGE_SIZE);

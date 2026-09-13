@@ -2,10 +2,12 @@ package com.readora.infrastructure.config;
 
 import com.readora.application.port.in.AuthenticateUserUseCase;
 import com.readora.application.port.in.BrowseCatalogUseCase;
+import com.readora.application.port.in.DirectPublishChapterUseCase;
 import com.readora.application.port.in.ManageBookmarkUseCase;
 import com.readora.application.port.in.ManageProfileUseCase;
 import com.readora.application.port.in.ManageScanlationTaskUseCase;
 import com.readora.application.port.in.ManageSubscriptionUseCase;
+import com.readora.application.port.in.ManageWorkUseCase;
 import com.readora.application.port.in.ReadChapterUseCase;
 import com.readora.application.port.in.ReaderInteractionUseCase;
 import com.readora.application.port.out.*;
@@ -17,6 +19,7 @@ import com.readora.application.service.ProfileService;
 import com.readora.application.service.ReaderSocialService;
 import com.readora.application.service.ScanlationTaskService;
 import com.readora.application.service.SubscriptionService;
+import com.readora.application.service.WorkManagementService;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +27,25 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties({SecurityProperties.class, StripeProperties.class})
 public class DomainServiceConfig {
+
+    @Bean
+    public WorkManagementService workManagementService(
+            WorkRepositoryPort workRepository,
+            ChapterRepositoryPort chapterRepository,
+            ScanlationProjectRepositoryPort projectRepository,
+            EventPublisherPort eventPublisher) {
+        return new WorkManagementService(workRepository, chapterRepository, projectRepository, eventPublisher);
+    }
+
+    @Bean
+    public ManageWorkUseCase manageWorkUseCase(WorkManagementService workManagementService) {
+        return workManagementService;
+    }
+
+    @Bean
+    public DirectPublishChapterUseCase directPublishChapterUseCase(WorkManagementService workManagementService) {
+        return workManagementService;
+    }
 
     @Bean
     public ReadChapterUseCase readChapterUseCase(

@@ -10,6 +10,7 @@ import com.readora.infrastructure.persistence.entity.TeamMemberJpaEntity;
 import com.readora.infrastructure.persistence.entity.WorkflowTaskJpaEntity;
 import com.readora.infrastructure.persistence.repository.SpringDataScanlationProjectRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,10 +30,76 @@ public class ScanlationProjectRepositoryAdapter implements ScanlationProjectRepo
     }
 
     @Override
+    public List<ScanlationProject> findByWorkId(WorkId workId) {
+        return springDataRepository.findByWorkId(workId.value()).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    @Transactional
     public ScanlationProject save(ScanlationProject project) {
-        ScanlationProjectJpaEntity entity = toEntity(project);
-        ScanlationProjectJpaEntity saved = springDataRepository.save(entity);
-        return toDomain(saved);
+        ScanlationProjectJpaEntity existing = springDataRepository.findById(project.getId().value()).orElse(null);
+        if (existing != null) {
+            existing.setName(project.getName());
+            existing.setWorkId(project.getWorkId().value());
+            existing.setUpdatedAt(project.getUpdatedAt());
+
+            // Update members in place
+            Map<String, TeamMemberJpaEntity> existingMembersByUserId = existing.getMembers().stream()
+                    .collect(Collectors.toMap(TeamMemberJpaEntity::getUserId, m -> m));
+
+            existing.getMembers().removeIf(em -> project.getMembers().stream().noneMatch(m -> m.userId().value().equals(em.getUserId())));
+
+            for (TeamMember m : project.getMembers()) {
+                TeamMemberJpaEntity memberEntity = existingMembersByUserId.get(m.userId().value());
+                List<String> roles = m.roles().stream().map(Enum::name).toList();
+                if (memberEntity != null) {
+                    memberEntity.setRoles(new ArrayList<>(roles));
+                    memberEntity.setJoinedAt(m.joinedAt());
+                } else {
+                    existing.getMembers().add(new TeamMemberJpaEntity(existing, m.userId().value(), new ArrayList<>(roles), m.joinedAt()));
+                }
+            }
+
+            // Update tasks in place
+            Map<UUID, WorkflowTaskJpaEntity> existingTasksById = existing.getTasks().stream()
+                    .collect(Collectors.toMap(WorkflowTaskJpaEntity::getId, t -> t));
+
+            existing.getTasks().removeIf(et -> project.getTasks().stream().noneMatch(t -> t.getId().value().equals(et.getId())));
+
+            for (WorkflowTask t : project.getTasks()) {
+                WorkflowTaskJpaEntity taskEntity = existingTasksById.get(t.getId().value());
+                if (taskEntity != null) {
+                    taskEntity.setChapterNumber(t.getChapterNumber().value());
+                    taskEntity.setStage(t.getStage().name());
+                    taskEntity.setStatus(t.getStatus().name());
+                    taskEntity.setAssigneeId(t.getAssigneeId() != null ? t.getAssigneeId().value() : null);
+                    taskEntity.setAssetPackageUrl(t.getAssetPackageUrl());
+                    taskEntity.setPageCount(t.getPageCount());
+                    taskEntity.setUpdatedAt(t.getUpdatedAt());
+                } else {
+                    existing.getTasks().add(new WorkflowTaskJpaEntity(
+                            t.getId().value(),
+                            existing,
+                            t.getChapterNumber().value(),
+                            t.getStage().name(),
+                            t.getStatus().name(),
+                            t.getAssigneeId() != null ? t.getAssigneeId().value() : null,
+                            t.getAssetPackageUrl(),
+                            t.getPageCount(),
+                            t.getUpdatedAt()
+                    ));
+                }
+            }
+
+            ScanlationProjectJpaEntity saved = springDataRepository.save(existing);
+            return toDomain(saved);
+        } else {
+            ScanlationProjectJpaEntity entity = toEntity(project);
+            ScanlationProjectJpaEntity saved = springDataRepository.save(entity);
+            return toDomain(saved);
+        }
     }
 
     private ScanlationProject toDomain(ScanlationProjectJpaEntity entity) {

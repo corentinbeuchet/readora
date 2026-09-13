@@ -9,6 +9,7 @@ import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { SeoService } from '@app/core/seo/seo.service';
 import { ChapterComments } from '@app/features/social/components/chapter-comments';
+import { FALLBACK_PAGE_IMAGE, onImageError } from '@app/core/utils/image-utils';
 import { ReaderState } from '../services/reader-state';
 
 export const PROGRESS_SYNC_DEBOUNCE_MS = 800;
@@ -29,6 +30,8 @@ interface ProgressUpdate {
 export class ChapterViewer {
   readonly state = inject(ReaderState);
   protected readonly auth = inject(AuthStore);
+  protected readonly fallbackPage = FALLBACK_PAGE_IMAGE;
+  protected readonly handlePageError = onImageError;
   private readonly chaptersApi = inject(ChaptersApi);
   private readonly bookmarksApi = inject(BookmarksApi);
   private readonly seo = inject(SeoService);

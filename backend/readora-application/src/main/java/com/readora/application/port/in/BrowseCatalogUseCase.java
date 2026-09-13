@@ -21,4 +21,5 @@ public interface BrowseCatalogUseCase {
     Optional<Work> getWork(WorkId workId);
     List<Chapter> listPublishedChapters(WorkId workId);
     Optional<ScanlationProject> getProject(ProjectId projectId);
+    List<ScanlationProject> listProjectsByWork(WorkId workId);
 }

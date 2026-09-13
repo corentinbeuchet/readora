@@ -7,10 +7,10 @@ import com.readora.infrastructure.persistence.entity.ChapterJpaEntity;
 import com.readora.infrastructure.persistence.entity.PageAssetJpaEntity;
 import com.readora.infrastructure.persistence.repository.SpringDataChapterRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
@@ -34,10 +34,43 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
     }
 
     @Override
+    @Transactional
     public Chapter save(Chapter chapter) {
-        ChapterJpaEntity entity = toEntity(chapter);
-        ChapterJpaEntity saved = springDataRepository.save(entity);
-        return toDomain(saved);
+        ChapterJpaEntity existing = springDataRepository.findById(chapter.getId().value()).orElse(null);
+        if (existing != null) {
+            existing.setWorkId(chapter.getWorkId().value());
+            existing.setChapterNumber(chapter.getChapterNumber().value());
+            existing.setTitle(chapter.getTitle());
+            existing.setStatus(chapter.getStatus().name());
+            existing.setScanlationProjectId(chapter.getScanlationProjectId() != null ? chapter.getScanlationProjectId().value() : null);
+            existing.setPublishedAt(chapter.getPublishedAt());
+            existing.setUpdatedAt(chapter.getUpdatedAt());
+
+            // Update pages in place
+            Map<Integer, PageAssetJpaEntity> existingPagesByNumber = existing.getPages().stream()
+                    .collect(Collectors.toMap(PageAssetJpaEntity::getPageNumber, p -> p));
+
+            existing.getPages().removeIf(ep -> chapter.getPages().stream().noneMatch(p -> p.pageNumber() == ep.getPageNumber()));
+
+            for (PageAsset page : chapter.getPages()) {
+                PageAssetJpaEntity pageEntity = existingPagesByNumber.get(page.pageNumber());
+                if (pageEntity != null) {
+                    pageEntity.setStorageKey(page.storageKey());
+                    pageEntity.setCdnUrl(page.cdnUrl());
+                    pageEntity.setWidth(page.width());
+                    pageEntity.setHeight(page.height());
+                } else {
+                    existing.getPages().add(new PageAssetJpaEntity(existing, page.pageNumber(), page.storageKey(), page.cdnUrl(), page.width(), page.height()));
+                }
+            }
+
+            ChapterJpaEntity saved = springDataRepository.save(existing);
+            return toDomain(saved);
+        } else {
+            ChapterJpaEntity entity = toEntity(chapter);
+            ChapterJpaEntity saved = springDataRepository.save(entity);
+            return toDomain(saved);
+        }
     }
 
     private Chapter toDomain(ChapterJpaEntity entity) {

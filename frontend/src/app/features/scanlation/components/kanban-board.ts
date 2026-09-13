@@ -15,12 +15,6 @@ interface SubmitModel {
   pageCount: number;
 }
 
-interface UploadModel {
-  chapterNumber: number;
-  assetUrl: string;
-  pageCount: number;
-}
-
 @Component({
   selector: 'app-kanban-board',
   imports: [RouterLink, FormField, HasPermissionDirective],
@@ -39,8 +33,6 @@ export class KanbanBoard {
 
   protected readonly project = this.scanlationApi.projectResource(this.projectId);
   protected readonly busyTaskId = signal<string | null>(null);
-  protected readonly isUploading = signal(false);
-  protected readonly showUploadDialog = signal(false);
   protected readonly actionError = signal<string | null>(null);
   protected readonly submitTarget = signal<WorkflowTask | null>(null);
 
@@ -58,14 +50,6 @@ export class KanbanBoard {
 
   protected readonly submitModel = signal<SubmitModel>({ assetUrl: '', pageCount: 1 });
   protected readonly submitForm = form(this.submitModel, (path) => {
-    required(path.assetUrl, { message: 'Asset package URL is required' });
-    pattern(path.assetUrl, /^https?:\/\/\S+$/, { message: 'Must be an http(s) URL' });
-    min(path.pageCount, 1, { message: 'Page count must be at least 1' });
-  });
-
-  protected readonly uploadModel = signal<UploadModel>({ chapterNumber: 1, assetUrl: '', pageCount: 1 });
-  protected readonly uploadForm = form(this.uploadModel, (path) => {
-    min(path.chapterNumber, 0.01, { message: 'Chapter number must be positive' });
     required(path.assetUrl, { message: 'Asset package URL is required' });
     pattern(path.assetUrl, /^https?:\/\/\S+$/, { message: 'Must be an http(s) URL' });
     min(path.pageCount, 1, { message: 'Page count must be at least 1' });
@@ -100,36 +84,6 @@ export class KanbanBoard {
 
   protected canPublish(task: WorkflowTask): boolean {
     return task.stage === 'QC_REVIEW';
-  }
-
-  protected openUpload(): void {
-    this.actionError.set(null);
-    this.uploadModel.set({ chapterNumber: 1, assetUrl: '', pageCount: 1 });
-    this.showUploadDialog.set(true);
-  }
-
-  protected closeUpload(): void {
-    this.showUploadDialog.set(false);
-  }
-
-  protected async onUploadChapter(event: Event): Promise<void> {
-    event.preventDefault();
-    await submit(this.uploadForm, async (f) => {
-      this.actionError.set(null);
-      this.isUploading.set(true);
-      try {
-        const { chapterNumber, assetUrl, pageCount } = f().value();
-        const created = await firstValueFrom(
-          this.scanlationApi.createTask(this.requireProjectId(), { chapterNumber: Number(chapterNumber), assetUrl, pageCount: Number(pageCount) })
-        );
-        this.state.upsertTask(created);
-        this.showUploadDialog.set(false);
-      } catch (error) {
-        this.actionError.set(apiErrorMessage(error, 'Failed to upload chapter'));
-      } finally {
-        this.isUploading.set(false);
-      }
-    });
   }
 
   protected async claim(task: WorkflowTask): Promise<void> {

@@ -75,7 +75,15 @@ describe('ChapterViewer (API-driven)', () => {
     await loadChapter();
 
     expect(stateService.currentChapter()?.id).toBe(MOCK_CHAPTER.id);
-    const images = fixture.debugElement.queryAll(By.css('img.page-image'));
+    const verticalFlow = fixture.debugElement.query(By.css('.vertical-flow'));
+    expect(verticalFlow).toBeTruthy();
+
+    const wrappers = fixture.debugElement.queryAll(By.css('.vertical-flow .page-wrapper'));
+    expect(wrappers.length).toBe(2);
+    expect(wrappers[0].nativeElement.getAttribute('data-page')).toBe('1');
+    expect(wrappers[1].nativeElement.getAttribute('data-page')).toBe('2');
+
+    const images = fixture.debugElement.queryAll(By.css('.vertical-flow .page-image'));
     expect(images.length).toBe(2);
     expect(images[0].nativeElement.src).toContain('https://cdn.readora.com/p1.webp');
     expect(images[1].nativeElement.src).toContain('https://cdn.readora.com/p2.webp');

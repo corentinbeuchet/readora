@@ -1,7 +1,7 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Injectable, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiResponse, ChapterSummary, PagedResponse, Work, WorkSummary } from '../models/readora.models';
+import { ApiResponse, Chapter, ChapterSummary, CreateWorkPayload, DirectPublishChapterPayload, PagedResponse, ScanlationProject, Work, WorkSummary } from '../models/readora.models';
 import { ApiClient } from './api-client';
 
 const EMPTY_PAGE: PagedResponse<WorkSummary> = { items: [], page: 0, size: 0, totalElements: 0, totalPages: 0 };
@@ -19,8 +19,20 @@ export class CatalogApi {
     return this.api.get<Work>(`/works/${workId}`);
   }
 
+  createWork(payload: CreateWorkPayload): Observable<Work> {
+    return this.api.post<Work>('/works', payload);
+  }
+
   listChapters(workId: string): Observable<ChapterSummary[]> {
     return this.api.get<ChapterSummary[]>(`/works/${workId}/chapters`);
+  }
+
+  listProjects(workId: string): Observable<ScanlationProject[]> {
+    return this.api.get<ScanlationProject[]>(`/works/${workId}/projects`);
+  }
+
+  directPublishChapter(workId: string, payload: DirectPublishChapterPayload): Observable<Chapter> {
+    return this.api.post<Chapter>(`/works/${workId}/chapters/direct`, payload);
   }
 
   worksResource(page: Signal<number>, size: Signal<number>): HttpResourceRef<PagedResponse<WorkSummary>> {

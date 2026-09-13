@@ -5,6 +5,7 @@ import { CatalogApi } from '@app/core/api/catalog-api';
 import { BookmarksApi } from '@app/core/api/bookmarks-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { SeoService } from '@app/core/seo/seo.service';
+import { FALLBACK_COVER_IMAGE, onImageError } from '@app/core/utils/image-utils';
 
 @Component({
   selector: 'app-work-detail-page',
@@ -18,6 +19,8 @@ export class WorkDetailPage {
   private readonly bookmarksApi = inject(BookmarksApi);
   private readonly seo = inject(SeoService);
   protected readonly auth = inject(AuthStore);
+  protected readonly fallbackCover = FALLBACK_COVER_IMAGE;
+  protected readonly handleCoverError = onImageError;
 
   /** Bound from the `works/:workId` route. */
   readonly workId = input.required<string>();

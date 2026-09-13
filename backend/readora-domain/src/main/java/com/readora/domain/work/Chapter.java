@@ -41,6 +41,16 @@ public class Chapter extends AggregateRoot<ChapterId> {
         return new Chapter(ChapterId.generate(), workId, chapterNumber, title, ChapterStatus.DRAFT, List.of(), scanlationProjectId, now, null, now);
     }
 
+    public static Chapter createPublished(WorkId workId, ChapterNumber chapterNumber, String title, List<PageAsset> pages, ProjectId scanlationProjectId, UserId publisherId) {
+        if (pages == null || pages.isEmpty()) {
+            throw new DomainValidationException("Cannot publish chapter with zero pages.");
+        }
+        Instant now = Instant.now();
+        Chapter chapter = new Chapter(ChapterId.generate(), workId, chapterNumber, title, ChapterStatus.PUBLISHED, pages, scanlationProjectId, now, now, now);
+        chapter.registerEvent(ChapterPublishedEvent.now(chapter.getId(), workId, chapterNumber));
+        return chapter;
+    }
+
     public void updatePages(List<PageAsset> newPages) {
         this.pages.clear();
         if (newPages != null) {

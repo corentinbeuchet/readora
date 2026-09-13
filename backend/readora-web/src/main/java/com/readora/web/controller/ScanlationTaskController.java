@@ -34,7 +34,7 @@ public class ScanlationTaskController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('TASK_CLAIM') or hasAuthority('PROJECT_MANAGE')")
+    @PreAuthorize("hasAuthority('TASK_CLAIM') or hasAuthority('PROJECT_MANAGE') or hasAuthority('WORK_CREATE')")
     @Operation(summary = "Upload raw chapter package and create workflow task")
     public ResponseEntity<ApiResponse<WorkflowTaskDto>> createTask(
             @PathVariable UUID projectId,

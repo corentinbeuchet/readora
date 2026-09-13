@@ -155,53 +155,13 @@ describe('KanbanBoard (API-driven, permission gated)', () => {
     expect(state.tasksByStage().QC_REVIEW.length).toBe(0);
   });
 
-  it('Upload Chapter opens modal, validates form, posts new raw task and updates board', async () => {
-    await signIn(store, http, mockUser({ permissions: ['PROJECT_VIEW', 'TASK_CLAIM'] }));
+  it('Upload Studio link is rendered and points to /upload for users with WORK_CREATE permission', async () => {
+    await signIn(store, http, mockUser({ permissions: ['PROJECT_VIEW', 'WORK_CREATE'] }));
     await render();
 
-    const uploadBtn = q('.btn-upload') as HTMLButtonElement;
-    expect(uploadBtn).not.toBeNull();
-    uploadBtn.click();
-    fixture.detectChanges();
-
-    expect(q('form.upload-dialog')).not.toBeNull();
-
-    const chapterInput = q('#upload-chapter-num') as HTMLInputElement;
-    const urlInput = q('#upload-asset-url') as HTMLInputElement;
-    const pagesInput = q('#upload-page-count') as HTMLInputElement;
-
-    chapterInput.value = '12';
-    chapterInput.dispatchEvent(new Event('input'));
-    urlInput.value = 'https://cdn.readora.com/raws/ch12.zip';
-    urlInput.dispatchEvent(new Event('input'));
-    pagesInput.value = '25';
-    pagesInput.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-
-    q('form.upload-dialog')!.dispatchEvent(new Event('submit', { cancelable: true }));
-    await settle(fixture);
-
-    const req = http.expectOne(`${API}/scanlation/projects/${PROJECT_ID}/tasks`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ chapterNumber: 12, assetUrl: 'https://cdn.readora.com/raws/ch12.zip', pageCount: 25 });
-
-    req.flush({
-      success: true,
-      error: null,
-      data: {
-        id: 't-new-12',
-        chapterNumber: '12',
-        stage: 'RAW_UPLOADED',
-        status: 'PENDING',
-        pageCount: 25,
-        assetPackageUrl: 'https://cdn.readora.com/raws/ch12.zip',
-        updatedAt: '2026-09-13T00:00:00Z'
-      }
-    });
-    await settle(fixture);
-
-    expect(q('form.upload-dialog')).toBeNull();
-    expect(state.tasksByStage().RAW_UPLOADED.length).toBe(2);
-    expect(state.tasksByStage().RAW_UPLOADED.some(t => t.chapterNumber === '12')).toBe(true);
+    const uploadLink = q('.btn-upload') as HTMLAnchorElement;
+    expect(uploadLink).not.toBeNull();
+    expect(uploadLink.getAttribute('href')).toBe('/upload');
+    expect(uploadLink.textContent).toContain('Upload Studio');
   });
 });

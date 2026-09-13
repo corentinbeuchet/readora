@@ -32,8 +32,12 @@ public class Work extends AggregateRoot<WorkId> {
     }
 
     public static Work create(String title, String synopsis, WorkType type, String coverImageUrl, Set<String> genres) {
+        return create(title, synopsis, type, WorkStatus.ONGOING, coverImageUrl, genres);
+    }
+
+    public static Work create(String title, String synopsis, WorkType type, WorkStatus status, String coverImageUrl, Set<String> genres) {
         Instant now = Instant.now();
-        return new Work(WorkId.generate(), title, synopsis, type, WorkStatus.ONGOING, coverImageUrl, genres, now, now);
+        return new Work(WorkId.generate(), title, synopsis, type, status != null ? status : WorkStatus.ONGOING, coverImageUrl, genres, now, now);
     }
 
     private static String validateTitle(String title) {

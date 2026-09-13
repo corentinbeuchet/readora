@@ -75,8 +75,26 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: 0;
   margin: 2rem 0;
+  width: 100%;
+  max-width: 900px;
+
+  .page-wrapper {
+    margin: 0;
+    padding: 0;
+    line-height: 0;
+    width: 100%;
+    display: block;
+  }
+
+  .page-image {
+    display: block;
+    width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+    margin: 0;
+  }
 }
 
 .page-image {
@@ -91,6 +109,11 @@
   flex-direction: column;
   align-items: center;
   margin: 2rem 0;
+
+  .page-image {
+    border-radius: 4px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  }
 }
 
 .paged-nav {
