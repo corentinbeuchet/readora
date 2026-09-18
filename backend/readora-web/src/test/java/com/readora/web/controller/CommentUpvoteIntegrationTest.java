@@ -72,6 +72,26 @@ class CommentUpvoteIntegrationTest extends AuthTestSupport {
                 .andExpect(jsonPath("$.success").value(false));
     }
 
+    @Test
+    @DisplayName("Commenting on a draft chapter is rejected with 400 and on an unknown chapter with 404")
+    void commentsNeedAPublishedChapter() throws Exception {
+        Session reader = register();
+        Chapter draft = chapterRepository.save(Chapter.createDraft(chapter.getWorkId(), ChapterNumber.of("2"), "Draft", null));
+        String body = objectMapper.writeValueAsString(new CreateCommentRequest("Early!", null, null, false));
+
+        mockMvc.perform(post("/api/v1/comments/chapter/" + draft.getId().value())
+                        .header("Authorization", reader.bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(post("/api/v1/comments/chapter/" + java.util.UUID.randomUUID())
+                        .header("Authorization", reader.bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isNotFound());
+    }
+
     private String postComment(Session author) throws Exception {
         var result = mockMvc.perform(post("/api/v1/comments/chapter/" + chapter.getId().value())
                         .header("Authorization", author.bearer())

@@ -1,13 +1,16 @@
 package com.readora.acceptance.steps;
 
-import com.readora.application.port.out.BookmarkRepositoryPort;
+import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.CommentRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.service.ReaderSocialService;
-import com.readora.domain.social.Bookmark;
 import com.readora.domain.social.ChapterComment;
 import com.readora.domain.social.CommentId;
+import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
+import com.readora.domain.work.ChapterNumber;
+import com.readora.domain.work.ChapterStatus;
+import com.readora.domain.work.PageAsset;
 import com.readora.domain.work.UserId;
 import com.readora.domain.work.WorkId;
 import io.cucumber.java.Before;
@@ -23,7 +26,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SocialCommentsStepDefinitions {
 
     private final Map<CommentId, ChapterComment> commentStore = new ConcurrentHashMap<>();
-    private final Map<String, Bookmark> bookmarkStore = new ConcurrentHashMap<>();
     private final Map<String, CommentId> aliasToCommentId = new ConcurrentHashMap<>();
     private final Set<String> upvotes = ConcurrentHashMap.newKeySet();
 
@@ -34,7 +36,6 @@ public class SocialCommentsStepDefinitions {
     @Before
     public void setup() {
         commentStore.clear();
-        bookmarkStore.clear();
         aliasToCommentId.clear();
         upvotes.clear();
         currentChapterId = ChapterId.generate();
@@ -67,23 +68,29 @@ public class SocialCommentsStepDefinitions {
             }
         };
 
-        BookmarkRepositoryPort bookmarkRepo = new BookmarkRepositoryPort() {
+        // Every chapter the scenarios comment on is published.
+        ChapterRepositoryPort chapterRepo = new ChapterRepositoryPort() {
             @Override
-            public Optional<Bookmark> findByUserIdAndWorkId(UserId userId, WorkId workId) {
-                return Optional.ofNullable(bookmarkStore.get(userId + ":" + workId));
+            public Optional<Chapter> findById(ChapterId id) {
+                return Optional.of(new Chapter(id, WorkId.generate(), ChapterNumber.of("1"), "Chapter 1", ChapterStatus.PUBLISHED,
+                        List.of(PageAsset.create(1, "p1.webp", null)), null, null, null, null));
             }
 
             @Override
-            public Bookmark save(Bookmark bookmark) {
-                bookmarkStore.put(bookmark.getUserId() + ":" + bookmark.getWorkId(), bookmark);
-                return bookmark;
+            public List<Chapter> findByWorkId(WorkId workId) {
+                return List.of();
+            }
+
+            @Override
+            public Chapter save(Chapter chapter) {
+                return chapter;
             }
         };
 
         EventPublisherPort eventPublisher = event -> {
         };
 
-        readerSocialService = new ReaderSocialService(commentRepo, bookmarkRepo, eventPublisher);
+        readerSocialService = new ReaderSocialService(commentRepo, chapterRepo, eventPublisher);
     }
 
     @Given("a published chapter {string} of {string} exists")

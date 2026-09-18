@@ -93,6 +93,25 @@ class BookmarkControllerIntegrationTest extends AuthTestSupport {
     }
 
     @Test
+    @DisplayName("Progress pointing at a chapter of another work is rejected with 400; an unknown chapter with 404")
+    void progressMustReferenceAChapterOfThatWork() throws Exception {
+        Session premium = registerPremium();
+        Work otherWork = workRepository.save(Work.create("Other", "Synopsis", WorkType.MANGA, "c.webp", Set.of("Action")));
+
+        mockMvc.perform(put("/api/v1/bookmarks/" + otherWork.getId().value() + "/progress")
+                        .header("Authorization", premium.bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new UpdateProgressRequest(chapter.getId().value(), 2))))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(put("/api/v1/bookmarks/" + work.getId().value() + "/progress")
+                        .header("Authorization", premium.bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new UpdateProgressRequest(java.util.UUID.randomUUID(), 2))))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @DisplayName("Invalid progress payload returns 400")
     void invalidPayloadIsBadRequest() throws Exception {
         Session premium = registerPremium();

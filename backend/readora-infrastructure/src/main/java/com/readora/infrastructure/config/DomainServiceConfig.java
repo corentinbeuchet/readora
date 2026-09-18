@@ -80,9 +80,9 @@ public class DomainServiceConfig {
     @Bean
     public ReaderInteractionUseCase readerInteractionUseCase(
             CommentRepositoryPort commentRepository,
-            BookmarkRepositoryPort bookmarkRepository,
+            ChapterRepositoryPort chapterRepository,
             EventPublisherPort eventPublisher) {
-        return transactional(new ReaderSocialService(commentRepository, bookmarkRepository, eventPublisher),
+        return transactional(new ReaderSocialService(commentRepository, chapterRepository, eventPublisher),
                 ReaderInteractionUseCase.class, transactionManager);
     }
 
@@ -106,8 +106,9 @@ public class DomainServiceConfig {
     public ManageBookmarkUseCase manageBookmarkUseCase(
             BookmarkRepositoryPort bookmarkRepository,
             UserAccountRepositoryPort userRepository,
+            ChapterRepositoryPort chapterRepository,
             EventPublisherPort eventPublisher) {
-        return transactional(new BookmarkService(bookmarkRepository, userRepository, eventPublisher),
+        return transactional(new BookmarkService(bookmarkRepository, userRepository, chapterRepository, eventPublisher),
                 ManageBookmarkUseCase.class, transactionManager);
     }
 

@@ -1,34 +1,34 @@
 package com.readora.application.service;
 
 import com.readora.application.port.in.ReaderInteractionUseCase;
-import com.readora.application.port.out.BookmarkRepositoryPort;
+import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.CommentRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
+import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.NotFoundException;
-import com.readora.domain.social.Bookmark;
 import com.readora.domain.social.ChapterComment;
 import com.readora.domain.social.CommentId;
-import com.readora.domain.social.ReadingProgressUpdatedEvent;
+import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.UserId;
-import com.readora.domain.work.WorkId;
 
 import java.util.List;
 import java.util.Objects;
 
 public class ReaderSocialService implements ReaderInteractionUseCase {
     private final CommentRepositoryPort commentRepository;
-    private final BookmarkRepositoryPort bookmarkRepository;
+    private final ChapterRepositoryPort chapterRepository;
     private final EventPublisherPort eventPublisher;
 
-    public ReaderSocialService(CommentRepositoryPort commentRepository, BookmarkRepositoryPort bookmarkRepository, EventPublisherPort eventPublisher) {
+    public ReaderSocialService(CommentRepositoryPort commentRepository, ChapterRepositoryPort chapterRepository, EventPublisherPort eventPublisher) {
         this.commentRepository = Objects.requireNonNull(commentRepository, "CommentRepositoryPort cannot be null");
-        this.bookmarkRepository = Objects.requireNonNull(bookmarkRepository, "BookmarkRepositoryPort cannot be null");
+        this.chapterRepository = Objects.requireNonNull(chapterRepository, "ChapterRepositoryPort cannot be null");
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "EventPublisherPort cannot be null");
     }
 
     @Override
     public ChapterComment postRootComment(ChapterId chapterId, UserId authorId, String username, String text, Integer pageRef, boolean isSpoiler) {
+        requirePublishedChapter(chapterId);
         ChapterComment comment = ChapterComment.createRoot(chapterId, authorId, username, text, pageRef, isSpoiler);
         ChapterComment saved = commentRepository.save(comment);
         comment.pollDomainEvents().forEach(eventPublisher::publish);
@@ -60,15 +60,15 @@ public class ReaderSocialService implements ReaderInteractionUseCase {
         return commentRepository.findByChapterId(chapterId);
     }
 
-    @Override
-    public Bookmark updateReadingProgress(UserId userId, WorkId workId, ChapterId chapterId, int pageIndex) {
-        Bookmark bookmark = bookmarkRepository.findByUserIdAndWorkId(userId, workId)
-                .orElseGet(() -> Bookmark.startReading(userId, workId, chapterId, pageIndex));
-
-        bookmark.updateProgress(chapterId, pageIndex);
-        Bookmark saved = bookmarkRepository.save(bookmark);
-
-        eventPublisher.publish(ReadingProgressUpdatedEvent.now(userId, workId, chapterId, pageIndex));
-        return saved;
+    /// Comments are only allowed on chapters readers can see.
+    ///
+    /// @throws NotFoundException if the chapter does not exist
+    /// @throws DomainValidationException if it is still a draft
+    private void requirePublishedChapter(ChapterId chapterId) {
+        Chapter chapter = chapterRepository.findById(chapterId)
+                .orElseThrow(() -> new NotFoundException("Chapter", chapterId));
+        if (!chapter.isPublished()) {
+            throw new DomainValidationException("Comments are only allowed on published chapters");
+        }
     }
 }

@@ -1,11 +1,9 @@
 package com.readora.application.port.in;
 
-import com.readora.domain.social.Bookmark;
 import com.readora.domain.social.ChapterComment;
 import com.readora.domain.social.CommentId;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.UserId;
-import com.readora.domain.work.WorkId;
 
 import java.util.List;
 
@@ -19,5 +17,4 @@ public interface ReaderInteractionUseCase {
 
     record UpvoteOutcome(CommentId commentId, int upvotes, boolean counted) {}
     List<ChapterComment> getCommentsForChapter(ChapterId chapterId);
-    Bookmark updateReadingProgress(UserId userId, WorkId workId, ChapterId chapterId, int pageIndex);
 }
