@@ -20,11 +20,11 @@
 
       <div class="viewer-actions" ngToolbar aria-label="Reader controls">
         <div ngToolbarWidgetGroup>
-          <button type="button" ngToolbarWidget value="VERTICAL" (click)="state.setViewMode('VERTICAL')"
+          <button type="button" ngToolbarWidget value="VERTICAL" (click)="setViewMode('VERTICAL')"
                   [class.active]="state.viewMode() === 'VERTICAL'" [attr.aria-pressed]="state.viewMode() === 'VERTICAL'">
             Vertical
           </button>
-          <button type="button" ngToolbarWidget value="PAGED" (click)="state.setViewMode('PAGED')"
+          <button type="button" ngToolbarWidget value="PAGED" (click)="setViewMode('PAGED')"
                   [class.active]="state.viewMode() === 'PAGED'" [attr.aria-pressed]="state.viewMode() === 'PAGED'">
             Paged
           </button>
@@ -55,7 +55,7 @@
       @if (state.viewMode() === 'VERTICAL') {
         <div class="vertical-flow">
           @for (page of state.currentChapter()?.pages; track page.pageNumber) {
-            <div class="page-wrapper" [attr.data-page]="page.pageNumber">
+            <div #pageWrapper class="page-wrapper" [attr.data-page]="page.pageNumber" [attr.data-page-index]="$index">
               <img
                 [src]="page.cdnUrl || fallbackPage"
                 [alt]="'Page ' + page.pageNumber"

@@ -31,7 +31,7 @@
         <div class="work-actions">
           @if (bookmark(); as bm) {
             @if (bm.lastReadChapterId) {
-              <a [routerLink]="['/read', bm.lastReadChapterId]" class="btn btn-primary">Continue reading (page {{ bm.lastReadPageIndex }})</a>
+              <a [routerLink]="['/read', bm.lastReadChapterId]" [queryParams]="{ page: bm.lastReadPageIndex }" class="btn btn-primary">Continue reading (page {{ bm.lastReadPageIndex }})</a>
             }
           } @else if (firstChapterId(); as first) {
             <a [routerLink]="['/read', first]" class="btn btn-primary">Start reading</a>

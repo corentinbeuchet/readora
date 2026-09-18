@@ -15,12 +15,16 @@ export class ChaptersApi {
     return this.api.get<Chapter>(`/chapters/${chapterId}`, { params: { viewMode } });
   }
 
-  /** Reactive chapter loader: re-fetches whenever `chapterId()` changes; idle while it is empty. */
-  chapterResource(chapterId: Signal<string | null | undefined>, viewMode: Signal<ViewMode>): HttpResourceRef<Chapter | undefined> {
+  /**
+   * Reactive chapter loader: re-fetches whenever `chapterId()` changes; idle while it is empty.
+   * Deliberately not keyed on the reader's view mode: the payload is the same for both modes, and
+   * switching mode must not re-fetch the chapter or reset the reading position.
+   */
+  chapterResource(chapterId: Signal<string | null | undefined>): HttpResourceRef<Chapter | undefined> {
     return httpResource<Chapter | undefined>(
       () => {
         const id = chapterId();
-        return id ? { url: this.api.url(`/chapters/${id}`), params: { viewMode: viewMode() } } : undefined;
+        return id ? this.api.url(`/chapters/${id}`) : undefined;
       },
       { parse: (raw) => (raw as ApiResponse<Chapter>).data ?? undefined }
     );

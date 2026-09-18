@@ -222,6 +222,7 @@ export type BookmarkStatus = 'READING' | 'COMPLETED' | 'ON_HOLD' | 'DROPPED' | '
 export interface Bookmark {
   workId: string;
   lastReadChapterId?: string | null;
+  /** 1-based page number of the last page read (see `UpdateProgressRequest.pageIndex`). */
   lastReadPageIndex: number;
   status: BookmarkStatus;
   updatedAt: string;
@@ -229,6 +230,7 @@ export interface Bookmark {
 
 export interface UpdateProgressRequest {
   chapterId: string;
+  /** 1-based page number (the backend validates `@Min(1)`), despite the field name. */
   pageIndex: number;
 }
 

@@ -37,9 +37,12 @@ export class ReaderState {
     return total === 0 || this._currentPageIndex() >= total - 1;
   });
 
-  setChapter(chapter: Chapter): void {
+  /** Loads a chapter and positions the reader on `startIndex` (0-based, clamped to the chapter). */
+  setChapter(chapter: Chapter, startIndex = 0): void {
+    const last = Math.max(0, chapter.pages.length - 1);
+    const index = Number.isInteger(startIndex) ? Math.min(Math.max(0, startIndex), last) : 0;
     this._currentChapter.set(chapter);
-    this._currentPageIndex.set(0);
+    this._currentPageIndex.set(index);
   }
 
   setViewMode(mode: ViewMode): void {
