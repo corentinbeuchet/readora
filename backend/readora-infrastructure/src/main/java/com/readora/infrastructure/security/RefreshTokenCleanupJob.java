@@ -3,6 +3,7 @@ package com.readora.infrastructure.security;
 import com.readora.application.port.out.RefreshTokenRepositoryPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,8 @@ public class RefreshTokenCleanupJob {
     private final RefreshTokenRepositoryPort refreshTokenRepository;
     private final Clock clock;
 
+    /// The constructor Spring uses (the other one exists for tests with a fixed clock).
+    @Autowired
     public RefreshTokenCleanupJob(RefreshTokenRepositoryPort refreshTokenRepository) {
         this(refreshTokenRepository, Clock.systemUTC());
     }
