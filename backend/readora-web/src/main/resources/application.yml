@@ -82,3 +82,24 @@ management:
       probes:
         enabled: true
       show-details: never
+  # OpenTelemetry (OTLP/HTTP): off unless OTEL_EXPORT_ENABLED=true and a collector is reachable.
+  tracing:
+    sampling:
+      probability: ${OTEL_TRACES_SAMPLE_RATE:0.1}
+    export:
+      otlp:
+        enabled: ${OTEL_EXPORT_ENABLED:false}
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
+  otlp:
+    metrics:
+      export:
+        enabled: ${OTEL_EXPORT_ENABLED:false}
+        url: ${OTEL_EXPORTER_OTLP_METRICS_ENDPOINT:http://localhost:4318/v1/metrics}
+  logging:
+    export:
+      otlp:
+        enabled: false
