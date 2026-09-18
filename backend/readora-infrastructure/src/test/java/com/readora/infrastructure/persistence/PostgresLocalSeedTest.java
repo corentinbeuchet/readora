@@ -1,0 +1,70 @@
+package com.readora.infrastructure.persistence;
+
+import com.readora.domain.identity.Email;
+import com.readora.domain.identity.Permission;
+import com.readora.domain.identity.UserAccount;
+import com.readora.domain.scanlation.ProjectId;
+import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.infrastructure.persistence.adapter.ScanlationProjectRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.UserAccountRepositoryAdapter;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
+
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/// Runs the local dev seed (db/seed-local) on real PostgreSQL, like docker-compose does. H2 accepts implicit
+/// text-to-uuid conversions that PostgreSQL rejects, so the H2 web test alone is not enough.
+/// Skipped when no Docker daemon is available; CI always runs it.
+@Testcontainers(disabledWithoutDocker = true)
+@SpringBootTest(classes = TestApplication.class, properties = {
+        "spring.flyway.enabled=true",
+        "spring.flyway.locations=classpath:db/migration,classpath:db/seed-local",
+        "spring.jpa.hibernate.ddl-auto=validate",
+        "aws.s3.bucket-name=test-bucket",
+        "aws.cloudfront.domain=https://cdn-test.readora.com",
+        "readora.security.jwt.secret=test-secret-at-least-32-bytes-long-1234567890",
+        "readora.stripe.secret-key=sk_test_123",
+        "readora.stripe.webhook-secret=whsec_123",
+        "readora.stripe.premium-price-id=price_123"
+})
+class PostgresLocalSeedTest {
+
+    @Container
+    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine");
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES::getUsername);
+        registry.add("spring.datasource.password", POSTGRES::getPassword);
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+    }
+
+    @Autowired
+    private UserAccountRepositoryAdapter users;
+
+    @Autowired
+    private ScanlationProjectRepositoryAdapter projects;
+
+    @Test
+    @DisplayName("The local seed applies on PostgreSQL and its accounts and demo team load through the adapters")
+    void seedAppliesOnPostgres() {
+        UserAccount premium = users.findByEmail(Email.of("premium@readora.local")).orElseThrow();
+        assertThat(premium.can(Permission.BOOKMARK_WRITE)).isTrue();
+        assertThat(users.findByEmail(Email.of("admin@readora.local")).orElseThrow().can(Permission.USER_MANAGE)).isTrue();
+        assertThat(users.findByEmail(Email.of("quality@readora.local")).orElseThrow().can(Permission.CHAPTER_PUBLISH)).isTrue();
+
+        ScanlationProject team = projects.findById(ProjectId.of(UUID.fromString("00000000-0000-4000-9000-000000000101"))).orElseThrow();
+        assertThat(team.getMembers()).hasSize(6);
+        assertThat(team.getTasks()).hasSize(5);
+    }
+}
