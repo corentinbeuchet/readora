@@ -7,10 +7,10 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Fails startup when the {@code production} profile runs with a development or placeholder JWT secret.
- * The dev default in {@code application.yml} keeps local runs working; it must never reach production.
- */
+/// Fails startup when the `production` profile runs with a development or placeholder JWT secret.
+/// The dev default in `application.yml` keeps local runs working; it must never reach production.
+///
+/// @see SecurityProperties.Jwt
 @Component
 public class ProductionSecretsGuard {
 

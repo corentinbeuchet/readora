@@ -21,10 +21,8 @@ import java.util.UUID;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Shared helpers for controller integration tests: registers users through the real API
- * and returns their tokens; can promote users to PREMIUM / SCANLATOR through the repository port.
- */
+/// Shared helpers for controller integration tests: registers users through the real API
+/// and returns their tokens; can promote users to `PREMIUM` / `SCANLATOR` through the repository port.
 abstract class AuthTestSupport {
 
     static final String REFRESH_COOKIE = "readora_refresh";

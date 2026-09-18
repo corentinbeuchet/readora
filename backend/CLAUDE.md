@@ -59,6 +59,23 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 - `@ConfigurationProperties` records (model: `SecurityProperties`), not `@Value`. Never a `@DefaultValue` on a secret.
 - Profile file names must match the profile: `application-{profile}.yml` with matching `on-profile`.
 
+## Documentation comments (Java 23+ Markdown, JEP 467)
+- Write doc comments as `///` Markdown lines, never `/** */`. Every line of the comment starts with `///`,
+  including blank separator lines (a truly empty line ends the comment).
+- Code in backticks (not `{@code}`); links as `[Type]`, `[Type#method(int)]`, `[#field]`, or `[label][Type]`
+  (not `{@link}`/`{@linkplain}`); escape array brackets: `[String#valueOf(char\[\])]`.
+- Block tags unchanged: `@param`, `@return`, `@throws`, `@see`, `{@inheritDoc}`; tables are GitHub pipe tables.
+- Document *why* and contracts (preconditions, thrown exceptions), not what the code obviously does.
+  Plain `//` stays for implementation notes inside method bodies.
+- Checkstyle javadoc checks don't understand `///` yet — don't add them. IntelliJ: inspection
+  "Javadoc comment can be Markdown documentation comment" converts old ones.
+  ```java
+  /// Returns the chapter with the given id.
+  ///
+  /// @param id the chapter id, never `null`
+  /// @throws NotFoundException if no chapter matches; see [ChapterRepositoryPort#findById(ChapterId)]
+  ```
+
 ## Tests
 - `@DisplayName("Full sentence describing behaviour")` + camelCase method name.
 - Web integration tests go through real HTTP and real auth (`AuthTestSupport`); assert JSON error bodies and status codes.

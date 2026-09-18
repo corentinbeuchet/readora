@@ -108,10 +108,10 @@ public class StorageController {
         )));
     }
 
-    /**
-     * Server-built key {@code <folder>/<uuid>-<filename>}: the client picks a folder and a filename but never the
-     * full key, so it cannot overwrite an existing asset or escape the folder with {@code ..}.
-     */
+    /// Server-built key `<folder>/<uuid>-<filename>`: the client picks a folder and a filename but never the
+    /// full key, so it cannot overwrite an existing asset or escape the folder with `..`.
+    ///
+    /// @throws DomainValidationException if the folder is empty or contains a `.` or `..` segment
     private static String newStorageKey(String folder, String originalFilename) {
         String cleanFolder = folder == null ? "" : folder.trim().replaceAll("[^a-zA-Z0-9/_.-]", "_");
         cleanFolder = cleanFolder.replaceAll("/{2,}", "/").replaceAll("^/+|/+$", "");
