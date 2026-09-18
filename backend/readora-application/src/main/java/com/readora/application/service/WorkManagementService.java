@@ -16,6 +16,7 @@ import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.ScanlationRole;
 import com.readora.domain.work.*;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
@@ -98,7 +99,7 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
     ///
     /// @return the project the chapter is attributed to, or `null` for an admin publishing a work without a project
     /// @throws AccessDeniedDomainException for anyone else — the global `CHAPTER_PUBLISH` permission is not enough
-    private ProjectId authorizePublisher(WorkId workId, UserId publisherId) {
+    private @Nullable ProjectId authorizePublisher(WorkId workId, UserId publisherId) {
         List<ScanlationProject> projects = projectRepository.findByWorkId(workId);
         var memberProject = projects.stream()
                 .filter(p -> p.findMember(publisherId).filter(m -> m.hasRole(ScanlationRole.QUALITY_CHECKER)).isPresent())

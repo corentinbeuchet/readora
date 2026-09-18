@@ -14,6 +14,7 @@ import com.readora.domain.identity.UserAccount;
 import com.readora.domain.common.UserId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -46,7 +47,7 @@ public class SubscriptionService implements ManageSubscriptionUseCase {
     }
 
     @Override
-    public void handleWebhook(String payload, String signature) {
+    public void handleWebhook(String payload, @Nullable String signature) {
         if (signature == null || signature.isBlank()) {
             throw new WebhookVerificationException("Missing webhook signature", null);
         }

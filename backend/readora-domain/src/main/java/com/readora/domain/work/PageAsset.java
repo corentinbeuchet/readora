@@ -1,13 +1,14 @@
 package com.readora.domain.work;
 
 import com.readora.domain.common.DomainValidationException;
+import org.jspecify.annotations.Nullable;
 import java.io.Serializable;
 import java.util.Objects;
 
 public record PageAsset(
         int pageNumber,
         String storageKey,
-        String cdnUrl,
+        @Nullable String cdnUrl,
         int width,
         int height
 ) implements Serializable {
@@ -18,7 +19,7 @@ public record PageAsset(
         Objects.requireNonNull(storageKey, "Storage key cannot be null");
     }
 
-    public static PageAsset create(int pageNumber, String storageKey, String cdnUrl) {
+    public static PageAsset create(int pageNumber, String storageKey, @Nullable String cdnUrl) {
         return new PageAsset(pageNumber, storageKey, cdnUrl, 0, 0);
     }
 }

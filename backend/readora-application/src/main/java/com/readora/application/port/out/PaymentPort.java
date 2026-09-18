@@ -3,6 +3,7 @@ package com.readora.application.port.out;
 import com.readora.domain.identity.SubscriptionPlan;
 import com.readora.domain.identity.SubscriptionStatus;
 import com.readora.domain.common.UserId;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
 
@@ -23,15 +24,15 @@ public interface PaymentPort {
     /// @param occurredAt when the provider created the event; used to drop out-of-order deliveries
     /// @param plan       `null` when the provider's price is not one of ours — never guess a paid plan
     record PaymentEvent(
-            String eventId,
+            @Nullable String eventId,
             PaymentEventType type,
-            UserId userId,
-            String customerId,
-            String subscriptionId,
-            SubscriptionPlan plan,
-            SubscriptionStatus status,
-            Instant currentPeriodEnd,
-            Instant occurredAt,
+            @Nullable UserId userId,
+            @Nullable String customerId,
+            @Nullable String subscriptionId,
+            @Nullable SubscriptionPlan plan,
+            @Nullable SubscriptionStatus status,
+            @Nullable Instant currentPeriodEnd,
+            @Nullable Instant occurredAt,
             boolean cancelAtPeriodEnd
     ) {}
 

@@ -3,6 +3,7 @@ package com.readora.application.port.in;
 import com.readora.domain.identity.Subscription;
 import com.readora.domain.identity.SubscriptionPlan;
 import com.readora.domain.common.UserId;
+import org.jspecify.annotations.Nullable;
 
 public interface ManageSubscriptionUseCase {
     CheckoutRedirect startCheckout(UserId userId, SubscriptionPlan plan, String successUrl, String cancelUrl);
@@ -10,7 +11,7 @@ public interface ManageSubscriptionUseCase {
     /// Verifies and applies a payment-provider webhook.
     ///
     /// @throws com.readora.application.exception.WebhookVerificationException if the signature is missing or invalid
-    void handleWebhook(String payload, String signature);
+    void handleWebhook(String payload, @Nullable String signature);
     Subscription getCurrent(UserId userId);
     Subscription cancel(UserId userId);
 

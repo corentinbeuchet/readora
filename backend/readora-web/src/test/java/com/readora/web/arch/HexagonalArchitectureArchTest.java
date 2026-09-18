@@ -30,7 +30,8 @@ public class HexagonalArchitectureArchTest {
                             "com.readora.domain..",
                             "com.readora.application..",
                             "java..",
-                            "org.slf4j.."
+                            "org.slf4j..",
+                            "org.jspecify.annotations.."
                     );
 
     @ArchTest
@@ -55,12 +56,14 @@ public class HexagonalArchitectureArchTest {
     @ArchTest
     public static final ArchRule inbound_ports_are_use_cases =
             classes().that().resideInAPackage("..application.port.in..").and().areTopLevelClasses()
+                    .and().doNotHaveSimpleName("package-info")
                     .should().beInterfaces()
                     .andShould().haveSimpleNameEndingWith("UseCase");
 
     @ArchTest
     public static final ArchRule outbound_ports_are_ports =
             classes().that().resideInAPackage("..application.port.out..").and().areTopLevelClasses()
+                    .and().doNotHaveSimpleName("package-info")
                     .should().beInterfaces()
                     .andShould().haveSimpleNameEndingWith("Port");
 

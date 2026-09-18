@@ -85,8 +85,9 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 
 ## Spring Boot 4 / Framework 7 / Security 7
 - Null safety: JSpecify `@NullMarked` in each package's `package-info.java`, `@Nullable` only where null is legal.
-  `readora-domain` is fully null-marked and **NullAway fails the build** there (Error Prone in the domain pom);
-  new domain packages need a `package-info.java` with `@NullMarked`. Application/infrastructure/web migrate next (B17).
+  `readora-domain` and `readora-application` are fully null-marked and **NullAway fails the build** on violations
+  (Error Prone configured once in the parent pom; it only checks `@NullMarked` packages). Every new package in those
+  modules needs a `package-info.java` with `@NullMarked`. Infrastructure/web migrate next (B17).
 - Errors are RFC 9457 `ProblemDetail` (`spring.mvc.problemdetails.enabled=true`, off by default).
 - Outbound HTTP: `RestClient` or `@HttpExchange` interfaces registered with `@ImportHttpServices`; never `RestTemplate`.
 - Resilience from Framework 7 core: `@Retryable` / `@ConcurrencyLimit` (enable with `@EnableResilientMethods`) on
@@ -143,5 +144,5 @@ Backlog ids used in commit `Refs:` (status: `git log --grep "review-2026-09/B<n>
 Improvements from best-practice research (2026-09), not bugs:
 - B15 Virtual threads: `spring.threads.virtual.enabled=true`, sized against the Hikari pool; `@ConcurrencyLimit` on scarce resources.
 - B16 Observability: `spring-boot-starter-opentelemetry` (OTLP metrics + traces).
-- B17 JSpecify `@NullMarked` + NullAway (Error Prone) build check, module by module starting with `readora-domain`. — domain done; application/infrastructure/web remaining
+- B17 JSpecify `@NullMarked` + NullAway (Error Prone) build check, module by module starting with `readora-domain`. — domain + application done; infrastructure/web remaining
 - B18 Optional: Spring Framework 7 API versioning (`spring.mvc.apiversion.*`) if `/api/v1` needs a successor.
