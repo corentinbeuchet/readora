@@ -66,3 +66,38 @@
 .chapter-info {
   font-size: 0.85rem;
 }
+
+.work-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.library-status {
+  margin: 0;
+}
+
+// Read chapters are muted (still AA contrast) and labelled "✓ Read"; the next one is outlined and labelled.
+.chapter-read {
+  .chapter-number,
+  .chapter-title {
+    color: var(--muted);
+    font-weight: 400;
+  }
+}
+
+.chapter-next {
+  border-color: var(--accent);
+}
+
+.chapter-state {
+  margin-left: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.chapter-state-next {
+  color: var(--accent);
+  font-weight: 600;
+}

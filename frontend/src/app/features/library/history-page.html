@@ -1,0 +1,42 @@
+<section class="page">
+  <h1>Reading history</h1>
+
+  @if (history.isLoading()) {
+    <p class="muted" role="status">Loading your history…</p>
+  } @else if (history.error()) {
+    <p class="form-error" role="alert">
+      Could not load your reading history.
+      <button type="button" class="btn btn-link" (click)="reload()">Retry</button>
+    </p>
+  } @else if (history.hasValue() && history.value().length === 0) {
+    <p class="muted">You haven't read anything yet.</p>
+    <a routerLink="/works" class="btn btn-primary">Browse the catalog</a>
+  } @else if (history.hasValue()) {
+    <ol class="history-list">
+      @for (item of history.value(); track item.work.id) {
+        <li class="card history-item">
+          @if (item.work.coverImageUrl) {
+            <img class="history-cover" [ngSrc]="item.work.coverImageUrl" alt="" width="60" height="84" (error)="handleCoverError($event, fallbackCover)" />
+          } @else {
+            <img class="history-cover" [src]="fallbackCover" alt="" width="60" height="84" />
+          }
+          <div class="history-body">
+            <h2 class="history-title"><a [routerLink]="['/works', item.work.id]">{{ item.work.title }}</a></h2>
+            <p class="muted">
+              Chapter {{ item.lastRead.chapterNumber }}
+              @if (item.lastRead.finished) {
+                (finished)
+              }
+              · {{ item.lastRead.readAt | date: 'medium' }}
+            </p>
+          </div>
+          <a
+            class="btn btn-primary"
+            [routerLink]="['/read', item.lastRead.chapterId]"
+            [attr.aria-label]="'Continue ' + item.work.title + ', chapter ' + item.lastRead.chapterNumber"
+          >Continue</a>
+        </li>
+      }
+    </ol>
+  }
+</section>

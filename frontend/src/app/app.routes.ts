@@ -45,6 +45,19 @@ export const routes: Routes = [
   },
 
   {
+    path: 'library',
+    loadComponent: () => import('./features/library/library-page').then((m) => m.LibraryPage),
+    canActivate: [permissionGuard],
+    data: { permission: 'LIBRARY_USE' }
+  },
+  {
+    path: 'history',
+    loadComponent: () => import('./features/library/history-page').then((m) => m.HistoryPage),
+    canActivate: [permissionGuard],
+    data: { permission: 'LIBRARY_USE' }
+  },
+
+  {
     path: 'login',
     loadComponent: () => import('./features/auth/login-page').then((m) => m.LoginPage),
     canActivate: [guestGuard]

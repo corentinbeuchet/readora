@@ -38,10 +38,31 @@
             @if (bm.lastReadChapterId) {
               <a [routerLink]="['/read', bm.lastReadChapterId]" [queryParams]="{ page: bm.lastReadPageIndex }" class="btn btn-primary">Continue reading (page {{ bm.lastReadPageIndex }})</a>
             }
+          } @else if (continueChapter(); as next) {
+            <a [routerLink]="['/read', next.id]" class="btn btn-primary">Continue with chapter {{ next.chapterNumber }}</a>
           } @else if (firstChapterId(); as first) {
             <a [routerLink]="['/read', first]" class="btn btn-primary">Start reading</a>
           }
+
+          <ng-container *appHasPermission="'LIBRARY_USE'">
+            @if (libraryStatus(); as status) {
+              <label class="field library-status">
+                <span>In my library</span>
+                <select [disabled]="librarySaving()" (change)="changeLibraryStatus($event)">
+                  @for (option of statuses; track option) {
+                    <option [value]="option" [selected]="status === option">{{ statusLabels[option] }}</option>
+                  }
+                </select>
+              </label>
+              <button type="button" class="btn btn-link" [disabled]="librarySaving()" (click)="removeFromLibrary()">Remove from library</button>
+            } @else {
+              <button type="button" class="btn" [disabled]="librarySaving()" (click)="addToLibrary()">+ Add to library</button>
+            }
+          </ng-container>
         </div>
+        @if (libraryError(); as message) {
+          <p class="form-error" role="alert">{{ message }}</p>
+        }
       </div>
     </article>
 
@@ -59,10 +80,19 @@
       } @else {
         <ol class="chapter-list">
           @for (chapter of chapters.value(); track chapter.id) {
+            @let read = isFinished(chapter.id);
+            @let next = chapter.id === nextChapterId();
             <li>
-              <a [routerLink]="['/read', chapter.id]" class="chapter-link">
+              <a [routerLink]="['/read', chapter.id]" class="chapter-link" [class.chapter-read]="read" [class.chapter-next]="next">
                 <span class="chapter-number">Ch. {{ chapter.chapterNumber }}</span>
-                <span class="chapter-title">{{ chapter.title }}</span>
+                <span class="chapter-title">
+                  {{ chapter.title }}
+                  @if (read) {
+                    <span class="chapter-state">✓ Read</span>
+                  } @else if (next) {
+                    <span class="chapter-state chapter-state-next">Next up</span>
+                  }
+                </span>
                 <span class="muted chapter-info">
                   {{ chapter.pageCount }} pages
                   @if (chapter.publishedAt) {

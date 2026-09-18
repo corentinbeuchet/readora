@@ -138,7 +138,8 @@ export const PERMISSIONS = [
   'PROJECT_VIEW',
   'PROJECT_MANAGE',
   'USER_MANAGE',
-  'WORK_CREATE'
+  'WORK_CREATE',
+  'LIBRARY_USE'
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -237,6 +238,55 @@ export interface ChapterSummary {
 }
 
 export type BookmarkStatus = 'READING' | 'COMPLETED' | 'ON_HOLD' | 'DROPPED' | 'PLAN_TO_READ';
+
+// ---------------------------------------------------------------------------
+// Library & reading history (free for signed-in readers: LIBRARY_USE)
+// ---------------------------------------------------------------------------
+
+export type ReadingStatus = 'READING' | 'PLAN_TO_READ' | 'COMPLETED' | 'DROPPED';
+
+export const READING_STATUS_LABELS: Record<ReadingStatus, string> = {
+  READING: 'Reading',
+  PLAN_TO_READ: 'Plan to read',
+  COMPLETED: 'Completed',
+  DROPPED: 'Dropped'
+};
+
+export interface LibraryEntry {
+  workId: string;
+  status: ReadingStatus;
+  addedAt: string;
+  updatedAt: string;
+}
+
+export interface LibraryItem {
+  work: WorkSummary;
+  status: ReadingStatus;
+  addedAt: string;
+  updatedAt: string;
+  /** Chapters published since the reader last read this series. */
+  newChapters: number;
+}
+
+export interface ChapterRead {
+  chapterId: string;
+  workId: string;
+  chapterNumber: string;
+  readAt: string;
+  finished: boolean;
+}
+
+export interface HistoryItem {
+  work: WorkSummary;
+  lastRead: ChapterRead;
+}
+
+export interface WorkProgress {
+  workId: string;
+  finishedChapterIds: string[];
+  /** The chapter to read next; `null` when the reader is up to date. */
+  nextChapterId: string | null;
+}
 
 export interface Bookmark {
   workId: string;

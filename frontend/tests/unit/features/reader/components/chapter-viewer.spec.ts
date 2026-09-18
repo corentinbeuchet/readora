@@ -322,4 +322,30 @@ describe('ChapterViewer (API-driven)', () => {
     http.expectOne(commentsUrl).flush({ success: true, data: [], error: null });
     await settle(fixture);
   });
+
+  it('records the visit, then the finish, for the reading history (free readers with LIBRARY_USE)', async () => {
+    await signIn(store, http, mockUser({ permissions: ['LIBRARY_USE'] }));
+    await loadChapter();
+
+    const opened = http.expectOne(`${API}/reading/chapters/${MOCK_CHAPTER.id}`);
+    expect(opened.request.method).toBe('PUT');
+    expect(opened.request.body).toEqual({ finished: false });
+    opened.flush({ success: false, data: null, error: 'down' });
+
+    await switchMode('Paged');
+    click('button.btn-next');
+    await settle(fixture);
+    http.expectNone(`${API}/reading/chapters/${MOCK_CHAPTER.id}`);
+    click('button.btn-next');
+    await settle(fixture);
+
+    const finished = http.expectOne(`${API}/reading/chapters/${MOCK_CHAPTER.id}`);
+    expect(finished.request.body).toEqual({ finished: true });
+    finished.flush({ success: true, data: null, error: null });
+
+    click('button.btn-prev');
+    click('button.btn-next');
+    await settle(fixture);
+    http.expectNone(`${API}/reading/chapters/${MOCK_CHAPTER.id}`);
+  });
 });

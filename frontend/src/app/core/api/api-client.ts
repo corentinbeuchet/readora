@@ -67,10 +67,14 @@ export class ApiClient {
       .pipe(map(unwrap), catchError(toApiError));
   }
 
-  delete<T>(path: string, options: RequestOptions = {}): Observable<T> {
+  /** A `204 No Content` answer (no envelope) resolves to `undefined`. */
+  delete<T = void>(path: string, options: RequestOptions = {}): Observable<T> {
     return this.http
-      .delete<ApiResponse<T>>(this.url(path), this.toHttpOptions(options))
-      .pipe(map(unwrap), catchError(toApiError));
+      .delete<ApiResponse<T> | null>(this.url(path), this.toHttpOptions(options))
+      .pipe(
+        map((response) => (response === null ? (undefined as T) : unwrap(response))),
+        catchError(toApiError)
+      );
   }
 
   private toHttpOptions(options: RequestOptions): { params?: HttpParams; withCredentials?: boolean } {

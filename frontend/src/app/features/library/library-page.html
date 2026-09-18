@@ -1,0 +1,74 @@
+<section class="page">
+  <h1>My library</h1>
+
+  <nav class="status-tabs" aria-label="Filter by reading status">
+    <a routerLink="/library" [queryParams]="{}" class="tab" [class.active]="!selected()" [attr.aria-current]="!selected() ? 'page' : null">All</a>
+    @for (option of statuses; track option) {
+      <a
+        routerLink="/library"
+        [queryParams]="{ status: option }"
+        class="tab"
+        [class.active]="selected() === option"
+        [attr.aria-current]="selected() === option ? 'page' : null"
+      >{{ labels[option] }}</a>
+    }
+  </nav>
+
+  @if (actionError(); as message) {
+    <p class="form-error" role="alert">{{ message }}</p>
+  }
+
+  @if (items.isLoading()) {
+    <p class="muted" role="status">Loading your library…</p>
+  } @else if (items.error()) {
+    <p class="form-error" role="alert">
+      Could not load your library.
+      <button type="button" class="btn btn-link" (click)="reload()">Retry</button>
+    </p>
+  } @else if (items.hasValue() && items.value().length === 0) {
+    <p class="muted">
+      @if (selected(); as current) {
+        Nothing marked “{{ labels[current] }}” yet.
+      } @else {
+        Your library is empty. Open a series and choose “Add to library”.
+      }
+    </p>
+    <a routerLink="/works" class="btn btn-primary">Browse the catalog</a>
+  } @else if (items.hasValue()) {
+    <ul class="library-list">
+      @for (item of items.value(); track item.work.id) {
+        <li class="card library-item">
+          <a [routerLink]="['/works', item.work.id]" class="library-cover-link" [attr.aria-label]="item.work.title">
+            @if (item.work.coverImageUrl) {
+              <img class="library-cover" [ngSrc]="item.work.coverImageUrl" alt="" width="60" height="84" (error)="handleCoverError($event, fallbackCover)" />
+            } @else {
+              <img class="library-cover" [src]="fallbackCover" alt="" width="60" height="84" />
+            }
+          </a>
+          <div class="library-body">
+            <h2 class="library-title">
+              <a [routerLink]="['/works', item.work.id]">{{ item.work.title }}</a>
+              @if (item.newChapters > 0) {
+                <span class="badge badge-new">{{ item.newChapters }} new<span class="sr-only"> chapters</span></span>
+              }
+            </h2>
+            <p class="muted">{{ item.work.type }} · {{ item.work.status }}</p>
+          </div>
+          <div class="library-actions">
+            <label class="field status-field">
+              <span class="sr-only">Reading status of {{ item.work.title }}</span>
+              <select [disabled]="busyWorkId() === item.work.id" (change)="changeStatus(item, $event)">
+                @for (option of statuses; track option) {
+                  <option [value]="option" [selected]="item.status === option">{{ labels[option] }}</option>
+                }
+              </select>
+            </label>
+            <button type="button" class="btn btn-danger-outline btn-sm" [disabled]="busyWorkId() === item.work.id" (click)="remove(item)">
+              Remove<span class="sr-only"> {{ item.work.title }}</span>
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>

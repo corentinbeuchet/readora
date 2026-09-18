@@ -47,6 +47,8 @@
         </button>
         <div ngMenu #userMenu="ngMenu" (itemSelected)="onUserMenuSelected($event)" class="user-menu">
           <ng-template ngMenuContent>
+            <button type="button" ngMenuItem value="/library">My library</button>
+            <button type="button" ngMenuItem value="/history">History</button>
             <button type="button" ngMenuItem value="/profile">Profile</button>
             <button type="button" ngMenuItem value="/subscription">Subscription</button>
             <button type="button" ngMenuItem value="logout">Log out</button>

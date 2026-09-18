@@ -20,6 +20,7 @@ import { Subject, catchError, debounceTime, distinctUntilChanged, map, of, switc
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BookmarksApi } from '@app/core/api/bookmarks-api';
 import { ChaptersApi } from '@app/core/api/chapters-api';
+import { ReadingApi } from '@app/core/api/reading-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { SeoService } from '@app/core/seo/seo.service';
@@ -61,6 +62,7 @@ export class ChapterViewer {
   protected readonly defaultPageHeight = 1200;
   private readonly chaptersApi = inject(ChaptersApi);
   private readonly bookmarksApi = inject(BookmarksApi);
+  private readonly readingApi = inject(ReadingApi);
   private readonly seo = inject(SeoService);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
@@ -75,6 +77,10 @@ export class ChapterViewer {
   protected readonly chapter = this.chaptersApi.chapterResource(this.chapterId);
   protected readonly canSaveProgress = computed(() => this.auth.can('BOOKMARK_WRITE'));
   protected readonly syncStatus = signal<SyncStatus>('idle');
+  /** Free history / read markers (US-07); separate from the Premium exact-page bookmark. */
+  private readonly canTrackReading = computed(() => this.auth.can('LIBRARY_USE'));
+  /** What was already sent for the current chapter: once on open, once when the last page is reached. */
+  private recorded: { chapterId: string; finished: boolean } | null = null;
 
   private readonly progress$ = new Subject<ProgressUpdate>();
   /**
@@ -110,6 +116,15 @@ export class ChapterViewer {
             type: 'article'
           });
         });
+      }
+    });
+
+    // Reading history and read markers: record the visit, then the finish.
+    effect(() => {
+      const current = this.state.currentChapter();
+      const atEnd = this.state.isLastPage();
+      if (current && untracked(() => this.canTrackReading())) {
+        untracked(() => this.recordRead(current.id, atEnd));
       }
     });
 
@@ -188,6 +203,22 @@ export class ChapterViewer {
       }
     });
     this.destroyRef.onDestroy(() => observer?.disconnect());
+  }
+
+  private recordRead(chapterId: string, finished: boolean): void {
+    const previous = this.recorded?.chapterId === chapterId ? this.recorded : null;
+    if (previous && (previous.finished || !finished)) {
+      return;
+    }
+    this.recorded = { chapterId, finished };
+    // Best effort: a failed history write must never disturb reading, and the next visit records it again.
+    this.readingApi
+      .recordRead(chapterId, finished)
+      .pipe(
+        catchError(() => of(null)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
   /** Switches view mode, keeping the current page (vertical mode scrolls back to it). */
