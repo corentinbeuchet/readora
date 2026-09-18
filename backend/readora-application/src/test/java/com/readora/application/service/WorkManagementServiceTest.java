@@ -3,8 +3,11 @@ package com.readora.application.service;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
+import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
+import com.readora.domain.common.AccessDeniedDomainException;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.identity.UserAccount;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.work.*;
@@ -27,6 +30,7 @@ class WorkManagementServiceTest {
     private WorkRepositoryPort workRepository;
     private ChapterRepositoryPort chapterRepository;
     private ScanlationProjectRepositoryPort projectRepository;
+    private UserAccountRepositoryPort userRepository;
     private EventPublisherPort eventPublisher;
     private WorkManagementService service;
 
@@ -35,8 +39,9 @@ class WorkManagementServiceTest {
         workRepository = mock(WorkRepositoryPort.class);
         chapterRepository = mock(ChapterRepositoryPort.class);
         projectRepository = mock(ScanlationProjectRepositoryPort.class);
+        userRepository = mock(UserAccountRepositoryPort.class);
         eventPublisher = mock(EventPublisherPort.class);
-        service = new WorkManagementService(workRepository, chapterRepository, projectRepository, eventPublisher);
+        service = new WorkManagementService(workRepository, chapterRepository, projectRepository, userRepository, eventPublisher);
     }
 
     @Test
@@ -83,7 +88,9 @@ class WorkManagementServiceTest {
     void directPublishChapterSuccess() {
         UserId publisherId = UserId.of("pub-1");
         Work work = Work.create("One Piece", "Pirates", WorkType.MANGA, "op.jpg", Set.of("Adventure"));
+        ScanlationProject project = ScanlationProject.create("One Piece Workspace", work.getId(), publisherId);
         when(workRepository.findById(work.getId())).thenReturn(Optional.of(work));
+        when(projectRepository.findByWorkId(work.getId())).thenReturn(List.of(project));
         when(chapterRepository.findByWorkId(work.getId())).thenReturn(List.of());
         when(chapterRepository.save(any(Chapter.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -109,6 +116,8 @@ class WorkManagementServiceTest {
         Chapter existing = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Existing", null);
 
         when(workRepository.findById(work.getId())).thenReturn(Optional.of(work));
+        when(projectRepository.findByWorkId(work.getId()))
+                .thenReturn(List.of(ScanlationProject.create("One Piece Workspace", work.getId(), publisherId)));
         when(chapterRepository.findByWorkId(work.getId())).thenReturn(List.of(existing));
 
         List<PageAsset> pages = List.of(PageAsset.create(1, "c1/p1.webp", "https://cdn.readora.com/c1/p1.webp"));
@@ -116,5 +125,40 @@ class WorkManagementServiceTest {
         assertThatThrownBy(() -> service.directPublishChapter(work.getId(), "1", "Duplicate", pages, publisherId))
                 .isInstanceOf(DomainValidationException.class)
                 .hasMessageContaining("already exists");
+    }
+
+    @Test
+    @DisplayName("A scanlator who is not a leader or quality checker of the work's project cannot publish into it")
+    void directPublishByOutsiderIsDenied() {
+        Work work = Work.create("One Piece", "Pirates", WorkType.MANGA, "op.jpg", Set.of("Adventure"));
+        ScanlationProject project = ScanlationProject.create("One Piece Workspace", work.getId(), UserId.of("owner"));
+        UserId outsider = UserId.of("outsider");
+        when(workRepository.findById(work.getId())).thenReturn(Optional.of(work));
+        when(projectRepository.findByWorkId(work.getId())).thenReturn(List.of(project));
+        when(userRepository.findById(outsider)).thenReturn(Optional.empty());
+
+        List<PageAsset> pages = List.of(PageAsset.create(1, "c1/p1.webp", null));
+
+        assertThatThrownBy(() -> service.directPublishChapter(work.getId(), "1", "Hijack", pages, outsider))
+                .isInstanceOf(AccessDeniedDomainException.class);
+        verify(chapterRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("An admin can publish into a work without being a project member")
+    void directPublishByAdminIsAllowed() {
+        Work work = Work.create("One Piece", "Pirates", WorkType.MANGA, "op.jpg", Set.of("Adventure"));
+        UserId adminId = UserId.of("admin");
+        UserAccount admin = mock(UserAccount.class);
+        when(admin.can(com.readora.domain.identity.Permission.USER_MANAGE)).thenReturn(true);
+        when(workRepository.findById(work.getId())).thenReturn(Optional.of(work));
+        when(projectRepository.findByWorkId(work.getId())).thenReturn(List.of());
+        when(userRepository.findById(adminId)).thenReturn(Optional.of(admin));
+        when(chapterRepository.findByWorkId(work.getId())).thenReturn(List.of());
+        when(chapterRepository.save(any(Chapter.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Chapter chapter = service.directPublishChapter(work.getId(), "1", "Admin", List.of(PageAsset.create(1, "p1.webp", null)), adminId);
+
+        assertThat(chapter.isPublished()).isTrue();
     }
 }

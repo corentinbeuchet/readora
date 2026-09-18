@@ -158,6 +158,33 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
     }
 
     @Test
+    @DisplayName("A scanlator cannot directly publish a chapter into another scanlator's work")
+    void directPublishIntoForeignWorkIsForbidden() throws Exception {
+        Session owner = registerScanlator();
+        Session intruder = registerScanlator();
+
+        CreateWorkRequest createWorkReq = new CreateWorkRequest(
+                "The Beginning After The End", "Reincarnation.", WorkType.MANHWA, WorkStatus.ONGOING, null, Set.of("Fantasy"));
+        var createWorkRes = mockMvc.perform(post("/api/v1/works")
+                        .header("Authorization", owner.bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createWorkReq)))
+                .andExpect(status().isCreated())
+                .andReturn();
+        String workId = json(createWorkRes).path("data").path("id").asString();
+
+        DirectPublishChapterRequest directReq = new DirectPublishChapterRequest(
+                "1", "Hijacked", List.of(new PageAssetDto(1, "x/p1.webp", "https://cdn.readora.com/x/p1.webp", 800, 1200)));
+
+        mockMvc.perform(post("/api/v1/works/" + workId + "/chapters/direct")
+                        .header("Authorization", intruder.bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(directReq)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
     @DisplayName("Create work followed by scanlation chapter task creation succeeds without unique constraint violations")
     void createWorkAndUploadScanlationTaskFlow() throws Exception {
         Session scanlator = registerScanlator();

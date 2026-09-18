@@ -33,8 +33,9 @@ public class DomainServiceConfig {
             WorkRepositoryPort workRepository,
             ChapterRepositoryPort chapterRepository,
             ScanlationProjectRepositoryPort projectRepository,
+            UserAccountRepositoryPort userRepository,
             EventPublisherPort eventPublisher) {
-        return new WorkManagementService(workRepository, chapterRepository, projectRepository, eventPublisher);
+        return new WorkManagementService(workRepository, chapterRepository, projectRepository, userRepository, eventPublisher);
     }
 
     @Bean
