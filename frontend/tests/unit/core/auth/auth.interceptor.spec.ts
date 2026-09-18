@@ -83,6 +83,43 @@ describe('authInterceptor', () => {
     expect(store.isAuthenticated()).toBe(false);
   });
 
+  it.each([404, 500])('keeps the session when the retried request fails with %i', async (status) => {
+    await loginAs('jwt-old');
+
+    const result = firstValueFrom(http.get(`${API}/bookmarks`));
+    backend.expectOne(`${API}/bookmarks`).flush(null, { status: 401, statusText: 'Unauthorized' });
+    backend.expectOne(`${API}/auth/refresh`).flush(mockAuthResponse({ accessToken: 'jwt-new' }));
+    backend.expectOne(`${API}/bookmarks`).flush(null, { status, statusText: 'Failure' });
+
+    await expect(result).rejects.toMatchObject({ status });
+    expect(store.isAuthenticated()).toBe(true);
+    expect(store.accessToken()).toBe('jwt-new');
+  });
+
+  it('clears the session when the refresh is rejected with 403', async () => {
+    await loginAs('jwt-old');
+
+    const result = firstValueFrom(http.get(`${API}/bookmarks`));
+    backend.expectOne(`${API}/bookmarks`).flush(null, { status: 401, statusText: 'Unauthorized' });
+    backend.expectOne(`${API}/auth/refresh`).flush(null, { status: 403, statusText: 'Forbidden' });
+
+    await expect(result).rejects.toMatchObject({ status: 401 });
+    expect(store.isAuthenticated()).toBe(false);
+  });
+
+  it('keeps the session when the refresh fails with a network error', async () => {
+    await loginAs('jwt-old');
+
+    const result = firstValueFrom(http.get(`${API}/bookmarks`));
+    backend.expectOne(`${API}/bookmarks`).flush(null, { status: 401, statusText: 'Unauthorized' });
+    backend.expectOne(`${API}/auth/refresh`).error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
+
+    await expect(result).rejects.toMatchObject({ status: 401 });
+    backend.expectNone(`${API}/bookmarks`);
+    expect(store.isAuthenticated()).toBe(true);
+    expect(store.accessToken()).toBe('jwt-old');
+  });
+
   it('does not try to refresh when the failing request is /auth/login itself', async () => {
     const result = firstValueFrom(http.post(`${API}/auth/login`, {}));
     backend.expectOne(`${API}/auth/login`).flush(null, { status: 401, statusText: 'Unauthorized' });
