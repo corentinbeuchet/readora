@@ -133,18 +133,23 @@ Backlog ids used in commit `Refs:` (status: `git log --grep "review-2026-09/B<n>
 - B3 Direct publish without project-membership check (IDOR). — fixed 90afc6f
 - B4 Publish-from-QC without `stage == QC_REVIEW` guard; `Chapter.publish` re-publishable. — fixed ee8a113
 - B5 `saved.pollDomainEvents()` in `ScanlationTaskService` / `ReaderSocialService` drops events. — fixed 84acc60
-- B6 No transactions across multi-save use cases. — fixed (see `git log --grep review-2026-09/B6`)
+- B6 No transactions across multi-save use cases. — fixed e7b4580
 - B7 No `@Version`; `WorkflowTask.assignTo` steals claimed tasks; unlimited upvotes. — fixed 83a6779, c64ad65, 8b9bd25
-- B8 Stripe: null `currentPeriodEnd` = infinite access; unknown status → ACTIVE; any price → PREMIUM; out-of-order events; immediate cancel.
-- B9 `S3StorageAdapter` unbounded in-memory `byte[]` cache; S3 failure swallowed; no multipart size config; fake presigned URL fallback. (`..` in folder fixed with B2.)
-- B10 500 handler leaks `ex.getMessage()`; framework exceptions → 500; not-found → 400; DTO sizes ≠ DB sizes.
-- B11 EAGER collections + load-all-then-filter (N+1); no `@OrderBy` on pages/chapters.
-- B12 Refresh-token reuse undetected; no expired-token cleanup; no issuer check; no rate limit; Swagger public in prod.
-- B13 Layer leaks: controllers → out-ports, web → infrastructure, `UserId` in `domain.work`; missing ArchUnit rules.
-- B14 Tests: web tests skip Flyway; fakes return same instance; CI runs `mvn test` not `verify`. — fixed (see `git log --grep review-2026-09/B14`)
+- B8 Stripe: null `currentPeriodEnd` = infinite access; unknown status → ACTIVE; any price → PREMIUM; out-of-order events; immediate cancel. — fixed 1fd811c
+- B9 `S3StorageAdapter` unbounded in-memory `byte[]` cache; S3 failure swallowed; no multipart size config; fake presigned URL fallback. (`..` in folder fixed with B2.) — fixed 9ffff17, c35ca1d, da891b6
+- B10 500 handler leaks `ex.getMessage()`; framework exceptions → 500; not-found → 400; DTO sizes ≠ DB sizes. — fixed 14401f9, 6f1cf72, 9b2db4f, da891b6
+- B11 EAGER collections + load-all-then-filter (N+1); no `@OrderBy` on pages/chapters. — fixed 3d96ef9, aa996ec
+- B12 Refresh-token reuse undetected; no expired-token cleanup; no issuer check; no rate limit; Swagger public in prod. — fixed 86a6e53
+- B13 Layer leaks: controllers → out-ports, web → infrastructure, `UserId` in `domain.work`; missing ArchUnit rules. — fixed ea6cb29, e893751
+- B14 Tests: web tests skip Flyway; fakes return same instance; CI runs `mvn test` not `verify`. — fixed d6f3f7b
 
 Improvements from best-practice research (2026-09), not bugs:
-- B15 Virtual threads: `spring.threads.virtual.enabled=true`, sized against the Hikari pool; `@ConcurrencyLimit` on scarce resources.
-- B16 Observability: `spring-boot-starter-opentelemetry` (OTLP metrics + traces).
-- B17 JSpecify `@NullMarked` + NullAway (Error Prone) build check, module by module starting with `readora-domain`. — fixed (all modules; entities @NullUnmarked by design)
-- B18 Optional: Spring Framework 7 API versioning (`spring.mvc.apiversion.*`) if `/api/v1` needs a successor.
+- B15 Virtual threads: `spring.threads.virtual.enabled=true`, sized against the Hikari pool; `@ConcurrencyLimit` on scarce resources. — fixed 3df5fcb
+- B16 Observability: `spring-boot-starter-opentelemetry` (OTLP metrics + traces). — fixed 6119e06
+- B17 JSpecify `@NullMarked` + NullAway (Error Prone) build check, module by module starting with `readora-domain`. — fixed e3815c8, 6ced143, 030a0b0 (all modules; entities @NullUnmarked by design)
+- B18 Optional: Spring Framework 7 API versioning (`spring.mvc.apiversion.*`) if `/api/v1` needs a successor. — not done: /api/v1 is the only version so far; adopt when a v2 is actually needed.
+
+Open (needs a product decision):
+- B19 Scanlation drafts/QC publish invent page keys `scans/{work}/{n}/p{i}.webp` that match no uploaded file; tasks only
+  carry one asset-package URL. Decide how final pages are produced (unpack the QC package into page assets, or
+  require a page upload step) before publishing through the scanlation workflow in production.
