@@ -1,5 +1,4 @@
 import { FieldTree, ValidationError } from '@angular/forms/signals';
-import { ApiError } from '@app/core/api/api-client';
 
 export const PASSWORD_MIN_LENGTH = 8;
 /** BCrypt reads at most 72 bytes; the API rejects longer passwords. */
@@ -45,13 +44,5 @@ export function visibleErrors(field: AnyField | FieldTree<unknown>): string[] {
   return state.errors().map(errorMessage);
 }
 
-/** Message shown at the top of a form after a failed API call. */
-export function apiErrorMessage(error: unknown, fallback = 'Something went wrong. Please try again.'): string {
-  if (error instanceof ApiError) {
-    if (error.status === 0) {
-      return 'Cannot reach the server. Check your connection and try again.';
-    }
-    return error.message || fallback;
-  }
-  return fallback;
-}
+/** Message shown at the top of a form after a failed API call (lives in core so services can use it). */
+export { apiErrorMessage } from '@app/core/api/api-client';

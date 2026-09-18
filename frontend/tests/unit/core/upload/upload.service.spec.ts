@@ -108,6 +108,44 @@ describe('UploadService and file-utils', () => {
       expect(progressUpdates).toEqual([1, 2]);
     });
 
+    it('uploadPagesBatch marks failed pages as error without failing the batch or mutating inputs', async () => {
+      const items: PageUploadItem[] = [
+        { id: '1', file: new File(['p1'], '01.png', { type: 'image/png' }), previewUrl: '', pageNumber: 1, status: 'pending', progress: 0 },
+        { id: '2', file: new File(['p2'], '02.png', { type: 'image/png' }), previewUrl: '', pageNumber: 2, status: 'pending', progress: 0 },
+      ];
+      const snapshot = structuredClone(items.map(({ file: _f, ...rest }) => rest));
+      const settled: PageUploadItem[] = [];
+      const batch$ = firstValueFrom(service.uploadPagesBatch(items, 'scans/c1', 2, (_c, _t, item) => settled.push(item)));
+
+      const reqs = http.match((r) => r.url.includes('/storage/upload'));
+      reqs[0].flush({ success: true, data: { storageKey: 'k1', cdnUrl: 'https://cdn/k1' }, error: null });
+      reqs[1].flush({ success: false, data: null, error: 'File too large' }, { status: 413, statusText: 'Payload Too Large' });
+
+      const results = await batch$;
+      expect(results.map((r) => r.status)).toEqual(['done', 'error']);
+      expect(results[1].error).toBe('File too large');
+      expect(settled.length).toBe(2);
+      // Inputs are untouched: results are new objects.
+      expect(items.map(({ file: _f, ...rest }) => rest)).toEqual(snapshot);
+      expect(results[0]).not.toBe(items[0]);
+    });
+
+    it('uploadPagesBatch skips pages that are already uploaded (retry)', async () => {
+      const items: PageUploadItem[] = [
+        { id: '1', file: new File(['p1'], '01.png'), previewUrl: '', pageNumber: 1, status: 'done', progress: 100, storageKey: 'k1', cdnUrl: 'https://cdn/k1' },
+        { id: '2', file: new File(['p2'], '02.png'), previewUrl: '', pageNumber: 2, status: 'error', progress: 0, error: 'boom' },
+      ];
+      const batch$ = firstValueFrom(service.uploadPagesBatch(items, 'scans/c1'));
+
+      http.expectOne((r) => r.url.includes('/storage/upload')).flush({ success: true, data: { storageKey: 'k2', cdnUrl: 'https://cdn/k2' }, error: null });
+
+      const results = await batch$;
+      expect(results.map((r) => [r.status, r.storageKey, r.error])).toEqual([
+        ['done', 'k1', undefined],
+        ['done', 'k2', undefined],
+      ]);
+    });
+
     it('createWork delegates to CatalogApi', async () => {
       const workPromise = firstValueFrom(
         service.createWork({

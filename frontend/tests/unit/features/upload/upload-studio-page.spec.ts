@@ -1,11 +1,21 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
-import { UploadStudioPage } from '@app/features/upload/upload-studio-page';
+import { UploadStudioPage, parseChapterNumber } from '@app/features/upload/upload-studio-page';
 import { UploadService } from '@app/core/upload/upload.service';
 import { PageUploadItem } from '@app/core/upload/file-utils';
+import { environment } from '../../../../src/environments/environment';
+
+const API = environment.apiUrl;
+const WORK = { id: 'work-1', title: 'Blue Lock', synopsis: '', type: 'MANGA', status: 'ONGOING', coverImageUrl: '', genres: ['Action'] };
+const ok = (data: unknown) => ({ success: true, data, error: null });
+const fail = (error: string) => ({ success: false, data: null, error });
+
+function page(id: string, pageNumber: number): PageUploadItem {
+  return { id, file: new File([id], `${id}.png`, { type: 'image/png' }), previewUrl: '', pageNumber, status: 'pending', progress: 0 };
+}
 
 describe('UploadStudioPage', () => {
   let fixture: ComponentFixture<UploadStudioPage>;
@@ -164,5 +174,150 @@ describe('UploadStudioPage', () => {
     expect(component.currentStep()).toBe('success');
     expect(component.createdWork()?.id).toBe('work-123');
     expect(component.createdChapterId()).toBe('chap-999');
+  });
+
+  describe('publish failures and retries (HTTP level)', () => {
+    let http: HttpTestingController;
+
+    beforeEach(() => {
+      http = TestBed.inject(HttpTestingController);
+      component.title.set('Blue Lock');
+      component.chapterNumber.set('3');
+      component.pages.set([page('p1', 1), page('p2', 2)]);
+      component.goToStep('review');
+      fixture.detectChanges();
+    });
+
+    afterEach(() => http.verify());
+
+    const alertText = (): string => fixture.nativeElement.querySelector('[role="alert"]')?.textContent ?? '';
+    const uploads = () => http.match((r) => r.url.startsWith(`${API}/storage/upload`));
+    const uploadAll = () => uploads().forEach((r, i) => r.flush(ok({ storageKey: `k${i}`, cdnUrl: `https://cdn/k${i}` })));
+
+    async function flushAsync(): Promise<void> {
+      for (let i = 0; i < 5; i++) {
+        await Promise.resolve();
+      }
+      fixture.detectChanges();
+    }
+
+    it('retries only the failed page and reuses the already created Work', async () => {
+      let submit = component.submitUpload();
+      await flushAsync();
+      http.expectOne({ method: 'POST', url: `${API}/works` }).flush(ok(WORK));
+      await flushAsync();
+      const first = uploads();
+      expect(first.length).toBe(2);
+      expect(first[0].request.urlWithParams).toContain(encodeURIComponent('scans/work-1/c3'));
+      first[0].flush(ok({ storageKey: 'k1', cdnUrl: 'https://cdn/k1' }));
+      first[1].flush(fail('Storage unavailable'), { status: 503, statusText: 'Service Unavailable' });
+      await submit;
+      fixture.detectChanges();
+
+      expect(component.currentStep()).toBe('review');
+      expect(alertText()).toContain('1 of 2 pages failed to upload');
+      expect(component.pages().map((p) => p.status)).toEqual(['done', 'error']);
+      expect(fixture.nativeElement.querySelector('.retry-hint')?.textContent).toContain('Blue Lock');
+
+      // Retry: no second POST /works, only the failed page is uploaded again.
+      submit = component.submitUpload();
+      await flushAsync();
+      http.expectNone({ method: 'POST', url: `${API}/works` });
+      const second = uploads();
+      expect(second.length).toBe(1);
+      second[0].flush(ok({ storageKey: 'k2', cdnUrl: 'https://cdn/k2' }));
+      await flushAsync();
+
+      const publish = http.expectOne(`${API}/works/work-1/chapters/direct`);
+      expect(publish.request.body).toEqual({
+        chapterNumber: '3',
+        title: undefined,
+        pages: [
+          { pageNumber: 1, storageKey: 'k1', cdnUrl: 'https://cdn/k1', width: undefined, height: undefined },
+          { pageNumber: 2, storageKey: 'k2', cdnUrl: 'https://cdn/k2', width: undefined, height: undefined },
+        ],
+      });
+      publish.flush(ok({ id: 'chap-1', workId: 'work-1', chapterNumber: '3', title: '', status: 'PUBLISHED', pages: [] }));
+      await submit;
+
+      expect(component.currentStep()).toBe('success');
+      expect(component.createdChapterId()).toBe('chap-1');
+    });
+
+    it('surfaces the API message when creating the Work fails, and retries it', async () => {
+      let submit = component.submitUpload();
+      await flushAsync();
+      http.expectOne(`${API}/works`).flush(fail('Title already exists'), { status: 409, statusText: 'Conflict' });
+      await submit;
+      fixture.detectChanges();
+      expect(alertText()).toContain('Title already exists');
+      expect(component.createdWork()).toBeNull();
+
+      submit = component.submitUpload();
+      await flushAsync();
+      http.expectOne(`${API}/works`).flush(ok(WORK));
+      await flushAsync();
+      uploadAll();
+      await flushAsync();
+      http.expectOne(`${API}/works/work-1/chapters/direct`).flush(ok({ id: 'chap-1', workId: 'work-1', chapterNumber: '3', title: '', status: 'PUBLISHED', pages: [] }));
+      await submit;
+      expect(component.currentStep()).toBe('success');
+    });
+
+    it('SCANLATION: reports a failed project lookup instead of swallowing it', async () => {
+      component.publishingMode.set('SCANLATION');
+      const submit = component.submitUpload();
+      await flushAsync();
+      http.expectOne(`${API}/works`).flush(ok(WORK));
+      await flushAsync();
+      uploadAll();
+      await flushAsync();
+      http.expectOne(`${API}/works/work-1/projects`).flush(fail('Access denied'), { status: 403, statusText: 'Forbidden' });
+      await submit;
+      fixture.detectChanges();
+
+      expect(component.currentStep()).toBe('review');
+      expect(alertText()).toContain('Access denied');
+    });
+
+    it('SCANLATION: explains when the series has no project, then creates the task on retry', async () => {
+      component.publishingMode.set('SCANLATION');
+      let submit = component.submitUpload();
+      await flushAsync();
+      http.expectOne(`${API}/works`).flush(ok(WORK));
+      await flushAsync();
+      uploadAll();
+      await flushAsync();
+      http.expectOne(`${API}/works/work-1/projects`).flush(ok([]));
+      await submit;
+      fixture.detectChanges();
+      expect(alertText()).toContain('No scanlation project exists');
+
+      submit = component.submitUpload();
+      await flushAsync();
+      http.expectOne(`${API}/works/work-1/projects`).flush(ok([{ id: 'proj-1' }]));
+      await flushAsync();
+      const task = http.expectOne((r) => r.method === 'POST' && r.url.endsWith('/tasks'));
+      expect(task.request.body).toEqual({ chapterNumber: 3, assetUrl: 'https://cdn/k0', pageCount: 2 });
+      task.flush(ok({ id: 'task-1' }));
+      await submit;
+      expect(component.currentStep()).toBe('success');
+      expect(component.createdProjectId()).toBe('proj-1');
+    });
+  });
+
+  it('validates chapter numbers instead of defaulting to 1', () => {
+    expect(parseChapterNumber('12.5')).toBe('12.5');
+    expect(parseChapterNumber(' 010 ')).toBe('10');
+    for (const bad of ['', 'abc', '1abc', '0', '-2', '1e3', '1.']) {
+      expect(parseChapterNumber(bad)).toBeNull();
+    }
+
+    component.title.set('Tower of God');
+    component.nextFromManga();
+    component.chapterNumber.set('1abc');
+    component.nextFromChapter();
+    expect(component.currentStep()).toBe('chapter');
+    expect(component.errorMessage()).toContain('positive number');
   });
 });

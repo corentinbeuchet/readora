@@ -83,6 +83,17 @@ export class ApiClient {
   }
 }
 
+/** User-facing message for a failed API call (`ApiError`), with a fallback for anything else. */
+export function apiErrorMessage(error: unknown, fallback = 'Something went wrong. Please try again.'): string {
+  if (error instanceof ApiError) {
+    if (error.status === 0) {
+      return 'Cannot reach the server. Check your connection and try again.';
+    }
+    return error.message || fallback;
+  }
+  return fallback;
+}
+
 export function unwrap<T>(response: ApiResponse<T>): T {
   if (!response.success) {
     throw new ApiError(200, response.error ?? 'Request failed');

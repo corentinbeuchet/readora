@@ -346,6 +346,13 @@
         }
       </div>
 
+      @if (createdWork(); as work) {
+        <p class="muted retry-hint">
+          The series "{{ work.title }}" was already created: publishing again reuses it and only uploads the pages
+          that are not uploaded yet.
+        </p>
+      }
+
       <!-- Upload Progress Bar -->
       @if (isSubmitting()) {
         <div class="upload-progress-container">

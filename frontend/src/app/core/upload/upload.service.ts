@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, from, map, mergeMap, of, toArray } from 'rxjs';
-import { ApiClient } from '../api/api-client';
+import { Observable, catchError, from, map, mergeMap, of, toArray } from 'rxjs';
+import { ApiClient, apiErrorMessage } from '../api/api-client';
 import { CatalogApi } from '../api/catalog-api';
 import { ScanlationApi } from '../api/scanlation-api';
 import {
@@ -38,13 +38,18 @@ export class UploadService {
   }
 
   /**
-   * Upload a batch of chapter pages concurrently with progress reporting.
+   * Uploads a batch of chapter pages with bounded concurrency.
+   *
+   * Never errors and never mutates its input: every item is settled into a **new** object, either
+   * `done` (with `storageKey`/`cdnUrl`) or `error` (with a message), so callers can store results in
+   * signals and retry only the failed ones. Items already `done` are not re-uploaded.
+   * `onSettled` fires once per item with the running count and the settled item.
    */
   uploadPagesBatch(
-    items: PageUploadItem[],
+    items: readonly PageUploadItem[],
     folder = 'scans',
     concurrency = 3,
-    onProgress?: (completed: number, total: number) => void
+    onSettled?: (completed: number, total: number, item: PageUploadItem) => void
   ): Observable<PageUploadItem[]> {
     if (items.length === 0) {
       return of([]);
@@ -52,28 +57,30 @@ export class UploadService {
 
     let completedCount = 0;
     const totalCount = items.length;
+    const settle = (item: PageUploadItem): PageUploadItem => {
+      completedCount++;
+      onSettled?.(completedCount, totalCount, item);
+      return item;
+    };
 
     return from(items).pipe(
       mergeMap((item) => {
         if (item.status === 'done' && item.storageKey && item.cdnUrl) {
-          completedCount++;
-          onProgress?.(completedCount, totalCount);
-          return of(item);
+          return of(settle(item));
         }
-
-        item.status = 'uploading';
-        item.progress = 10;
-
         return this.uploadFile(item.file, folder).pipe(
-          map((res) => {
-            item.status = 'done';
-            item.progress = 100;
-            item.storageKey = res.storageKey;
-            item.cdnUrl = res.cdnUrl;
-            completedCount++;
-            onProgress?.(completedCount, totalCount);
-            return item;
-          })
+          map((res): PageUploadItem => ({
+            ...item,
+            status: 'done',
+            progress: 100,
+            storageKey: res.storageKey,
+            cdnUrl: res.cdnUrl,
+            error: undefined,
+          })),
+          catchError((err: unknown) =>
+            of<PageUploadItem>({ ...item, status: 'error', progress: 0, error: apiErrorMessage(err, 'Upload failed') })
+          ),
+          map(settle)
         );
       }, concurrency),
       toArray(),
