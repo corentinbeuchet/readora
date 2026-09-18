@@ -17,6 +17,11 @@
     <description>Primary Driving Adapters: REST Controllers, OpenAPI &amp; ArchUnit Tests</description>
 
     <dependencies>
+        <!-- Liveness/readiness probes for the load balancer (only /actuator/health is exposed). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.readora</groupId>
             <artifactId>readora-domain</artifactId>

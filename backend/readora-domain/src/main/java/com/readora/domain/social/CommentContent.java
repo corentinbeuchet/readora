@@ -16,6 +16,7 @@ public record CommentContent(String value) implements Serializable {
         if (trimmed.length() > MAX_LENGTH) {
             throw new DomainValidationException("Comment content cannot exceed " + MAX_LENGTH + " characters");
         }
+        value = trimmed;
     }
 
     public static CommentContent of(String value) {

@@ -74,6 +74,16 @@ class ErrorHandlingIntegrationTest extends AuthTestSupport {
     }
 
     @Test
+    @DisplayName("The health endpoint and its liveness probe are public and report UP")
+    void healthIsPublic() throws Exception {
+        mockMvc.perform(get("/actuator/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"));
+        mockMvc.perform(get("/actuator/health/liveness"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     @DisplayName("An unsupported HTTP method returns 405")
     void unsupportedMethodIsMethodNotAllowed() throws Exception {
         Session user = register();

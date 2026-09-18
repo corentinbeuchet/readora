@@ -27,6 +27,12 @@ class ChapterCommentDomainTest {
     }
 
     @Test
+    @DisplayName("Comment text is stored trimmed")
+    void contentIsTrimmed() {
+        assertThat(CommentContent.of("  Great chapter!  ").value()).isEqualTo("Great chapter!");
+    }
+
+    @Test
     @DisplayName("Authors cannot upvote their own comment; other readers can")
     void authorsCannotUpvoteOwnComment() {
         ChapterComment root = ChapterComment.createRoot(ChapterId.generate(), UserId.of("u1"), "u1", "Root", null, false);
