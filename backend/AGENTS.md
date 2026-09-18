@@ -117,11 +117,11 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 Backlog ids used in commit `Refs:` (status: `git log --grep "review-2026-09/B<n>"`).
 - B1 `application-prod.yml` guarded by `on-profile: production` → never loaded; dev JWT secret default in `application.yml`. — fixed 61ef652
 - B2 `/storage/presigned-url` lets any authenticated user choose bucket, key and duration. — fixed 9ffff17
-- B3 Direct publish without project-membership check (IDOR).
-- B4 Publish-from-QC without `stage == QC_REVIEW` guard; `Chapter.publish` re-publishable.
-- B5 `saved.pollDomainEvents()` in `ScanlationTaskService` / `ReaderSocialService` drops events.
+- B3 Direct publish without project-membership check (IDOR). — fixed 90afc6f
+- B4 Publish-from-QC without `stage == QC_REVIEW` guard; `Chapter.publish` re-publishable. — fixed ee8a113
+- B5 `saved.pollDomainEvents()` in `ScanlationTaskService` / `ReaderSocialService` drops events. — fixed 84acc60
 - B6 No transactions across multi-save use cases.
-- B7 No `@Version`; `WorkflowTask.assignTo` steals claimed tasks; unlimited upvotes.
+- B7 No `@Version`; `WorkflowTask.assignTo` steals claimed tasks; unlimited upvotes. — fixed 83a6779, c64ad65, 8b9bd25
 - B8 Stripe: null `currentPeriodEnd` = infinite access; unknown status → ACTIVE; any price → PREMIUM; out-of-order events; immediate cancel.
 - B9 `S3StorageAdapter` unbounded in-memory `byte[]` cache; S3 failure swallowed; no multipart size config; fake presigned URL fallback. (`..` in folder fixed with B2.)
 - B10 500 handler leaks `ex.getMessage()`; framework exceptions → 500; not-found → 400; DTO sizes ≠ DB sizes.
