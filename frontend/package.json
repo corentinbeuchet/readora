@@ -15,7 +15,7 @@
     "test": "ng test",
     "test:ci": "ng test --watch=false",
     "e2e": "playwright test",
-    "e2e:staging": "PLAYWRIGHT_BASE_URL=https://staging.readora.com playwright test",
+    "e2e:staging": "node scripts/e2e-staging.mjs",
     "lint": "ng lint",
     "lint:fix": "ng lint --fix",
     "postbuild": "node scripts/generate-sitemap.mjs"
