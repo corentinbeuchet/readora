@@ -81,6 +81,7 @@ describe('ChapterViewer (API-driven)', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
     http.verify();
   });
 
@@ -484,6 +485,134 @@ describe('ChapterViewer (API-driven)', () => {
     await loadChapter(undefined, latest);
     await switchMode('Vertical');
     expect(fixture.nativeElement.querySelector('.chapter-end').textContent).toContain("You're up to date");
+  });
+
+  function openSettings(): HTMLElement {
+    toolbarButton('Settings').click();
+    fixture.detectChanges();
+    return fixture.nativeElement.querySelector('#reader-settings');
+  }
+
+  function choose(label: string, value: string): void {
+    const field = Array.from(fixture.nativeElement.querySelectorAll('#reader-settings label') as NodeListOf<HTMLLabelElement>).find((l) =>
+      l.textContent!.includes(label)
+    )!;
+    const select = field.querySelector('select')!;
+    select.value = value;
+    select.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+  }
+
+  it('Fitting the page to my screen', async () => {
+    await loadChapter();
+    const settings = openSettings();
+    expect(settings.hidden).toBe(false);
+    expect(toolbarButton('Settings').getAttribute('aria-expanded')).toBe('true');
+    const body = (): HTMLElement => fixture.nativeElement.querySelector('.viewer-body');
+    expect(body().classList).toContain('fit-width');
+
+    choose('Page size', 'HEIGHT');
+    expect(body().classList).toContain('fit-height');
+    choose('Page size', 'ORIGINAL');
+    expect(body().classList).toContain('fit-original');
+
+    // Kept for the next chapters.
+    await loadChapter(undefined, { ...MOCK_CHAPTER, id: 'chap-11-uuid' });
+    expect(body().classList).toContain('fit-original');
+  });
+
+  it('Changing the background colour', async () => {
+    await loadChapter();
+    openSettings();
+    const container = (): HTMLElement => fixture.nativeElement.querySelector('.viewer-container');
+    expect(container().classList).toContain('bg-black');
+
+    choose('Background', 'GRAY');
+    expect(container().classList).toContain('bg-gray');
+    choose('Background', 'WHITE');
+    expect(container().classList).toContain('bg-white');
+  });
+
+  it('Reading two pages side by side', async () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: true, addEventListener: () => undefined, removeEventListener: () => undefined }));
+    const book: Chapter = {
+      ...chapterOf('op-1', 'one-piece', 'MANGA'),
+      pages: [1, 2, 3, 4, 5].map((n) => ({ pageNumber: n, storageKey: `p${n}`, cdnUrl: `https://cdn.readora.com/p${n}.webp` }))
+    };
+    await loadChapter(undefined, book);
+    openSettings();
+    const toggle: HTMLInputElement = fixture.nativeElement.querySelector('#reader-settings input[type="checkbox"]');
+    toggle.checked = true;
+    toggle.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    const shown = (): string[] =>
+      Array.from(fixture.nativeElement.querySelectorAll('.page-stage img.page-image') as NodeListOf<HTMLImageElement>).map((img) => img.alt);
+    expect(shown()).toEqual(['Page 1']); // the cover stands alone
+    click('button.btn-next');
+    // Right-to-left manga: page 2 on the right, page 3 on the left.
+    expect(shown()).toEqual(['Page 3', 'Page 2']);
+    click('button.btn-next');
+    expect(shown()).toEqual(['Page 5', 'Page 4']);
+    expect(stateService.isLastPage()).toBe(true);
+    click('button.btn-prev');
+    expect(shown()).toEqual(['Page 3', 'Page 2']);
+
+  });
+
+  it('offers double page only on wide screens', async () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: () => undefined, removeEventListener: () => undefined }));
+    await loadChapter(undefined, chapterOf('op-1', 'one-piece', 'MANGA'));
+    openSettings();
+    expect(fixture.nativeElement.querySelector('#reader-settings input[type="checkbox"]')).toBeNull();
+  });
+
+  it('Letting a webtoon scroll by itself', async () => {
+    // The viewer drives the document's own window. Angular's scheduler also uses animation frames, so frames are
+    // tracked by id and cancelling one never drops the others.
+    const win = document.defaultView!;
+    const frames = new Map<number, FrameRequestCallback>();
+    let lastId = 0;
+    vi.spyOn(win, 'requestAnimationFrame').mockImplementation((cb: FrameRequestCallback) => {
+      frames.set(++lastId, cb);
+      return lastId;
+    });
+    vi.spyOn(win, 'cancelAnimationFrame').mockImplementation((id: number) => frames.delete(id));
+    const scrollBy = vi.spyOn(win, 'scrollBy').mockImplementation(() => undefined);
+    Object.defineProperty(document.documentElement, 'scrollHeight', { configurable: true, value: 100_000 });
+    const runFrames = (at: number) => {
+      const pending = [...frames.values()];
+      frames.clear();
+      pending.forEach((cb) => cb(at));
+    };
+
+    await loadChapter(undefined, chapterOf('sl-1', 'solo-leveling', 'MANHWA'));
+    toolbarButton('Auto-scroll').click();
+    fixture.detectChanges();
+    expect(toolbarButton('Auto-scroll').getAttribute('aria-pressed')).toBe('true');
+
+    runFrames(0);
+    runFrames(1000); // one second at medium speed
+    expect(scrollBy).toHaveBeenLastCalledWith(0, 60);
+
+    document.dispatchEvent(new Event('wheel'));
+    fixture.detectChanges();
+    expect(toolbarButton('Auto-scroll').getAttribute('aria-pressed')).toBe('false');
+    const calls = scrollBy.mock.calls.length;
+    runFrames(2000);
+    expect(scrollBy.mock.calls.length).toBe(calls);
+
+    // Faster setting, then a touch stops it too.
+    openSettings();
+    choose('Auto-scroll speed', 'FAST');
+    toolbarButton('Auto-scroll').click();
+    runFrames(3000);
+    runFrames(3500);
+    expect(scrollBy).toHaveBeenLastCalledWith(0, 60);
+    document.dispatchEvent(new Event('touchstart'));
+    fixture.detectChanges();
+    expect(toolbarButton('Auto-scroll').getAttribute('aria-pressed')).toBe('false');
+    delete (document.documentElement as unknown as Record<string, unknown>)['scrollHeight'];
   });
 
   it('records the visit, then the finish, for the reading history (free readers with LIBRARY_USE)', async () => {

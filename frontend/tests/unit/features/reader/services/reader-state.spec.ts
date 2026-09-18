@@ -73,4 +73,26 @@ describe('ReaderState (Signals)', () => {
     service.setZoom(30);
     expect(service.zoomLevel()).toBe(50);
   });
+
+  it('double page: cover alone, then pairs; turning moves by spread', () => {
+    const five: Chapter = {
+      ...MOCK_CHAPTER,
+      pages: [1, 2, 3, 4, 5].map((n) => ({ pageNumber: n, storageKey: `p${n}`, cdnUrl: `c${n}` }))
+    };
+    service.setChapter(five, 3); // page 4
+    service.setDoublePage(true);
+    expect(service.currentSpread().map((p) => p.pageNumber)).toEqual([4, 5]);
+    expect(service.isLastPage()).toBe(true);
+
+    service.previousPage();
+    expect(service.currentSpread().map((p) => p.pageNumber)).toEqual([2, 3]);
+    service.previousPage();
+    expect(service.currentSpread().map((p) => p.pageNumber)).toEqual([1]);
+    expect(service.isFirstPage()).toBe(true);
+    service.nextPage();
+    expect(service.currentSpread().map((p) => p.pageNumber)).toEqual([2, 3]);
+
+    service.setDoublePage(false);
+    expect(service.currentSpread().map((p) => p.pageNumber)).toEqual([2]);
+  });
 });

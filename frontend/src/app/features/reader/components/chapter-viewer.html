@@ -1,4 +1,4 @@
-<div class="viewer-container">
+<div class="viewer-container" [class]="'bg-' + prefs.background().toLowerCase()">
   @if (chapter.isLoading()) {
     <p class="muted viewer-status" role="status">Loading chapter…</p>
   } @else if (chapter.error()) {
@@ -44,12 +44,59 @@
             </button>
           </div>
         }
+        @if (state.viewMode() === 'VERTICAL') {
+          <div ngToolbarWidgetGroup>
+            <button type="button" ngToolbarWidget value="auto-scroll" data-auto-scroll-toggle (click)="toggleAutoScroll()"
+                    [class.active]="autoScrolling()" [attr.aria-pressed]="autoScrolling()">
+              Auto-scroll
+            </button>
+          </div>
+        }
+        <div ngToolbarWidgetGroup>
+          <button type="button" ngToolbarWidget value="settings" (click)="settingsOpen.set(!settingsOpen())"
+                  [attr.aria-expanded]="settingsOpen()" aria-controls="reader-settings">
+            Settings
+          </button>
+        </div>
         <div ngToolbarWidgetGroup>
           <button type="button" ngToolbarWidget value="zoom-in" (click)="zoomIn()" aria-label="Zoom in">Zoom +</button>
           <button type="button" ngToolbarWidget value="zoom-out" (click)="zoomOut()" aria-label="Zoom out">Zoom -</button>
         </div>
       </div>
     </header>
+
+    <section id="reader-settings" class="reader-settings" aria-label="Reader settings" [hidden]="!settingsOpen()">
+      <label class="field setting">
+        <span>Page size</span>
+        <select (change)="setFit($event)">
+          <option value="WIDTH" [selected]="prefs.fit() === 'WIDTH'">Fit width</option>
+          <option value="HEIGHT" [selected]="prefs.fit() === 'HEIGHT'">Fit height</option>
+          <option value="ORIGINAL" [selected]="prefs.fit() === 'ORIGINAL'">Original size</option>
+        </select>
+      </label>
+      <label class="field setting">
+        <span>Background</span>
+        <select (change)="setBackground($event)">
+          <option value="BLACK" [selected]="prefs.background() === 'BLACK'">Black</option>
+          <option value="GRAY" [selected]="prefs.background() === 'GRAY'">Gray</option>
+          <option value="WHITE" [selected]="prefs.background() === 'WHITE'">White</option>
+        </select>
+      </label>
+      <label class="field setting">
+        <span>Auto-scroll speed</span>
+        <select (change)="setAutoScrollSpeed($event)">
+          <option value="SLOW" [selected]="prefs.autoScrollSpeed() === 'SLOW'">Slow</option>
+          <option value="MEDIUM" [selected]="prefs.autoScrollSpeed() === 'MEDIUM'">Medium</option>
+          <option value="FAST" [selected]="prefs.autoScrollSpeed() === 'FAST'">Fast</option>
+        </select>
+      </label>
+      @if (canShowDoublePage()) {
+        <label class="checkbox setting">
+          <input type="checkbox" [checked]="prefs.doublePage()" (change)="setDoublePage($event)" />
+          Double page (two pages side by side)
+        </label>
+      }
+    </section>
 
     <div class="progress-row">
       <label class="sr-only" for="page-jump">Go to page</label>
@@ -83,7 +130,7 @@
     </p>
 
     <!-- Viewer Content -->
-    <div class="viewer-body" [style.transform]="'scale(' + state.zoomLevel() / 100 + ')'">
+    <div class="viewer-body" [class]="'fit-' + prefs.fit().toLowerCase()" [style.transform]="'scale(' + state.zoomLevel() / 100 + ')'">
       @if (state.viewMode() === 'VERTICAL') {
         <div class="vertical-flow">
           @for (page of state.currentChapter()?.pages; track page.pageNumber; let first = $first) {
@@ -108,11 +155,10 @@
       } @else {
         <div class="paged-flow">
           <!-- Swipe to turn pages on touch screens (the buttons below are the accessible equivalent). -->
-          <div class="page-stage" (pointerdown)="onPointerDown($event)" (pointerup)="onPointerUp($event)">
-          @if (state.currentPage(); as current) {
+          <div class="page-stage" [class.spread]="state.doublePage()" (pointerdown)="onPointerDown($event)" (pointerup)="onPointerUp($event)">
             <!-- Keyed by page number: each page gets a fresh <img>. NgOptimizedImage forbids changing
                  width/height on an existing image (NG02953), and pages have different sizes. -->
-            @for (page of [current]; track page.pageNumber) {
+            @for (page of displayedSpread(); track page.pageNumber) {
               @if (page.cdnUrl) {
                 <img
                   [ngSrc]="page.cdnUrl"
@@ -127,7 +173,6 @@
                 <img [src]="fallbackPage" [alt]="'Page ' + page.pageNumber" class="page-image active-page" width="800" height="1200" />
               }
             }
-          }
             <!-- Click the left or right third to turn the page: a mouse shortcut for the buttons below, so hidden
                  from assistive tech and not a tab stop. -->
             <button type="button" class="turn-zone turn-zone-left" tabindex="-1" aria-hidden="true" (click)="turnFromSide('left')"></button>

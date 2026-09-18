@@ -28,13 +28,26 @@ import { SeoService } from '@app/core/seo/seo.service';
 import { ChapterComments } from '@app/features/social/components/chapter-comments';
 import { FALLBACK_PAGE_IMAGE, onImageError } from '@app/core/utils/image-utils';
 import { ReaderState } from '../services/reader-state';
-import { ReaderPreferencesStore, ReadingDirection, ViewMode } from '../services/reader-preferences-store';
+import {
+  AutoScrollSpeed,
+  FitMode,
+  ReaderBackground,
+  ReaderPreferencesStore,
+  ReadingDirection,
+  ViewMode
+} from '../services/reader-preferences-store';
 
 export const PROGRESS_SYNC_DEBOUNCE_MS = 800;
 /** Pages downloaded ahead of the current one in paged mode. */
 export const PRELOADED_PAGES = 2;
 /** Minimum horizontal travel (px) for a touch swipe to turn the page. */
 const SWIPE_THRESHOLD_PX = 50;
+/** Screens at least this wide can show two pages side by side. */
+export const DOUBLE_PAGE_MEDIA_QUERY = '(min-width: 1024px)';
+/** Auto-scroll speeds in pixels per second. */
+export const AUTO_SCROLL_PX_PER_SECOND: Record<AutoScrollSpeed, number> = { SLOW: 30, MEDIUM: 60, FAST: 120 };
+/** Any of these from the reader stops auto-scroll. */
+const AUTO_SCROLL_STOP_EVENTS = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const;
 
 interface ProgressUpdate {
   workId: string;
@@ -105,6 +118,17 @@ export class ChapterViewer {
     const from = this.state.currentPageIndex() + 1;
     return chapter.pages.slice(from, from + PRELOADED_PAGES).filter((page) => !!page.cdnUrl);
   });
+  protected readonly settingsOpen = signal(false);
+  /** Wide enough for two pages (updated live from a media query in the browser). */
+  private readonly wideScreen = signal(false);
+  protected readonly canShowDoublePage = computed(() => this.state.viewMode() === 'PAGED' && this.wideScreen());
+  /** Spread in display order: in right-to-left reading the first page of a spread is on the right. */
+  protected readonly displayedSpread = computed(() => {
+    const spread = this.state.currentSpread();
+    return this.state.direction() === 'RTL' ? [...spread].reverse() : spread;
+  });
+  protected readonly autoScrolling = signal(false);
+  private stopAutoScroll: (() => void) | null = null;
   private swipeStart: { x: number; y: number } | null = null;
   /** A swipe also ends with a click on a turn zone: that click must not turn a second page. */
   private swiped = false;
@@ -154,7 +178,30 @@ export class ChapterViewer {
       }
     });
 
-    afterNextRender(() => this.hydrated.set(true));
+    afterNextRender(() => {
+      this.hydrated.set(true);
+      const media = this.document.defaultView?.matchMedia?.(DOUBLE_PAGE_MEDIA_QUERY);
+      if (media) {
+        this.wideScreen.set(media.matches);
+        const onChange = (event: MediaQueryListEvent) => this.wideScreen.set(event.matches);
+        media.addEventListener?.('change', onChange);
+        this.destroyRef.onDestroy(() => media.removeEventListener?.('change', onChange));
+      }
+    });
+
+    // Double page only in paged mode on a wide screen, when the reader asked for it.
+    effect(() => {
+      const enabled = this.prefs.doublePage() && this.canShowDoublePage();
+      untracked(() => this.state.setDoublePage(enabled));
+    });
+
+    // Auto-scroll is a vertical-mode feature.
+    effect(() => {
+      if (this.state.viewMode() !== 'VERTICAL') {
+        untracked(() => this.toggleAutoScroll(false));
+      }
+    });
+    this.destroyRef.onDestroy(() => this.stopAutoScroll?.());
 
     // Open each chapter in its series' layout: the one the reader chose, or the default for the format.
     effect(() => {
@@ -337,6 +384,72 @@ export class ChapterViewer {
     }
     this.swiped = true;
     this.turn((dx < 0) !== (this.state.direction() === 'RTL'));
+  }
+
+  protected setFit(event: Event): void {
+    this.prefs.setFit((event.target as HTMLSelectElement).value as FitMode);
+  }
+
+  protected setBackground(event: Event): void {
+    this.prefs.setBackground((event.target as HTMLSelectElement).value as ReaderBackground);
+  }
+
+  protected setDoublePage(event: Event): void {
+    this.prefs.setDoublePage((event.target as HTMLInputElement).checked);
+  }
+
+  protected setAutoScrollSpeed(event: Event): void {
+    this.prefs.setAutoScrollSpeed((event.target as HTMLSelectElement).value as AutoScrollSpeed);
+  }
+
+  /**
+   * Vertical mode: scrolls the page on its own at the chosen speed until the end, or until the reader scrolls,
+   * touches, clicks or presses a key.
+   */
+  protected toggleAutoScroll(on = !this.autoScrolling()): void {
+    this.stopAutoScroll?.();
+    this.stopAutoScroll = null;
+    const win = this.document.defaultView;
+    if (!on || !win?.requestAnimationFrame) {
+      this.autoScrolling.set(false);
+      return;
+    }
+    let frame = 0;
+    let last: number | null = null;
+    let carry = 0;
+    const step = (now: number) => {
+      const elapsed = last === null ? 0 : now - last;
+      last = now;
+      carry += (AUTO_SCROLL_PX_PER_SECOND[this.prefs.autoScrollSpeed()] * elapsed) / 1000;
+      const pixels = Math.floor(carry);
+      carry -= pixels;
+      if (pixels > 0) {
+        win.scrollBy(0, pixels);
+      }
+      const atBottom = win.innerHeight + win.scrollY >= this.document.documentElement.scrollHeight - 1;
+      if (atBottom && elapsed > 0) {
+        this.toggleAutoScroll(false);
+        return;
+      }
+      frame = win.requestAnimationFrame(step);
+    };
+    // The toggle button handles its own clicks (otherwise pressing it to stop would stop, then restart).
+    const stop = (event: Event) => {
+      if (!(event.target as Element | null)?.closest?.('[data-auto-scroll-toggle]')) {
+        this.toggleAutoScroll(false);
+      }
+    };
+    frame = win.requestAnimationFrame(step);
+    for (const type of AUTO_SCROLL_STOP_EVENTS) {
+      this.document.addEventListener(type, stop, { passive: true });
+    }
+    this.stopAutoScroll = () => {
+      win.cancelAnimationFrame(frame);
+      for (const type of AUTO_SCROLL_STOP_EVENTS) {
+        this.document.removeEventListener(type, stop);
+      }
+    };
+    this.autoScrolling.set(true);
   }
 
   /** Range input: 1-based page number. Vertical mode scrolls to the page. */

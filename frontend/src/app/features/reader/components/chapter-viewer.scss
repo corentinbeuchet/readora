@@ -196,3 +196,77 @@
   gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
+
+// Background around the pages (the reader's choice); the controls keep the site colours.
+.viewer-body {
+  background: var(--reader-bg, #000);
+}
+
+.bg-black {
+  --reader-bg: #000;
+}
+
+.bg-gray {
+  --reader-bg: #3f3f46;
+}
+
+.bg-white {
+  --reader-bg: #fff;
+}
+
+.fit-width .page-image {
+  width: 100%;
+  height: auto;
+}
+
+// Whole page visible on screen.
+.fit-height .page-image {
+  width: auto;
+  max-width: 100%;
+  height: calc(100vh - 2rem);
+  object-fit: contain;
+}
+
+.fit-original {
+  .vertical-flow,
+  .paged-flow {
+    max-width: none;
+  }
+
+  .page-image {
+    width: auto;
+    max-width: none;
+    height: auto;
+  }
+}
+
+.page-stage.spread {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+
+  .page-image {
+    width: 50%;
+  }
+}
+
+.reader-settings {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  padding: 1rem;
+  margin-top: 0.5rem;
+  background: var(--surface-2);
+  border-radius: 0.5rem;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.setting {
+  margin: 0;
+}
