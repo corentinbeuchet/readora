@@ -12,9 +12,20 @@ public record SecurityProperties(
         @DefaultValue("false") boolean cookieSecure
 ) {
     public record Jwt(
-            @DefaultValue("change-me-please-use-a-256-bit-secret-from-READORA_JWT_SECRET") String secret,
+            String secret,
             @DefaultValue("readora") String issuer,
             @DefaultValue("PT15M") Duration accessTtl,
             @DefaultValue("P30D") Duration refreshTtl
-    ) {}
+    ) {
+        public Jwt {
+            if (secret == null || secret.isBlank()) {
+                throw new IllegalStateException("readora.security.jwt.secret must be set (READORA_JWT_SECRET)");
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "Jwt[secret=****, issuer=" + issuer + ", accessTtl=" + accessTtl + ", refreshTtl=" + refreshTtl + "]";
+        }
+    }
 }
