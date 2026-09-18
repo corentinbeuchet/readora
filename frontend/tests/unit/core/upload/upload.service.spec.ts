@@ -3,7 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { firstValueFrom } from 'rxjs';
 import { UploadService } from '@app/core/upload/upload.service';
-import { PageUploadItem, naturalCompare, sortFilesNaturally, extractArchiveImages } from '@app/core/upload/file-utils';
+import { ArchiveError, ArchiveLimits, PageUploadItem, naturalCompare, sortFilesNaturally, extractArchiveImages } from '@app/core/upload/file-utils';
 import { environment } from '../../../../src/environments/environment';
 import JSZip from 'jszip';
 
@@ -108,6 +108,44 @@ describe('UploadService and file-utils', () => {
       expect(progressUpdates).toEqual([1, 2]);
     });
 
+    it('uploadPagesBatch marks failed pages as error without failing the batch or mutating inputs', async () => {
+      const items: PageUploadItem[] = [
+        { id: '1', file: new File(['p1'], '01.png', { type: 'image/png' }), previewUrl: '', pageNumber: 1, status: 'pending', progress: 0 },
+        { id: '2', file: new File(['p2'], '02.png', { type: 'image/png' }), previewUrl: '', pageNumber: 2, status: 'pending', progress: 0 },
+      ];
+      const snapshot = structuredClone(items.map(({ file: _f, ...rest }) => rest));
+      const settled: PageUploadItem[] = [];
+      const batch$ = firstValueFrom(service.uploadPagesBatch(items, 'scans/c1', 2, (_c, _t, item) => settled.push(item)));
+
+      const reqs = http.match((r) => r.url.includes('/storage/upload'));
+      reqs[0].flush({ success: true, data: { storageKey: 'k1', cdnUrl: 'https://cdn/k1' }, error: null });
+      reqs[1].flush({ success: false, data: null, error: 'File too large' }, { status: 413, statusText: 'Payload Too Large' });
+
+      const results = await batch$;
+      expect(results.map((r) => r.status)).toEqual(['done', 'error']);
+      expect(results[1].error).toBe('File too large');
+      expect(settled.length).toBe(2);
+      // Inputs are untouched: results are new objects.
+      expect(items.map(({ file: _f, ...rest }) => rest)).toEqual(snapshot);
+      expect(results[0]).not.toBe(items[0]);
+    });
+
+    it('uploadPagesBatch skips pages that are already uploaded (retry)', async () => {
+      const items: PageUploadItem[] = [
+        { id: '1', file: new File(['p1'], '01.png'), previewUrl: '', pageNumber: 1, status: 'done', progress: 100, storageKey: 'k1', cdnUrl: 'https://cdn/k1' },
+        { id: '2', file: new File(['p2'], '02.png'), previewUrl: '', pageNumber: 2, status: 'error', progress: 0, error: 'boom' },
+      ];
+      const batch$ = firstValueFrom(service.uploadPagesBatch(items, 'scans/c1'));
+
+      http.expectOne((r) => r.url.includes('/storage/upload')).flush({ success: true, data: { storageKey: 'k2', cdnUrl: 'https://cdn/k2' }, error: null });
+
+      const results = await batch$;
+      expect(results.map((r) => [r.status, r.storageKey, r.error])).toEqual([
+        ['done', 'k1', undefined],
+        ['done', 'k2', undefined],
+      ]);
+    });
+
     it('createWork delegates to CatalogApi', async () => {
       const workPromise = firstValueFrom(
         service.createWork({
@@ -139,5 +177,78 @@ describe('UploadService and file-utils', () => {
       expect(work.id).toBe('w-1');
       expect(work.title).toBe('Naruto');
     });
+  });
+});
+
+describe('extractArchiveImages limits (zip-bomb guards)', () => {
+  const LIMITS: ArchiveLimits = {
+    maxArchiveBytes: 1024 * 1024,
+    maxImageEntries: 3,
+    maxTotalEntries: 5,
+    maxEntryBytes: 1000,
+    maxTotalUncompressedBytes: 2500,
+  };
+
+  async function archive(files: Record<string, string | Uint8Array>, name = 'ch.cbz'): Promise<File> {
+    const zip = new JSZip();
+    for (const [path, content] of Object.entries(files)) {
+      zip.file(path, content);
+    }
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+    return new File([blob], name, { type: 'application/zip' });
+  }
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it('rejects an archive file above the size limit before reading it', async () => {
+    const loadSpy = vi.spyOn(JSZip.prototype, 'loadAsync');
+    const big = new File([new Uint8Array(LIMITS.maxArchiveBytes + 1)], 'huge.cbz');
+    await expect(extractArchiveImages(big, LIMITS)).rejects.toThrow(/huge\.cbz" is larger than/);
+    expect(loadSpy).not.toHaveBeenCalled();
+  });
+
+  it('rejects too many entries', async () => {
+    const file = await archive({ '1.png': 'a', '2.png': 'b', '3.png': 'c', '4.png': 'd' });
+    await expect(extractArchiveImages(file, LIMITS)).rejects.toBeInstanceOf(ArchiveError);
+    await expect(extractArchiveImages(file, LIMITS)).rejects.toThrow(/too many files/);
+  });
+
+  it('rejects an entry whose declared uncompressed size is too big', async () => {
+    const file = await archive({ '1.png': new Uint8Array(5000) });
+    await expect(extractArchiveImages(file, LIMITS)).rejects.toThrow(/1\.png" is larger than/);
+
+    const tooMuchInTotal = await archive({ '1.png': new Uint8Array(900), '2.png': new Uint8Array(900), '3.png': new Uint8Array(900) });
+    await expect(extractArchiveImages(tooMuchInTotal, LIMITS)).rejects.toThrow(/ch\.cbz" is larger than 0 MB once unpacked/);
+  });
+
+  it('stops inflating when an entry lies about its size (zip bomb)', async () => {
+    const realLoad = JSZip.prototype.loadAsync;
+    vi.spyOn(JSZip.prototype, 'loadAsync').mockImplementation(async function (this: JSZip, data: any) {
+      const zip = await realLoad.call(this, data);
+      zip.forEach((_path, entry) => ((entry as any)._data.uncompressedSize = 1));
+      return zip;
+    });
+    // Small lies are caught by JSZip's own size check at the end of the entry...
+    const file = await archive({ '1.png': new Uint8Array(900) });
+    await expect(extractArchiveImages(file, LIMITS)).rejects.toBeInstanceOf(ArchiveError);
+
+    // ...big ones are cut off by the byte counter as soon as the limit is crossed.
+    const single = await archive({ 'bomb.png': new Uint8Array(200_000) });
+    await expect(extractArchiveImages(single, LIMITS)).rejects.toThrow(/bomb\.png" is larger than/);
+  });
+
+  it('reports invalid archives and archives without images', async () => {
+    await expect(extractArchiveImages(new File(['not a zip'], 'bad.zip'), LIMITS)).rejects.toThrow(/not a valid ZIP/);
+    const noImages = await archive({ 'readme.txt': 'hello' });
+    await expect(extractArchiveImages(noImages, LIMITS)).rejects.toThrow(/does not contain any/);
+  });
+
+  it('extracts within the limits', async () => {
+    const file = await archive({ 'b/2.png': new Uint8Array(800), 'b/1.png': new Uint8Array(800) });
+    const pages = await extractArchiveImages(file, LIMITS);
+    expect(pages.map((p) => [p.name, p.size, p.type])).toEqual([
+      ['1.png', 800, 'image/png'],
+      ['2.png', 800, 'image/png'],
+    ]);
   });
 });

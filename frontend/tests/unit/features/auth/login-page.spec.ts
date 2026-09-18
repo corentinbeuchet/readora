@@ -46,6 +46,11 @@ describe('LoginPage (Signal Forms)', () => {
     const errors = Array.from(fixture.nativeElement.querySelectorAll('.field-error')).map((e) => (e as HTMLElement).textContent?.trim());
     expect(errors).toContain('Email is required');
     expect(errors).toContain('Password is required');
+    // aria-describedby targets are unique containers, never ids repeated inside @for.
+    const ids = Array.from(fixture.nativeElement.querySelectorAll('[id]')).map((e) => (e as HTMLElement).id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(el('#login-email-error').textContent).toContain('Email is required');
+    expect(el('#login-email').getAttribute('aria-describedby')).toBe('login-email-error');
     http.expectNone(`${environment.apiUrl}/auth/login`);
 
     type('#login-email', 'not-an-email');

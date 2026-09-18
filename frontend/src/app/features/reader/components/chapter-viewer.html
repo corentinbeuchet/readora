@@ -20,11 +20,11 @@
 
       <div class="viewer-actions" ngToolbar aria-label="Reader controls">
         <div ngToolbarWidgetGroup>
-          <button type="button" ngToolbarWidget value="VERTICAL" (click)="state.setViewMode('VERTICAL')"
+          <button type="button" ngToolbarWidget value="VERTICAL" (click)="setViewMode('VERTICAL')"
                   [class.active]="state.viewMode() === 'VERTICAL'" [attr.aria-pressed]="state.viewMode() === 'VERTICAL'">
             Vertical
           </button>
-          <button type="button" ngToolbarWidget value="PAGED" (click)="state.setViewMode('PAGED')"
+          <button type="button" ngToolbarWidget value="PAGED" (click)="setViewMode('PAGED')"
                   [class.active]="state.viewMode() === 'PAGED'" [attr.aria-pressed]="state.viewMode() === 'PAGED'">
             Paged
           </button>
@@ -54,27 +54,41 @@
     <div class="viewer-body" [style.transform]="'scale(' + state.zoomLevel() / 100 + ')'">
       @if (state.viewMode() === 'VERTICAL') {
         <div class="vertical-flow">
-          @for (page of state.currentChapter()?.pages; track page.pageNumber) {
-            <div class="page-wrapper" [attr.data-page]="page.pageNumber">
-              <img
-                [src]="page.cdnUrl || fallbackPage"
-                [alt]="'Page ' + page.pageNumber"
-                (error)="handlePageError($event, fallbackPage)"
-                class="page-image"
-                loading="lazy"
-              />
+          @for (page of state.currentChapter()?.pages; track page.pageNumber; let first = $first) {
+            <div #pageWrapper class="page-wrapper" [attr.data-page]="page.pageNumber" [attr.data-page-index]="$index">
+              @if (page.cdnUrl) {
+                <!-- Intrinsic size reserves the space (no layout shift); the first page is the LCP image. -->
+                <img
+                  [ngSrc]="page.cdnUrl"
+                  [width]="page.width || defaultPageWidth"
+                  [height]="page.height || defaultPageHeight"
+                  [priority]="first"
+                  [alt]="'Page ' + page.pageNumber"
+                  (error)="handlePageError($event, fallbackPage)"
+                  class="page-image"
+                />
+              } @else {
+                <img [src]="fallbackPage" [alt]="'Page ' + page.pageNumber" class="page-image" width="800" height="1200" />
+              }
             </div>
           }
         </div>
       } @else {
         <div class="paged-flow">
           @if (state.currentPage(); as page) {
-            <img
-              [src]="page.cdnUrl || fallbackPage"
-              [alt]="'Page ' + page.pageNumber"
-              (error)="handlePageError($event, fallbackPage)"
-              class="page-image active-page"
-            />
+            @if (page.cdnUrl) {
+              <img
+                [ngSrc]="page.cdnUrl"
+                [width]="page.width || defaultPageWidth"
+                [height]="page.height || defaultPageHeight"
+                priority
+                [alt]="'Page ' + page.pageNumber"
+                (error)="handlePageError($event, fallbackPage)"
+                class="page-image active-page"
+              />
+            } @else {
+              <img [src]="fallbackPage" [alt]="'Page ' + page.pageNumber" class="page-image active-page" width="800" height="1200" />
+            }
           }
           <nav class="paged-nav" aria-label="Page navigation">
             <button type="button" (click)="state.previousPage()" [disabled]="state.isFirstPage()" class="btn btn-prev">
@@ -89,7 +103,12 @@
     </div>
 
     @if (state.currentChapter(); as current) {
-      <app-chapter-comments [chapterId]="current.id" />
+      <!-- Below the pages: load the comments code and data only when the reader gets there. -->
+      @defer (on viewport) {
+        <app-chapter-comments [chapterId]="current.id" />
+      } @placeholder {
+        <p class="muted comments-placeholder">Comments load when you scroll here.</p>
+      }
     }
   }
 </div>

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
@@ -9,7 +10,7 @@ const PAGE_SIZE = 24;
 
 @Component({
   selector: 'app-works-page',
-  imports: [RouterLink, HasPermissionDirective],
+  imports: [RouterLink, NgOptimizedImage, HasPermissionDirective],
   templateUrl: './works-page.html',
   styleUrl: './works-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -25,7 +26,7 @@ export class WorksPage {
   protected readonly works = this.catalogApi.worksResource(this.page, this.pageSize);
 
   protected readonly hasPrevious = computed(() => this.page() > 0);
-  protected readonly hasNext = computed(() => this.page() + 1 < (this.works.value()?.totalPages ?? 0));
+  protected readonly hasNext = computed(() => this.page() + 1 < (this.works.hasValue() ? this.works.value().totalPages : 0));
 
   constructor() {
     this.seo.update({

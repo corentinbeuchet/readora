@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { apiErrorMessage } from '@app/core/api/api-client';
 import { SeoService } from '@app/core/seo/seo.service';
 import { UploadService } from '@app/core/upload/upload.service';
 import {
@@ -11,11 +12,32 @@ import {
   WorkStatus,
   WorkType,
 } from '@app/core/models/readora.models';
-import { PageUploadItem, createPreviewUrl, isImageFile } from '@app/core/upload/file-utils';
+import { PageUploadItem, createPreviewUrl, isImageFile, revokePreviewUrl } from '@app/core/upload/file-utils';
+import { CoverPicker } from './components/cover-picker';
 import { PageGridUploader } from './components/page-grid-uploader';
+import { UploadStep, WizardSteps } from './components/wizard-steps';
 
-export type UploadStep = 'manga' | 'chapter' | 'pages' | 'review' | 'success';
+export type { UploadStep } from './components/wizard-steps';
 export type PublishingMode = 'DIRECT' | 'SCANLATION';
+
+/** Positive chapter number such as `1`, `10` or `12.5` (backend: `@Positive BigDecimal`, max 50 chars). */
+const CHAPTER_NUMBER_PATTERN = /^\d{1,6}(\.\d{1,3})?$/;
+const CHAPTER_NUMBER_ERROR = 'Chapter number must be a positive number such as 1, 10 or 12.5';
+const NO_PROJECT_ERROR =
+  'No scanlation project exists for this series yet. Create one from the Scanlation workspace, then publish again.';
+
+/** Normalised chapter number (e.g. `"012.50"` -> `"12.5"`), or `null` when invalid. Never defaults to 1. */
+export function parseChapterNumber(raw: string): string | null {
+  const value = raw.trim();
+  if (!CHAPTER_NUMBER_PATTERN.test(value)) {
+    return null;
+  }
+  const n = Number(value);
+  return n > 0 ? String(n) : null;
+}
+
+/** A failure whose message is written for the user (as opposed to an unexpected exception). */
+class UploadFlowError extends Error {}
 
 export const GENRE_PRESETS = [
   'Action',
@@ -37,7 +59,7 @@ export const GENRE_PRESETS = [
 
 @Component({
   selector: 'app-upload-studio-page',
-  imports: [CommonModule, FormsModule, RouterLink, PageGridUploader],
+  imports: [FormsModule, RouterLink, PageGridUploader, CoverPicker, WizardSteps],
   templateUrl: './upload-studio-page.html',
   styleUrl: './upload-studio-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,7 +67,6 @@ export const GENRE_PRESETS = [
 export class UploadStudioPage {
   private readonly uploadService = inject(UploadService);
   private readonly seo = inject(SeoService);
-  private readonly router = inject(Router);
 
   // Wizard step
   readonly currentStep = signal<UploadStep>('manga');
@@ -78,6 +99,8 @@ export class UploadStudioPage {
   readonly createdWork = signal<Work | null>(null);
   readonly createdChapterId = signal<string | null>(null);
   readonly createdProjectId = signal<string | null>(null);
+  /** CDN URL of the uploaded cover, kept so a retry does not upload it again. */
+  private readonly uploadedCoverUrl = signal<string | null>(null);
 
   readonly availableGenres = GENRE_PRESETS;
 
@@ -86,9 +109,7 @@ export class UploadStudioPage {
     return this.title().trim().length > 0 && this.title().trim().length <= 255;
   });
 
-  readonly isChapterStepValid = computed(() => {
-    return this.chapterNumber().trim().length > 0;
-  });
+  readonly isChapterStepValid = computed(() => parseChapterNumber(this.chapterNumber()) !== null);
 
   readonly isPagesStepValid = computed(() => {
     return this.pages().length > 0;
@@ -100,6 +121,13 @@ export class UploadStudioPage {
       description: 'Create manga series, upload chapter pages, and publish directly or via scanlation pipeline.',
       path: '/upload',
     });
+    // The wizard owns the cover and page previews (they survive step changes): release them all.
+    inject(DestroyRef).onDestroy(() => this.revokePreviews());
+  }
+
+  private revokePreviews(): void {
+    revokePreviewUrl(this.coverPreviewUrl());
+    this.pages().forEach((page) => revokePreviewUrl(page.previewUrl));
   }
 
   // Genre management
@@ -121,23 +149,11 @@ export class UploadStudioPage {
   }
 
   // Cover image management
-  onCoverSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      this.setCoverFile(input.files[0]);
-    }
-  }
-
-  onCoverDrop(event: DragEvent): void {
-    event.preventDefault();
-    if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
-      this.setCoverFile(event.dataTransfer.files[0]);
-    }
-  }
-
-  private setCoverFile(file: File): void {
+  protected setCoverFile(file: File): void {
     if (isImageFile(file)) {
+      revokePreviewUrl(this.coverPreviewUrl());
       this.coverFile.set(file);
+      this.uploadedCoverUrl.set(null);
       this.coverPreviewUrl.set(createPreviewUrl(file));
       this.errorMessage.set(null);
     } else {
@@ -146,7 +162,9 @@ export class UploadStudioPage {
   }
 
   removeCover(): void {
+    revokePreviewUrl(this.coverPreviewUrl());
     this.coverFile.set(null);
+    this.uploadedCoverUrl.set(null);
     this.coverPreviewUrl.set('');
   }
 
@@ -166,7 +184,7 @@ export class UploadStudioPage {
 
   nextFromChapter(): void {
     if (!this.isChapterStepValid()) {
-      this.errorMessage.set('Please provide a valid chapter number');
+      this.errorMessage.set(CHAPTER_NUMBER_ERROR);
       return;
     }
     this.goToStep('pages');
@@ -180,140 +198,135 @@ export class UploadStudioPage {
     this.goToStep('review');
   }
 
-  // Final Publish Workflow
+  // Final Publish Workflow.
+  // Retry-safe: every step records what it created (cover URL, Work, uploaded pages, chapter/task),
+  // so a retry after a partial failure resumes where it stopped instead of duplicating entities.
   async submitUpload(): Promise<void> {
     if (!this.isMangaStepValid() || !this.isChapterStepValid() || !this.isPagesStepValid()) {
       this.errorMessage.set('Please complete all required fields before publishing.');
+      return;
+    }
+    const chapterNumber = parseChapterNumber(this.chapterNumber());
+    if (chapterNumber === null) {
+      this.errorMessage.set(CHAPTER_NUMBER_ERROR);
       return;
     }
 
     this.isSubmitting.set(true);
     this.errorMessage.set(null);
     this.uploadProgress.set(5);
-    this.uploadStatusText.set('Uploading cover image…');
 
     try {
-      let coverImageUrl = '';
-      const cover = this.coverFile();
-      if (cover) {
-        const coverRes = await new Promise<{ storageKey: string; cdnUrl: string }>((resolve, reject) => {
-          this.uploadService.uploadCover(cover).subscribe({
-            next: resolve,
-            error: reject,
-          });
-        });
-        coverImageUrl = coverRes.cdnUrl;
+      const work = await this.ensureWork();
+
+      const pending = this.pages().filter((p) => p.status !== 'done').length;
+      this.uploadProgress.set(40);
+      this.uploadStatusText.set(`Uploading ${pending} chapter pages…`);
+      const uploadedPages = await firstValueFrom(
+        this.uploadService.uploadPagesBatch(this.pages(), `scans/${work.id}/c${chapterNumber}`, 3, (completed, total, item) => {
+          this.pages.update((pages) => pages.map((p) => (p.id === item.id ? item : p)));
+          this.uploadProgress.set(40 + Math.floor((completed / total) * 45));
+          this.uploadStatusText.set(`Uploaded ${completed}/${total} pages…`);
+        })
+      );
+      const failed = uploadedPages.filter((p) => p.status !== 'done');
+      if (failed.length > 0) {
+        this.errorMessage.set(
+          `${failed.length} of ${uploadedPages.length} pages failed to upload (${failed[0].error ?? 'upload failed'}). ` +
+            'Publish again to retry only the failed pages.'
+        );
+        return;
       }
 
-      this.uploadProgress.set(20);
-      this.uploadStatusText.set('Creating series in catalog…');
-
-      const workPayload: CreateWorkPayload = {
-        title: this.title().trim(),
-        synopsis: this.synopsis().trim(),
-        type: this.type(),
-        status: this.status(),
-        coverImageUrl: coverImageUrl || undefined,
-        genres: this.selectedGenres(),
-      };
-
-      const work = await new Promise<Work>((resolve, reject) => {
-        this.uploadService.createWork(workPayload).subscribe({
-          next: resolve,
-          error: reject,
-        });
-      });
-
-      this.createdWork.set(work);
-      this.uploadProgress.set(40);
-      this.uploadStatusText.set(`Uploading ${this.pages().length} chapter pages…`);
-
-      // Upload chapter pages batch
-      const pagesToUpload = this.pages();
-      const uploadedPages = await new Promise<PageUploadItem[]>((resolve, reject) => {
-        this.uploadService
-          .uploadPagesBatch(pagesToUpload, `scans/${work.id}/c${this.chapterNumber()}`, 3, (completed, total) => {
-            const pageProgress = 40 + Math.floor((completed / total) * 45);
-            this.uploadProgress.set(pageProgress);
-            this.uploadStatusText.set(`Uploaded ${completed}/${total} pages…`);
-          })
-          .subscribe({
-            next: resolve,
-            error: reject,
-          });
-      });
-
       this.uploadProgress.set(90);
-
       if (this.publishingMode() === 'DIRECT') {
-        this.uploadStatusText.set('Publishing chapter directly to catalog…');
-
-        const pagesPayload: PageAsset[] = uploadedPages.map((p) => ({
-          pageNumber: p.pageNumber,
-          storageKey: p.storageKey || '',
-          cdnUrl: p.cdnUrl || '',
-          width: p.width,
-          height: p.height,
-        }));
-
-        const chapter = await new Promise<{ id: string }>((resolve, reject) => {
-          this.uploadService
-            .directPublishChapter(work.id, {
-              chapterNumber: this.chapterNumber().trim(),
-              title: this.chapterTitle().trim() || undefined,
-              pages: pagesPayload,
-            })
-            .subscribe({
-              next: resolve,
-              error: reject,
-            });
-        });
-
-        this.createdChapterId.set(chapter.id);
+        await this.publishDirect(work, uploadedPages, chapterNumber);
       } else {
-        this.uploadStatusText.set('Attaching RAW package to scanlation workspace…');
-
-        // Look up workspace project created for this work
-        const projects = await new Promise<{ id: string }[]>((resolve) => {
-          this.uploadService.getProjectsForWork(work.id).subscribe({
-            next: resolve,
-            error: () => resolve([]),
-          });
-        });
-
-        const projectId = projects.length > 0 ? projects[0].id : '';
-        this.createdProjectId.set(projectId);
-
-        if (projectId) {
-          const firstAssetUrl = uploadedPages[0]?.cdnUrl || '';
-          await new Promise((resolve, reject) => {
-            this.uploadService
-              .createScanlationTask(projectId, {
-                chapterNumber: parseFloat(this.chapterNumber()) || 1,
-                assetUrl: firstAssetUrl,
-                pageCount: uploadedPages.length,
-              })
-              .subscribe({
-                next: resolve,
-                error: reject,
-              });
-          });
-        }
+        await this.createScanlationTask(work, uploadedPages, chapterNumber);
       }
 
       this.uploadProgress.set(100);
       this.uploadStatusText.set('Upload completed successfully!');
       this.currentStep.set('success');
     } catch (err: unknown) {
-      console.error('Upload failed:', err);
-      const msg = err instanceof Error ? err.message : 'An unexpected error occurred during upload.';
-      this.errorMessage.set(msg);
+      this.errorMessage.set(
+        err instanceof UploadFlowError
+          ? err.message
+          : apiErrorMessage(err, 'An unexpected error occurred during upload. Please try again.')
+      );
     } finally {
       this.isSubmitting.set(false);
     }
   }
 
+  /** Uploads the cover and creates the Work once; later attempts reuse both. */
+  private async ensureWork(): Promise<Work> {
+    const existing = this.createdWork();
+    if (existing) {
+      return existing;
+    }
+
+    const cover = this.coverFile();
+    if (cover && !this.uploadedCoverUrl()) {
+      this.uploadStatusText.set('Uploading cover image…');
+      const coverRes = await firstValueFrom(this.uploadService.uploadCover(cover));
+      this.uploadedCoverUrl.set(coverRes.cdnUrl);
+    }
+
+    this.uploadProgress.set(20);
+    this.uploadStatusText.set('Creating series in catalog…');
+    const workPayload: CreateWorkPayload = {
+      title: this.title().trim(),
+      synopsis: this.synopsis().trim(),
+      type: this.type(),
+      status: this.status(),
+      coverImageUrl: this.uploadedCoverUrl() || undefined,
+      genres: this.selectedGenres(),
+    };
+    const work = await firstValueFrom(this.uploadService.createWork(workPayload));
+    this.createdWork.set(work);
+    return work;
+  }
+
+  private async publishDirect(work: Work, uploadedPages: PageUploadItem[], chapterNumber: string): Promise<void> {
+    this.uploadStatusText.set('Publishing chapter directly to catalog…');
+    const pagesPayload: PageAsset[] = uploadedPages.map((p) => ({
+      pageNumber: p.pageNumber,
+      storageKey: p.storageKey ?? '',
+      cdnUrl: p.cdnUrl ?? '',
+      width: p.width,
+      height: p.height,
+    }));
+    const chapter = await firstValueFrom(
+      this.uploadService.directPublishChapter(work.id, {
+        chapterNumber,
+        title: this.chapterTitle().trim() || undefined,
+        pages: pagesPayload,
+      })
+    );
+    this.createdChapterId.set(chapter.id);
+  }
+
+  private async createScanlationTask(work: Work, uploadedPages: PageUploadItem[], chapterNumber: string): Promise<void> {
+    this.uploadStatusText.set('Attaching RAW package to scanlation workspace…');
+    // Errors propagate: a failed lookup must be reported, not treated as "no project".
+    const projects = await firstValueFrom(this.uploadService.getProjectsForWork(work.id));
+    const projectId = projects[0]?.id;
+    if (!projectId) {
+      throw new UploadFlowError(NO_PROJECT_ERROR);
+    }
+    this.createdProjectId.set(projectId);
+    await firstValueFrom(
+      this.uploadService.createScanlationTask(projectId, {
+        chapterNumber: Number(chapterNumber),
+        assetUrl: uploadedPages[0]?.cdnUrl ?? '',
+        pageCount: uploadedPages.length,
+      })
+    );
+  }
+
   resetStudio(): void {
+    this.revokePreviews();
     this.title.set('');
     this.type.set('MANGA');
     this.status.set('ONGOING');
@@ -328,6 +341,9 @@ export class UploadStudioPage {
     this.createdWork.set(null);
     this.createdChapterId.set(null);
     this.createdProjectId.set(null);
+    this.uploadedCoverUrl.set(null);
+    this.uploadProgress.set(0);
+    this.uploadStatusText.set('');
     this.errorMessage.set(null);
     this.currentStep.set('manga');
   }

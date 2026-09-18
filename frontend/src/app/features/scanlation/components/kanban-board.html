@@ -75,38 +75,47 @@
     </div>
 
     @if (submitTarget(); as task) {
-      <div class="dialog-backdrop">
-        <form class="card form submit-dialog" role="dialog" aria-modal="true" aria-labelledby="submit-title"
-              (submit)="onSubmitWork($event)" novalidate>
-          <h2 id="submit-title">Submit work for chapter {{ task.chapterNumber }}</h2>
-          <p class="muted">Stage: {{ task.stage }}</p>
+      <!-- The dialog (and its form/focus-trap code) is only loaded when first opened. -->
+      @defer (on immediate) {
+        <div class="dialog-backdrop">
+          <form class="card form submit-dialog" role="dialog" aria-modal="true" aria-labelledby="submit-title"
+                appFocusTrap (escaped)="closeSubmit()" (submit)="onSubmitWork($event)" novalidate>
+            <h2 id="submit-title">Submit work for chapter {{ task.chapterNumber }}</h2>
+            <p class="muted">Stage: {{ task.stage }}</p>
 
-          <div class="field">
-            <label for="submit-asset-url">Asset package URL</label>
-            <input id="submit-asset-url" type="url" [formField]="submitForm.assetUrl"
-                   [attr.aria-invalid]="errors(submitForm.assetUrl).length > 0" aria-describedby="submit-asset-url-error" />
-            @for (msg of errors(submitForm.assetUrl); track $index) {
-              <span id="submit-asset-url-error" class="field-error">{{ msg }}</span>
-            }
-          </div>
+            <div class="field">
+              <label for="submit-asset-url">Asset package URL</label>
+              <input id="submit-asset-url" type="url" [formField]="submitForm.assetUrl"
+                     [attr.aria-invalid]="errors(submitForm.assetUrl).length > 0" aria-describedby="submit-asset-url-error" />
+              <div id="submit-asset-url-error" class="field-errors">
+                @for (msg of errors(submitForm.assetUrl); track $index) {
+                  <span class="field-error">{{ msg }}</span>
+                }
+              </div>
+            </div>
 
-          <div class="field">
-            <label for="submit-page-count">Page count</label>
-            <input id="submit-page-count" type="number" [formField]="submitForm.pageCount"
-                   [attr.aria-invalid]="errors(submitForm.pageCount).length > 0" aria-describedby="submit-page-count-error" />
-            @for (msg of errors(submitForm.pageCount); track $index) {
-              <span id="submit-page-count-error" class="field-error">{{ msg }}</span>
-            }
-          </div>
+            <div class="field">
+              <label for="submit-page-count">Page count</label>
+              <input id="submit-page-count" type="number" [formField]="submitForm.pageCount"
+                     [attr.aria-invalid]="errors(submitForm.pageCount).length > 0" aria-describedby="submit-page-count-error" />
+              <div id="submit-page-count-error" class="field-errors">
+                @for (msg of errors(submitForm.pageCount); track $index) {
+                  <span class="field-error">{{ msg }}</span>
+                }
+              </div>
+            </div>
 
-          <div class="dialog-actions">
-            <button type="button" class="btn" (click)="closeSubmit()">Cancel</button>
-            <button type="submit" class="btn btn-primary" [disabled]="busyTaskId() === task.id">
-              {{ busyTaskId() === task.id ? 'Submitting…' : 'Submit & advance' }}
-            </button>
-          </div>
-        </form>
-      </div>
+            <div class="dialog-actions">
+              <button type="button" class="btn" (click)="closeSubmit()">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="busyTaskId() === task.id">
+                {{ busyTaskId() === task.id ? 'Submitting…' : 'Submit & advance' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      } @loading {
+        <p class="muted" role="status">Opening…</p>
+      }
     }
 
   }

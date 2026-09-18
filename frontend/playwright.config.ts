@@ -43,10 +43,13 @@ export default defineConfig({
       use: { ...devices['iPhone 12'] }
     }
   ],
-  webServer: {
-    command: 'npm run start',
-    url: 'http://localhost:4200',
-    reuseExistingServer: true,
-    timeout: 120 * 1000
-  }
+  // Against a deployed environment (PLAYWRIGHT_BASE_URL, e.g. `npm run e2e:staging`) no local server is started.
+  webServer: process.env['PLAYWRIGHT_BASE_URL']
+    ? undefined
+    : {
+        command: 'npm run start',
+        url: 'http://localhost:4200',
+        reuseExistingServer: true,
+        timeout: 120 * 1000
+      }
 });

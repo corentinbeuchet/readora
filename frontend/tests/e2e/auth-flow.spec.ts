@@ -32,8 +32,8 @@ test.describe('Authentication flow', () => {
     await expect(page.getByRole('tab', { name: 'Overview' })).toBeVisible();
     await expect(page.getByLabel('Display name')).toHaveValue(username);
 
-    // A plain reader has no Scanlation entry in the menubar and no bookmarks yet.
-    await expect(page.getByRole('menuitem', { name: 'Scanlation' })).toHaveCount(0);
+    // A plain reader has no Scanlation entry in the primary navigation and no bookmarks yet.
+    await expect(page.getByRole('link', { name: 'Scanlation' })).toHaveCount(0);
     await page.getByRole('tab', { name: 'Bookmarks' }).click();
     await expect(page.getByText('Bookmarks are a Premium feature')).toBeVisible();
 

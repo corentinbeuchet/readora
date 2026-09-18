@@ -38,9 +38,8 @@ describe('KanbanBoard (API-driven, permission gated)', () => {
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     store = TestBed.inject(AuthStore);
-    state = TestBed.inject(ScanlationState);
-    state.clear();
     fixture = TestBed.createComponent(KanbanBoard);
+    state = fixture.debugElement.injector.get(ScanlationState);
     fixture.componentRef.setInput('projectId', PROJECT_ID);
   });
 
@@ -109,7 +108,7 @@ describe('KanbanBoard (API-driven, permission gated)', () => {
     await render();
 
     all('.btn-submit')[0].click();
-    fixture.detectChanges();
+    await settle(fixture); // the dialog is a @defer block: its code loads on first open
     expect(q('[role="dialog"]')).not.toBeNull();
 
     const url = q('#submit-asset-url') as HTMLInputElement;
@@ -163,5 +162,68 @@ describe('KanbanBoard (API-driven, permission gated)', () => {
     expect(uploadLink).not.toBeNull();
     expect(uploadLink.getAttribute('href')).toBe('/upload');
     expect(uploadLink.textContent).toContain('Upload Studio');
+  });
+
+  it('does not show the previous project while another one loads or when it fails', async () => {
+    await signIn(store, http, mockUser({ permissions: ['PROJECT_VIEW'] }));
+    await render();
+    expect(state.currentProject()?.id).toBe(PROJECT_ID);
+
+    fixture.componentRef.setInput('projectId', 'proj-2');
+    await settle(fixture);
+    expect(state.currentProject()).toBeNull();
+    expect(all('.task-card').length).toBe(0);
+
+    http.expectOne(`${API}/scanlation/projects/proj-2`).flush({ success: false, data: null, error: 'not found' }, { status: 404, statusText: 'Not Found' });
+    await settle(fixture);
+    expect(state.currentProject()).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('FlameScans Solo Leveling');
+  });
+
+  it('gives every board its own state (not a root singleton)', () => {
+    const other = TestBed.createComponent(KanbanBoard);
+    expect(other.debugElement.injector.get(ScanlationState)).not.toBe(state);
+    expect(() => TestBed.inject(ScanlationState)).toThrow();
+  });
+
+  describe('submit dialog accessibility', () => {
+    const key = (target: Element, k: string, shiftKey = false): KeyboardEvent => {
+      const event = new KeyboardEvent('keydown', { key: k, shiftKey, bubbles: true, cancelable: true });
+      target.dispatchEvent(event);
+      fixture.detectChanges();
+      return event;
+    };
+
+    async function openDialog(): Promise<HTMLButtonElement> {
+      await signIn(store, http, mockUser({ permissions: ['PROJECT_VIEW', 'TASK_SUBMIT'] }));
+      await render();
+      const trigger = all('.btn-submit')[0] as HTMLButtonElement;
+      trigger.focus();
+      trigger.click();
+      await settle(fixture);
+      return trigger;
+    }
+
+    it('moves focus into the dialog, traps Tab, closes on Escape and returns focus', async () => {
+      const trigger = await openDialog();
+      const dialog = q('[role="dialog"]')!;
+      const first = q('#submit-asset-url')!;
+      const buttons = Array.from(dialog.querySelectorAll('button')) as HTMLButtonElement[];
+      const last = buttons[buttons.length - 1];
+
+      expect(document.activeElement).toBe(first);
+
+      last.focus();
+      expect(key(last, 'Tab').defaultPrevented).toBe(true);
+      expect(document.activeElement).toBe(first);
+
+      expect(key(first, 'Tab', true).defaultPrevented).toBe(true);
+      expect(document.activeElement).toBe(last);
+
+      key(last, 'Escape');
+      await settle(fixture);
+      expect(q('[role="dialog"]')).toBeNull();
+      expect(document.activeElement).toBe(trigger);
+    });
   });
 });

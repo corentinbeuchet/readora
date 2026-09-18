@@ -1,12 +1,10 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Service, computed, signal } from '@angular/core';
 import { Chapter, PageAsset } from '@app/core/models/readora.models';
 
 export type ViewMode = 'VERTICAL' | 'PAGED';
 export type ReadingDirection = 'LTR' | 'RTL' | 'VERTICAL';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class ReaderState {
   private readonly _currentChapter = signal<Chapter | null>(null);
   private readonly _currentPageIndex = signal<number>(0);
@@ -37,9 +35,12 @@ export class ReaderState {
     return total === 0 || this._currentPageIndex() >= total - 1;
   });
 
-  setChapter(chapter: Chapter): void {
+  /** Loads a chapter and positions the reader on `startIndex` (0-based, clamped to the chapter). */
+  setChapter(chapter: Chapter, startIndex = 0): void {
+    const last = Math.max(0, chapter.pages.length - 1);
+    const index = Number.isInteger(startIndex) ? Math.min(Math.max(0, startIndex), last) : 0;
     this._currentChapter.set(chapter);
-    this._currentPageIndex.set(0);
+    this._currentPageIndex.set(index);
   }
 
   setViewMode(mode: ViewMode): void {

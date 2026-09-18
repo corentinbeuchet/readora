@@ -1,13 +1,13 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
-import { Injectable, Signal, inject } from '@angular/core';
+import { Service, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiResponse, Chapter, ChapterSummary, CreateWorkPayload, DirectPublishChapterPayload, PagedResponse, ScanlationProject, Work, WorkSummary } from '../models/readora.models';
-import { ApiClient } from './api-client';
+import { Chapter, ChapterSummary, CreateWorkPayload, DirectPublishChapterPayload, PagedResponse, ScanlationProject, Work, WorkSummary } from '../models/readora.models';
+import { ApiClient, parseEnvelope } from './api-client';
 
 const EMPTY_PAGE: PagedResponse<WorkSummary> = { items: [], page: 0, size: 0, totalElements: 0, totalPages: 0 };
 
 /** `/api/v1/works` (public catalog). */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class CatalogApi {
   private readonly api = inject(ApiClient);
 
@@ -38,7 +38,7 @@ export class CatalogApi {
   worksResource(page: Signal<number>, size: Signal<number>): HttpResourceRef<PagedResponse<WorkSummary>> {
     return httpResource<PagedResponse<WorkSummary>>(
       () => ({ url: this.api.url('/works'), params: { page: page(), size: size() } }),
-      { parse: (raw) => (raw as ApiResponse<PagedResponse<WorkSummary>>).data ?? EMPTY_PAGE, defaultValue: EMPTY_PAGE }
+      { parse: (raw) => parseEnvelope<PagedResponse<WorkSummary>>(raw) ?? EMPTY_PAGE, defaultValue: EMPTY_PAGE }
     );
   }
 
@@ -48,7 +48,7 @@ export class CatalogApi {
         const id = workId();
         return id ? this.api.url(`/works/${id}`) : undefined;
       },
-      { parse: (raw) => (raw as ApiResponse<Work>).data ?? undefined }
+      { parse: (raw) => parseEnvelope<Work>(raw) }
     );
   }
 
@@ -58,7 +58,7 @@ export class CatalogApi {
         const id = workId();
         return id ? this.api.url(`/works/${id}/chapters`) : undefined;
       },
-      { parse: (raw) => (raw as ApiResponse<ChapterSummary[]>).data ?? [], defaultValue: [] }
+      { parse: (raw) => parseEnvelope<ChapterSummary[]>(raw) ?? [], defaultValue: [] }
     );
   }
 }

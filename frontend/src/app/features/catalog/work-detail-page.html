@@ -9,14 +9,19 @@
     </p>
   } @else if (work.value(); as w) {
     <article class="work-detail">
-      <img
-        class="work-cover"
-        [src]="w.coverImageUrl || fallbackCover"
-        [alt]="'Cover of ' + w.title"
-        (error)="handleCoverError($event, fallbackCover)"
-        width="240"
-        height="336"
-      />
+      @if (w.coverImageUrl) {
+        <img
+          class="work-cover"
+          [ngSrc]="w.coverImageUrl"
+          [alt]="'Cover of ' + w.title"
+          (error)="handleCoverError($event, fallbackCover)"
+          width="240"
+          height="336"
+          priority
+        />
+      } @else {
+        <img class="work-cover" [src]="fallbackCover" [alt]="'Cover of ' + w.title" width="240" height="336" />
+      }
       <div class="work-body">
         <h1>{{ w.title }}</h1>
         <p class="work-meta">
@@ -31,7 +36,7 @@
         <div class="work-actions">
           @if (bookmark(); as bm) {
             @if (bm.lastReadChapterId) {
-              <a [routerLink]="['/read', bm.lastReadChapterId]" class="btn btn-primary">Continue reading (page {{ bm.lastReadPageIndex }})</a>
+              <a [routerLink]="['/read', bm.lastReadChapterId]" [queryParams]="{ page: bm.lastReadPageIndex }" class="btn btn-primary">Continue reading (page {{ bm.lastReadPageIndex }})</a>
             }
           } @else if (firstChapterId(); as first) {
             <a [routerLink]="['/read', first]" class="btn btn-primary">Start reading</a>
@@ -44,6 +49,11 @@
       <h2 id="chapters-heading">Chapters</h2>
       @if (chapters.isLoading()) {
         <p class="muted" role="status">Loading chapters…</p>
+      } @else if (chapters.error()) {
+        <p class="form-error" role="alert">
+          The chapter list could not be loaded.
+          <button type="button" class="btn btn-link" (click)="chapters.reload()">Retry</button>
+        </p>
       } @else if (!chapters.value() || chapters.value().length === 0) {
         <p class="muted">No chapters have been published yet.</p>
       } @else {

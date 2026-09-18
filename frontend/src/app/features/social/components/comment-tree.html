@@ -12,13 +12,14 @@
           <span class="comment-date">{{ comment.createdAt | date:'short' }}</span>
         </div>
 
-        <div class="comment-content" [class.spoiler-blur]="comment.isSpoiler && !revealedSpoilers.has(comment.id)">
-          {{ comment.content }}
-        </div>
-        @if (comment.isSpoiler && !revealedSpoilers.has(comment.id)) {
+        @if (isHidden(comment)) {
+          <!-- The spoiler text is not in the DOM (nor in prerendered HTML) until revealed. -->
+          <p class="comment-content spoiler-placeholder muted">This comment contains spoilers.</p>
           <button type="button" (click)="revealSpoiler(comment.id)" class="btn-spoiler">
             Show Spoiler
           </button>
+        } @else {
+          <div class="comment-content">{{ comment.content }}</div>
         }
 
         <div class="comment-footer">

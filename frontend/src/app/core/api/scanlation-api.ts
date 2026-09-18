@@ -1,11 +1,11 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
-import { Injectable, Signal, inject } from '@angular/core';
+import { Service, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiResponse, CreateTaskRequest, ScanlationProject, SubmitTaskRequest, WorkflowTask } from '../models/readora.models';
-import { ApiClient } from './api-client';
+import { CreateTaskRequest, ScanlationProject, SubmitTaskRequest, WorkflowTask } from '../models/readora.models';
+import { ApiClient, parseEnvelope } from './api-client';
 
 /** `/api/v1/scanlation/projects` — needs `PROJECT_VIEW` / `TASK_CLAIM` / `TASK_SUBMIT` / `CHAPTER_PUBLISH`. */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class ScanlationApi {
   private readonly api = inject(ApiClient);
 
@@ -35,7 +35,7 @@ export class ScanlationApi {
         const id = projectId();
         return id ? this.api.url(`/scanlation/projects/${id}`) : undefined;
       },
-      { parse: (raw) => (raw as ApiResponse<ScanlationProject>).data ?? undefined }
+      { parse: (raw) => parseEnvelope<ScanlationProject>(raw) }
     );
   }
 }

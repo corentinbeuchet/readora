@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { BookmarksApi } from '@app/core/api/bookmarks-api';
@@ -9,7 +9,7 @@ import { FALLBACK_COVER_IMAGE, onImageError } from '@app/core/utils/image-utils'
 
 @Component({
   selector: 'app-work-detail-page',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, NgOptimizedImage],
   templateUrl: './work-detail-page.html',
   styleUrl: './work-detail-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -31,9 +31,9 @@ export class WorkDetailPage {
   /** Bookmark of the current user for this work (only fetched with BOOKMARK_READ). */
   private readonly canReadBookmark = computed(() => this.auth.can('BOOKMARK_READ'));
   protected readonly bookmarks = this.bookmarksApi.listResource(this.canReadBookmark);
-  protected readonly bookmark = computed(() => this.bookmarks.value()?.find((b) => b.workId === this.workId()) ?? null);
+  protected readonly bookmark = computed(() => (this.bookmarks.hasValue() ? this.bookmarks.value() : []).find((b) => b.workId === this.workId()) ?? null);
 
-  protected readonly firstChapterId = computed(() => this.chapters.value()?.[0]?.id ?? null);
+  protected readonly firstChapterId = computed(() => (this.chapters.hasValue() ? this.chapters.value()[0]?.id : null) ?? null);
 
   constructor() {
     effect(() => {

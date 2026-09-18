@@ -1,0 +1,35 @@
+<div class="cover-uploader-section" role="group" aria-labelledby="cover-image-label">
+  <span id="cover-image-label" class="group-label">Cover Image</span>
+  @if (previewUrl()) {
+    <div class="cover-preview-card">
+      <img [src]="previewUrl()" alt="Cover preview" class="cover-img" />
+      <button type="button" class="btn btn-danger-outline btn-sm remove-cover-btn" (click)="removed.emit()">
+        Change Cover
+      </button>
+    </div>
+  } @else {
+    <div
+      class="cover-drop-zone"
+      (dragover)="$event.preventDefault()"
+      (drop)="onDrop($event)"
+      (click)="coverInput.click()"
+      (keydown.enter)="coverInput.click()"
+      (keydown.space)="$event.preventDefault(); coverInput.click()"
+      tabindex="0"
+      role="button"
+      aria-label="Upload cover image"
+    >
+      <input
+        #coverInput
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        class="sr-only"
+        tabindex="-1"
+        (change)="onInputChange($event)"
+      />
+      <span class="cover-icon" aria-hidden="true">🖼️</span>
+      <p><strong>Upload Cover</strong></p>
+      <p class="muted small">Drag & drop or browse (JPEG, PNG, WebP)</p>
+    </div>
+  }
+</div>

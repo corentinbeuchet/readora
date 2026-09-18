@@ -4,6 +4,7 @@ import { FormField, form, min, pattern, required, submit } from '@angular/forms/
 import { firstValueFrom } from 'rxjs';
 import { ScanlationApi } from '@app/core/api/scanlation-api';
 import { AuthStore } from '@app/core/auth/auth-store';
+import { FocusTrapDirective } from '@app/core/a11y/focus-trap.directive';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { WorkflowStage, WorkflowTask } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
@@ -17,9 +18,11 @@ interface SubmitModel {
 
 @Component({
   selector: 'app-kanban-board',
-  imports: [RouterLink, FormField, HasPermissionDirective],
+  imports: [RouterLink, FormField, HasPermissionDirective, FocusTrapDirective],
   templateUrl: './kanban-board.html',
   styleUrl: './kanban-board.scss',
+  // Page-scoped state: a fresh ScanlationState per board, discarded on navigation.
+  providers: [ScanlationState],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class KanbanBoard {
@@ -58,11 +61,17 @@ export class KanbanBoard {
   constructor() {
     this.seo.private_('Scanlation workspace');
     effect(() => {
+      const id = this.projectId();
       // `value()` throws while the resource is in error state: check `hasValue()` first.
       const loaded = this.project.hasValue() ? this.project.value() : undefined;
-      if (loaded) {
-        untracked(() => this.state.setProject(loaded));
-      }
+      untracked(() => {
+        if (loaded && loaded.id === id) {
+          this.state.setProject(loaded);
+        } else if (this.state.currentProject()?.id !== id || this.project.error()) {
+          // Another project is loading, or it failed: never keep showing the previous project.
+          this.state.clear();
+        }
+      });
     });
   }
 

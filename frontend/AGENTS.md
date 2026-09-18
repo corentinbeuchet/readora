@@ -25,9 +25,9 @@
   readonly isAuthenticated = computed(() => this._accessToken() !== null && this._user() !== null);
   ```
 - Name stores `*Store` in `*-store.ts`. Only app-wide state is `providedIn: 'root'`; page-scoped state is provided on the
-  route/component so it resets on navigation (the root-scoped `ScanlationState` shows stale data — don't copy).
+  route/component so it resets on navigation (model: `KanbanBoard` `providers: [ScanlationState]`).
 - New singleton services use the Angular 22 `@Service()` decorator (root-provided, `inject()`-only) instead of
-  `@Injectable({ providedIn: 'root' })`; existing ones migrate under F22.
+  `@Injectable({ providedIn: 'root' })` (enforced by `@angular-eslint/prefer-service-decorator`).
 - Derived read-only state → `computed()`; derived but locally overridable state → `linkedSignal()`. Never `mutate`,
   only `set` / `update`. Keep transformations pure.
 - Inside `effect`, wrap writes/reads you don't want tracked in `untracked(...)`. Check `resource.hasValue()` before `value()`.
@@ -40,9 +40,11 @@
   readonly workId = input.required<string>();            // route param via withComponentInputBinding
   protected readonly work = this.catalogApi.workResource(this.workId);   // read by the template
   ```
-  Resource `parse` must surface `success: false` as an error, not silently return `[]`.
+  Resource `parse` uses `parseEnvelope<T>` (`core/api/api-client.ts`): `success: false` becomes an error, never `[]`.
+  In error state `value()` throws: read list resources through `hasValue()`.
 - Writes: `await firstValueFrom(this.api.x(...))` — never `new Promise(res => obs.subscribe(...))`.
-- User-facing error text via `apiErrorMessage(err)` (`features/auth/auth-form.utils.ts`). No `console.error` as handling.
+- User-facing error text via `apiErrorMessage(err)` (`core/api/api-client.ts`, re-exported by `features/auth/auth-form.utils.ts`).
+  No `console.error` as handling.
 - Multi-step flows (upload/publish) must be retry-safe: reuse already-created entities, mark failed items, surface errors.
 - `HttpClient` uses the fetch backend by default in v22: don't add `withFetch()` (deprecated). Upload progress needs
   `provideHttpClient(withXhr())` + `reportUploadProgress: true` (`reportProgress` is deprecated).
@@ -60,7 +62,7 @@
 - Forms: Signal Forms (`@angular/forms/signals`) + `visibleErrors(field)`, with
   `[attr.aria-invalid]="errors(f.x).length > 0"` and `aria-describedby`. Ids must be unique — never a static id inside `@for`.
 - Every `<label>` has a control; custom radios/toggles need `role`, `aria-checked/pressed`, and keyboard handlers;
-  dialogs need focus trap, Escape, initial focus and focus return; hover-only controls must also show on `:focus-visible`.
+  dialogs need focus trap, Escape, initial focus and focus return (`appFocusTrap`, `core/a11y/focus-trap.directive.ts`); hover-only controls must also show on `:focus-visible`.
 - Use global styles `.field`, `.form-error`, `.sr-only` — no Bootstrap-style classes, no per-component `.visually-hidden`.
 - Every page must pass AXE checks and WCAG 2.2 AA (focus management, contrast, ARIA).
 - Images: `NgOptimizedImage` (`ngSrc`, `width`/`height` or `fill`, `priority` on the LCP image such as the first
@@ -81,12 +83,13 @@
 - No direct `window`, `document`, `navigator`, `localStorage`. Use `inject(DOCUMENT)` / `DOCUMENT.defaultView?`, and
   run browser-only work in `afterNextRender()`. Prefer platform-specific providers over `isPlatformBrowser`; never
   branch on platform inside templates (hydration mismatch).
-- App initializers must be server-safe (skip on the server) and have a `timeout()`. Async server work that must finish
+- App initializers must be server-safe (skip on the server) and have a `timeout()` (model: `core/auth/session-restore.ts`,
+  registered only in `app.config.browser.ts`). Async server work that must finish
   before render is registered with `PendingTasks`.
 - `getPrerenderParams` calls `inject()` before any `await`.
 - Hydration: `provideClientHydration(withEventReplay())` — incremental hydration is on by default in v22; use
   `@defer (hydrate on viewport|interaction)` for heavy prerendered sections.
-- Security: `security.allowedHosts` (or `NG_ALLOWED_HOSTS`) set for SSR; CSP via `autoCsp` / per-request nonce; keep
+- Security: `security.allowedHosts` (or `NG_ALLOWED_HOSTS`) set for SSR; CSP via a per-request nonce (`autoCsp` cannot be combined with SSR in 22.1, see F23); keep
   Trusted Types compatible; build `SafeValue`s as close to the input as possible and never bypass sanitization on
   user content.
 - Browser side effects go behind an overridable method (model: `plans-page.ts` `protected redirectTo(url)`).
@@ -108,35 +111,35 @@
 - Use shared fixtures (`tests/unit/core/auth/auth-fixtures.ts`: `signIn`, `mockUser`) and `settle(fixture)` from
   `tests/unit/test-utils.ts` for `httpResource` components. `http.verify()` in `afterEach`.
 - Drive the real DOM and assert request bodies; don't poke component internals.
-- `vi.useFakeTimers()` for debounce/timeouts — no real `setTimeout` waits.
+- `vi.useFakeTimers()` for debounce/timeouts — no real `setTimeout` waits. `tests/**` is linted by `npm run lint`.
 - Cover failure and retry paths, not only the happy path. No placeholder e2e tests; no `test.skip` on missing data.
 
 ## Known pitfalls found in review (2026-09) — don't reintroduce
 Backlog ids used in commit `Refs:` (status: `git log --grep "review-2026-09/F<n>"`).
-- F1 Upload retry recreates the Work; batch failure leaves items `uploading`; SCANLATION mode swallows errors; `parseFloat || 1`.
+- F1 Upload retry recreates the Work; batch failure leaves items `uploading`; SCANLATION mode swallows errors; `parseFloat || 1`. — fixed 06e748b
 - F2 Reader: vertical mode never updates `currentPageIndex`; opening a chapter overwrites the bookmark with page 1;
-  view-mode switch refetches and resets; "continue reading" doesn't restore the page.
-- F3 Progress sync stream dies after one failed save (no inner `catchError`).
-- F4 `auth.interceptor.ts` clears the session when the *retried* request fails.
-- F5 Object URLs never revoked in `page-grid-uploader` / cover preview; serial image decoding.
-- F6 ZIP/CBZ loaded fully in memory with no size/entry limits; failures silent.
-- F7 `ng lint` fails (unused imports, unlabeled controls, keyboard-less `role="radio"`).
-- F8 `provideAppInitializer` session restore runs during SSR/prerender with no timeout.
-- F9 Root-scoped `ScanlationState` shows stale project data.
-- F10 Profile form effect overwrites in-progress edits.
-- F11 `httpResource` parsers ignore `success:false`.
-- F12 Comments: replies appended at bottom; spoilers present in DOM/prerender.
-- F13 A11y: kanban modal focus trap/Escape; focus-invisible buttons; duplicate ids in `@for`.
-- F14 Build/SEO: missing favicon/og image in `public/`; sitemap only on `npm run build`; upload scss over budget.
-- F15 Eager routes (`ChapterViewer`, `KanbanBoard`).
-- F16 Low: shell double navigation; Stripe redirect host unchecked; unused `proxy.conf.json`; POSIX env in `e2e:staging`.
-- F17 Tests: upload happy-path only; real timers; placeholder e2e; e2e not on SSR build; `tests/**` not linted.
+  view-mode switch refetches and resets; "continue reading" doesn't restore the page. — fixed d685632
+- F3 Progress sync stream dies after one failed save (no inner `catchError`). — fixed d685632
+- F4 `auth.interceptor.ts` clears the session when the *retried* request fails. — fixed 0c8ade9
+- F5 Object URLs never revoked in `page-grid-uploader` / cover preview; serial image decoding. — fixed d8262f2
+- F6 ZIP/CBZ loaded fully in memory with no size/entry limits; failures silent. — fixed 781a96d
+- F7 `ng lint` fails (unused imports, unlabeled controls, keyboard-less `role="radio"`). — fixed 7b3901d
+- F8 `provideAppInitializer` session restore runs during SSR/prerender with no timeout. — fixed 85c548b
+- F9 Root-scoped `ScanlationState` shows stale project data. — fixed 3dc0948
+- F10 Profile form effect overwrites in-progress edits. — fixed 25b939a
+- F11 `httpResource` parsers ignore `success:false`. — fixed 4d524da
+- F12 Comments: replies appended at bottom; spoilers present in DOM/prerender. — fixed 356615d
+- F13 A11y: kanban modal focus trap/Escape; focus-invisible buttons; duplicate ids in `@for`. — fixed 25814d7
+- F14 Build/SEO: missing favicon/og image in `public/`; sitemap only on `npm run build`; upload scss over budget. — fixed ecd9f84, bed5898, 3d5d938
+- F15 Eager routes (`ChapterViewer`, `KanbanBoard`). — fixed ae4dbbf
+- F16 Low: shell double navigation; Stripe redirect host unchecked; unused `proxy.conf.json`; POSIX env in `e2e:staging`. — fixed 73bdda6, 76b029c, ba65a83
+- F17 Tests: upload happy-path only; real timers; placeholder e2e; e2e not on SSR build; `tests/**` not linted. — partially fixed 95fe6f4 (still open: e2e runs against `ng serve`, not the prerendered build)
 
 Improvements from best-practice research (2026-09), not bugs:
 - F18 Upgrade to stable Angular 22.2, then switch template-only members from `protected` to `private` (~106 today).
-- F19 Remove `withFetch()` (`app.config.ts`); upload progress via `withXhr()` + `reportUploadProgress`.
-- F20 `NgOptimizedImage` for covers and reader pages (none today; also fixes reader layout shift from F13).
-- F21 `@defer` the comments section and the kanban modal.
-- F22 Migrate the 14 `@Injectable` root services to `@Service()` (check angular-eslint for a `prefer-service-decorator` rule).
-- F23 `autoCsp` + `security.allowedHosts` for SSR.
+- F19 Remove `withFetch()` (`app.config.ts`); upload progress via `withXhr()` + `reportUploadProgress`. — fixed 176fb94 (no withXhr: progress is per settled page)
+- F20 `NgOptimizedImage` for covers and reader pages (none today; also fixes reader layout shift from F13). — fixed ef12282
+- F21 `@defer` the comments section and the kanban modal. — fixed 385f63d
+- F22 Migrate the 14 `@Injectable` root services to `@Service()` (check angular-eslint for a `prefer-service-decorator` rule). — fixed 12aa7fd
+- F23 `autoCsp` + `security.allowedHosts` for SSR. — blocked: Angular 22.1 build fails with "Cannot set both SSR and auto-CSP"; allowedHosts only applies to an SSR server (outputMode is static)
 - F24 Axe accessibility assertions in Playwright e2e (`@axe-core/playwright`).

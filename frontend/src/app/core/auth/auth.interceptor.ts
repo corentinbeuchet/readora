@@ -1,6 +1,6 @@
 import { HttpErrorResponse, HttpHandlerFn, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, switchMap, throwError } from 'rxjs';
+import { catchError, of, switchMap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthStore } from './auth-store';
 
@@ -29,7 +29,12 @@ function withAuth(req: HttpRequest<unknown>, token: string | null): HttpRequest<
 
 /**
  * Attaches the bearer token to API calls, sends the refresh cookie on `/auth/*`, and on a 401
- * tries **one** refresh followed by a retry; if that fails the session is cleared.
+ * tries **one** refresh followed by a retry.
+ *
+ * Only the refresh itself is guarded: `AuthStore.refresh()` clears the session when the refresh
+ * cookie is rejected (401/403) and resolves `null`; any other refresh failure (network, 5xx) keeps
+ * the session and surfaces the original 401. Errors from the *retried* request (404, 500, …)
+ * propagate untouched and never log the user out.
  */
 export const authInterceptor: HttpInterceptorFn = (req, next: HttpHandlerFn) => {
   if (!isApiRequest(req)) {
@@ -46,17 +51,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next: HttpHandlerFn) => 
         return throwError(() => error);
       }
 
-      return store.refresh().pipe(
-        switchMap((session) => {
-          if (!session) {
-            return throwError(() => error);
-          }
-          return next(withAuth(req, session.accessToken));
-        }),
-        catchError((refreshError: unknown) => {
-          store.clearSession();
-          return throwError(() => (refreshError instanceof HttpErrorResponse ? refreshError : error));
-        })
+      const refreshed = store.refresh().pipe(catchError(() => of(null)));
+      return refreshed.pipe(
+        switchMap((session) => (session ? next(withAuth(req, session.accessToken)) : throwError(() => error)))
       );
     })
   );

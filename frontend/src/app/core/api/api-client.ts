@@ -1,5 +1,5 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/readora.models';
@@ -39,7 +39,7 @@ export interface RequestOptions {
  * Thin wrapper around HttpClient that knows the backend base URL, unwraps the
  * `ApiResponse<T>` envelope and converts HTTP failures into `ApiError`.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class ApiClient {
   private readonly http = inject(HttpClient);
   readonly baseUrl = environment.apiUrl.replace(/\/+$/, '');
@@ -81,6 +81,30 @@ export class ApiClient {
     }
     return { params, withCredentials: options.withCredentials };
   }
+}
+
+/** User-facing message for a failed API call (`ApiError`), with a fallback for anything else. */
+export function apiErrorMessage(error: unknown, fallback = 'Something went wrong. Please try again.'): string {
+  if (error instanceof ApiError) {
+    if (error.status === 0) {
+      return 'Cannot reach the server. Check your connection and try again.';
+    }
+    return error.message || fallback;
+  }
+  return fallback;
+}
+
+/**
+ * `httpResource` parser for the API envelope: returns `data`, and throws an `ApiError` (so the
+ * resource enters its error state) for `success: false` or a body that is not an envelope, instead
+ * of silently turning a failure into an empty value.
+ */
+export function parseEnvelope<T>(raw: unknown): T {
+  const body = raw as Partial<ApiResponse<T>> | null;
+  if (!body || typeof body !== 'object' || typeof body.success !== 'boolean') {
+    throw new ApiError(200, 'Unexpected response from the server', raw);
+  }
+  return unwrap(body as ApiResponse<T>);
 }
 
 export function unwrap<T>(response: ApiResponse<T>): T {

@@ -31,9 +31,11 @@
         <label for="comment-content">{{ replyTo() ? 'Your reply' : 'Add a comment' }}</label>
         <textarea id="comment-content" [formField]="commentForm.content"
                   [attr.aria-invalid]="errors(commentForm.content).length > 0" aria-describedby="comment-content-error"></textarea>
-        @for (msg of errors(commentForm.content); track $index) {
-          <span id="comment-content-error" class="field-error">{{ msg }}</span>
-        }
+        <div id="comment-content-error" class="field-errors">
+          @for (msg of errors(commentForm.content); track $index) {
+            <span class="field-error">{{ msg }}</span>
+          }
+        </div>
       </div>
 
       <div class="compose-options">
@@ -42,9 +44,11 @@
             <label for="comment-page">Page (optional)</label>
             <input id="comment-page" type="number" [formField]="commentForm.pageReference"
                    [attr.aria-invalid]="errors(commentForm.pageReference).length > 0" aria-describedby="comment-page-error" />
-            @for (msg of errors(commentForm.pageReference); track $index) {
-              <span id="comment-page-error" class="field-error">{{ msg }}</span>
-            }
+            <div id="comment-page-error" class="field-errors">
+              @for (msg of errors(commentForm.pageReference); track $index) {
+                <span class="field-error">{{ msg }}</span>
+              }
+            </div>
           </div>
         }
         <label class="checkbox" for="comment-spoiler">

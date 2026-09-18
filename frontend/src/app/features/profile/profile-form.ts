@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { FieldTree, FormField, form, maxLength, pattern, required, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import { ProfileApi } from '@app/core/api/profile-api';
@@ -35,12 +35,22 @@ export class ProfileForm {
 
   protected readonly status = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
   protected readonly errorMessage = signal<string | null>(null);
+  /** Id of the user the form was last seeded for. */
+  private seededFor: string | null = null;
 
   constructor() {
-    // Pre-fill the form whenever the bound profile changes.
+    // Seed the form from the bound profile. A refreshed profile object (e.g. AuthStore reloading the
+    // user after a checkout) must not overwrite what the user is typing: only a pristine form, or a
+    // different user, is re-seeded.
     effect(() => {
       const p = this.profile();
-      this.model.set({ displayName: p.displayName, bio: p.bio ?? '', avatarUrl: p.avatarUrl ?? '' });
+      untracked(() => {
+        if (p.id === this.seededFor && this.profileForm().dirty()) {
+          return;
+        }
+        this.seededFor = p.id;
+        this.profileForm().reset({ displayName: p.displayName, bio: p.bio ?? '', avatarUrl: p.avatarUrl ?? '' });
+      });
     });
   }
 
@@ -56,6 +66,8 @@ export class ProfileForm {
       try {
         const { displayName, bio, avatarUrl } = f().value();
         const updated = await firstValueFrom(this.profileApi.update({ displayName, bio, avatarUrl: avatarUrl || null }));
+        // Saved: the form is pristine again, so the effect re-seeds it from the server's version.
+        this.profileForm().reset();
         this.auth.setUser(updated);
         this.saved.emit(updated);
         this.status.set('saved');

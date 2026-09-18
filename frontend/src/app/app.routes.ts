@@ -1,8 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, guestGuard } from './core/auth/auth.guard';
 import { permissionGuard } from './core/auth/permission.guard';
-import { ChapterViewer } from './features/reader/components/chapter-viewer';
-import { KanbanBoard } from './features/scanlation/components/kanban-board';
 
 /**
  * Page titles / meta are owned by `SeoService` inside each page component (so prerendered HTML
@@ -29,16 +27,19 @@ export const routes: Routes = [
     data: { permission: 'WORK_CREATE' }
   },
   { path: 'read', redirectTo: 'works', pathMatch: 'full' },
-  { path: 'read/:chapterId', component: ChapterViewer },
+  {
+    path: 'read/:chapterId',
+    loadComponent: () => import('./features/reader/components/chapter-viewer').then((m) => m.ChapterViewer)
+  },
   {
     path: 'scanlation',
-    component: KanbanBoard,
+    loadComponent: () => import('./features/scanlation/components/kanban-board').then((m) => m.KanbanBoard),
     canActivate: [permissionGuard],
     data: { permission: 'PROJECT_VIEW' }
   },
   {
     path: 'scanlation/:projectId',
-    component: KanbanBoard,
+    loadComponent: () => import('./features/scanlation/components/kanban-board').then((m) => m.KanbanBoard),
     canActivate: [permissionGuard],
     data: { permission: 'PROJECT_VIEW' }
   },
