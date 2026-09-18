@@ -72,4 +72,42 @@ describe('ProfilePage (Angular Aria Tabs + Signal Forms)', () => {
     expect(store.user()?.displayName).toBe('Jane R.');
     expect(fixture.nativeElement.textContent).toContain('Profile saved.');
   });
+
+  it('keeps in-progress edits when the user object is refreshed, and re-seeds once saved', async () => {
+    const name = one<HTMLInputElement>('#profile-display-name');
+    name.value = 'Typing a new name';
+    name.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    // e.g. AuthStore.reloadUser() after a Stripe checkout: same user, new object.
+    store.setUser(mockUser({ displayName: 'Jane Reader', bio: 'Bio from the server', username: 'jane' }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(one<HTMLInputElement>('#profile-display-name').value).toBe('Typing a new name');
+    expect(one<HTMLTextAreaElement>('#profile-bio').value).toBe('I read a lot');
+
+    one<HTMLFormElement>('form').dispatchEvent(new Event('submit', { cancelable: true }));
+    await fixture.whenStable();
+    http.expectOne(`${environment.apiUrl}/profile`).flush({
+      success: true,
+      data: mockUser({ displayName: 'Typing a new name', bio: 'Normalised bio', username: 'jane' }),
+      error: null
+    });
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(one<HTMLInputElement>('#profile-display-name').value).toBe('Typing a new name');
+    expect(one<HTMLTextAreaElement>('#profile-bio').value).toBe('Normalised bio');
+  });
+
+  it('re-seeds a pristine form when the profile is refreshed', async () => {
+    store.setUser(mockUser({ displayName: 'Jane Reader', bio: 'Updated elsewhere', username: 'jane' }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(one<HTMLTextAreaElement>('#profile-bio').value).toBe('Updated elsewhere');
+  });
 });
