@@ -18,6 +18,12 @@ Manga/comics reading and scanlation platform. Monorepo:
 - Local stack: `docker compose up` (Postgres, MinIO, backend). The backend image is rebuilt on every `up`
   (`pull_policy: build`, cached layers make it fast), so it always runs the current code. `docker compose up --watch`
   also rebuilds and restarts the backend whenever a backend source or pom changes.
+- Dev seed accounts (Spring profile `local`: on in docker-compose; elsewhere add `local` to the active profiles,
+  e.g. `--spring.profiles.active=local`). Password for all: `readora-dev`. Emails `<username>@readora.local`:
+  `reader` (free), `premium` (PREMIUM until 2099), `admin`, and the "Readora Demo Team" scanlators `leader`, `cleaner`,
+  `translator`, `typesetter`, `proofreader`, `quality` (QC) with one open task per stage (chapters 1–5; QC can publish ch. 5).
+  Seed file: `backend/readora-infrastructure/src/main/resources/db/seed-local/R__local_seed_accounts.sql`.
+  Never enabled with `production` (startup guard).
 
 ## Cross-cutting rules
 - `.feature` files in `.readora/context/user-stories/` are the source of truth for behaviour. New behaviour → scenario first.

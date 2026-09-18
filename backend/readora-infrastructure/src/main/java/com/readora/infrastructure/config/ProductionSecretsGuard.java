@@ -7,7 +7,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Locale;
 
-/// Fails startup when the `production` profile runs with a development or placeholder JWT secret.
+/// Fails startup when the `production` profile runs with a development or placeholder JWT secret, or together with
+/// the `local` profile (which seeds test accounts with a known password).
 /// The dev default in `application.yml` keeps local runs working; it must never reach production.
 ///
 /// @see SecurityProperties.Jwt
@@ -15,11 +16,16 @@ import java.util.Locale;
 public class ProductionSecretsGuard {
 
     static final String PRODUCTION_PROFILE = "production";
+    static final String LOCAL_SEED_PROFILE = "local";
     private static final List<String> PLACEHOLDER_MARKERS = List.of("dev-only", "test-only", "change-me", "local-compose");
 
     public ProductionSecretsGuard(Environment environment, SecurityProperties securityProperties) {
         if (!environment.acceptsProfiles(Profiles.of(PRODUCTION_PROFILE))) {
             return;
+        }
+        if (environment.acceptsProfiles(Profiles.of(LOCAL_SEED_PROFILE))) {
+            throw new IllegalStateException(
+                    "The 'local' profile seeds test accounts with a known password and must never run with 'production'");
         }
         String secret = securityProperties.jwt().secret().toLowerCase(Locale.ROOT);
         if (PLACEHOLDER_MARKERS.stream().anyMatch(secret::contains)) {

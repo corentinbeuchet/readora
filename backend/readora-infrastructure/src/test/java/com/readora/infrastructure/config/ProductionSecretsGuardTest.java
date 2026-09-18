@@ -24,6 +24,14 @@ class ProductionSecretsGuardTest {
     }
 
     @Test
+    @DisplayName("Production refuses to start with the local seed profile (known test passwords)")
+    void productionRejectsLocalSeedProfile() {
+        assertThatThrownBy(() -> new ProductionSecretsGuard(env("production", "local"), props(REAL_SECRET)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("local");
+    }
+
+    @Test
     @DisplayName("Production profile starts with a real JWT secret")
     void productionAcceptsRealSecret() {
         assertThatCode(() -> new ProductionSecretsGuard(env("production"), props(REAL_SECRET))).doesNotThrowAnyException();

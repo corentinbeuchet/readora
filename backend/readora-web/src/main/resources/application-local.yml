@@ -1,0 +1,8 @@
+# LOCAL/DEV ONLY. Adds the seed accounts (db/seed-local, password `readora-dev`) on top of the active profile,
+# e.g. SPRING_PROFILES_ACTIVE=staging,local in docker-compose. Refused together with `production`.
+spring:
+  config:
+    activate:
+      on-profile: local
+  flyway:
+    locations: classpath:db/migration,classpath:db/seed-local

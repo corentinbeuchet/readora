@@ -28,6 +28,9 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+    # The dev seed (db/seed-local, `local` profile) is a repeatable migration: starting the same database
+    # without `local` must not fail validation because that migration is "missing".
+    ignore-migration-patterns: "*:future,repeatable:missing"
 
 aws:
   s3:

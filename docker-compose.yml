@@ -69,7 +69,8 @@ services:
         - { action: rebuild, path: ./backend/readora-web/src/main }
     container_name: readora-backend
     environment:
-      SPRING_PROFILES_ACTIVE: staging
+      # `local` adds the dev seed accounts (password readora-dev, see AGENTS.md).
+      SPRING_PROFILES_ACTIVE: staging,local
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/readoradb
       SPRING_DATASOURCE_USERNAME: readora_user
       SPRING_DATASOURCE_PASSWORD: readora_pass
