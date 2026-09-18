@@ -130,6 +130,22 @@ Feature: A reading experience as good as the best manga and webtoon apps
     When "Kenji" turns on "Data saver"
     Then chapters load lighter, lower-quality images
 
+  # Inspired by: MangaDex (from docs/use-cases UC-17)
+  @should @wip
+  Scenario: Marking all previous chapters as read
+    Given "Kenji" read chapters 1 to 49 of "Solo Leveling" on another site
+    When he chooses "Mark all previous as read" on chapter 50
+    Then chapters 1 to 49 are marked as read
+    And chapter 50 is highlighted as the next one to read
+
+  # Inspired by: MangaDex reader side panel (from docs/use-cases UC-08)
+  @should @ui @wip
+  Scenario: Opening the chapter list inside the reader
+    Given "Kenji" is reading chapter 5 of "Solo Leveling"
+    When he opens the chapter list from the reader
+    Then he sees every chapter with the ones he read marked
+    And choosing chapter 2 opens it without leaving the reader
+
   # ---------------------------------------------------------------- @could
 
   # Inspired by: WEBTOON, Shonen Jump, Mihon
