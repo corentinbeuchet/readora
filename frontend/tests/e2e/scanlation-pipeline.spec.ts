@@ -17,7 +17,7 @@ test.describe('Scanlation Collaborative Multi-Role Pipeline Suite', () => {
     await page.getByRole('button', { name: 'Sign up' }).click();
     await expect(page).toHaveURL(/\/profile$/);
 
-    await expect(page.getByRole('menuitem', { name: 'Scanlation' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Scanlation' })).toHaveCount(0);
 
     await page.goto('/scanlation/00000000-0000-0000-0000-000000000000');
     await expect(page).toHaveURL(/\/forbidden/);

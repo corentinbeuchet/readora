@@ -6,17 +6,22 @@
       <span class="logo-text">Readora</span>
     </a>
 
+    <!-- Site navigation is a list of links (not an ARIA menubar): native Tab/Enter, one navigation per activation. -->
     <nav class="app-nav" aria-label="Primary">
-      <div ngMenuBar (itemSelected)="onNavSelected($event)">
-        <a ngMenuItem value="/" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
-        <a ngMenuItem value="/works" routerLink="/works" routerLinkActive="active">Catalog</a>
-        <ng-container *appHasPermission="'PROJECT_VIEW'">
-          <a ngMenuItem value="/scanlation" routerLink="/scanlation" routerLinkActive="active">Scanlation</a>
-        </ng-container>
-        <ng-container *appHasPermission="'WORK_CREATE'">
-          <a ngMenuItem value="/upload" routerLink="/upload" routerLinkActive="active">Upload Studio</a>
-        </ng-container>
-      </div>
+      <ul class="nav-list">
+        <li>
+          <a class="nav-link" routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page" [routerLinkActiveOptions]="{ exact: true }">Home</a>
+        </li>
+        <li>
+          <a class="nav-link" routerLink="/works" routerLinkActive="active" ariaCurrentWhenActive="page">Catalog</a>
+        </li>
+        <li *appHasPermission="'PROJECT_VIEW'">
+          <a class="nav-link" routerLink="/scanlation" routerLinkActive="active" ariaCurrentWhenActive="page">Scanlation</a>
+        </li>
+        <li *appHasPermission="'WORK_CREATE'">
+          <a class="nav-link" routerLink="/upload" routerLinkActive="active" ariaCurrentWhenActive="page">Upload Studio</a>
+        </li>
+      </ul>
     </nav>
 
     <div class="user-area">
