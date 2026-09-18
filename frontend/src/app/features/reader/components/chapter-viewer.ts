@@ -13,6 +13,7 @@ import {
   untracked,
   viewChildren
 } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Toolbar, ToolbarWidget, ToolbarWidgetGroup } from '@angular/aria/toolbar';
 import { Subject, catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
@@ -45,7 +46,7 @@ function pageParamToIndex(raw: string | number | null | undefined): number | nul
 
 @Component({
   selector: 'app-chapter-viewer',
-  imports: [RouterLink, Toolbar, ToolbarWidget, ToolbarWidgetGroup, HasPermissionDirective, ChapterComments],
+  imports: [RouterLink, NgOptimizedImage, Toolbar, ToolbarWidget, ToolbarWidgetGroup, HasPermissionDirective, ChapterComments],
   templateUrl: './chapter-viewer.html',
   styleUrl: './chapter-viewer.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -55,6 +56,9 @@ export class ChapterViewer {
   protected readonly auth = inject(AuthStore);
   protected readonly fallbackPage = FALLBACK_PAGE_IMAGE;
   protected readonly handlePageError = onImageError;
+  /** Used when the API has no dimensions for a page (typical manga page ratio 2:3). */
+  protected readonly defaultPageWidth = 800;
+  protected readonly defaultPageHeight = 1200;
   private readonly chaptersApi = inject(ChaptersApi);
   private readonly bookmarksApi = inject(BookmarksApi);
   private readonly seo = inject(SeoService);

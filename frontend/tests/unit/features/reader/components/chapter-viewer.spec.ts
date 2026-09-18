@@ -268,4 +268,19 @@ describe('ChapterViewer (API-driven)', () => {
     await elapse(0);
     expect(syncHint()).toContain('Progress saved');
   });
+
+  it('renders pages with NgOptimizedImage: reserved size, first page prioritised, others lazy', async () => {
+    await loadChapter();
+    const images = Array.from(fixture.nativeElement.querySelectorAll('.vertical-flow img.page-image')) as HTMLImageElement[];
+
+    expect(images[0].getAttribute('fetchpriority')).toBe('high');
+    expect(images[1].getAttribute('loading')).toBe('lazy');
+    expect(images[1].getAttribute('fetchpriority')).not.toBe('high');
+    // No dimensions from the API: 2:3 defaults still reserve the space.
+    expect(images.map((img) => [img.getAttribute('width'), img.getAttribute('height')])).toEqual([
+      ['800', '1200'],
+      ['800', '1200'],
+      ['800', '1200']
+    ]);
+  });
 });

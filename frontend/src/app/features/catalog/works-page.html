@@ -21,18 +21,23 @@
       <p class="muted">No works have been published yet.</p>
     } @else {
       <ul class="work-grid">
-        @for (work of workList.items; track work.id) {
+        @for (work of workList.items; track work.id; let first = $first) {
           <li class="work-card">
             <a [routerLink]="['/works', work.id]" class="work-link">
-              <img
-                class="work-cover"
-                [src]="work.coverImageUrl || fallbackCover"
-                [alt]="'Cover of ' + work.title"
-                (error)="handleCoverError($event, fallbackCover)"
-                width="200"
-                height="280"
-                loading="lazy"
-              />
+              @if (work.coverImageUrl) {
+                <!-- NgOptimizedImage: lazy by default, the first cover is the LCP candidate. -->
+                <img
+                  class="work-cover"
+                  [ngSrc]="work.coverImageUrl"
+                  [alt]="'Cover of ' + work.title"
+                  (error)="handleCoverError($event, fallbackCover)"
+                  width="200"
+                  height="280"
+                  [priority]="first"
+                />
+              } @else {
+                <img class="work-cover" [src]="fallbackCover" [alt]="'Cover of ' + work.title" width="200" height="280" />
+              }
               <h2 class="work-title">{{ work.title }}</h2>
               <p class="work-meta">
                 <span class="badge">{{ work.type }}</span>

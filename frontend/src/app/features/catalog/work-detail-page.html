@@ -9,14 +9,19 @@
     </p>
   } @else if (work.value(); as w) {
     <article class="work-detail">
-      <img
-        class="work-cover"
-        [src]="w.coverImageUrl || fallbackCover"
-        [alt]="'Cover of ' + w.title"
-        (error)="handleCoverError($event, fallbackCover)"
-        width="240"
-        height="336"
-      />
+      @if (w.coverImageUrl) {
+        <img
+          class="work-cover"
+          [ngSrc]="w.coverImageUrl"
+          [alt]="'Cover of ' + w.title"
+          (error)="handleCoverError($event, fallbackCover)"
+          width="240"
+          height="336"
+          priority
+        />
+      } @else {
+        <img class="work-cover" [src]="fallbackCover" [alt]="'Cover of ' + w.title" width="240" height="336" />
+      }
       <div class="work-body">
         <h1>{{ w.title }}</h1>
         <p class="work-meta">

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
@@ -9,7 +10,7 @@ const PAGE_SIZE = 24;
 
 @Component({
   selector: 'app-works-page',
-  imports: [RouterLink, HasPermissionDirective],
+  imports: [RouterLink, NgOptimizedImage, HasPermissionDirective],
   templateUrl: './works-page.html',
   styleUrl: './works-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

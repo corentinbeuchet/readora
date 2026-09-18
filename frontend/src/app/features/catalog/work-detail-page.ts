@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { BookmarksApi } from '@app/core/api/bookmarks-api';
@@ -9,7 +9,7 @@ import { FALLBACK_COVER_IMAGE, onImageError } from '@app/core/utils/image-utils'
 
 @Component({
   selector: 'app-work-detail-page',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, NgOptimizedImage],
   templateUrl: './work-detail-page.html',
   styleUrl: './work-detail-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

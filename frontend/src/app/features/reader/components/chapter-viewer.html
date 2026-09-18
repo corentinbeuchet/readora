@@ -54,27 +54,41 @@
     <div class="viewer-body" [style.transform]="'scale(' + state.zoomLevel() / 100 + ')'">
       @if (state.viewMode() === 'VERTICAL') {
         <div class="vertical-flow">
-          @for (page of state.currentChapter()?.pages; track page.pageNumber) {
+          @for (page of state.currentChapter()?.pages; track page.pageNumber; let first = $first) {
             <div #pageWrapper class="page-wrapper" [attr.data-page]="page.pageNumber" [attr.data-page-index]="$index">
-              <img
-                [src]="page.cdnUrl || fallbackPage"
-                [alt]="'Page ' + page.pageNumber"
-                (error)="handlePageError($event, fallbackPage)"
-                class="page-image"
-                loading="lazy"
-              />
+              @if (page.cdnUrl) {
+                <!-- Intrinsic size reserves the space (no layout shift); the first page is the LCP image. -->
+                <img
+                  [ngSrc]="page.cdnUrl"
+                  [width]="page.width || defaultPageWidth"
+                  [height]="page.height || defaultPageHeight"
+                  [priority]="first"
+                  [alt]="'Page ' + page.pageNumber"
+                  (error)="handlePageError($event, fallbackPage)"
+                  class="page-image"
+                />
+              } @else {
+                <img [src]="fallbackPage" [alt]="'Page ' + page.pageNumber" class="page-image" width="800" height="1200" />
+              }
             </div>
           }
         </div>
       } @else {
         <div class="paged-flow">
           @if (state.currentPage(); as page) {
-            <img
-              [src]="page.cdnUrl || fallbackPage"
-              [alt]="'Page ' + page.pageNumber"
-              (error)="handlePageError($event, fallbackPage)"
-              class="page-image active-page"
-            />
+            @if (page.cdnUrl) {
+              <img
+                [ngSrc]="page.cdnUrl"
+                [width]="page.width || defaultPageWidth"
+                [height]="page.height || defaultPageHeight"
+                priority
+                [alt]="'Page ' + page.pageNumber"
+                (error)="handlePageError($event, fallbackPage)"
+                class="page-image active-page"
+              />
+            } @else {
+              <img [src]="fallbackPage" [alt]="'Page ' + page.pageNumber" class="page-image active-page" width="800" height="1200" />
+            }
           }
           <nav class="paged-nav" aria-label="Page navigation">
             <button type="button" (click)="state.previousPage()" [disabled]="state.isFirstPage()" class="btn btn-prev">
