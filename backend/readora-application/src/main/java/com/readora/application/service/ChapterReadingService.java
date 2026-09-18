@@ -2,7 +2,6 @@ package com.readora.application.service;
 
 import com.readora.application.port.in.ReadChapterUseCase;
 import com.readora.application.port.out.ChapterRepositoryPort;
-import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.StoragePort;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.NotFoundException;
@@ -17,12 +16,10 @@ import java.util.Objects;
 public class ChapterReadingService implements ReadChapterUseCase {
     private final ChapterRepositoryPort chapterRepository;
     private final StoragePort storagePort;
-    private final EventPublisherPort eventPublisher;
 
-    public ChapterReadingService(ChapterRepositoryPort chapterRepository, StoragePort storagePort, EventPublisherPort eventPublisher) {
+    public ChapterReadingService(ChapterRepositoryPort chapterRepository, StoragePort storagePort) {
         this.chapterRepository = Objects.requireNonNull(chapterRepository, "ChapterRepositoryPort cannot be null");
         this.storagePort = Objects.requireNonNull(storagePort, "StoragePort cannot be null");
-        this.eventPublisher = Objects.requireNonNull(eventPublisher, "EventPublisherPort cannot be null");
     }
 
     @Override
@@ -44,8 +41,9 @@ public class ChapterReadingService implements ReadChapterUseCase {
                     return p;
                 }).toList();
 
-        chapter.updatePages(enrichedPages);
-        chapter.pollDomainEvents().forEach(eventPublisher::publish);
-        return chapter;
+        // A read returns a view with public URLs; it never mutates the aggregate or emits domain events.
+        return new Chapter(chapter.getId(), chapter.getWorkId(), chapter.getChapterNumber(), chapter.getTitle(),
+                chapter.getStatus(), enrichedPages, chapter.getScanlationProjectId(), chapter.getCreatedAt(),
+                chapter.getPublishedAt(), chapter.getUpdatedAt());
     }
 }

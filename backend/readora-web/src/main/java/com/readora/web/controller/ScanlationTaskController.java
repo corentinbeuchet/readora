@@ -42,7 +42,7 @@ public class ScanlationTaskController {
     ) {
         WorkflowTask task = scanlationTaskUseCase.uploadChapterTask(
                 ProjectId.of(projectId),
-                ChapterNumber.of(request.chapterNumber().stripTrailingZeros().toPlainString()),
+                ChapterNumber.of(request.chapterNumber().toPlainString()),
                 request.assetUrl(),
                 request.pageCount(),
                 currentUserProvider.requireUserId()

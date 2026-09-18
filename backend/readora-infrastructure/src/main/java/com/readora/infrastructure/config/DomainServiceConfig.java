@@ -62,9 +62,8 @@ public class DomainServiceConfig {
     @Bean
     public ReadChapterUseCase readChapterUseCase(
             ChapterRepositoryPort chapterRepository,
-            StoragePort storagePort,
-            EventPublisherPort eventPublisher) {
-        return transactional(new ChapterReadingService(chapterRepository, storagePort, eventPublisher),
+            StoragePort storagePort) {
+        return transactional(new ChapterReadingService(chapterRepository, storagePort),
                 ReadChapterUseCase.class, transactionManager);
     }
 

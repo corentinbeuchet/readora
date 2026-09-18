@@ -1,7 +1,6 @@
 package com.readora.acceptance.steps;
 
 import com.readora.application.port.out.ChapterRepositoryPort;
-import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.StoragePort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.application.service.ChapterReadingService;
@@ -85,10 +84,7 @@ public class ReaderViewerStepDefinitions {
             }
         };
 
-        EventPublisherPort eventPublisher = event -> {
-        };
-
-        chapterReadingService = new ChapterReadingService(chapterRepo, storagePort, eventPublisher);
+        chapterReadingService = new ChapterReadingService(chapterRepo, storagePort);
     }
 
     @Given("the reader {string} is registered on Readora")
