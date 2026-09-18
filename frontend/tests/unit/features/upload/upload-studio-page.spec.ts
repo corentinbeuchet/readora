@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { UploadStudioPage, parseChapterNumber } from '@app/features/upload/upload-studio-page';
 import { UploadService } from '@app/core/upload/upload.service';
 import { PageUploadItem } from '@app/core/upload/file-utils';
@@ -359,5 +359,26 @@ describe('UploadStudioPage', () => {
       fixture.destroy();
       expect(revoked).toEqual(['blob:cover/1', 'blob:page/1', 'blob:cover/2', 'blob:page/2']);
     });
+  });
+
+  it('exposes genre toggles as pressed buttons and the upload progress as a progressbar', async () => {
+    const action = Array.from(fixture.nativeElement.querySelectorAll('.genre-pill') as NodeListOf<HTMLButtonElement>).find((b) => b.textContent?.trim() === 'Action')!;
+    expect(action.getAttribute('aria-pressed')).toBe('true');
+    action.click();
+    fixture.detectChanges();
+    expect(action.getAttribute('aria-pressed')).toBe('false');
+
+    component.title.set('Blue Lock');
+    component.pages.set([page('p1', 1)]);
+    component.goToStep('review');
+    vi.spyOn(uploadService, 'createWork').mockReturnValue(new Subject<never>());
+    void component.submitUpload();
+    fixture.detectChanges();
+
+    const bar: HTMLElement = fixture.nativeElement.querySelector('[role="progressbar"]');
+    expect(bar.getAttribute('aria-valuemin')).toBe('0');
+    expect(bar.getAttribute('aria-valuemax')).toBe('100');
+    expect(Number(bar.getAttribute('aria-valuenow'))).toBe(component.uploadProgress());
+    expect(bar.getAttribute('aria-valuetext')).toContain('Creating series in catalog');
   });
 });

@@ -185,4 +185,45 @@ describe('KanbanBoard (API-driven, permission gated)', () => {
     expect(other.debugElement.injector.get(ScanlationState)).not.toBe(state);
     expect(() => TestBed.inject(ScanlationState)).toThrow();
   });
+
+  describe('submit dialog accessibility', () => {
+    const key = (target: Element, k: string, shiftKey = false): KeyboardEvent => {
+      const event = new KeyboardEvent('keydown', { key: k, shiftKey, bubbles: true, cancelable: true });
+      target.dispatchEvent(event);
+      fixture.detectChanges();
+      return event;
+    };
+
+    async function openDialog(): Promise<HTMLButtonElement> {
+      await signIn(store, http, mockUser({ permissions: ['PROJECT_VIEW', 'TASK_SUBMIT'] }));
+      await render();
+      const trigger = all('.btn-submit')[0] as HTMLButtonElement;
+      trigger.focus();
+      trigger.click();
+      await settle(fixture);
+      return trigger;
+    }
+
+    it('moves focus into the dialog, traps Tab, closes on Escape and returns focus', async () => {
+      const trigger = await openDialog();
+      const dialog = q('[role="dialog"]')!;
+      const first = q('#submit-asset-url')!;
+      const buttons = Array.from(dialog.querySelectorAll('button')) as HTMLButtonElement[];
+      const last = buttons[buttons.length - 1];
+
+      expect(document.activeElement).toBe(first);
+
+      last.focus();
+      expect(key(last, 'Tab').defaultPrevented).toBe(true);
+      expect(document.activeElement).toBe(first);
+
+      expect(key(first, 'Tab', true).defaultPrevented).toBe(true);
+      expect(document.activeElement).toBe(last);
+
+      key(last, 'Escape');
+      await settle(fixture);
+      expect(q('[role="dialog"]')).toBeNull();
+      expect(document.activeElement).toBe(trigger);
+    });
+  });
 });

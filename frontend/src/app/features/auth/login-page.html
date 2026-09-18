@@ -17,9 +17,11 @@
         [attr.aria-invalid]="errors(loginForm.email).length > 0"
         aria-describedby="login-email-error"
       />
-      @for (msg of errors(loginForm.email); track $index) {
-        <span id="login-email-error" class="field-error">{{ msg }}</span>
-      }
+      <div id="login-email-error" class="field-errors">
+        @for (msg of errors(loginForm.email); track $index) {
+          <span class="field-error">{{ msg }}</span>
+        }
+      </div>
     </div>
 
     <div class="field">
@@ -32,9 +34,11 @@
         [attr.aria-invalid]="errors(loginForm.password).length > 0"
         aria-describedby="login-password-error"
       />
-      @for (msg of errors(loginForm.password); track $index) {
-        <span id="login-password-error" class="field-error">{{ msg }}</span>
-      }
+      <div id="login-password-error" class="field-errors">
+        @for (msg of errors(loginForm.password); track $index) {
+          <span class="field-error">{{ msg }}</span>
+        }
+      </div>
     </div>
 
     <button type="submit" class="btn btn-primary" [disabled]="submitting()">

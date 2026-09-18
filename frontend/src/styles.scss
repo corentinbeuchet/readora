@@ -164,6 +164,16 @@ a {
   }
 }
 
+.field-errors {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+
+  &:empty {
+    display: none;
+  }
+}
+
 .field-error {
   color: var(--danger);
   font-size: 0.85rem;

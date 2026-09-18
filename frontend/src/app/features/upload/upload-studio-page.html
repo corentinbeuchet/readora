@@ -123,6 +123,7 @@
                   type="button"
                   class="genre-pill"
                   [class.selected]="selectedGenres().includes(genre)"
+                  [attr.aria-pressed]="selectedGenres().includes(genre)"
                   (click)="toggleGenre(genre)"
                 >
                   {{ genre }}
@@ -172,6 +173,8 @@
               (dragover)="$event.preventDefault()"
               (drop)="onCoverDrop($event)"
               (click)="coverInput.click()"
+              (keydown.enter)="coverInput.click()"
+              (keydown.space)="$event.preventDefault(); coverInput.click()"
               tabindex="0"
               role="button"
               aria-label="Upload cover image"
@@ -356,10 +359,18 @@
       <!-- Upload Progress Bar -->
       @if (isSubmitting()) {
         <div class="upload-progress-container">
-          <div class="progress-bar-track">
+          <div
+            class="progress-bar-track"
+            role="progressbar"
+            aria-label="Upload progress"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            [attr.aria-valuenow]="uploadProgress()"
+            [attr.aria-valuetext]="uploadStatusText() + ' (' + uploadProgress() + '%)'"
+          >
             <div class="progress-bar-fill" [style.width.%]="uploadProgress()"></div>
           </div>
-          <p class="progress-text">{{ uploadStatusText() }} ({{ uploadProgress() }}%)</p>
+          <p class="progress-text" aria-live="polite">{{ uploadStatusText() }} ({{ uploadProgress() }}%)</p>
         </div>
       }
 

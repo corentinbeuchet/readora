@@ -125,7 +125,11 @@
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
 
+  /* Keyboard users must see the actions too, not only mouse users. */
+  &:hover,
+  &:focus-within {
     .page-overlay-actions {
       opacity: 1;
     }
@@ -172,6 +176,11 @@
   }
 
   .icon-btn {
+    &:focus-visible {
+      outline: 2px solid var(--accent, #3b82f6);
+      outline-offset: 1px;
+    }
+
     background: rgba(255, 255, 255, 0.2);
     color: #fff;
     border: none;

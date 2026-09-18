@@ -4,6 +4,7 @@ import { FormField, form, min, pattern, required, submit } from '@angular/forms/
 import { firstValueFrom } from 'rxjs';
 import { ScanlationApi } from '@app/core/api/scanlation-api';
 import { AuthStore } from '@app/core/auth/auth-store';
+import { FocusTrapDirective } from '@app/core/a11y/focus-trap.directive';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { WorkflowStage, WorkflowTask } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
@@ -17,7 +18,7 @@ interface SubmitModel {
 
 @Component({
   selector: 'app-kanban-board',
-  imports: [RouterLink, FormField, HasPermissionDirective],
+  imports: [RouterLink, FormField, HasPermissionDirective, FocusTrapDirective],
   templateUrl: './kanban-board.html',
   styleUrl: './kanban-board.scss',
   // Page-scoped state: a fresh ScanlationState per board, discarded on navigation.

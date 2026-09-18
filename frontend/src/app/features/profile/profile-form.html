@@ -10,27 +10,33 @@
     <label for="profile-display-name">Display name</label>
     <input id="profile-display-name" type="text" autocomplete="nickname" [formField]="profileForm.displayName"
            [attr.aria-invalid]="errors(profileForm.displayName).length > 0" aria-describedby="profile-display-name-error" />
-    @for (msg of errors(profileForm.displayName); track $index) {
-      <span id="profile-display-name-error" class="field-error">{{ msg }}</span>
-    }
+    <div id="profile-display-name-error" class="field-errors">
+      @for (msg of errors(profileForm.displayName); track $index) {
+        <span class="field-error">{{ msg }}</span>
+      }
+    </div>
   </div>
 
   <div class="field">
     <label for="profile-bio">Bio</label>
     <textarea id="profile-bio" [formField]="profileForm.bio"
               [attr.aria-invalid]="errors(profileForm.bio).length > 0" aria-describedby="profile-bio-error"></textarea>
-    @for (msg of errors(profileForm.bio); track $index) {
-      <span id="profile-bio-error" class="field-error">{{ msg }}</span>
-    }
+    <div id="profile-bio-error" class="field-errors">
+      @for (msg of errors(profileForm.bio); track $index) {
+        <span class="field-error">{{ msg }}</span>
+      }
+    </div>
   </div>
 
   <div class="field">
     <label for="profile-avatar">Avatar URL</label>
     <input id="profile-avatar" type="url" autocomplete="photo" [formField]="profileForm.avatarUrl"
            [attr.aria-invalid]="errors(profileForm.avatarUrl).length > 0" aria-describedby="profile-avatar-error" />
-    @for (msg of errors(profileForm.avatarUrl); track $index) {
-      <span id="profile-avatar-error" class="field-error">{{ msg }}</span>
-    }
+    <div id="profile-avatar-error" class="field-errors">
+      @for (msg of errors(profileForm.avatarUrl); track $index) {
+        <span class="field-error">{{ msg }}</span>
+      }
+    </div>
   </div>
 
   <button type="submit" class="btn btn-primary" [disabled]="status() === 'saving'">

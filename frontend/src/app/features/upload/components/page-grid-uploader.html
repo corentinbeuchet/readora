@@ -10,7 +10,7 @@
     role="button"
     aria-label="Upload chapter pages or archive"
     (keydown.enter)="fileInput.click()"
-    (keydown.space)="fileInput.click()"
+    (keydown.space)="$event.preventDefault(); fileInput.click()"
   >
     <input
       #fileInput
