@@ -74,6 +74,8 @@
       }
     </div>
 
+    <app-page-reports-panel [projectId]="projectId()" />
+
     @if (submitTarget(); as task) {
       <!-- The dialog (and its form/focus-trap code) is only loaded when first opened. -->
       @defer (on immediate) {

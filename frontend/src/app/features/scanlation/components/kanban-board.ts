@@ -10,6 +10,7 @@ import { WorkflowStage, WorkflowTask } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
 import { AnyField, apiErrorMessage, visibleErrors } from '@app/features/auth/auth-form.utils';
 import { ScanlationState } from '../services/scanlation-state';
+import { PageReportsPanel } from './page-reports-panel';
 
 interface SubmitModel {
   assetUrl: string;
@@ -18,7 +19,7 @@ interface SubmitModel {
 
 @Component({
   selector: 'app-kanban-board',
-  imports: [RouterLink, FormField, HasPermissionDirective, FocusTrapDirective],
+  imports: [RouterLink, FormField, HasPermissionDirective, FocusTrapDirective, PageReportsPanel],
   templateUrl: './kanban-board.html',
   styleUrl: './kanban-board.scss',
   // Page-scoped state: a fresh ScanlationState per board, discarded on navigation.

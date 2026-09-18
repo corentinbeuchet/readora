@@ -1,0 +1,22 @@
+<div class="dialog-backdrop">
+  <form class="card form report-dialog" role="dialog" aria-modal="true" aria-labelledby="report-title"
+        appFocusTrap (escaped)="closed.emit()" (submit)="send($event)" novalidate>
+    <h2 id="report-title">Report page {{ pageNumber() }}</h2>
+    <fieldset class="report-reasons">
+      <legend>What is wrong with it?</legend>
+      @for (option of reasons; track option) {
+        <label class="checkbox">
+          <input type="radio" name="report-reason" [value]="option" [checked]="reason() === option" (change)="choose(option)" />
+          {{ labels[option] }}
+        </label>
+      }
+    </fieldset>
+    @if (error(); as message) {
+      <p class="form-error" role="alert">{{ message }}</p>
+    }
+    <div class="dialog-actions">
+      <button type="button" class="btn" (click)="closed.emit()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="sending()">{{ sending() ? 'Sending…' : 'Send report' }}</button>
+    </div>
+  </form>
+</div>

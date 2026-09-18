@@ -49,6 +49,8 @@ describe('KanbanBoard (API-driven, permission gated)', () => {
     await settle(fixture);
     http.expectOne(`${API}/scanlation/projects/${PROJECT_ID}`).flush({ success: true, data: PROJECT, error: null });
     await settle(fixture);
+    http.match(`${API}/scanlation/projects/${PROJECT_ID}/page-reports`).forEach((r) => r.flush({ success: true, data: [], error: null }));
+    await settle(fixture);
   }
 
   async function submitDialog(): Promise<void> {

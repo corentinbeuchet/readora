@@ -59,6 +59,9 @@
                   [class.active]="zen()" [attr.aria-pressed]="zen()" title="Hide everything but the pages (Esc to leave)">
             Zen mode
           </button>
+          <button *appHasPermission="'PAGE_REPORT'" type="button" ngToolbarWidget value="report" (click)="openReport()">
+            Report page
+          </button>
           <button type="button" ngToolbarWidget value="settings" (click)="settingsOpen.set(!settingsOpen())"
                   [attr.aria-expanded]="settingsOpen()" aria-controls="reader-settings">
             Settings
@@ -134,7 +137,17 @@
         <a routerLink="/subscription">Go Premium</a> to save your reading progress.
       </ng-template>
     </p>
+    <p class="report-confirmation" role="status">{{ reportConfirmation() }}</p>
     </div>
+
+    @if (state.currentChapter(); as current) {
+      @if (reportingPage(); as page) {
+        <!-- Dialog code is only loaded when a reader opens it. -->
+        @defer (on immediate) {
+          <app-report-page-dialog [chapterId]="current.id" [pageNumber]="page" (closed)="reportingPage.set(null)" (reported)="onReported($event)" />
+        }
+      }
+    }
 
     <!-- Viewer Content -->
     <div class="viewer-body" [class]="'fit-' + prefs.fit().toLowerCase()" [style.transform]="'scale(' + state.zoomLevel() / 100 + ')'">

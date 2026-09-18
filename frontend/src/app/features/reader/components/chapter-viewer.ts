@@ -29,6 +29,7 @@ import { SeoService } from '@app/core/seo/seo.service';
 import { ChapterComments } from '@app/features/social/components/chapter-comments';
 import { FALLBACK_PAGE_IMAGE, onImageError } from '@app/core/utils/image-utils';
 import { ReaderState } from '../services/reader-state';
+import { ReportPageDialog } from './report-page-dialog';
 import {
   AutoScrollSpeed,
   FitMode,
@@ -69,7 +70,7 @@ function pageParamToIndex(raw: string | number | null | undefined): number | nul
 
 @Component({
   selector: 'app-chapter-viewer',
-  imports: [RouterLink, NgOptimizedImage, Toolbar, ToolbarWidget, ToolbarWidgetGroup, HasPermissionDirective, ChapterComments],
+  imports: [RouterLink, NgOptimizedImage, Toolbar, ToolbarWidget, ToolbarWidgetGroup, HasPermissionDirective, ChapterComments, ReportPageDialog],
   templateUrl: './chapter-viewer.html',
   styleUrl: './chapter-viewer.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -127,6 +128,9 @@ export class ChapterViewer {
     return chapter.pages.slice(from, from + PRELOADED_PAGES).filter((page) => !!page.cdnUrl);
   });
   protected readonly settingsOpen = signal(false);
+  /** Page number being reported (US-06), `null` when the dialog is closed. */
+  protected readonly reportingPage = signal<number | null>(null);
+  protected readonly reportConfirmation = signal<string | null>(null);
   /** Zen mode (US-06): no site header, reader controls auto-hide. */
   protected readonly zen = signal(false);
   protected readonly controlsVisible = signal(true);
@@ -341,6 +345,10 @@ export class ChapterViewer {
    * Ignored while typing in a field or when a modifier is held (browser shortcuts); vertical mode scrolls natively.
    */
   protected onKeydown(event: KeyboardEvent): void {
+    // Keys inside a dialog (report page) belong to the dialog.
+    if ((event.target as HTMLElement | null)?.closest?.('[role="dialog"]')) {
+      return;
+    }
     if (event.key === 'Escape' && this.zen() && !event.defaultPrevented) {
       this.setZen(false);
       return;
@@ -405,6 +413,19 @@ export class ChapterViewer {
     }
     this.swiped = true;
     this.turn((dx < 0) !== (this.state.direction() === 'RTL'));
+  }
+
+  protected openReport(): void {
+    const page = this.state.currentPage();
+    if (page) {
+      this.reportConfirmation.set(null);
+      this.reportingPage.set(page.pageNumber);
+    }
+  }
+
+  protected onReported(pageNumber: number): void {
+    this.reportingPage.set(null);
+    this.reportConfirmation.set(`Thanks! Page ${pageNumber} was reported to the team.`);
   }
 
   /** Zen mode on: site header gone, reader controls hidden until the mouse moves or the screen is tapped. */

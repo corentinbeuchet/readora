@@ -655,6 +655,56 @@ describe('ChapterViewer (API-driven)', () => {
     expect(TestBed.inject(LayoutStore).immersive()).toBe(false);
   });
 
+  it('reports the current page to the team (US-06), with the reason chosen', async () => {
+    await signIn(store, http, mockUser({ permissions: ['PAGE_REPORT'] }));
+    await loadChapter();
+    await switchMode('Paged');
+    click('button.btn-next');
+
+    toolbarButton('Report page').click();
+    await settle(fixture);
+    const [dialog] = await fixture.getDeferBlocks();
+    await dialog.render(DeferBlockState.Complete);
+    await settle(fixture);
+    expect(fixture.nativeElement.querySelector('#report-title').textContent).toContain('Report page 2');
+
+    // Arrow keys inside the dialog don't turn pages.
+    press('ArrowRight', {}, fixture.nativeElement.querySelector('[role="dialog"] input'));
+    expect(stateService.currentPageIndex()).toBe(1);
+
+    const missing: HTMLInputElement = fixture.nativeElement.querySelector('input[value="MISSING_PAGE"]');
+    missing.click();
+    fixture.nativeElement.querySelector('form.report-dialog').dispatchEvent(new Event('submit', { cancelable: true }));
+    const req = http.expectOne(`${API}/chapters/${MOCK_CHAPTER.id}/pages/2/reports`);
+    expect(req.request.body).toEqual({ reason: 'MISSING_PAGE' });
+    req.flush({ success: true, data: { id: 'r-1' }, error: null });
+    await settle(fixture);
+
+    expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.report-confirmation').textContent).toContain('Page 2 was reported');
+  });
+
+  it('keeps the report dialog open with the reason when sending fails', async () => {
+    await signIn(store, http, mockUser({ permissions: ['PAGE_REPORT'] }));
+    await loadChapter();
+    toolbarButton('Report page').click();
+    await settle(fixture);
+    const [dialog] = await fixture.getDeferBlocks();
+    await dialog.render(DeferBlockState.Complete);
+    await settle(fixture);
+
+    fixture.nativeElement.querySelector('form.report-dialog').dispatchEvent(new Event('submit', { cancelable: true }));
+    http.expectOne(`${API}/chapters/${MOCK_CHAPTER.id}/pages/1/reports`).flush({ success: false, data: null, error: 'Chapter 10 has no page 1' }, { status: 400, statusText: 'Bad Request' });
+    await settle(fixture);
+
+    expect(fixture.nativeElement.querySelector('[role="dialog"] [role="alert"]').textContent).toContain('has no page 1');
+  });
+
+  it('hides "Report page" from readers without PAGE_REPORT', async () => {
+    await loadChapter();
+    expect(toolbarButton('Report page')).toBeUndefined();
+  });
+
   it('records the visit, then the finish, for the reading history (free readers with LIBRARY_USE)', async () => {
     await signIn(store, http, mockUser({ permissions: ['LIBRARY_USE'] }));
     await loadChapter();
