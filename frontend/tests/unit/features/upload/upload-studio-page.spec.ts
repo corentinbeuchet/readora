@@ -320,4 +320,44 @@ describe('UploadStudioPage', () => {
     expect(component.currentStep()).toBe('chapter');
     expect(component.errorMessage()).toContain('positive number');
   });
+
+  describe('object URL lifecycle', () => {
+    let revoked: string[];
+    let n: number;
+
+    beforeEach(() => {
+      revoked = [];
+      n = 0;
+      vi.spyOn(URL, 'createObjectURL').mockImplementation(() => `blob:cover/${++n}`);
+      vi.spyOn(URL, 'revokeObjectURL').mockImplementation((url: string) => void revoked.push(url));
+    });
+
+    afterEach(() => vi.restoreAllMocks());
+
+    const selectCover = (name: string): void => {
+      const input = { files: [new File(['x'], name, { type: 'image/png' })] } as unknown as HTMLInputElement;
+      component.onCoverSelected({ target: input } as unknown as Event);
+    };
+
+    it('revokes the previous cover preview on replace and remove', () => {
+      selectCover('a.png');
+      selectCover('b.png');
+      expect(revoked).toEqual(['blob:cover/1']);
+      component.removeCover();
+      expect(revoked).toEqual(['blob:cover/1', 'blob:cover/2']);
+      expect(component.coverPreviewUrl()).toBe('');
+    });
+
+    it('revokes cover and page previews on reset and on destroy', () => {
+      selectCover('a.png');
+      component.pages.set([{ ...page('p1', 1), previewUrl: 'blob:page/1' }]);
+      component.resetStudio();
+      expect(revoked).toEqual(['blob:cover/1', 'blob:page/1']);
+
+      selectCover('b.png');
+      component.pages.set([{ ...page('p2', 1), previewUrl: 'blob:page/2' }]);
+      fixture.destroy();
+      expect(revoked).toEqual(['blob:cover/1', 'blob:page/1', 'blob:cover/2', 'blob:page/2']);
+    });
+  });
 });

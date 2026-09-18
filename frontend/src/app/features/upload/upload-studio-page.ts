@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -13,7 +13,7 @@ import {
   WorkStatus,
   WorkType,
 } from '@app/core/models/readora.models';
-import { PageUploadItem, createPreviewUrl, isImageFile } from '@app/core/upload/file-utils';
+import { PageUploadItem, createPreviewUrl, isImageFile, revokePreviewUrl } from '@app/core/upload/file-utils';
 import { PageGridUploader } from './components/page-grid-uploader';
 
 export type UploadStep = 'manga' | 'chapter' | 'pages' | 'review' | 'success';
@@ -120,6 +120,13 @@ export class UploadStudioPage {
       description: 'Create manga series, upload chapter pages, and publish directly or via scanlation pipeline.',
       path: '/upload',
     });
+    // The wizard owns the cover and page previews (they survive step changes): release them all.
+    inject(DestroyRef).onDestroy(() => this.revokePreviews());
+  }
+
+  private revokePreviews(): void {
+    revokePreviewUrl(this.coverPreviewUrl());
+    this.pages().forEach((page) => revokePreviewUrl(page.previewUrl));
   }
 
   // Genre management
@@ -157,6 +164,7 @@ export class UploadStudioPage {
 
   private setCoverFile(file: File): void {
     if (isImageFile(file)) {
+      revokePreviewUrl(this.coverPreviewUrl());
       this.coverFile.set(file);
       this.uploadedCoverUrl.set(null);
       this.coverPreviewUrl.set(createPreviewUrl(file));
@@ -167,6 +175,7 @@ export class UploadStudioPage {
   }
 
   removeCover(): void {
+    revokePreviewUrl(this.coverPreviewUrl());
     this.coverFile.set(null);
     this.uploadedCoverUrl.set(null);
     this.coverPreviewUrl.set('');
@@ -330,6 +339,7 @@ export class UploadStudioPage {
   }
 
   resetStudio(): void {
+    this.revokePreviews();
     this.title.set('');
     this.type.set('MANGA');
     this.status.set('ONGOING');

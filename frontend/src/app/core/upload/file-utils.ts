@@ -95,7 +95,8 @@ export function getMimeTypeFromFilename(filename: string): string {
 }
 
 /**
- * Generates an object preview URL for a File.
+ * Generates an object preview URL for a File. Every URL returned here must be released with
+ * `revokePreviewUrl` when the preview is removed, replaced, reset or destroyed.
  */
 export function createPreviewUrl(file: File): string {
   if (typeof URL !== 'undefined' && URL.createObjectURL) {
@@ -104,31 +105,52 @@ export function createPreviewUrl(file: File): string {
   return '';
 }
 
+/** Releases a URL created by `createPreviewUrl` (no-op for empty / non-blob URLs). */
+export function revokePreviewUrl(url: string | null | undefined): void {
+  if (url && url.startsWith('blob:') && typeof URL !== 'undefined' && URL.revokeObjectURL) {
+    URL.revokeObjectURL(url);
+  }
+}
+
+/** Maps `items` through `fn` with at most `limit` calls in flight; results keep the input order. */
+export async function mapWithConcurrency<T, R>(items: readonly T[], limit: number, fn: (item: T, index: number) => Promise<R>): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+  const worker = async (): Promise<void> => {
+    while (next < items.length) {
+      const index = next++;
+      results[index] = await fn(items[index], index);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, worker));
+  return results;
+}
+
 /**
- * Reads image dimensions asynchronously.
+ * Reads image dimensions asynchronously. Pass an existing preview URL to avoid creating (and
+ * decoding from) a second object URL; a URL created here is revoked here. Resolves 0x0 on failure.
  */
-export function getImageDimensions(file: File): Promise<{ width: number; height: number }> {
+export function getImageDimensions(file: File, previewUrl?: string): Promise<{ width: number; height: number }> {
   return new Promise((resolve) => {
     if (typeof Image === 'undefined') {
       resolve({ width: 0, height: 0 });
       return;
     }
+    const ownUrl = !previewUrl;
+    const url = previewUrl || createPreviewUrl(file);
+    if (!url) {
+      resolve({ width: 0, height: 0 });
+      return;
+    }
     const img = new Image();
-    const url = createPreviewUrl(file);
-    img.onload = () => {
-      const width = img.naturalWidth || img.width;
-      const height = img.naturalHeight || img.height;
-      if (url.startsWith('blob:')) {
-        URL.revokeObjectURL(url);
+    const done = (width: number, height: number): void => {
+      if (ownUrl) {
+        revokePreviewUrl(url);
       }
       resolve({ width, height });
     };
-    img.onerror = () => {
-      if (url.startsWith('blob:')) {
-        URL.revokeObjectURL(url);
-      }
-      resolve({ width: 0, height: 0 });
-    };
+    img.onload = () => done(img.naturalWidth || img.width, img.naturalHeight || img.height);
+    img.onerror = () => done(0, 0);
     img.src = url;
   });
 }

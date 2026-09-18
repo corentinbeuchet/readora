@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, model, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, model, signal } from '@angular/core';
 import {
   PageUploadItem,
   createPreviewUrl,
@@ -6,8 +6,30 @@ import {
   getImageDimensions,
   isArchiveFile,
   isImageFile,
+  mapWithConcurrency,
+  naturalCompare,
+  revokePreviewUrl,
 } from '@app/core/upload/file-utils';
 
+/** How many images are decoded in parallel to read their dimensions. */
+export const IMAGE_DECODE_CONCURRENCY = 4;
+
+/** Returns the items renumbered 1..n, as new objects when the number changes (never mutates). */
+function renumber(items: PageUploadItem[]): PageUploadItem[] {
+  return items.map((item, idx) => (item.pageNumber === idx + 1 ? item : { ...item, pageNumber: idx + 1 }));
+}
+
+function newId(): string {
+  return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
+}
+
+/**
+ * Chapter page picker (images or ZIP/CBZ).
+ *
+ * Object URL ownership: this component creates a preview URL per page and revokes it when the page
+ * is removed or cleared. Pages still in the `pages` model when it is destroyed belong to the model's
+ * owner (the wizard keeps them across steps), which revokes them on reset/destroy.
+ */
 @Component({
   selector: 'app-page-grid-uploader',
   templateUrl: './page-grid-uploader.html',
@@ -20,6 +42,11 @@ export class PageGridUploader {
   protected readonly extracting = signal(false);
 
   private dragSourceIndex: number | null = null;
+  private destroyed = false;
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => (this.destroyed = true));
+  }
 
   onDragOver(event: DragEvent): void {
     event.preventDefault();
@@ -71,34 +98,23 @@ export class PageGridUploader {
 
     if (imagesToAdd.length === 0) return;
 
-    const newItems: PageUploadItem[] = [];
-    let startPage = this.pages().length + 1;
-
-    for (const file of imagesToAdd) {
+    // One preview URL per page, reused to read the dimensions (decoded a few at a time, not serially).
+    const newItems = await mapWithConcurrency(imagesToAdd, IMAGE_DECODE_CONCURRENCY, async (file): Promise<PageUploadItem> => {
       const previewUrl = createPreviewUrl(file);
-      const dims = await getImageDimensions(file);
-      newItems.push({
-        id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
-        file,
-        previewUrl,
-        pageNumber: startPage++,
-        width: dims.width,
-        height: dims.height,
-        status: 'pending',
-        progress: 0,
-      });
-    }
+      const dims = await getImageDimensions(file, previewUrl);
+      return { id: newId(), file, previewUrl, pageNumber: 0, width: dims.width, height: dims.height, status: 'pending', progress: 0 };
+    });
 
-    this.pages.update((current) => [...current, ...newItems]);
+    if (this.destroyed) {
+      // Nobody will render or own these previews any more.
+      newItems.forEach((item) => revokePreviewUrl(item.previewUrl));
+      return;
+    }
+    this.pages.update((current) => renumber([...current, ...newItems]));
   }
 
   sortNaturally(): void {
-    const current = [...this.pages()];
-    current.sort((a, b) => a.file.name.localeCompare(b.file.name, undefined, { numeric: true, sensitivity: 'base' }));
-    current.forEach((item, idx) => {
-      item.pageNumber = idx + 1;
-    });
-    this.pages.set(current);
+    this.pages.update((current) => renumber([...current].sort((a, b) => naturalCompare(a.file.name, b.file.name))));
   }
 
   move(from: number, to: number): void {
@@ -106,22 +122,20 @@ export class PageGridUploader {
     const items = [...this.pages()];
     const [moved] = items.splice(from, 1);
     items.splice(to, 0, moved);
-    items.forEach((item, idx) => {
-      item.pageNumber = idx + 1;
-    });
-    this.pages.set(items);
+    this.pages.set(renumber(items));
   }
 
   remove(index: number): void {
     const items = [...this.pages()];
-    items.splice(index, 1);
-    items.forEach((item, idx) => {
-      item.pageNumber = idx + 1;
-    });
-    this.pages.set(items);
+    const [removed] = items.splice(index, 1);
+    if (removed) {
+      revokePreviewUrl(removed.previewUrl);
+    }
+    this.pages.set(renumber(items));
   }
 
   clearAll(): void {
+    this.pages().forEach((item) => revokePreviewUrl(item.previewUrl));
     this.pages.set([]);
   }
 
@@ -132,7 +146,7 @@ export class PageGridUploader {
     }
   }
 
-  onItemDragOver(index: number, event: DragEvent): void {
+  onItemDragOver(_index: number, event: DragEvent): void {
     event.preventDefault();
   }
 
