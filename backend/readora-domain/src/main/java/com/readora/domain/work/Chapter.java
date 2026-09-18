@@ -61,6 +61,9 @@ public class Chapter extends AggregateRoot<ChapterId> {
     }
 
     public void publish(UserId publisherId) {
+        if (isPublished()) {
+            throw new DomainValidationException("Chapter " + this.chapterNumber + " is already published.");
+        }
         if (this.pages.isEmpty()) {
             throw new DomainValidationException("Cannot publish chapter with zero pages.");
         }

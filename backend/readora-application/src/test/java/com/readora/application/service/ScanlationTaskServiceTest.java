@@ -140,6 +140,24 @@ class ScanlationTaskServiceTest {
         verify(eventPublisher).publish(any(TaskStageAdvancedEvent.class));
     }
 
+    @Test
+    @DisplayName("Publishing from QC a task still in translation is rejected and nothing is saved")
+    void publishFromQcBeforeQcReviewSavesNothing() {
+        UserId leaderId = UserId.of("leader-1");
+        ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), leaderId);
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"), "scans/1/raw.zip", 20);
+        task.advanceStage(WorkflowStage.TRANSLATING);
+
+        when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+
+        assertThatThrownBy(() -> taskService.publishChapterFromQC(project.getId(), task.getId(), leaderId))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessageContaining("QC_REVIEW");
+        verify(projectRepository, never()).save(any());
+        verify(chapterRepository, never()).save(any());
+        verify(eventPublisher, never()).publish(any());
+    }
+
     /// Mimics the JPA adapter: `save` returns a new instance rebuilt from state, without pending events.
     private static ScanlationProject rebuilt(ScanlationProject source) {
         return new ScanlationProject(source.getId(), source.getName(), source.getWorkId(), source.getMembers(),

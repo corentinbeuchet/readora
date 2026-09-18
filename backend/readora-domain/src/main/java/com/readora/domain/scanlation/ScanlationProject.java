@@ -124,6 +124,30 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
         }
     }
 
+    /// Final QC approval: moves a task from `QC_REVIEW` to `PUBLISHED`.
+    ///
+    /// @throws DomainValidationException if the user is not a member with the `QUALITY_CHECKER` role (leaders
+    ///         qualify), or if the task is not in `QC_REVIEW` — translation, typesetting and proofreading can't be skipped
+    public WorkflowTask approveQualityCheck(TaskId taskId, UserId userId) {
+        TeamMember member = findMember(userId)
+                .orElseThrow(() -> new DomainValidationException("User " + userId + " is not a member of project " + name));
+        WorkflowTask task = findTask(taskId)
+                .orElseThrow(() -> new DomainValidationException("Task not found with id: " + taskId));
+
+        if (task.getStage() != WorkflowStage.QC_REVIEW) {
+            throw new DomainValidationException("Only a task in QC_REVIEW can be published; this one is in " + task.getStage());
+        }
+        if (!member.hasRole(ScanlationRole.QUALITY_CHECKER)) {
+            throw new DomainValidationException("User lacks required role: " + ScanlationRole.QUALITY_CHECKER);
+        }
+
+        task.advanceStage(WorkflowStage.PUBLISHED);
+        this.updatedAt = Instant.now();
+        registerEvent(TaskStageAdvancedEvent.now(this.id, taskId, WorkflowStage.QC_REVIEW, WorkflowStage.PUBLISHED));
+        registerEvent(WorkflowCompletedEvent.now(this.id, task.getChapterNumber()));
+        return task;
+    }
+
     public String getName() {
         return name;
     }

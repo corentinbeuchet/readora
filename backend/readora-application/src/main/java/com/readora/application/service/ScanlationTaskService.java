@@ -88,13 +88,8 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
         ScanlationProject project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new DomainValidationException("Scanlation project not found: " + projectId));
 
-        WorkflowTask task = project.findTask(taskId)
-                .orElseThrow(() -> new DomainValidationException("Task not found: " + taskId));
-
-        // Submit and transition to PUBLISHED
-        project.submitTaskWork(taskId, publisherId, task.getAssetPackageUrl(), task.getPageCount());
-        projectRepository.save(project);
-        project.pollDomainEvents().forEach(eventPublisher::publish);
+        // Validate and mutate both aggregates in memory first; persist only once both transitions succeeded.
+        WorkflowTask task = project.approveQualityCheck(taskId, publisherId);
 
         // Find or create the chapter to publish
         List<Chapter> chapters = chapterRepository.findByWorkId(project.getWorkId());
@@ -120,7 +115,10 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
         }
 
         chapter.publish(publisherId);
+
+        projectRepository.save(project);
         chapterRepository.save(chapter);
+        project.pollDomainEvents().forEach(eventPublisher::publish);
         chapter.pollDomainEvents().forEach(eventPublisher::publish);
     }
 }
