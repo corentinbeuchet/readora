@@ -1,7 +1,6 @@
 # From docs/use-cases (2026-09): UC-24 ratings and structured reviews. Brings back the score dropped from US-04.
-# Priority tags: @must / @should / @could. @wip = not built yet (feature level: nothing here is built).
+# Priority tags: @must / @should / @could.
 
-@wip
 Feature: Ratings and reviews
   As a reader
   I want to rate series and read what others thought
@@ -22,7 +21,7 @@ Feature: Ratings and reviews
   @must
   Scenario: Seeing the average rating
     Given "Kenji" rated "Berserk" 9 and "Aoi" rated it 7
-    When a reader opens "Berserk"
+    When a reader opens the page of "Berserk"
     Then it shows a score of 8.0 from 2 ratings
 
   # Inspired by: MyAnimeList reviews

@@ -15,5 +15,7 @@ public enum Permission {
     /// Personal library, reading history and read markers (free for every signed-in reader).
     LIBRARY_USE,
     /// Report a page that doesn't display (US-06).
-    PAGE_REPORT
+    PAGE_REPORT,
+    /// Rate and review series (US-09).
+    RATE_WORK
 }

@@ -5,6 +5,8 @@ import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.work.*;
 import com.readora.domain.library.ChapterRead;
+import com.readora.domain.rating.Review;
+import com.readora.domain.rating.WorkRating;
 import com.readora.domain.report.PageReport;
 import com.readora.domain.report.PageReportReason;
 import com.readora.domain.library.LibraryEntry;
@@ -13,6 +15,7 @@ import com.readora.infrastructure.persistence.adapter.ChapterReadRepositoryAdapt
 import com.readora.infrastructure.persistence.adapter.ChapterRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.LibraryRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.PageReportRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.RatingRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.ScanlationProjectRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.WorkRepositoryAdapter;
 import org.junit.jupiter.api.DisplayName;
@@ -150,6 +153,23 @@ class PostgresMigrationTest {
         report.resolve(UserId.of("pg-leader"), java.time.Instant.now());
         pageReports.save(report);
         assertThat(pageReports.findOpenByProject(team.getId())).isEmpty();
+    }
+
+    @Autowired
+    private RatingRepositoryAdapter ratingRepository;
+
+    @Test
+    @DisplayName("Rating queries (summary, reviews joined with usernames, top rated) run on PostgreSQL")
+    void ratingQueriesRunOnPostgres() {
+        Work work = workRepository.save(Work.create("PG Rated", "", WorkType.MANGA, "c.png", Set.of("Action")));
+        WorkRating rating = WorkRating.rate(UserId.of("pg-rater"), work.getId(), 8, java.time.Instant.now());
+        rating.writeReview(new Review(null, null, "Good"), java.time.Instant.now());
+        ratingRepository.save(rating);
+
+        assertThat(ratingRepository.summary(work.getId()).count()).isEqualTo(1);
+        assertThat(ratingRepository.findReviews(work.getId(), 10)).isEmpty(); // no user row for pg-rater: inner join
+        assertThat(ratingRepository.addHelpfulVote(rating.getId(), UserId.of("pg-voter"))).isEqualTo(1);
+        assertThat(ratingRepository.findTopRated(1, 10)).extracting(r -> r.workId()).contains(work.getId());
     }
 
     private static void sleepPastClockTick() {

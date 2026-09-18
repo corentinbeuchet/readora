@@ -40,7 +40,7 @@ class AuthControllerIntegrationTest extends AuthTestSupport {
                 .andExpect(jsonPath("$.data.tokenType").value("Bearer"))
                 .andExpect(jsonPath("$.data.user.email").value(email))
                 .andExpect(jsonPath("$.data.user.roles[0]").value("READER"))
-                .andExpect(jsonPath("$.data.user.permissions", containsInAnyOrder("COMMENT_WRITE", "COMMENT_UPVOTE", "LIBRARY_USE", "PAGE_REPORT")))
+                .andExpect(jsonPath("$.data.user.permissions", containsInAnyOrder("COMMENT_WRITE", "COMMENT_UPVOTE", "LIBRARY_USE", "PAGE_REPORT", "RATE_WORK")))
                 .andExpect(jsonPath("$.data.user.subscription.plan").value("FREE"))
                 .andExpect(cookie().exists(REFRESH_COOKIE))
                 .andExpect(cookie().httpOnly(REFRESH_COOKIE, true))
@@ -78,7 +78,7 @@ class AuthControllerIntegrationTest extends AuthTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.id").value(registered.userId()))
                 .andExpect(jsonPath("$.data.username").value(registered.username()))
-                .andExpect(jsonPath("$.data.permissions", containsInAnyOrder("COMMENT_WRITE", "COMMENT_UPVOTE", "LIBRARY_USE", "PAGE_REPORT")));
+                .andExpect(jsonPath("$.data.permissions", containsInAnyOrder("COMMENT_WRITE", "COMMENT_UPVOTE", "LIBRARY_USE", "PAGE_REPORT", "RATE_WORK")));
     }
 
     @Test
