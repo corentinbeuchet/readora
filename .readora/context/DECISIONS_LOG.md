@@ -97,3 +97,14 @@ This log records significant architectural choices, context, rationales, and con
   - `npm run test:ci` runs in Node without a browser; Jasmine-only matchers were replaced by Jest-style equivalents (`toBe(true)`).
   - `src/` contains only production code; `package-lock.json` is committed so `npm ci` works in CI.
   - The unit-test builder resolves `include` globs relative to `sourceRoot`, hence `../tests/unit/**/*.spec.ts` in `angular.json`.
+
+---
+
+## ADR-009: 38 Comprehensive Use Case Specifications (comix.to Benchmark)
+- **Status**: Accepted
+- **Date**: 2026-09-13
+- **Context**: Readora requires a full, production-grade functional blueprint inspired by **comix.to** for reader UX, catalog discovery, user collections, and scanlation hubs, ready for incremental implementation by AI coding agents.
+- **Decision**: Decompose all platform capabilities into 38 atomic use cases across 8 modular markdown specifications (`docs/use-cases/01-reader-experience.md` through `08-moderation-safety.md`), backed by living BDD feature files in `.readora/context/user-stories/`.
+- **Consequences**:
+  - Every use case specifies actor, preconditions, primary/alternate flows, state transition models, and Angular Signal / Hexagonal port contracts.
+  - Future AI coding agents can implement any individual use case independently with zero architectural ambiguity.
