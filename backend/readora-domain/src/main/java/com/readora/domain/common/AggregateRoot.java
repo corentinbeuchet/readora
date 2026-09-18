@@ -1,5 +1,7 @@
 package com.readora.domain.common;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -7,7 +9,7 @@ import java.util.List;
 
 public abstract class AggregateRoot<ID extends Serializable> extends Entity<ID> {
     private final List<DomainEvent> domainEvents = new ArrayList<>();
-    private Long version;
+    private @Nullable Long version;
 
     protected AggregateRoot(ID id) {
         super(id);
@@ -27,12 +29,12 @@ public abstract class AggregateRoot<ID extends Serializable> extends Entity<ID> 
 
     /// Optimistic-locking token owned by the persistence adapter: `null` until the aggregate is first stored.
     /// Domain logic must not read or change it.
-    public Long getVersion() {
+    public @Nullable Long getVersion() {
         return version;
     }
 
     /// Called by repository adapters after loading or saving, so the next save can detect concurrent writes.
-    public void restoreVersion(Long version) {
+    public void restoreVersion(@Nullable Long version) {
         this.version = version;
     }
 

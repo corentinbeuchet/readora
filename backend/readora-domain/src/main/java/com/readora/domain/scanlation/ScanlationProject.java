@@ -6,6 +6,7 @@ import com.readora.domain.common.NotFoundException;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.common.UserId;
 import com.readora.domain.work.WorkId;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.*;
@@ -18,7 +19,8 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
     private final Instant createdAt;
     private Instant updatedAt;
 
-    public ScanlationProject(ProjectId id, String name, WorkId workId, Set<TeamMember> members, List<WorkflowTask> tasks, Instant createdAt, Instant updatedAt) {
+    public ScanlationProject(ProjectId id, String name, WorkId workId, @Nullable Set<TeamMember> members,
+                             @Nullable List<WorkflowTask> tasks, @Nullable Instant createdAt, @Nullable Instant updatedAt) {
         super(id);
         this.name = validateName(name);
         this.workId = Objects.requireNonNull(workId, "WorkId cannot be null");
@@ -61,7 +63,7 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
         return addChapterTask(chapterNumber, null, 0);
     }
 
-    public WorkflowTask addChapterTask(ChapterNumber chapterNumber, String assetUrl, int pageCount) {
+    public WorkflowTask addChapterTask(ChapterNumber chapterNumber, @Nullable String assetUrl, int pageCount) {
         if (findTaskByChapter(chapterNumber).isPresent()) {
             throw new DomainValidationException("Task for chapter " + chapterNumber + " already exists in project " + name);
         }
@@ -100,7 +102,7 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
         registerEvent(TaskAssignedEvent.now(this.id, taskId, userId, task.getStage()));
     }
 
-    public void submitTaskWork(TaskId taskId, UserId userId, String assetUrl, int pageCount) {
+    public void submitTaskWork(TaskId taskId, UserId userId, @Nullable String assetUrl, int pageCount) {
         WorkflowTask task = findTask(taskId)
                 .orElseThrow(() -> new NotFoundException("Task", taskId));
 

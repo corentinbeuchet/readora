@@ -4,6 +4,7 @@ import com.readora.domain.common.AggregateRoot;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.common.UserId;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -15,14 +16,16 @@ public class ChapterComment extends AggregateRoot<CommentId> {
     private final UserId authorId;
     private final String authorUsername;
     private CommentContent content;
-    private final Integer pageReference;
-    private final CommentId parentId;
+    private final @Nullable Integer pageReference;
+    private final @Nullable CommentId parentId;
     private final int depth;
     private boolean isSpoiler;
     private int upvotes;
     private final Instant createdAt;
 
-    public ChapterComment(CommentId id, ChapterId chapterId, UserId authorId, String authorUsername, CommentContent content, Integer pageReference, CommentId parentId, int depth, boolean isSpoiler, int upvotes, Instant createdAt) {
+    public ChapterComment(CommentId id, ChapterId chapterId, UserId authorId, @Nullable String authorUsername, CommentContent content,
+                          @Nullable Integer pageReference, @Nullable CommentId parentId, int depth, boolean isSpoiler, int upvotes,
+                          @Nullable Instant createdAt) {
         super(id);
         this.chapterId = Objects.requireNonNull(chapterId, "ChapterId cannot be null");
         this.authorId = Objects.requireNonNull(authorId, "AuthorId cannot be null");
@@ -39,14 +42,15 @@ public class ChapterComment extends AggregateRoot<CommentId> {
         this.createdAt = createdAt != null ? createdAt : Instant.now();
     }
 
-    public static ChapterComment createRoot(ChapterId chapterId, UserId authorId, String username, String text, Integer pageReference, boolean isSpoiler) {
+    public static ChapterComment createRoot(ChapterId chapterId, UserId authorId, @Nullable String username, String text,
+                                            @Nullable Integer pageReference, boolean isSpoiler) {
         CommentId id = CommentId.generate();
         ChapterComment comment = new ChapterComment(id, chapterId, authorId, username, CommentContent.of(text), pageReference, null, 1, isSpoiler, 0, Instant.now());
         comment.registerEvent(CommentPostedEvent.now(id, chapterId, authorId));
         return comment;
     }
 
-    public static ChapterComment createReply(ChapterComment parent, UserId authorId, String username, String text, boolean isSpoiler) {
+    public static ChapterComment createReply(ChapterComment parent, UserId authorId, @Nullable String username, String text, boolean isSpoiler) {
         CommentId id = CommentId.generate();
         ChapterComment reply = new ChapterComment(id, parent.getChapterId(), authorId, username, CommentContent.of(text), parent.getPageReference(), parent.getId(), parent.getDepth() + 1, isSpoiler, 0, Instant.now());
         reply.registerEvent(CommentPostedEvent.now(id, parent.getChapterId(), authorId));
@@ -79,11 +83,11 @@ public class ChapterComment extends AggregateRoot<CommentId> {
         return content;
     }
 
-    public Integer getPageReference() {
+    public @Nullable Integer getPageReference() {
         return pageReference;
     }
 
-    public CommentId getParentId() {
+    public @Nullable CommentId getParentId() {
         return parentId;
     }
 

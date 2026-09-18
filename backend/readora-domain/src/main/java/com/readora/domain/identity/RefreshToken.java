@@ -1,6 +1,7 @@
 package com.readora.domain.identity;
 
 import com.readora.domain.common.UserId;
+import org.jspecify.annotations.Nullable;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -12,10 +13,11 @@ public final class RefreshToken implements Serializable {
     private final UserId userId;
     private final String tokenHash;
     private final Instant expiresAt;
-    private Instant revokedAt;
+    private @Nullable Instant revokedAt;
     private final Instant createdAt;
 
-    public RefreshToken(UUID id, UserId userId, String tokenHash, Instant expiresAt, Instant revokedAt, Instant createdAt) {
+    public RefreshToken(UUID id, UserId userId, String tokenHash, Instant expiresAt, @Nullable Instant revokedAt,
+                        @Nullable Instant createdAt) {
         this.id = Objects.requireNonNull(id, "RefreshToken id cannot be null");
         this.userId = Objects.requireNonNull(userId, "UserId cannot be null");
         this.tokenHash = Objects.requireNonNull(tokenHash, "Token hash cannot be null");
@@ -54,7 +56,7 @@ public final class RefreshToken implements Serializable {
         return expiresAt;
     }
 
-    public Instant getRevokedAt() {
+    public @Nullable Instant getRevokedAt() {
         return revokedAt;
     }
 

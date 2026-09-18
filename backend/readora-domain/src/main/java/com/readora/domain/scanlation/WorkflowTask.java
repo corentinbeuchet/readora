@@ -3,6 +3,7 @@ package com.readora.domain.scanlation;
 import com.readora.domain.common.Entity;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.common.UserId;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -11,12 +12,13 @@ public class WorkflowTask extends Entity<TaskId> {
     private final ChapterNumber chapterNumber;
     private WorkflowStage stage;
     private TaskStatus status;
-    private UserId assigneeId;
-    private String assetPackageUrl;
+    private @Nullable UserId assigneeId;
+    private @Nullable String assetPackageUrl;
     private int pageCount;
     private Instant updatedAt;
 
-    public WorkflowTask(TaskId id, ChapterNumber chapterNumber, WorkflowStage stage, TaskStatus status, UserId assigneeId, String assetPackageUrl, int pageCount, Instant updatedAt) {
+    public WorkflowTask(TaskId id, ChapterNumber chapterNumber, WorkflowStage stage, TaskStatus status, @Nullable UserId assigneeId,
+                        @Nullable String assetPackageUrl, int pageCount, @Nullable Instant updatedAt) {
         super(id);
         this.chapterNumber = Objects.requireNonNull(chapterNumber, "ChapterNumber cannot be null");
         this.stage = Objects.requireNonNull(stage, "WorkflowStage cannot be null");
@@ -31,7 +33,7 @@ public class WorkflowTask extends Entity<TaskId> {
         return create(chapterNumber, null, 0);
     }
 
-    public static WorkflowTask create(ChapterNumber chapterNumber, String assetUrl, int pageCount) {
+    public static WorkflowTask create(ChapterNumber chapterNumber, @Nullable String assetUrl, int pageCount) {
         return new WorkflowTask(TaskId.generate(), chapterNumber, WorkflowStage.RAW_UPLOADED, TaskStatus.PENDING, null, assetUrl, pageCount, Instant.now());
     }
 
@@ -41,7 +43,7 @@ public class WorkflowTask extends Entity<TaskId> {
         this.updatedAt = Instant.now();
     }
 
-    public void submitAssetPackage(String assetPackageUrl, int pageCount) {
+    public void submitAssetPackage(@Nullable String assetPackageUrl, int pageCount) {
         this.assetPackageUrl = assetPackageUrl;
         this.pageCount = pageCount;
         this.status = TaskStatus.COMPLETED;
@@ -67,11 +69,11 @@ public class WorkflowTask extends Entity<TaskId> {
         return status;
     }
 
-    public UserId getAssigneeId() {
+    public @Nullable UserId getAssigneeId() {
         return assigneeId;
     }
 
-    public String getAssetPackageUrl() {
+    public @Nullable String getAssetPackageUrl() {
         return assetPackageUrl;
     }
 

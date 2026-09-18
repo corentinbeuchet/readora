@@ -3,6 +3,7 @@ package com.readora.domain.identity;
 import com.readora.domain.common.AggregateRoot;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.UserId;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -22,14 +23,15 @@ public class UserAccount extends AggregateRoot<UserId> {
     private PasswordHash passwordHash;
     private String displayName;
     private String bio;
-    private String avatarUrl;
+    private @Nullable String avatarUrl;
     private final Set<Role> roles = EnumSet.noneOf(Role.class);
     private Subscription subscription;
     private final Instant createdAt;
     private Instant updatedAt;
 
-    public UserAccount(UserId id, Email email, String username, PasswordHash passwordHash, String displayName, String bio,
-                       String avatarUrl, Set<Role> roles, Subscription subscription, Instant createdAt, Instant updatedAt) {
+    public UserAccount(UserId id, Email email, String username, PasswordHash passwordHash, @Nullable String displayName,
+                       @Nullable String bio, @Nullable String avatarUrl, @Nullable Set<Role> roles,
+                       @Nullable Subscription subscription, @Nullable Instant createdAt, @Nullable Instant updatedAt) {
         super(id);
         this.email = Objects.requireNonNull(email, "Email cannot be null");
         this.username = validateUsername(username);
@@ -74,7 +76,7 @@ public class UserAccount extends AggregateRoot<UserId> {
         return effectivePermissions().contains(permission);
     }
 
-    public void updateProfile(String newDisplayName, String newBio, String newAvatarUrl) {
+    public void updateProfile(@Nullable String newDisplayName, @Nullable String newBio, @Nullable String newAvatarUrl) {
         if (newDisplayName != null) {
             String trimmed = newDisplayName.trim();
             if (trimmed.isEmpty()) {
@@ -185,7 +187,7 @@ public class UserAccount extends AggregateRoot<UserId> {
         return bio;
     }
 
-    public String getAvatarUrl() {
+    public @Nullable String getAvatarUrl() {
         return avatarUrl;
     }
 
