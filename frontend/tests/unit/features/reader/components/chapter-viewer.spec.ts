@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, DeferBlockBehavior, DeferBlockState, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
@@ -68,7 +68,8 @@ describe('ChapterViewer (API-driven)', () => {
     vi.stubGlobal('IntersectionObserver', FakeIntersectionObserver);
     await TestBed.configureTestingModule({
       imports: [ChapterViewer],
-      providers: [ReaderState, provideRouter([]), provideHttpClient(), provideHttpClientTesting()]
+      providers: [ReaderState, provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      deferBlockBehavior: DeferBlockBehavior.Manual
     }).compileComponents();
 
     stateService = TestBed.inject(ReaderState);
@@ -282,5 +283,20 @@ describe('ChapterViewer (API-driven)', () => {
       ['800', '1200'],
       ['800', '1200']
     ]);
+  });
+
+  it('defers the comments section: placeholder first, thread loaded only once the block renders', async () => {
+    await loadChapter();
+    expect(fixture.nativeElement.querySelector('.comments-placeholder')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('app-chapter-comments')).toBeNull();
+    http.expectNone(commentsUrl);
+
+    const [comments] = await fixture.getDeferBlocks();
+    await comments.render(DeferBlockState.Complete);
+    await settle(fixture);
+
+    expect(fixture.nativeElement.querySelector('app-chapter-comments')).not.toBeNull();
+    http.expectOne(commentsUrl).flush({ success: true, data: [], error: null });
+    await settle(fixture);
   });
 });

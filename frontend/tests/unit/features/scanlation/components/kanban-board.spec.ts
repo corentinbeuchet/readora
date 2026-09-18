@@ -108,7 +108,7 @@ describe('KanbanBoard (API-driven, permission gated)', () => {
     await render();
 
     all('.btn-submit')[0].click();
-    fixture.detectChanges();
+    await settle(fixture); // the dialog is a @defer block: its code loads on first open
     expect(q('[role="dialog"]')).not.toBeNull();
 
     const url = q('#submit-asset-url') as HTMLInputElement;
