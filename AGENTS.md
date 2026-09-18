@@ -3,14 +3,17 @@
 > Tool-neutral source of truth for AI agents (Claude Code, Junie, Gemini CLI, …). `CLAUDE.md` and `GEMINI.md`
 > only import/point to this file. Edit rules **here**, and in `backend/AGENTS.md` / `frontend/AGENTS.md`.
 
-Manga/comics reading and scanlation platform. Monorepo:
+Manga/manhwa/comics reading platform with built-in scanlation team workflows (readers read, discuss and follow
+series; teams take chapters from RAW to published). Monorepo:
 
 - `backend/` — Spring Boot 4.1 / Java 25, hexagonal DDD, Maven multi-module
   (`readora-domain` → `readora-application` → `readora-infrastructure` / `readora-web`, plus `readora-acceptance` Cucumber).
   Conventions: `backend/AGENTS.md`.
 - `frontend/` — Angular 22, standalone, zoneless, signals, SSR (static prerender). Conventions: `frontend/AGENTS.md`.
-- `.readora/context/` — `ARCHITECTURE.md`, `DECISIONS_LOG.md`, `DOMAIN_MODELS.md`, `PROJECT_CONTEXT.md`
-  and `user-stories/*.feature`. Read the relevant ones before feature work.
+- `.readora/context/user-stories/*.feature` — behaviour specs, executed by Cucumber (`readora-acceptance`).
+  Read the relevant ones before feature work.
+- Target hosting: isolated staging and production (AWS App Runner/ECS, RDS PostgreSQL, S3 + CloudFront); same
+  container image and Flyway migrations in both.
 
 ## Commands
 - Backend: `mvn -f backend/pom.xml verify` (ArchUnit + unit + integration + acceptance)
@@ -38,8 +41,8 @@ Manga/comics reading and scanlation platform. Monorepo:
   frontend route `data: { permission }` + `permissionGuard` and `*appHasPermission`. Rename in both places or neither.
 - Authorization is enforced on the server for every write, including resource ownership/membership. UI gating is cosmetic.
 - No default secrets anywhere (yml fallbacks, `@DefaultValue`, env files). Missing secret = startup failure.
-- When a pattern changes, update `.readora/context/ARCHITECTURE.md` (it has drifted: frontend store names, zoneless API)
-  and log the decision in `DECISIONS_LOG.md`.
+- Decisions are recorded where they're read: the commit's `Why:` for the change, and the matching `AGENTS.md` when
+  it becomes a rule. No separate architecture/domain docs: the code (and ArchUnit) is the reference.
 - Keep lint, tests and build green; don't leave `console.error`/`printStackTrace` as error handling.
 
 ## Git: commit every change an AI agent makes (user rule)
