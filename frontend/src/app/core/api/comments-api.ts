@@ -1,7 +1,7 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Injectable, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiResponse, ChapterComment, CreateCommentRequest } from '../models/readora.models';
+import { ApiResponse, ChapterComment, CommentUpvote, CreateCommentRequest } from '../models/readora.models';
 import { ApiClient } from './api-client';
 
 /** `/api/v1/comments` — reads are public, writes need `COMMENT_WRITE` / `COMMENT_UPVOTE`. */
@@ -17,8 +17,8 @@ export class CommentsApi {
     return this.api.post<ChapterComment>(`/comments/chapter/${chapterId}`, request);
   }
 
-  upvote(commentId: string): Observable<string> {
-    return this.api.post<string>(`/comments/${commentId}/upvote`);
+  upvote(commentId: string): Observable<CommentUpvote> {
+    return this.api.post<CommentUpvote>(`/comments/${commentId}/upvote`);
   }
 
   forChapterResource(chapterId: Signal<string | null | undefined>): HttpResourceRef<ChapterComment[]> {

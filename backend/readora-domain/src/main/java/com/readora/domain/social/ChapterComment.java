@@ -53,8 +53,14 @@ public class ChapterComment extends AggregateRoot<CommentId> {
         return reply;
     }
 
-    public void upvote() {
-        this.upvotes++;
+    /// Upvotes are counted by the repository (one per user, incremented atomically), so the domain only
+    /// enforces who may vote.
+    ///
+    /// @throws DomainValidationException if the voter is the comment's author
+    public void ensureCanBeUpvotedBy(UserId voterId) {
+        if (this.authorId.equals(voterId)) {
+            throw new DomainValidationException("You can't upvote your own comment");
+        }
     }
 
     public ChapterId getChapterId() {

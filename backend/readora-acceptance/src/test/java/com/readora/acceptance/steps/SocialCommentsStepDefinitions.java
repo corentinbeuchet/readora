@@ -25,6 +25,7 @@ public class SocialCommentsStepDefinitions {
     private final Map<CommentId, ChapterComment> commentStore = new ConcurrentHashMap<>();
     private final Map<String, Bookmark> bookmarkStore = new ConcurrentHashMap<>();
     private final Map<String, CommentId> aliasToCommentId = new ConcurrentHashMap<>();
+    private final Set<String> upvotes = ConcurrentHashMap.newKeySet();
 
     private ReaderSocialService readerSocialService;
     private ChapterId currentChapterId;
@@ -35,6 +36,7 @@ public class SocialCommentsStepDefinitions {
         commentStore.clear();
         bookmarkStore.clear();
         aliasToCommentId.clear();
+        upvotes.clear();
         currentChapterId = ChapterId.generate();
 
         CommentRepositoryPort commentRepo = new CommentRepositoryPort() {
@@ -52,6 +54,16 @@ public class SocialCommentsStepDefinitions {
             public ChapterComment save(ChapterComment comment) {
                 commentStore.put(comment.getId(), comment);
                 return comment;
+            }
+
+            @Override
+            public UpvoteResult addUpvote(CommentId commentId, UserId voterId) {
+                ChapterComment c = commentStore.get(commentId);
+                boolean counted = upvotes.add(commentId + ":" + voterId);
+                int total = c.getUpvotes() + (counted ? 1 : 0);
+                commentStore.put(commentId, new ChapterComment(c.getId(), c.getChapterId(), c.getAuthorId(), c.getAuthorUsername(),
+                        c.getContent(), c.getPageReference(), c.getParentId(), c.getDepth(), c.isSpoiler(), total, c.getCreatedAt()));
+                return new UpvoteResult(counted, total);
             }
         };
 
@@ -132,7 +144,7 @@ public class SocialCommentsStepDefinitions {
     @When("{string} upvotes comment {string}")
     public void readerUpvotesComment(String readerName, String alias) {
         CommentId commentId = aliasToCommentId.get(alias);
-        readerSocialService.upvoteComment(commentId);
+        readerSocialService.upvoteComment(commentId, UserId.of(readerName));
     }
 
     @Then("the comment {string} upvote count should be {int}")

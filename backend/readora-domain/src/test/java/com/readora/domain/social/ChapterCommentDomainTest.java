@@ -27,12 +27,14 @@ class ChapterCommentDomainTest {
     }
 
     @Test
-    @DisplayName("Upvoting increment tally correctly")
-    void upvoteIncrementsCount() {
+    @DisplayName("Authors cannot upvote their own comment; other readers can")
+    void authorsCannotUpvoteOwnComment() {
         ChapterComment root = ChapterComment.createRoot(ChapterId.generate(), UserId.of("u1"), "u1", "Root", null, false);
-        assertThat(root.getUpvotes()).isZero();
 
-        root.upvote();
-        assertThat(root.getUpvotes()).isEqualTo(1);
+        assertThatThrownBy(() -> root.ensureCanBeUpvotedBy(UserId.of("u1")))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessageContaining("own comment");
+        root.ensureCanBeUpvotedBy(UserId.of("u2"));
+        assertThat(root.getUpvotes()).isZero();
     }
 }

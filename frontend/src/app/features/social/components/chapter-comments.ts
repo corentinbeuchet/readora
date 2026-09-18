@@ -66,8 +66,9 @@ export class ChapterComments {
       return;
     }
     try {
-      await firstValueFrom(this.commentsApi.upvote(commentId));
-      this.comments.update((list) => list.map((c) => (c.id === commentId ? { ...c, upvotes: c.upvotes + 1 } : c)));
+      // The server counts one vote per user and returns the authoritative total.
+      const result = await firstValueFrom(this.commentsApi.upvote(commentId));
+      this.comments.update((list) => list.map((c) => (c.id === commentId ? { ...c, upvotes: result.upvotes } : c)));
     } catch {
       // Keep the UI unchanged; a failed upvote is not worth an error banner.
     }

@@ -47,11 +47,12 @@ public class ReaderSocialService implements ReaderInteractionUseCase {
     }
 
     @Override
-    public void upvoteComment(CommentId commentId) {
+    public UpvoteOutcome upvoteComment(CommentId commentId, UserId voterId) {
         ChapterComment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new DomainValidationException("Comment not found: " + commentId));
-        comment.upvote();
-        commentRepository.save(comment);
+        comment.ensureCanBeUpvotedBy(voterId);
+        CommentRepositoryPort.UpvoteResult result = commentRepository.addUpvote(commentId, voterId);
+        return new UpvoteOutcome(commentId, result.upvotes(), result.counted());
     }
 
     @Override

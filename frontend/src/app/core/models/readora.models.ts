@@ -93,6 +93,13 @@ export interface ChapterComment {
   createdAt: string;
 }
 
+/** Result of `POST /comments/{id}/upvote`: one vote per user, so `counted` is false on a repeat. */
+export interface CommentUpvote {
+  commentId: string;
+  upvotes: number;
+  counted: boolean;
+}
+
 // ---------------------------------------------------------------------------
 // API envelope & pagination
 // ---------------------------------------------------------------------------

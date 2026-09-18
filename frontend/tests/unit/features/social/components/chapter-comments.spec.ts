@@ -59,13 +59,19 @@ describe('ChapterComments', () => {
     expect(all('.btn-reply').length).toBe(0);
   });
 
-  it('a READER can upvote (optimistic +1) and post a comment under their identity', async () => {
+  it('a READER can upvote (server total shown, repeat is idempotent) and post a comment under their identity', async () => {
     await signIn(store, http);
     await render();
 
     expect(q('form.compose')).not.toBeNull();
     all('.btn-upvote')[0].click();
-    http.expectOne(`${API}/comments/c1/upvote`).flush({ success: true, data: 'Upvoted successfully', error: null });
+    http.expectOne(`${API}/comments/c1/upvote`).flush({ success: true, data: { commentId: 'c1', upvotes: 4, counted: true }, error: null });
+    await settle(fixture);
+    expect(all('.btn-upvote')[0].textContent).toContain('4');
+
+    // A second click is not counted again by the server; the UI keeps the server's total.
+    all('.btn-upvote')[0].click();
+    http.expectOne(`${API}/comments/c1/upvote`).flush({ success: true, data: { commentId: 'c1', upvotes: 4, counted: false }, error: null });
     await settle(fixture);
     expect(all('.btn-upvote')[0].textContent).toContain('4');
 

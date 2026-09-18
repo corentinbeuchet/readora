@@ -6,6 +6,7 @@ import com.readora.domain.social.CommentId;
 import com.readora.domain.work.ChapterId;
 import com.readora.web.dto.ApiResponse;
 import com.readora.web.dto.CommentDto;
+import com.readora.web.dto.CommentUpvoteDto;
 import com.readora.web.dto.CreateCommentRequest;
 import com.readora.web.security.AuthenticatedUser;
 import com.readora.web.security.CurrentUserProvider;
@@ -73,8 +74,8 @@ public class SocialCommentController {
     @PostMapping("/{commentId}/upvote")
     @PreAuthorize("hasAuthority('COMMENT_UPVOTE')")
     @Operation(summary = "Upvote a comment")
-    public ResponseEntity<ApiResponse<String>> upvoteComment(@PathVariable UUID commentId) {
-        readerInteractionUseCase.upvoteComment(CommentId.of(commentId));
-        return ResponseEntity.ok(ApiResponse.ok("Upvoted successfully"));
+    public ResponseEntity<ApiResponse<CommentUpvoteDto>> upvoteComment(@PathVariable UUID commentId) {
+        var outcome = readerInteractionUseCase.upvoteComment(CommentId.of(commentId), currentUserProvider.requireUserId());
+        return ResponseEntity.ok(ApiResponse.ok(CommentUpvoteDto.fromDomain(outcome)));
     }
 }
