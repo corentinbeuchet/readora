@@ -2,6 +2,7 @@ package com.readora.web.exception;
 
 import com.readora.application.port.out.PaymentPort;
 import com.readora.domain.common.AccessDeniedDomainException;
+import com.readora.domain.common.ConcurrentModificationDomainException;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.identity.EmailAlreadyUsedException;
 import com.readora.domain.identity.InvalidCredentialsException;
@@ -48,6 +49,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleForbidden(RuntimeException ex) {
         log.debug("Access denied: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(ConcurrentModificationDomainException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConcurrentModification(ConcurrentModificationDomainException ex) {
+        log.info("Optimistic lock conflict: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(EmailAlreadyUsedException.class)

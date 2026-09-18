@@ -41,6 +41,7 @@ public class ScanlationProjectRepositoryAdapter implements ScanlationProjectRepo
     public ScanlationProject save(ScanlationProject project) {
         ScanlationProjectJpaEntity existing = springDataRepository.findById(project.getId().value()).orElse(null);
         if (existing != null) {
+            OptimisticLocking.verify(project, existing.getVersion(), "ScanlationProject");
             existing.setName(project.getName());
             existing.setWorkId(project.getWorkId().value());
             existing.setUpdatedAt(project.getUpdatedAt());
@@ -93,16 +94,22 @@ public class ScanlationProjectRepositoryAdapter implements ScanlationProjectRepo
                 }
             }
 
-            ScanlationProjectJpaEntity saved = springDataRepository.save(existing);
+            ScanlationProjectJpaEntity saved = springDataRepository.saveAndFlush(existing);
+            project.restoreVersion(saved.getVersion());
             return toDomain(saved);
         } else {
             ScanlationProjectJpaEntity entity = toEntity(project);
-            ScanlationProjectJpaEntity saved = springDataRepository.save(entity);
+            ScanlationProjectJpaEntity saved = springDataRepository.saveAndFlush(entity);
+            project.restoreVersion(saved.getVersion());
             return toDomain(saved);
         }
     }
 
     private ScanlationProject toDomain(ScanlationProjectJpaEntity entity) {
+        return OptimisticLocking.restored(toDomainState(entity), entity.getVersion());
+    }
+
+    private ScanlationProject toDomainState(ScanlationProjectJpaEntity entity) {
         Set<TeamMember> members = entity.getMembers() != null ?
                 entity.getMembers().stream()
                         .map(m -> new TeamMember(

@@ -31,6 +31,14 @@ public class ScanlationProjectJpaEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Version
+    @Column(nullable = false)
+    private Long version;
+
+    public Long getVersion() {
+        return version;
+    }
+
     public ScanlationProjectJpaEntity() {}
 
     public ScanlationProjectJpaEntity(UUID id, String name, UUID workId, Instant createdAt, Instant updatedAt) {

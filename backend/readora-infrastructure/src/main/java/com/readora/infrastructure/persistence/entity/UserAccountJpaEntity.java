@@ -41,6 +41,14 @@ public class UserAccountJpaEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Version
+    @Column(nullable = false)
+    private Long version;
+
+    public Long getVersion() {
+        return version;
+    }
+
     public UserAccountJpaEntity() {}
 
     public UserAccountJpaEntity(String id, String email, String username, String passwordHash, String displayName, String bio,

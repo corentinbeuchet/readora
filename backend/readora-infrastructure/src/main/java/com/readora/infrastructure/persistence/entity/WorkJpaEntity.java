@@ -38,6 +38,14 @@ public class WorkJpaEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Version
+    @Column(nullable = false)
+    private Long version;
+
+    public Long getVersion() {
+        return version;
+    }
+
     public WorkJpaEntity() {}
 
     public WorkJpaEntity(UUID id, String title, String synopsis, String workType, String status, String coverImageUrl, List<String> genres, Instant createdAt, Instant updatedAt) {

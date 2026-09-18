@@ -71,13 +71,21 @@ public class UserAccountRepositoryAdapter implements UserAccountRepositoryPort {
     @Transactional
     public UserAccount save(UserAccount account) {
         UserAccountJpaEntity entity = springDataRepository.findById(account.getId().value())
-                .map(existing -> updateEntity(existing, account))
+                .map(existing -> {
+                    OptimisticLocking.verify(account, existing.getVersion(), "UserAccount");
+                    return updateEntity(existing, account);
+                })
                 .orElseGet(() -> toEntity(account));
-        UserAccountJpaEntity saved = springDataRepository.save(entity);
+        UserAccountJpaEntity saved = springDataRepository.saveAndFlush(entity);
+        account.restoreVersion(saved.getVersion());
         return toDomain(saved);
     }
 
     private UserAccount toDomain(UserAccountJpaEntity entity) {
+        return OptimisticLocking.restored(toDomainState(entity), entity.getVersion());
+    }
+
+    private UserAccount toDomainState(UserAccountJpaEntity entity) {
         return new UserAccount(
                 UserId.of(entity.getId()),
                 Email.of(entity.getEmail()),

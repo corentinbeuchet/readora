@@ -45,6 +45,7 @@ public class WorkRepositoryAdapter implements WorkRepositoryPort {
     public Work save(Work work) {
         WorkJpaEntity existing = springDataRepository.findById(work.getId().value()).orElse(null);
         if (existing != null) {
+            OptimisticLocking.verify(work, existing.getVersion(), "Work");
             existing.setTitle(work.getTitle());
             existing.setSynopsis(work.getSynopsis());
             existing.setWorkType(work.getType().name());
@@ -52,16 +53,22 @@ public class WorkRepositoryAdapter implements WorkRepositoryPort {
             existing.setCoverImageUrl(work.getCoverImageUrl());
             existing.setGenres(new ArrayList<>(work.getGenres()));
             existing.setUpdatedAt(work.getUpdatedAt());
-            WorkJpaEntity saved = springDataRepository.save(existing);
+            WorkJpaEntity saved = springDataRepository.saveAndFlush(existing);
+            work.restoreVersion(saved.getVersion());
             return toDomain(saved);
         } else {
             WorkJpaEntity entity = toEntity(work);
-            WorkJpaEntity saved = springDataRepository.save(entity);
+            WorkJpaEntity saved = springDataRepository.saveAndFlush(entity);
+            work.restoreVersion(saved.getVersion());
             return toDomain(saved);
         }
     }
 
     private Work toDomain(WorkJpaEntity entity) {
+        return OptimisticLocking.restored(toDomainState(entity), entity.getVersion());
+    }
+
+    private Work toDomainState(WorkJpaEntity entity) {
         return new Work(
                 WorkId.of(entity.getId()),
                 entity.getTitle(),

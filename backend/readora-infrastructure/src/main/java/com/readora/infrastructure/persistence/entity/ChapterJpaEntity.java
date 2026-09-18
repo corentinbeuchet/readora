@@ -39,6 +39,14 @@ public class ChapterJpaEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Version
+    @Column(nullable = false)
+    private Long version;
+
+    public Long getVersion() {
+        return version;
+    }
+
     public ChapterJpaEntity() {}
 
     public ChapterJpaEntity(UUID id, UUID workId, String chapterNumber, String title, String status, UUID scanlationProjectId, Instant createdAt, Instant publishedAt, Instant updatedAt) {

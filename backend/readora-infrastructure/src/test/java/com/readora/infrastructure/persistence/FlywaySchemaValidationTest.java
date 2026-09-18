@@ -14,7 +14,11 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
 
+import com.readora.domain.common.ConcurrentModificationDomainException;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = TestApplication.class)
@@ -77,5 +81,40 @@ class FlywaySchemaValidationTest {
                 .findFirst()
                 .orElseThrow();
         assertEquals(Set.of(ScanlationRole.TRANSLATOR, ScanlationRole.PROOFREADER), translator.roles());
+    }
+
+    @Test
+    @DisplayName("Two writers who loaded the same project version: the second save is rejected as a concurrent modification")
+    void staleProjectSaveIsRejected() {
+        Work work = Work.create("Locking Work", "Synopsis", WorkType.MANGA, "c.png", Set.of("Action"));
+        workRepositoryAdapter.save(work);
+        ScanlationProject project = ScanlationProject.create("Lock Group", work.getId(), UserId.of("leader_lock"));
+        project.addChapterTask(ChapterNumber.of("1"));
+        scanlationProjectRepositoryAdapter.save(project);
+
+        ScanlationProject first = scanlationProjectRepositoryAdapter.findById(project.getId()).orElseThrow();
+        ScanlationProject second = scanlationProjectRepositoryAdapter.findById(project.getId()).orElseThrow();
+        TaskId taskId = first.getTasks().getFirst().getId();
+
+        first.claimTask(taskId, UserId.of("leader_lock"));
+        scanlationProjectRepositoryAdapter.save(first);
+
+        second.addChapterTask(ChapterNumber.of("2"));
+        assertThrows(ConcurrentModificationDomainException.class, () -> scanlationProjectRepositoryAdapter.save(second));
+        assertEquals(1, scanlationProjectRepositoryAdapter.findById(project.getId()).orElseThrow().getTasks().size());
+    }
+
+    @Test
+    @DisplayName("The same in-memory aggregate can be saved repeatedly: its version follows each save")
+    void repeatedSavesOfSameAggregateSucceed() {
+        Work work = Work.create("Resave Work", "Synopsis", WorkType.MANGA, "c.png", Set.of("Action"));
+        workRepositoryAdapter.save(work);
+        Long afterInsert = work.getVersion();
+
+        workRepositoryAdapter.save(work);
+        workRepositoryAdapter.save(work);
+
+        assertNotNull(afterInsert);
+        assertEquals(work.getVersion(), workRepositoryAdapter.findById(work.getId()).orElseThrow().getVersion());
     }
 }

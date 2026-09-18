@@ -38,6 +38,7 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
     public Chapter save(Chapter chapter) {
         ChapterJpaEntity existing = springDataRepository.findById(chapter.getId().value()).orElse(null);
         if (existing != null) {
+            OptimisticLocking.verify(chapter, existing.getVersion(), "Chapter");
             existing.setWorkId(chapter.getWorkId().value());
             existing.setChapterNumber(chapter.getChapterNumber().value());
             existing.setTitle(chapter.getTitle());
@@ -64,16 +65,22 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
                 }
             }
 
-            ChapterJpaEntity saved = springDataRepository.save(existing);
+            ChapterJpaEntity saved = springDataRepository.saveAndFlush(existing);
+            chapter.restoreVersion(saved.getVersion());
             return toDomain(saved);
         } else {
             ChapterJpaEntity entity = toEntity(chapter);
-            ChapterJpaEntity saved = springDataRepository.save(entity);
+            ChapterJpaEntity saved = springDataRepository.saveAndFlush(entity);
+            chapter.restoreVersion(saved.getVersion());
             return toDomain(saved);
         }
     }
 
     private Chapter toDomain(ChapterJpaEntity entity) {
+        return OptimisticLocking.restored(toDomainState(entity), entity.getVersion());
+    }
+
+    private Chapter toDomainState(ChapterJpaEntity entity) {
         List<PageAsset> pages = entity.getPages() != null ?
                 entity.getPages().stream()
                         .map(p -> new PageAsset(p.getPageNumber(), p.getStorageKey(), p.getCdnUrl(), p.getWidth(), p.getHeight()))
