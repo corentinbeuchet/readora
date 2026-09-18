@@ -15,6 +15,19 @@ export const PREMIUM_FEATURES = [
 
 export const FREE_FEATURES = ['Read every published chapter', 'Comment and reply', 'Upvote the best comments'] as const;
 
+/** Hosts the checkout redirect may point to (Stripe Checkout). Anything else is refused. */
+export const TRUSTED_CHECKOUT_HOSTS: readonly string[] = ['checkout.stripe.com'];
+
+/** True for an `https:` URL on a trusted checkout host (no credentials, no other scheme). */
+export function isTrustedCheckoutUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' && !parsed.username && !parsed.password && TRUSTED_CHECKOUT_HOSTS.includes(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
 @Component({
   selector: 'app-plans-page',
   imports: [RouterLink, DatePipe],
@@ -58,6 +71,12 @@ export class PlansPage {
     this.busy.set('checkout');
     try {
       const session = await firstValueFrom(this.subscriptionsApi.checkout('PREMIUM'));
+      if (!isTrustedCheckoutUrl(session.url)) {
+        // Never follow an unexpected external redirect (compromised/misconfigured API, open redirect).
+        this.error.set('Could not start the checkout: unexpected payment page. Please contact support.');
+        this.busy.set(null);
+        return;
+      }
       this.redirectTo(session.url);
     } catch (error) {
       this.error.set(apiErrorMessage(error, 'Could not start the checkout'));

@@ -57,6 +57,22 @@ describe('PlansPage', () => {
     expect(redirectSpy).toHaveBeenCalledWith('https://checkout.stripe.com/c/pay/cs_1');
   });
 
+  it.each(['https://evil.example/pay', 'http://checkout.stripe.com/c/pay/cs_1', 'https://checkout.stripe.com.evil.example/x', 'javascript:alert(1)'])(
+    'refuses to redirect to an untrusted checkout URL (%s)',
+    async (url) => {
+      await signIn(store, http);
+      fixture.detectChanges();
+      subscribeBtn().click();
+      http.expectOne(`${environment.apiUrl}/subscriptions/checkout`).flush({ success: true, data: { sessionId: 'cs_1', url }, error: null });
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(redirectSpy).not.toHaveBeenCalled();
+      expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('unexpected payment page');
+      expect(subscribeBtn().disabled).toBe(false);
+    }
+  );
+
   it('shows the error returned by the API when checkout cannot be created', async () => {
     await signIn(store, http);
     fixture.detectChanges();
