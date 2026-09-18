@@ -2,6 +2,8 @@ package com.readora.infrastructure.persistence.repository;
 
 import com.readora.infrastructure.persistence.entity.ChapterJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,4 +16,8 @@ public interface SpringDataChapterRepository extends JpaRepository<ChapterJpaEnt
     List<ChapterJpaEntity> findByWorkIdAndStatus(UUID workId, String status);
 
     java.util.Optional<ChapterJpaEntity> findByWorkIdAndChapterNumber(UUID workId, String chapterNumber);
+
+    /// Rows of `[id, chapterNumber]` for navigation: no pages are loaded.
+    @Query("select c.id, c.chapterNumber from ChapterJpaEntity c where c.workId = :workId and c.status = :status")
+    List<Object[]> findRefsByWorkIdAndStatus(@Param("workId") UUID workId, @Param("status") String status);
 }

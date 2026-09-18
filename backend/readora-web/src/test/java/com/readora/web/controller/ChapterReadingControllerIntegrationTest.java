@@ -61,4 +61,32 @@ class ChapterReadingControllerIntegrationTest {
                 .andExpect(jsonPath("$.data.status").value("PUBLISHED"))
                 .andExpect(jsonPath("$.data.pages.length()").value(2));
     }
+
+    @Test
+    @DisplayName("The reader view carries the series (for the default reading mode) and its published neighbours")
+    void chapterViewHasSeriesAndNeighbours() throws Exception {
+        Chapter second = publish("2");
+        chapterRepository.save(Chapter.createDraft(work.getId(), ChapterNumber.of("3"), "Draft", null));
+        Chapter tenth = publish("10");
+
+        mockMvc.perform(get("/api/v1/chapters/" + second.getId().value()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.work.title").value("Solo Leveling"))
+                .andExpect(jsonPath("$.data.work.type").value("MANHWA"))
+                .andExpect(jsonPath("$.data.previousChapterId").value(chapter.getId().value().toString()))
+                .andExpect(jsonPath("$.data.nextChapterId").value(tenth.getId().value().toString()));
+
+        mockMvc.perform(get("/api/v1/chapters/" + chapter.getId().value()))
+                .andExpect(jsonPath("$.data.previousChapterId").doesNotExist())
+                .andExpect(jsonPath("$.data.nextChapterId").value(second.getId().value().toString()));
+        mockMvc.perform(get("/api/v1/chapters/" + tenth.getId().value()))
+                .andExpect(jsonPath("$.data.nextChapterId").doesNotExist());
+    }
+
+    private Chapter publish(String number) {
+        Chapter next = Chapter.createDraft(work.getId(), ChapterNumber.of(number), "Chapter " + number, null);
+        next.updatePages(List.of(PageAsset.create(1, "scans/solo/" + number + "/p1.webp", "https://cdn.readora.com/p.webp")));
+        next.publish(UserId.of("publisher1"));
+        return chapterRepository.save(next);
+    }
 }

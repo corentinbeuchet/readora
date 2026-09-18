@@ -17,12 +17,12 @@ Feature: A reading experience as good as the best manga and webtoon apps
   # ---------------------------------------------------------------- @must
 
   # Inspired by: WEBTOON, MANGA Plus
-  @must @wip
+  @must
   Scenario: Going to the next chapter from the end of a chapter
-    Given "Kenji" is on the last page of chapter 5 of "Solo Leveling"
+    Given "Kenji" is on the last page of chapter 4 of "Solo Leveling"
     Then he sees a "Next chapter" button, a "Previous chapter" button and the chapter list
     When he clicks "Next chapter"
-    Then chapter 6 opens on its first page
+    Then chapter 5 opens on its first page
 
   # Inspired by: MANGA Plus, Mihon
   @must @ui

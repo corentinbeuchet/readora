@@ -44,6 +44,15 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
+    public List<PublishedChapterRef> findPublishedRefsByWorkId(WorkId workId) {
+        return springDataRepository.findRefsByWorkIdAndStatus(workId.value(), ChapterStatus.PUBLISHED.name()).stream()
+                .map(row -> new PublishedChapterRef(ChapterId.of((UUID) row[0]), ChapterNumber.of((String) row[1])))
+                .sorted(Comparator.comparing(PublishedChapterRef::number))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Chapter> findByWorkId(WorkId workId) {
         return springDataRepository.findByWorkId(workId.value()).stream()
                 .map(this::toDomain)

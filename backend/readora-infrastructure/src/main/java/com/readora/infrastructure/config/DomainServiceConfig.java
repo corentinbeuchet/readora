@@ -70,8 +70,9 @@ public class DomainServiceConfig {
     @Bean
     public ReadChapterUseCase readChapterUseCase(
             ChapterRepositoryPort chapterRepository,
+            WorkRepositoryPort workRepository,
             StoragePort storagePort) {
-        return transactional(new ChapterReadingService(chapterRepository, storagePort),
+        return transactional(new ChapterReadingService(chapterRepository, workRepository, storagePort),
                 ReadChapterUseCase.class, transactionManager);
     }
 

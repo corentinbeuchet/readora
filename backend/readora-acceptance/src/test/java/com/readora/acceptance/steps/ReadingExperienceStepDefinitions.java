@@ -1,12 +1,15 @@
 package com.readora.acceptance.steps;
 
+import com.readora.acceptance.fakes.FakeStorage;
 import com.readora.acceptance.fakes.InMemoryChapterReadRepository;
 import com.readora.acceptance.fakes.InMemoryChapterRepository;
 import com.readora.acceptance.fakes.InMemoryLibraryRepository;
 import com.readora.acceptance.fakes.InMemoryWorkRepository;
 import com.readora.acceptance.fakes.MutableClock;
+import com.readora.application.port.in.ReadChapterUseCase.ChapterReading;
 import com.readora.application.port.in.TrackReadingUseCase.HistoryItem;
 import com.readora.application.port.in.TrackReadingUseCase.WorkProgress;
+import com.readora.application.service.ChapterReadingService;
 import com.readora.application.service.LibraryService;
 import com.readora.application.service.ReadingTrackerService;
 import com.readora.domain.common.UserId;
@@ -31,7 +34,7 @@ import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/// US-07 scenarios that need the backend: read markers, history, new-chapter badges.
+/// US-07 scenarios that need the backend: next chapter, read markers, history, new-chapter badges.
 public class ReadingExperienceStepDefinitions {
 
     private static final Instant START = Instant.parse("2026-09-01T10:00:00Z");
@@ -41,6 +44,8 @@ public class ReadingExperienceStepDefinitions {
     private InMemoryChapterRepository chapters;
     private ReadingTrackerService reading;
     private LibraryService library;
+    private ChapterReadingService chapterReader;
+    private ChapterReading opened;
     private UserId reader;
     private WorkProgress progress;
     private List<HistoryItem> history = List.of();
@@ -54,6 +59,7 @@ public class ReadingExperienceStepDefinitions {
         InMemoryChapterReadRepository reads = new InMemoryChapterReadRepository(chapters);
         reading = new ReadingTrackerService(reads, chapters, works, clock);
         library = new LibraryService(new InMemoryLibraryRepository(), works, reads, clock);
+        chapterReader = new ChapterReadingService(chapters, works, new FakeStorage());
         lastChapterRead.clear();
     }
 
@@ -69,6 +75,32 @@ public class ReadingExperienceStepDefinitions {
             works.save(work);
             IntStream.rangeClosed(1, 5).forEach(n -> publish(work.getId(), n, START.minus(Duration.ofDays(30))));
         }
+    }
+
+    @Given("{string} is on the last page of chapter {int} of {string}")
+    public void isOnTheLastPageOfChapter(String name, int number, String title) {
+        opened = chapterReader.readChapter(chapter(title, number).getId(), reader, "PAGED");
+    }
+
+    @Then("he sees a {string} button, a {string} button and the chapter list")
+    public void heSeesNavigation(String next, String previous) {
+        assertThat(opened.nextChapterId()).as(next).isNotNull();
+        assertThat(opened.previousChapterId()).as(previous).isNotNull();
+        assertThat(opened.work().getId()).as("chapter list of the series").isEqualTo(opened.chapter().getWorkId());
+    }
+
+    @When("he clicks {string}")
+    public void heClicks(String button) {
+        assertThat(button).isEqualTo("Next chapter");
+        ChapterId next = opened.nextChapterId();
+        assertThat(next).isNotNull();
+        opened = chapterReader.readChapter(next, reader, "PAGED");
+    }
+
+    @Then("chapter {int} opens on its first page")
+    public void chapterOpensOnItsFirstPage(int number) {
+        assertThat(opened.chapter().getChapterNumber().value()).isEqualTo(String.valueOf(number));
+        assertThat(opened.chapter().getPages()).isNotEmpty();
     }
 
     @Given("{string} finished chapters {int} to {int} of {string}")

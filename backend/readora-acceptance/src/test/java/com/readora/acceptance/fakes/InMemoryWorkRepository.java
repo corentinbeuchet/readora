@@ -18,7 +18,16 @@ import java.util.stream.Collectors;
 /// In-memory [WorkRepositoryPort] with the same search semantics as the JPA adapter (`WorkSpecifications`).
 public class InMemoryWorkRepository implements WorkRepositoryPort {
 
-    private final Map<WorkId, Work> works = new ConcurrentHashMap<>();
+    private final Map<WorkId, Work> works;
+
+    public InMemoryWorkRepository() {
+        this(new ConcurrentHashMap<>());
+    }
+
+    /// Backed by a map the caller also uses (steps that store works directly).
+    public InMemoryWorkRepository(Map<WorkId, Work> works) {
+        this.works = works;
+    }
 
     @Override
     public Optional<Work> findById(WorkId id) {

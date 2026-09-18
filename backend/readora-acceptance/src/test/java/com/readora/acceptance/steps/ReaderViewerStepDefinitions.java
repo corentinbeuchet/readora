@@ -1,6 +1,7 @@
 package com.readora.acceptance.steps;
 
 import com.readora.domain.common.UserId;
+import com.readora.acceptance.fakes.InMemoryWorkRepository;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.StoragePort;
 import com.readora.application.service.ChapterReadingService;
@@ -86,7 +87,7 @@ public class ReaderViewerStepDefinitions {
             }
         };
 
-        chapterReadingService = new ChapterReadingService(chapterRepo, storagePort);
+        chapterReadingService = new ChapterReadingService(chapterRepo, new InMemoryWorkRepository(workStore), storagePort);
     }
 
     @Given("the reader {string} is registered on Readora")
@@ -130,7 +131,7 @@ public class ReaderViewerStepDefinitions {
     @When("{string} sets the view mode to {string}")
     public void setsViewMode(String readerName, String viewMode) {
         try {
-            loadedChapterResult = chapterReadingService.readChapter(currentChapter.getId(), UserId.of(readerName), viewMode);
+            loadedChapterResult = chapterReadingService.readChapter(currentChapter.getId(), UserId.of(readerName), viewMode).chapter();
         } catch (Exception e) {
             thrownException = e;
         }
@@ -199,7 +200,7 @@ public class ReaderViewerStepDefinitions {
     @When("{string} attempts to read {string}")
     public void readerAttemptsToRead(String readerName, String chapterName) {
         try {
-            loadedChapterResult = chapterReadingService.readChapter(currentChapter.getId(), UserId.of(readerName), "VERTICAL");
+            loadedChapterResult = chapterReadingService.readChapter(currentChapter.getId(), UserId.of(readerName), "VERTICAL").chapter();
         } catch (Exception e) {
             thrownException = e;
         }

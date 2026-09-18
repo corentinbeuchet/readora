@@ -37,7 +37,7 @@ public class ChapterReadingController {
             @RequestParam(defaultValue = "VERTICAL") String viewMode
     ) {
         UserId readerId = currentUserProvider.current().map(AuthenticatedUser::userId).orElse(ANONYMOUS_READER);
-        Chapter chapter = readChapterUseCase.readChapter(ChapterId.of(chapterId), readerId, viewMode);
-        return ResponseEntity.ok(ApiResponse.ok(ChapterDto.fromDomain(chapter)));
+        var reading = readChapterUseCase.readChapter(ChapterId.of(chapterId), readerId, viewMode);
+        return ResponseEntity.ok(ApiResponse.ok(ChapterDto.fromReading(reading)));
     }
 }
