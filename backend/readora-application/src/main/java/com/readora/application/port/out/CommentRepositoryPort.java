@@ -3,7 +3,7 @@ package com.readora.application.port.out;
 import com.readora.domain.social.ChapterComment;
 import com.readora.domain.social.CommentId;
 import com.readora.domain.work.ChapterId;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 
 import java.util.List;
 import java.util.Optional;

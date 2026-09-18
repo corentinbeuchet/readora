@@ -2,7 +2,7 @@ package com.readora.domain.social;
 
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.work.ChapterId;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

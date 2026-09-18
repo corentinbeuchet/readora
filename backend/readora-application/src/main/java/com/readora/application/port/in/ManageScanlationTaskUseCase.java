@@ -4,7 +4,7 @@ import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.TaskId;
 import com.readora.domain.scanlation.WorkflowTask;
 import com.readora.domain.work.ChapterNumber;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 
 public interface ManageScanlationTaskUseCase {
     WorkflowTask uploadChapterTask(ProjectId projectId, ChapterNumber chapterNumber, String assetUrl, int pageCount, UserId userId);

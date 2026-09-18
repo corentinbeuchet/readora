@@ -1,7 +1,7 @@
 package com.readora.domain.identity;
 
 import com.readora.domain.common.DomainEvent;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 
 import java.time.Instant;
 

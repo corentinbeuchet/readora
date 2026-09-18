@@ -1,5 +1,6 @@
 package com.readora.domain.work;
 
+import com.readora.domain.common.UserId;
 import com.readora.domain.common.AggregateRoot;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.scanlation.ProjectId;

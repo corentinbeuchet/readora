@@ -5,7 +5,7 @@ import com.readora.domain.social.ChapterComment;
 import com.readora.domain.social.CommentContent;
 import com.readora.domain.social.CommentId;
 import com.readora.domain.work.ChapterId;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import com.readora.infrastructure.persistence.entity.ChapterCommentJpaEntity;
 import com.readora.infrastructure.persistence.entity.CommentUpvoteJpaEntity;
 import com.readora.infrastructure.persistence.repository.SpringDataCommentRepository;

@@ -2,7 +2,7 @@ package com.readora.application.port.out;
 
 import com.readora.domain.identity.Email;
 import com.readora.domain.identity.UserAccount;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 
 import java.util.Optional;
 

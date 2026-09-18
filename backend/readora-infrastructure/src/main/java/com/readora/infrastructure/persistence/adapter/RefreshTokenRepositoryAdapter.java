@@ -2,7 +2,7 @@ package com.readora.infrastructure.persistence.adapter;
 
 import com.readora.application.port.out.RefreshTokenRepositoryPort;
 import com.readora.domain.identity.RefreshToken;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import com.readora.infrastructure.persistence.entity.RefreshTokenJpaEntity;
 import com.readora.infrastructure.persistence.repository.SpringDataRefreshTokenRepository;
 import org.springframework.stereotype.Component;

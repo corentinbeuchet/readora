@@ -13,7 +13,7 @@ import com.readora.domain.identity.InvalidCredentialsException;
 import com.readora.domain.identity.PasswordHash;
 import com.readora.domain.identity.RefreshToken;
 import com.readora.domain.identity.UserAccount;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

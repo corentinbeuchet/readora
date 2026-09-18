@@ -1,7 +1,7 @@
 package com.readora.web.security;
 
 import com.readora.domain.identity.Permission;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import com.readora.application.auth.TokenClaims;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;

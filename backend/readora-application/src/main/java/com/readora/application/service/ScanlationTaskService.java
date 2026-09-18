@@ -12,7 +12,7 @@ import com.readora.domain.scanlation.TaskId;
 import com.readora.domain.scanlation.WorkflowTask;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.PageAsset;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.readora.domain.work;
+package com.readora.domain.common;
 
 import com.readora.domain.common.DomainValidationException;
 import java.io.Serializable;

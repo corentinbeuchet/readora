@@ -1,6 +1,6 @@
 package com.readora.application.port.in;
 
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import com.readora.domain.work.Work;
 import com.readora.domain.work.WorkStatus;
 import com.readora.domain.work.WorkType;

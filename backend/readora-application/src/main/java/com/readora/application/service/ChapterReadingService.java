@@ -8,7 +8,7 @@ import com.readora.domain.common.NotFoundException;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.PageAsset;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 
 import java.util.List;
 import java.util.Objects;

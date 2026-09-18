@@ -1,5 +1,6 @@
 package com.readora.domain.work;
 
+import com.readora.domain.common.UserId;
 import com.readora.domain.common.DomainValidationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

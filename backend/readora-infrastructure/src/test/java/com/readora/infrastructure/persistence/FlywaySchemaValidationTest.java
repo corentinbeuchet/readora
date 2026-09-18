@@ -1,5 +1,6 @@
 package com.readora.infrastructure.persistence;
 
+import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.*;
 import com.readora.domain.work.*;
 import com.readora.infrastructure.persistence.adapter.ScanlationProjectRepositoryAdapter;

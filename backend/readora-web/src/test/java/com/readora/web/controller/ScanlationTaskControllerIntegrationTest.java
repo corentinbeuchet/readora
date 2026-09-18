@@ -6,7 +6,7 @@ import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.ScanlationRole;
 import com.readora.domain.scanlation.TeamMember;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import com.readora.domain.work.Work;
 import com.readora.domain.work.WorkType;
 import com.readora.web.ReadoraApplication;

@@ -5,7 +5,7 @@ import com.readora.domain.identity.Role;
 import com.readora.domain.identity.Subscription;
 import com.readora.domain.identity.SubscriptionPlan;
 import com.readora.domain.identity.UserAccount;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;

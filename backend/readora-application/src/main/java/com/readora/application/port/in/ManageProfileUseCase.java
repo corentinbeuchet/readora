@@ -1,7 +1,7 @@
 package com.readora.application.port.in;
 
 import com.readora.domain.identity.UserAccount;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 
 public interface ManageProfileUseCase {
     UserAccount getProfile(UserId userId);

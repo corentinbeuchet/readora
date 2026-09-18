@@ -4,7 +4,7 @@ import com.readora.domain.common.AggregateRoot;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.NotFoundException;
 import com.readora.domain.work.ChapterNumber;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import com.readora.domain.work.WorkId;
 
 import java.time.Instant;

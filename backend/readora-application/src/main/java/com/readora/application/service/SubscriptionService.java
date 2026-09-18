@@ -11,7 +11,7 @@ import com.readora.domain.identity.Subscription;
 import com.readora.domain.identity.SubscriptionPlan;
 import com.readora.domain.identity.SubscriptionStatus;
 import com.readora.domain.identity.UserAccount;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

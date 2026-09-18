@@ -2,7 +2,7 @@ package com.readora.application.port.in;
 
 import com.readora.domain.social.Bookmark;
 import com.readora.domain.work.ChapterId;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import com.readora.domain.work.WorkId;
 
 import java.util.List;

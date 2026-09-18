@@ -1,5 +1,6 @@
 package com.readora.application.service;
 
+import com.readora.domain.common.UserId;
 import com.readora.application.port.in.DirectPublishChapterUseCase;
 import com.readora.application.port.in.ManageWorkUseCase;
 import com.readora.application.port.out.ChapterRepositoryPort;

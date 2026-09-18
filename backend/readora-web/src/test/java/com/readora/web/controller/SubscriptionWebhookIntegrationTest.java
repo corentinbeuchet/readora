@@ -1,5 +1,6 @@
 package com.readora.web.controller;
 
+import com.readora.domain.common.UserId;
 import com.readora.application.exception.WebhookVerificationException;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.PaymentPort;

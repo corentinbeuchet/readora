@@ -5,7 +5,7 @@ import com.readora.application.exception.WebhookVerificationException;
 import com.readora.application.port.out.PaymentPort;
 import com.readora.domain.identity.SubscriptionPlan;
 import com.readora.domain.identity.SubscriptionStatus;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import com.readora.infrastructure.config.StripeProperties;
 import com.stripe.StripeClient;
 import com.stripe.exception.SignatureVerificationException;

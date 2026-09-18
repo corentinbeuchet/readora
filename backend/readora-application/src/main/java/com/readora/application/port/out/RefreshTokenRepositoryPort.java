@@ -1,7 +1,7 @@
 package com.readora.application.port.out;
 
 import com.readora.domain.identity.RefreshToken;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 
 import java.util.Optional;
 

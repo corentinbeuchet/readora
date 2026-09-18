@@ -4,10 +4,14 @@
 - `readora-domain`: plain Java only. No Spring, JPA, Jackson, validation annotations.
 - `readora-application`: plain Java + domain + slf4j. Services are **not** Spring components; they are wired as
   `@Bean`s in `infrastructure/config/DomainServiceConfig.java` with constructor `Objects.requireNonNull(x, "XPort cannot be null")`.
-- Controllers call **only** `port.in` use cases. Never inject a `port.out` port or an `infrastructure` class into `web`
-  (existing violations: `StorageController`, `SubscriptionController`, `SecurityProperties`/`JwtTokenProviderAdapter` imports — fix, don't copy).
-- In-ports never expose out-port types; define the use case's own records.
-- Shared-kernel types (e.g. `UserId`) belong in `domain.common`, not in a bounded context package.
+- Controllers call **only** `port.in` use cases. `web` never depends on `port.out`, `application.service` or
+  `infrastructure` (ArchUnit-enforced). Exceptions adapters throw and web maps live in `application.exception`;
+  JWT claim names in `application.auth.TokenClaims`.
+- In-ports never expose out-port types; define the use case's own records (e.g. `ManageSubscriptionUseCase.CheckoutRedirect`).
+- Shared-kernel types live in `domain.common` (`UserId`, `NotFoundException`, `ConcurrentModificationDomainException`).
+- ArchUnit also enforces: `port.in` = interfaces named `*UseCase`, `port.out` = interfaces named `*Port`,
+  `@Entity` classes are `*JpaEntity` in `infrastructure.persistence.entity`, `*Adapter` implements an out-port,
+  no cycles between domain/application/infrastructure/web, no Jackson/validation in the domain.
 
 ## Domain
 - Value objects are `record`s that validate **and normalise** in the compact constructor (model: `domain/identity/Email.java`).
@@ -23,8 +27,10 @@
 ## Application services
 - **Events:** `aggregate.pollDomainEvents()` on the aggregate you mutated, **never** on the object returned by `repository.save(...)`
   (adapters rebuild it via `toDomain`, so it has no events).
-- Every `port.in` bean is wrapped with `UseCaseTransactions.transactional(...)` in `DomainServiceConfig`, so each
-  use-case call is one transaction (application layer stays Spring-free). Register new use cases the same way.
+- Every `port.in` bean that touches persistence is wrapped with `UseCaseTransactions.transactional(...)` in
+  `DomainServiceConfig`, so each use-case call is one transaction (application layer stays Spring-free). Register new
+  use cases the same way; pure I/O use cases (e.g. `ManageAssetsUseCase`) are not wrapped so they don't hold a DB
+  connection. `InvalidCredentialsException` commits (security side effects stick).
   Validate/mutate all aggregates in memory before the first save. External calls (Stripe) must be idempotent.
 - Every write on a resource checks ownership/membership, not just the global permission (e.g. publisher must belong to the work's project).
 - Not-found is a dedicated not-found exception → 404. Don't use `DomainValidationException` (400) for missing entities.

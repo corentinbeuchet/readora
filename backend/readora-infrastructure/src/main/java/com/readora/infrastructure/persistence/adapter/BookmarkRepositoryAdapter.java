@@ -4,7 +4,7 @@ import com.readora.application.port.out.BookmarkRepositoryPort;
 import com.readora.domain.social.Bookmark;
 import com.readora.domain.social.ReadingStatus;
 import com.readora.domain.work.ChapterId;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import com.readora.domain.work.WorkId;
 import com.readora.infrastructure.persistence.entity.BookmarkJpaEntity;
 import com.readora.infrastructure.persistence.repository.SpringDataBookmarkRepository;

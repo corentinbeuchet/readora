@@ -9,7 +9,7 @@ import com.readora.domain.identity.Email;
 import com.readora.domain.identity.InvalidCredentialsException;
 import com.readora.domain.identity.PasswordHash;
 import com.readora.domain.identity.RefreshToken;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

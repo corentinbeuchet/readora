@@ -12,7 +12,7 @@ import com.readora.domain.scanlation.WorkflowStage;
 import com.readora.domain.scanlation.WorkflowTask;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterNumber;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import com.readora.domain.work.WorkId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

@@ -4,7 +4,7 @@ import com.readora.application.port.in.ManageProfileUseCase;
 import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.domain.common.NotFoundException;
 import com.readora.domain.identity.UserAccount;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 
 import java.util.Objects;
 

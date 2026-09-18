@@ -8,7 +8,7 @@ import com.readora.domain.identity.Subscription;
 import com.readora.domain.identity.SubscriptionPlan;
 import com.readora.domain.identity.SubscriptionStatus;
 import com.readora.domain.identity.UserAccount;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import com.readora.infrastructure.persistence.entity.SubscriptionJpaEntity;
 import com.readora.infrastructure.persistence.entity.UserAccountJpaEntity;
 import com.readora.infrastructure.persistence.repository.SpringDataUserAccountRepository;

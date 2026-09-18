@@ -14,7 +14,7 @@ import com.readora.domain.social.Bookmark;
 import com.readora.domain.social.ReadingProgressUpdatedEvent;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import com.readora.domain.work.WorkId;
 
 import java.util.List;

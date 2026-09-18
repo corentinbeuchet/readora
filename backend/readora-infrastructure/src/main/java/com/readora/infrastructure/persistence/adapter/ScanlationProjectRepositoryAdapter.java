@@ -3,7 +3,7 @@ package com.readora.infrastructure.persistence.adapter;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
 import com.readora.domain.scanlation.*;
 import com.readora.domain.work.ChapterNumber;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import com.readora.domain.work.WorkId;
 import com.readora.infrastructure.persistence.entity.ScanlationProjectJpaEntity;
 import com.readora.infrastructure.persistence.entity.TeamMemberJpaEntity;

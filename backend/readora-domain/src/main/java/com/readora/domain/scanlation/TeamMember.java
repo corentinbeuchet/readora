@@ -1,6 +1,6 @@
 package com.readora.domain.scanlation;
 
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Collections;

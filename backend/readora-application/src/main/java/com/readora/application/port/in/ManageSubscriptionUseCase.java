@@ -2,7 +2,7 @@ package com.readora.application.port.in;
 
 import com.readora.domain.identity.Subscription;
 import com.readora.domain.identity.SubscriptionPlan;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 
 public interface ManageSubscriptionUseCase {
     CheckoutRedirect startCheckout(UserId userId, SubscriptionPlan plan, String successUrl, String cancelUrl);

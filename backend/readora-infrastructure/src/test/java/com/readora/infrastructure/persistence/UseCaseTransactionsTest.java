@@ -1,5 +1,6 @@
 package com.readora.infrastructure.persistence;
 
+import com.readora.domain.common.UserId;
 import com.readora.domain.common.ConcurrentModificationDomainException;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.work.*;

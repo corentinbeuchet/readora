@@ -3,7 +3,7 @@ package com.readora.web.controller;
 import com.readora.application.port.in.ReadChapterUseCase;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
-import com.readora.domain.work.UserId;
+import com.readora.domain.common.UserId;
 import com.readora.web.dto.ApiResponse;
 import com.readora.web.dto.ChapterDto;
 import com.readora.web.security.AuthenticatedUser;
