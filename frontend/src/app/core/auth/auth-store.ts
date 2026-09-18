@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Service, computed, inject, signal } from '@angular/core';
 import { Observable, catchError, finalize, map, of, shareReplay, tap } from 'rxjs';
 import { ApiError } from '../api/api-client';
 import { AuthApi } from '../api/auth-api';
@@ -9,7 +9,7 @@ import { AuthResponse, LoginRequest, Permission, RegisterRequest, UserProfile } 
  * HttpOnly cookie managed by the browser, so a page reload restores the session through
  * `restoreSession()` -> `POST /auth/refresh`.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class AuthStore {
   private readonly authApi = inject(AuthApi);
 

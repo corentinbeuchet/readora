@@ -1,5 +1,5 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
-import { Injectable, Signal, inject } from '@angular/core';
+import { Service, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Chapter } from '../models/readora.models';
 import { ApiClient, parseEnvelope } from './api-client';
@@ -7,7 +7,7 @@ import { ApiClient, parseEnvelope } from './api-client';
 export type ViewMode = 'VERTICAL' | 'PAGED';
 
 /** `/api/v1/chapters` (public). */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class ChaptersApi {
   private readonly api = inject(ApiClient);
 

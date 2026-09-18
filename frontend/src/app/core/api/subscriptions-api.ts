@@ -1,10 +1,10 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { CheckoutSession, Subscription, SubscriptionPlan } from '../models/readora.models';
 import { ApiClient } from './api-client';
 
 /** `/api/v1/subscriptions` */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class SubscriptionsApi {
   private readonly api = inject(ApiClient);
 

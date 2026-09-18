@@ -1,11 +1,11 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
-import { Injectable, Signal, inject } from '@angular/core';
+import { Service, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ChapterComment, CommentUpvote, CreateCommentRequest } from '../models/readora.models';
 import { ApiClient, parseEnvelope } from './api-client';
 
 /** `/api/v1/comments` — reads are public, writes need `COMMENT_WRITE` / `COMMENT_UPVOTE`. */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class CommentsApi {
   private readonly api = inject(ApiClient);
 

@@ -1,5 +1,5 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
-import { Injectable, Signal, inject } from '@angular/core';
+import { Service, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Chapter, ChapterSummary, CreateWorkPayload, DirectPublishChapterPayload, PagedResponse, ScanlationProject, Work, WorkSummary } from '../models/readora.models';
 import { ApiClient, parseEnvelope } from './api-client';
@@ -7,7 +7,7 @@ import { ApiClient, parseEnvelope } from './api-client';
 const EMPTY_PAGE: PagedResponse<WorkSummary> = { items: [], page: 0, size: 0, totalElements: 0, totalPages: 0 };
 
 /** `/api/v1/works` (public catalog). */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class CatalogApi {
   private readonly api = inject(ApiClient);
 

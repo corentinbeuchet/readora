@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { Observable, catchError, from, map, mergeMap, of, toArray } from 'rxjs';
 import { ApiClient, apiErrorMessage } from '../api/api-client';
 import { CatalogApi } from '../api/catalog-api';
@@ -15,7 +15,7 @@ import {
 } from '../models/readora.models';
 import { PageUploadItem } from './file-utils';
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class UploadService {
   private readonly api = inject(ApiClient);
   private readonly catalogApi = inject(CatalogApi);

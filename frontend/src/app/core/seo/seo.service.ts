@@ -1,4 +1,4 @@
-import { DOCUMENT, Injectable, inject } from '@angular/core';
+import { DOCUMENT, Service, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { environment } from '../../../environments/environment';
 
@@ -23,7 +23,7 @@ const TITLE_SUFFIX = ` · ${SITE_NAME}`;
  * Centralised `<head>` management for SEO: title, description, Open Graph / Twitter cards,
  * canonical link and robots directive. Works during prerendering and in the browser.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class SeoService {
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);

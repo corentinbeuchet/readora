@@ -35,6 +35,8 @@ module.exports = defineConfig([
       // Modern Angular best practices (signals, standalone, lifecycle hygiene)
       "@angular-eslint/prefer-signals": "error",
       "@angular-eslint/prefer-inject": "error",
+      // Angular 22: root singletons use @Service() instead of @Injectable({ providedIn: 'root' }).
+      "@angular-eslint/prefer-service-decorator": "error",
       "@angular-eslint/prefer-standalone": "error",
       "@angular-eslint/prefer-on-push-component-change-detection": "warn",
       "@angular-eslint/use-lifecycle-interface": "error",

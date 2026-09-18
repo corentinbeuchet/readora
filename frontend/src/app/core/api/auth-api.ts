@@ -1,10 +1,10 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AuthResponse, LoginRequest, RegisterRequest, UserProfile } from '../models/readora.models';
 import { ApiClient } from './api-client';
 
 /** `/api/v1/auth` — every call carries the HttpOnly refresh cookie (`withCredentials`). */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class AuthApi {
   private readonly api = inject(ApiClient);
 

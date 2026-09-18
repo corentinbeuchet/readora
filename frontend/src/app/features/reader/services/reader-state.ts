@@ -1,12 +1,10 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Service, computed, signal } from '@angular/core';
 import { Chapter, PageAsset } from '@app/core/models/readora.models';
 
 export type ViewMode = 'VERTICAL' | 'PAGED';
 export type ReadingDirection = 'LTR' | 'RTL' | 'VERTICAL';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class ReaderState {
   private readonly _currentChapter = signal<Chapter | null>(null);
   private readonly _currentPageIndex = signal<number>(0);

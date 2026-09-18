@@ -1,11 +1,11 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
-import { Injectable, Signal, inject } from '@angular/core';
+import { Service, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Bookmark, UpdateProgressRequest } from '../models/readora.models';
 import { ApiClient, parseEnvelope } from './api-client';
 
 /** `/api/v1/bookmarks` (requires `BOOKMARK_READ` / `BOOKMARK_WRITE`). */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class BookmarksApi {
   private readonly api = inject(ApiClient);
 

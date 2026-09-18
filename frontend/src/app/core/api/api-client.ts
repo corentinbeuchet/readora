@@ -1,5 +1,5 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/readora.models';
@@ -39,7 +39,7 @@ export interface RequestOptions {
  * Thin wrapper around HttpClient that knows the backend base URL, unwraps the
  * `ApiResponse<T>` envelope and converts HTTP failures into `ApiError`.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class ApiClient {
   private readonly http = inject(HttpClient);
   readonly baseUrl = environment.apiUrl.replace(/\/+$/, '');
