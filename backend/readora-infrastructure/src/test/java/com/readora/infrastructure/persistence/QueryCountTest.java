@@ -1,5 +1,6 @@
 package com.readora.infrastructure.persistence;
 
+import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.ScanlationRole;
@@ -71,7 +72,8 @@ class QueryCountTest {
                 workRepository.save(Work.create("Count Work " + i, "S", WorkType.MANGA, "c.png", Set.of("Action", "Drama"))));
 
         statistics.clear();
-        List<Work> works = workRepository.findAll(0, 12);
+        List<Work> works = workRepository.search(
+                new WorkRepositoryPort.WorkSearch(null, Set.of(), Set.of(), Set.of(), Set.of(), Set.of()), 0, 12).items();
 
         assertThat(works).hasSize(12).allSatisfy(w -> assertThat(w.getGenres()).isNotEmpty());
         assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(3);

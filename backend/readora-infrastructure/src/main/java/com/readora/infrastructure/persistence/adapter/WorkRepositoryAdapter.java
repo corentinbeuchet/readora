@@ -4,8 +4,11 @@ import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.work.*;
 import com.readora.infrastructure.persistence.entity.WorkJpaEntity;
 import com.readora.infrastructure.persistence.repository.SpringDataWorkRepository;
+import com.readora.infrastructure.persistence.repository.WorkSpecifications;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,16 +34,17 @@ public class WorkRepositoryAdapter implements WorkRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Work> findAll(int page, int size) {
-        return springDataRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt")))
-                .map(this::toDomain)
-                .getContent();
+    public WorkPage search(WorkSearch search, int page, int size) {
+        // Tie-break on id so pages are stable when works share an updatedAt.
+        Sort order = Sort.by(Sort.Direction.DESC, "updatedAt").and(Sort.by("id"));
+        Page<WorkJpaEntity> result = springDataRepository.findAll(WorkSpecifications.matching(search), PageRequest.of(page, size, order));
+        return new WorkPage(result.map(this::toDomain).getContent(), result.getTotalElements());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long count() {
-        return springDataRepository.count();
+    public List<String> findAllGenres() {
+        return springDataRepository.findAllGenres();
     }
 
     @Override
@@ -53,6 +57,8 @@ public class WorkRepositoryAdapter implements WorkRepositoryPort {
             existing.setSynopsis(work.getSynopsis());
             existing.setWorkType(work.getType().name());
             existing.setStatus(work.getStatus().name());
+            existing.setAuthor(work.getAuthor());
+            existing.setDemographic(demographicName(work));
             existing.setCoverImageUrl(work.getCoverImageUrl());
             existing.setGenres(new ArrayList<>(work.getGenres()));
             existing.setUpdatedAt(work.getUpdatedAt());
@@ -78,11 +84,18 @@ public class WorkRepositoryAdapter implements WorkRepositoryPort {
                 entity.getSynopsis(),
                 WorkType.valueOf(entity.getWorkType()),
                 WorkStatus.valueOf(entity.getStatus()),
+                entity.getAuthor(),
+                entity.getDemographic() != null ? Demographic.valueOf(entity.getDemographic()) : null,
                 entity.getCoverImageUrl(),
                 entity.getGenres() != null ? new HashSet<>(entity.getGenres()) : new HashSet<>(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );
+    }
+
+    private static @Nullable String demographicName(Work work) {
+        Demographic demographic = work.getDemographic();
+        return demographic != null ? demographic.name() : null;
     }
 
     private WorkJpaEntity toEntity(Work work) {
@@ -92,6 +105,8 @@ public class WorkRepositoryAdapter implements WorkRepositoryPort {
                 work.getSynopsis(),
                 work.getType().name(),
                 work.getStatus().name(),
+                work.getAuthor(),
+                demographicName(work),
                 work.getCoverImageUrl(),
                 new ArrayList<>(work.getGenres()),
                 work.getCreatedAt(),

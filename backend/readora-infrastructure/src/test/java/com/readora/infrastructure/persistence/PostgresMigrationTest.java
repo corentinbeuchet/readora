@@ -1,5 +1,6 @@
 package com.readora.infrastructure.persistence;
 
+import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.work.*;
@@ -73,5 +74,20 @@ class PostgresMigrationTest {
                 .satisfies(p -> assertThat(p.getTasks()).hasSize(1));
         assertThat(chapterRepository.findPublishedByWorkId(work.getId())).singleElement()
                 .satisfies(c -> assertThat(c.getPages()).hasSize(1));
+    }
+
+    @Test
+    @DisplayName("Catalog search (genre EXISTS sub-queries, LIKE with escapes, facets) runs on PostgreSQL")
+    void catalogSearchRunsOnPostgres() {
+        workRepository.save(Work.create("PG Solo Leveling", "", WorkType.MANHWA, WorkStatus.COMPLETED, "Chugong", Demographic.SHOUNEN, null, Set.of("Action", "PG-run")));
+        workRepository.save(Work.create("PG Horimiya", "", WorkType.MANGA, WorkStatus.COMPLETED, "HERO", Demographic.SHOUNEN, null, Set.of("Romance", "PG-run")));
+
+        var search = new WorkRepositoryPort.WorkSearch("chug", Set.of("pg-run", "action"), Set.of("romance"),
+                Set.of(WorkType.MANHWA), Set.of(WorkStatus.COMPLETED), Set.of(Demographic.SHOUNEN));
+        var page = workRepository.search(search, 0, 10);
+
+        assertThat(page.totalElements()).isEqualTo(1);
+        assertThat(page.items()).singleElement().extracting(Work::getAuthor).isEqualTo("Chugong");
+        assertThat(workRepository.findAllGenres()).contains("Action", "PG-run", "Romance");
     }
 }

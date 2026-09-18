@@ -1,6 +1,7 @@
 package com.readora.application.service;
 
 import com.readora.domain.common.UserId;
+import com.readora.application.port.in.ManageWorkUseCase;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
@@ -52,20 +53,23 @@ class WorkManagementServiceTest {
         when(workRepository.save(any(Work.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(projectRepository.save(any(ScanlationProject.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Work work = service.createWork(
+        Work work = service.createWork(new ManageWorkUseCase.NewWork(
                 "Solo Leveling",
                 "Hunter Sung Jinwoo story",
                 WorkType.MANHWA,
                 WorkStatus.ONGOING,
+                "  Chugong ",
+                Demographic.SHOUNEN,
                 "https://cdn.readora.com/covers/solo.webp",
-                Set.of("Action", "Fantasy"),
-                creatorId
-        );
+                Set.of("Action", "Fantasy")
+        ), creatorId);
 
         assertThat(work).isNotNull();
         assertThat(work.getTitle()).isEqualTo("Solo Leveling");
         assertThat(work.getType()).isEqualTo(WorkType.MANHWA);
         assertThat(work.getGenres()).containsExactlyInAnyOrder("Action", "Fantasy");
+        assertThat(work.getAuthor()).isEqualTo("Chugong");
+        assertThat(work.getDemographic()).isEqualTo(Demographic.SHOUNEN);
 
         ArgumentCaptor<ScanlationProject> projectCaptor = ArgumentCaptor.forClass(ScanlationProject.class);
         verify(projectRepository).save(projectCaptor.capture());
@@ -79,7 +83,7 @@ class WorkManagementServiceTest {
     void createWorkInvalidTitle() {
         UserId creatorId = UserId.of("creator-123");
 
-        assertThatThrownBy(() -> service.createWork("", "Synopsis", WorkType.MANGA, WorkStatus.ONGOING, null, Set.of(), creatorId))
+        assertThatThrownBy(() -> service.createWork(new ManageWorkUseCase.NewWork("", "Synopsis", WorkType.MANGA, WorkStatus.ONGOING, null, null, null, Set.of()), creatorId))
                 .isInstanceOf(DomainValidationException.class)
                 .hasMessageContaining("Work title cannot be empty");
     }

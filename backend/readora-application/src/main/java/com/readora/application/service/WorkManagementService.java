@@ -43,18 +43,22 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
     }
 
     @Override
-    public Work createWork(String title, String synopsis, WorkType type, WorkStatus status, String coverImageUrl, Set<String> genres, UserId creatorId) {
+    public Work createWork(NewWork details, UserId creatorId) {
+        String title = details.title();
         if (title == null || title.trim().isEmpty()) {
             throw new DomainValidationException("Work title cannot be empty");
         }
         if (title.length() > 255) {
             throw new DomainValidationException("Work title cannot exceed 255 characters");
         }
-        if (type == null) {
+        if (details.type() == null) {
             throw new DomainValidationException("Work type cannot be null");
         }
 
-        Work work = Work.create(title, synopsis, type, status != null ? status : WorkStatus.ONGOING, coverImageUrl, genres);
+        WorkStatus requested = details.status();
+        WorkStatus status = requested != null ? requested : WorkStatus.ONGOING;
+        Work work = Work.create(title, details.synopsis(), details.type(), status, details.author(), details.demographic(),
+                details.coverImageUrl(), details.genres() != null ? details.genres() : Set.of());
         Work savedWork = workRepository.save(work);
 
         if (creatorId != null) {

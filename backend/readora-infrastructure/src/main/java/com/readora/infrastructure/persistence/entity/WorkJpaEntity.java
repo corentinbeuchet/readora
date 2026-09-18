@@ -25,6 +25,12 @@ public class WorkJpaEntity {
     @Column(nullable = false)
     private String status;
 
+    @Column(length = 120)
+    private String author;
+
+    @Column(length = 20)
+    private String demographic;
+
     @Column(name = "cover_image_url")
     private String coverImageUrl;
 
@@ -50,12 +56,15 @@ public class WorkJpaEntity {
 
     public WorkJpaEntity() {}
 
-    public WorkJpaEntity(UUID id, String title, String synopsis, String workType, String status, String coverImageUrl, List<String> genres, Instant createdAt, Instant updatedAt) {
+    public WorkJpaEntity(UUID id, String title, String synopsis, String workType, String status, String author, String demographic,
+                         String coverImageUrl, List<String> genres, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.title = title;
         this.synopsis = synopsis;
         this.workType = workType;
         this.status = status;
+        this.author = author;
+        this.demographic = demographic;
         this.coverImageUrl = coverImageUrl;
         this.genres = genres;
         this.createdAt = createdAt;
@@ -72,6 +81,10 @@ public class WorkJpaEntity {
     public void setWorkType(String workType) { this.workType = workType; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getAuthor() { return author; }
+    public void setAuthor(String author) { this.author = author; }
+    public String getDemographic() { return demographic; }
+    public void setDemographic(String demographic) { this.demographic = demographic; }
     public String getCoverImageUrl() { return coverImageUrl; }
     public void setCoverImageUrl(String coverImageUrl) { this.coverImageUrl = coverImageUrl; }
     public List<String> getGenres() { return genres; }

@@ -3,7 +3,6 @@ package com.readora.acceptance.steps;
 import com.readora.domain.common.UserId;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.StoragePort;
-import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.application.service.ChapterReadingService;
 import com.readora.application.service.ReaderSocialService;
 import com.readora.domain.common.DomainValidationException;
@@ -41,29 +40,6 @@ public class ReaderViewerStepDefinitions {
         chapterStore.clear();
         bookmarkStore.clear();
         thrownException = null;
-
-        WorkRepositoryPort workRepo = new WorkRepositoryPort() {
-            @Override
-            public Optional<Work> findById(WorkId id) {
-                return Optional.ofNullable(workStore.get(id));
-            }
-
-            @Override
-            public Work save(Work work) {
-                workStore.put(work.getId(), work);
-                return work;
-            }
-
-            @Override
-            public List<Work> findAll(int page, int size) {
-                return workStore.values().stream().skip((long) page * size).limit(size).toList();
-            }
-
-            @Override
-            public long count() {
-                return workStore.size();
-            }
-        };
 
         ChapterRepositoryPort chapterRepo = new ChapterRepositoryPort() {
             @Override

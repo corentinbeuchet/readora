@@ -4,6 +4,9 @@ import com.readora.application.port.in.BrowseCatalogUseCase;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
+import com.readora.application.port.out.WorkRepositoryPort.WorkPage;
+import com.readora.application.port.out.WorkRepositoryPort.WorkSearch;
+import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.work.Chapter;
@@ -11,8 +14,11 @@ import com.readora.domain.work.Work;
 import com.readora.domain.work.WorkId;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class CatalogService implements BrowseCatalogUseCase {
     public static final int MAX_PAGE_SIZE = 100;
@@ -28,11 +34,33 @@ public class CatalogService implements BrowseCatalogUseCase {
     }
 
     @Override
-    public Page<Work> listWorks(int page, int size) {
+    public Page<Work> searchWorks(CatalogQuery query, int page, int size) {
         int safePage = Math.max(0, page);
         int safeSize = Math.min(Math.max(1, size), MAX_PAGE_SIZE);
-        List<Work> items = workRepository.findAll(safePage, safeSize);
-        return new Page<>(items, safePage, safeSize, workRepository.count());
+        String rawText = query.text();
+        String text = rawText == null || rawText.isBlank() ? null : rawText.trim();
+        if (text != null && text.length() > CatalogQuery.MAX_TEXT_LENGTH) {
+            throw new DomainValidationException("Search text cannot exceed " + CatalogQuery.MAX_TEXT_LENGTH + " characters");
+        }
+        if (query.includedGenres().size() + query.excludedGenres().size() > CatalogQuery.MAX_GENRES) {
+            throw new DomainValidationException("Cannot filter on more than " + CatalogQuery.MAX_GENRES + " genres");
+        }
+        WorkSearch search = new WorkSearch(text, lowerCased(query.includedGenres()), lowerCased(query.excludedGenres()),
+                query.types(), query.statuses(), query.demographics());
+        WorkPage result = workRepository.search(search, safePage, safeSize);
+        return new Page<>(result.items(), safePage, safeSize, result.totalElements());
+    }
+
+    @Override
+    public List<String> listGenres() {
+        return workRepository.findAllGenres();
+    }
+
+    private static Set<String> lowerCased(Set<String> genres) {
+        return genres.stream()
+                .filter(genre -> !genre.isBlank())
+                .map(genre -> genre.trim().toLowerCase(Locale.ROOT))
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     @Override

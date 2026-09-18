@@ -4,20 +4,25 @@ import com.readora.application.port.in.BrowseCatalogUseCase;
 import com.readora.application.port.in.DirectPublishChapterUseCase;
 import com.readora.application.port.in.ManageWorkUseCase;
 import com.readora.domain.work.Chapter;
+import com.readora.domain.work.Demographic;
 import com.readora.domain.work.PageAsset;
 import com.readora.domain.work.Work;
 import com.readora.domain.work.WorkId;
+import com.readora.domain.work.WorkStatus;
+import com.readora.domain.work.WorkType;
 import com.readora.web.dto.*;
 import com.readora.web.security.CurrentUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -41,13 +46,28 @@ public class CatalogController {
     }
 
     @GetMapping
-    @Operation(summary = "List works (paginated)")
+    @Operation(summary = "List or search works (paginated)",
+            description = "Without filters, lists every work. `q` matches part of the title or author; `genre` values are all "
+                    + "required, `excludeGenre` values are all excluded; repeated `type`/`status`/`demographic` values are alternatives.")
     public ResponseEntity<ApiResponse<PagedResponse<WorkSummaryDto>>> listWorks(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) @Nullable String q,
+            @RequestParam(name = "genre", defaultValue = "") Set<String> genres,
+            @RequestParam(name = "excludeGenre", defaultValue = "") Set<String> excludedGenres,
+            @RequestParam(name = "type", defaultValue = "") Set<WorkType> types,
+            @RequestParam(name = "status", defaultValue = "") Set<WorkStatus> statuses,
+            @RequestParam(name = "demographic", defaultValue = "") Set<Demographic> demographics
     ) {
-        BrowseCatalogUseCase.Page<Work> result = browseCatalogUseCase.listWorks(page, size);
+        var query = new BrowseCatalogUseCase.CatalogQuery(q, genres, excludedGenres, types, statuses, demographics);
+        BrowseCatalogUseCase.Page<Work> result = browseCatalogUseCase.searchWorks(query, page, size);
         return ResponseEntity.ok(ApiResponse.ok(PagedResponse.from(result, WorkSummaryDto::fromDomain)));
+    }
+
+    @GetMapping("/genres")
+    @Operation(summary = "List every genre used in the catalog, sorted")
+    public ResponseEntity<ApiResponse<List<String>>> listGenres() {
+        return ResponseEntity.ok(ApiResponse.ok(browseCatalogUseCase.listGenres()));
     }
 
     @GetMapping("/{workId}")
@@ -83,15 +103,17 @@ public class CatalogController {
     public ResponseEntity<ApiResponse<WorkDto>> createWork(
             @Valid @RequestBody CreateWorkRequest request
     ) {
-        Work work = manageWorkUseCase.createWork(
+        var details = new ManageWorkUseCase.NewWork(
                 request.title(),
                 request.synopsis(),
                 request.type(),
                 request.status(),
+                request.author(),
+                request.demographic(),
                 request.coverImageUrl(),
-                request.genres(),
-                currentUserProvider.requireUserId()
+                request.genres() != null ? request.genres() : Set.of()
         );
+        Work work = manageWorkUseCase.createWork(details, currentUserProvider.requireUserId());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(WorkDto.fromDomain(work)));
     }
 

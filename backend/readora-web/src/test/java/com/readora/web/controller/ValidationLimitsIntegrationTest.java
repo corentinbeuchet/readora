@@ -69,7 +69,7 @@ class ValidationLimitsIntegrationTest extends AuthTestSupport {
                         .header("Authorization", scanlator.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new CreateWorkRequest(
-                                "Limits Work", "Synopsis", WorkType.MANGA, WorkStatus.ONGOING, null, Set.of("Action")))))
+                                "Limits Work", "Synopsis", WorkType.MANGA, WorkStatus.ONGOING, null, null, null, Set.of("Action")))))
                 .andExpect(status().isCreated())
                 .andReturn();
         String workId = json(createWorkRes).path("data").path("id").asString();
@@ -99,14 +99,14 @@ class ValidationLimitsIntegrationTest extends AuthTestSupport {
                         .header("Authorization", scanlator.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new CreateWorkRequest(
-                                "Bad Cover", null, WorkType.MANGA, WorkStatus.ONGOING, "file:///etc/passwd", Set.of("Action")))))
+                                "Bad Cover", null, WorkType.MANGA, WorkStatus.ONGOING, null, null, "file:///etc/passwd", Set.of("Action")))))
                 .andExpect(status().isBadRequest());
 
         mockMvc.perform(post("/api/v1/works")
                         .header("Authorization", scanlator.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new CreateWorkRequest(
-                                "Bad Genre", null, WorkType.MANGA, WorkStatus.ONGOING, null, Set.of(" ")))))
+                                "Bad Genre", null, WorkType.MANGA, WorkStatus.ONGOING, null, null, null, Set.of(" ")))))
                 .andExpect(status().isBadRequest());
     }
 }

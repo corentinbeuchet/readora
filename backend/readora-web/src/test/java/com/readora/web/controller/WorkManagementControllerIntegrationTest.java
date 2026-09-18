@@ -4,6 +4,7 @@ import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.work.Demographic;
 import com.readora.domain.work.WorkId;
 import com.readora.domain.work.WorkStatus;
 import com.readora.domain.work.WorkType;
@@ -53,7 +54,7 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
                 "Chainsaw Man",
                 "Denji is a young boy...",
                 WorkType.MANGA,
-                WorkStatus.ONGOING,
+                WorkStatus.ONGOING, "Tatsuki Fujimoto", Demographic.SHOUNEN,
                 "https://cdn.readora.com/covers/csm.webp",
                 Set.of("Action", "Horror")
         );
@@ -66,6 +67,8 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.title").value("Chainsaw Man"))
                 .andExpect(jsonPath("$.data.type").value("MANGA"))
+                .andExpect(jsonPath("$.data.author").value("Tatsuki Fujimoto"))
+                .andExpect(jsonPath("$.data.demographic").value("SHOUNEN"))
                 .andReturn();
 
         String workIdStr = json(result).path("data").path("id").asString();
@@ -91,7 +94,7 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
                 "Unauthorized Manga",
                 "Synopsis",
                 WorkType.MANGA,
-                WorkStatus.ONGOING,
+                WorkStatus.ONGOING, null, null,
                 null,
                 Set.of("Action")
         );
@@ -113,7 +116,7 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
                 "Tower of God",
                 "What do you desire?",
                 WorkType.MANHWA,
-                WorkStatus.ONGOING,
+                WorkStatus.ONGOING, null, null,
                 "https://cdn.readora.com/covers/tog.webp",
                 Set.of("Fantasy", "Adventure")
         );
@@ -164,7 +167,7 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
         Session intruder = registerScanlator();
 
         CreateWorkRequest createWorkReq = new CreateWorkRequest(
-                "The Beginning After The End", "Reincarnation.", WorkType.MANHWA, WorkStatus.ONGOING, null, Set.of("Fantasy"));
+                "The Beginning After The End", "Reincarnation.", WorkType.MANHWA, WorkStatus.ONGOING, null, null, null, Set.of("Fantasy"));
         var createWorkRes = mockMvc.perform(post("/api/v1/works")
                         .header("Authorization", owner.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -194,7 +197,7 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
                 "Omniscient Reader",
                 "Only I know the end of this world.",
                 WorkType.MANHWA,
-                WorkStatus.ONGOING,
+                WorkStatus.ONGOING, null, null,
                 "https://cdn.readora.com/covers/orv.webp",
                 Set.of("Action", "Fantasy")
         );

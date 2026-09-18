@@ -2,6 +2,7 @@ package com.readora.domain.work;
 
 import com.readora.domain.common.AggregateRoot;
 import com.readora.domain.common.DomainValidationException;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -10,21 +11,29 @@ import java.util.Objects;
 import java.util.Set;
 
 public class Work extends AggregateRoot<WorkId> {
+    public static final int MAX_AUTHOR_LENGTH = 120;
+
     private String title;
     private String synopsis;
     private WorkType type;
     private WorkStatus status;
-    private String coverImageUrl;
+    private @Nullable String author;
+    private @Nullable Demographic demographic;
+    private @Nullable String coverImageUrl;
     private Set<String> genres;
     private final Instant createdAt;
     private Instant updatedAt;
 
-    public Work(WorkId id, String title, String synopsis, WorkType type, WorkStatus status, String coverImageUrl, Set<String> genres, Instant createdAt, Instant updatedAt) {
+    public Work(WorkId id, String title, @Nullable String synopsis, WorkType type, WorkStatus status,
+                @Nullable String author, @Nullable Demographic demographic,
+                @Nullable String coverImageUrl, Set<String> genres, Instant createdAt, Instant updatedAt) {
         super(id);
         this.title = validateTitle(title);
         this.synopsis = synopsis != null ? synopsis : "";
         this.type = Objects.requireNonNull(type, "WorkType cannot be null");
         this.status = Objects.requireNonNull(status, "WorkStatus cannot be null");
+        this.author = normaliseAuthor(author);
+        this.demographic = demographic;
         this.coverImageUrl = coverImageUrl;
         this.genres = genres != null ? new HashSet<>(genres) : new HashSet<>();
         this.createdAt = createdAt != null ? createdAt : Instant.now();
@@ -36,8 +45,27 @@ public class Work extends AggregateRoot<WorkId> {
     }
 
     public static Work create(String title, String synopsis, WorkType type, WorkStatus status, String coverImageUrl, Set<String> genres) {
+        return create(title, synopsis, type, status, null, null, coverImageUrl, genres);
+    }
+
+    public static Work create(String title, @Nullable String synopsis, WorkType type, WorkStatus status,
+                              @Nullable String author, @Nullable Demographic demographic,
+                              @Nullable String coverImageUrl, Set<String> genres) {
         Instant now = Instant.now();
-        return new Work(WorkId.generate(), title, synopsis, type, status != null ? status : WorkStatus.ONGOING, coverImageUrl, genres, now, now);
+        return new Work(WorkId.generate(), title, synopsis, type, status != null ? status : WorkStatus.ONGOING,
+                author, demographic, coverImageUrl, genres, now, now);
+    }
+
+    /// Blank means unknown; otherwise trimmed and at most [#MAX_AUTHOR_LENGTH] characters.
+    private static @Nullable String normaliseAuthor(@Nullable String author) {
+        if (author == null || author.isBlank()) {
+            return null;
+        }
+        String trimmed = author.trim();
+        if (trimmed.length() > MAX_AUTHOR_LENGTH) {
+            throw new DomainValidationException("Author cannot exceed " + MAX_AUTHOR_LENGTH + " characters");
+        }
+        return trimmed;
     }
 
     private static String validateTitle(String title) {
@@ -63,7 +91,15 @@ public class Work extends AggregateRoot<WorkId> {
         return status;
     }
 
-    public String getCoverImageUrl() {
+    public @Nullable String getAuthor() {
+        return author;
+    }
+
+    public @Nullable Demographic getDemographic() {
+        return demographic;
+    }
+
+    public @Nullable String getCoverImageUrl() {
         return coverImageUrl;
     }
 

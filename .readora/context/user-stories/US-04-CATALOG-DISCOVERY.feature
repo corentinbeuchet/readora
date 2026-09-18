@@ -1,7 +1,6 @@
 # Rewritten 2026-09 from the first draft: ratings dropped (no rating system yet), author and demographic added to works.
 # @ui = frontend-only, verified by a Vitest test named after the scenario (not run by Cucumber).
 
-@wip
 Feature: Finding a series in the catalog
   As a reader
   I want to search the catalog and filter it by genre, type, status and audience
