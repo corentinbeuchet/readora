@@ -5,11 +5,14 @@ import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.work.*;
 import com.readora.domain.library.ChapterRead;
+import com.readora.domain.report.PageReport;
+import com.readora.domain.report.PageReportReason;
 import com.readora.domain.library.LibraryEntry;
 import com.readora.domain.social.ReadingStatus;
 import com.readora.infrastructure.persistence.adapter.ChapterReadRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.ChapterRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.LibraryRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.PageReportRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.ScanlationProjectRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.WorkRepositoryAdapter;
 import org.junit.jupiter.api.DisplayName;
@@ -124,6 +127,29 @@ class PostgresMigrationTest {
         assertThat(chapterReads.findLatestPerWork(kenji, 10)).singleElement().extracting(ChapterRead::chapterId).isEqualTo(one.getId());
         assertThat(chapterReads.countChaptersPublishedSinceLastRead(kenji, List.of(work.getId()))).containsEntry(work.getId(), 1L);
         assertThat(library.findByUser(kenji, ReadingStatus.READING)).hasSize(1);
+    }
+
+    @Autowired
+    private PageReportRepositoryAdapter pageReports;
+
+    @Test
+    @DisplayName("Page reports round-trip on PostgreSQL, with optimistic locking on resolve")
+    void pageReportsRunOnPostgres() {
+        Work work = workRepository.save(Work.create("PG Reports", "", WorkType.MANGA, "c.png", Set.of("Action")));
+        ScanlationProject team = projectRepository.save(ScanlationProject.create("PG Team", work.getId(), UserId.of("pg-leader")));
+        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", team.getId());
+        chapter.updatePages(List.of(PageAsset.create(1, "p1.webp", null)));
+        chapter.publish(UserId.of("pg-leader"));
+        chapterRepository.save(chapter);
+
+        PageReport report = pageReports.save(PageReport.open(chapter.getId(), work.getId(), team.getId(), chapter.getChapterNumber(), 1,
+                PageReportReason.IMAGE_CORRUPTED, UserId.of("pg-reader"), java.time.Instant.now()));
+        assertThat(pageReports.findOpen(UserId.of("pg-reader"), chapter.getId(), 1)).isPresent();
+        assertThat(pageReports.findOpenByProject(team.getId())).hasSize(1);
+
+        report.resolve(UserId.of("pg-leader"), java.time.Instant.now());
+        pageReports.save(report);
+        assertThat(pageReports.findOpenByProject(team.getId())).isEmpty();
     }
 
     private static void sleepPastClockTick() {

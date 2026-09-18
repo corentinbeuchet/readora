@@ -2,7 +2,6 @@
 # auto-scroll moved to US-07, and reports are described by what the team sees instead of an internal event.
 # @ui = frontend-only, verified by a Vitest test named after the scenario (not run by Cucumber).
 
-@wip
 Feature: Distraction-free reading and broken pages
   As a reader
   I want to hide everything but the pages, and to report a page that does not display

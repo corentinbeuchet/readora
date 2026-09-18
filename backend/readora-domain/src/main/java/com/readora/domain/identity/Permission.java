@@ -13,5 +13,7 @@ public enum Permission {
     USER_MANAGE,
     WORK_CREATE,
     /// Personal library, reading history and read markers (free for every signed-in reader).
-    LIBRARY_USE
+    LIBRARY_USE,
+    /// Report a page that doesn't display (US-06).
+    PAGE_REPORT
 }

@@ -12,6 +12,7 @@ import com.readora.application.port.in.ManageSubscriptionUseCase;
 import com.readora.application.port.in.ManageWorkUseCase;
 import com.readora.application.port.in.ReadChapterUseCase;
 import com.readora.application.port.in.ReaderInteractionUseCase;
+import com.readora.application.port.in.ReportPageUseCase;
 import com.readora.application.port.in.TrackReadingUseCase;
 import com.readora.application.port.out.*;
 import com.readora.application.service.AssetService;
@@ -20,6 +21,7 @@ import com.readora.application.service.BookmarkService;
 import com.readora.application.service.CatalogService;
 import com.readora.application.service.ChapterReadingService;
 import com.readora.application.service.LibraryService;
+import com.readora.application.service.PageReportService;
 import com.readora.application.service.ProfileService;
 import com.readora.application.service.ReaderSocialService;
 import com.readora.application.service.ReadingTrackerService;
@@ -153,6 +155,18 @@ public class DomainServiceConfig {
             WorkRepositoryPort workRepository) {
         return transactional(new ReadingTrackerService(chapterReadRepository, chapterRepository, workRepository, Clock.systemUTC()),
                 TrackReadingUseCase.class, transactionManager);
+    }
+
+    @Bean
+    public ReportPageUseCase reportPageUseCase(
+            PageReportRepositoryPort reportRepository,
+            ChapterRepositoryPort chapterRepository,
+            ScanlationProjectRepositoryPort projectRepository,
+            UserAccountRepositoryPort userRepository,
+            EventPublisherPort eventPublisher) {
+        return transactional(new PageReportService(reportRepository, chapterRepository, projectRepository, userRepository,
+                        eventPublisher, Clock.systemUTC()),
+                ReportPageUseCase.class, transactionManager);
     }
 
     @Bean
