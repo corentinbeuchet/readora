@@ -2,7 +2,8 @@
 /**
  * Generates `sitemap.xml` in the browser output folder from the public catalog API.
  *
- * Runs automatically as `postbuild`. Configure with environment variables:
+ * Runs after `npm run build` (npm `postbuild` hook) and explicitly at the end of `build:prod` /
+ * `build:staging` (npm only fires `post<name>` hooks for the exact script name). Configure with env vars:
  *   READORA_API_URL   backend base URL (default: value inferred from the build configuration)
  *   READORA_SITE_URL  public frontend origin used for <loc> (default: inferred likewise)
  *   READORA_OUT_DIR   output directory (default: dist/readora-frontend/browser)
