@@ -5,6 +5,7 @@ import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.PaymentPort;
 import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.NotFoundException;
 import com.readora.domain.identity.Subscription;
 import com.readora.domain.identity.SubscriptionPlan;
 import com.readora.domain.identity.SubscriptionStatus;
@@ -137,6 +138,6 @@ public class SubscriptionService implements ManageSubscriptionUseCase {
 
     private UserAccount requireAccount(UserId userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new DomainValidationException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User", userId));
     }
 }

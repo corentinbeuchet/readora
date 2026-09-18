@@ -2,6 +2,7 @@ package com.readora.domain.scanlation;
 
 import com.readora.domain.common.AggregateRoot;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.NotFoundException;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.UserId;
 import com.readora.domain.work.WorkId;
@@ -83,7 +84,7 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
                 .orElseThrow(() -> new DomainValidationException("User " + userId + " is not a member of project " + name));
 
         WorkflowTask task = findTask(taskId)
-                .orElseThrow(() -> new DomainValidationException("Task not found with id: " + taskId));
+                .orElseThrow(() -> new NotFoundException("Task", taskId));
 
         requireOpenStage(task);
         ScanlationRole required = task.getStage().requiredRole();
@@ -101,7 +102,7 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
 
     public void submitTaskWork(TaskId taskId, UserId userId, String assetUrl, int pageCount) {
         WorkflowTask task = findTask(taskId)
-                .orElseThrow(() -> new DomainValidationException("Task not found with id: " + taskId));
+                .orElseThrow(() -> new NotFoundException("Task", taskId));
 
         requireOpenStage(task);
         if (task.getStage() == WorkflowStage.QC_REVIEW) {
@@ -143,7 +144,7 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
         TeamMember member = findMember(userId)
                 .orElseThrow(() -> new DomainValidationException("User " + userId + " is not a member of project " + name));
         WorkflowTask task = findTask(taskId)
-                .orElseThrow(() -> new DomainValidationException("Task not found with id: " + taskId));
+                .orElseThrow(() -> new NotFoundException("Task", taskId));
 
         if (task.getStage() != WorkflowStage.QC_REVIEW) {
             throw new DomainValidationException("Only a task in QC_REVIEW can be published; this one is in " + task.getStage());

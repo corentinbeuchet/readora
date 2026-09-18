@@ -9,6 +9,7 @@ import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.AccessDeniedDomainException;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.NotFoundException;
 import com.readora.domain.identity.Permission;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
@@ -67,7 +68,7 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
     public Chapter directPublishChapter(WorkId workId, String chapterNumberStr, String title, List<PageAsset> pages, UserId publisherId) {
         Objects.requireNonNull(workId, "WorkId cannot be null");
         if (workRepository.findById(workId).isEmpty()) {
-            throw new DomainValidationException("Work not found with id: " + workId);
+            throw new NotFoundException("Work", workId);
         }
         ProjectId projectId = authorizePublisher(workId, publisherId);
 

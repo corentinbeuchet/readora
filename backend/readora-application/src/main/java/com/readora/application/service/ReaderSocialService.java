@@ -4,7 +4,7 @@ import com.readora.application.port.in.ReaderInteractionUseCase;
 import com.readora.application.port.out.BookmarkRepositoryPort;
 import com.readora.application.port.out.CommentRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
-import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.NotFoundException;
 import com.readora.domain.social.Bookmark;
 import com.readora.domain.social.ChapterComment;
 import com.readora.domain.social.CommentId;
@@ -38,7 +38,7 @@ public class ReaderSocialService implements ReaderInteractionUseCase {
     @Override
     public ChapterComment replyToComment(CommentId parentCommentId, UserId authorId, String username, String text, boolean isSpoiler) {
         ChapterComment parent = commentRepository.findById(parentCommentId)
-                .orElseThrow(() -> new DomainValidationException("Parent comment not found: " + parentCommentId));
+                .orElseThrow(() -> new NotFoundException("Parent comment", parentCommentId));
 
         ChapterComment reply = ChapterComment.createReply(parent, authorId, username, text, isSpoiler);
         ChapterComment saved = commentRepository.save(reply);
@@ -49,7 +49,7 @@ public class ReaderSocialService implements ReaderInteractionUseCase {
     @Override
     public UpvoteOutcome upvoteComment(CommentId commentId, UserId voterId) {
         ChapterComment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new DomainValidationException("Comment not found: " + commentId));
+                .orElseThrow(() -> new NotFoundException("Comment", commentId));
         comment.ensureCanBeUpvotedBy(voterId);
         CommentRepositoryPort.UpvoteResult result = commentRepository.addUpvote(commentId, voterId);
         return new UpvoteOutcome(commentId, result.upvotes(), result.counted());

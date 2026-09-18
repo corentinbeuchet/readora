@@ -2,7 +2,7 @@ package com.readora.application.service;
 
 import com.readora.application.port.in.ManageProfileUseCase;
 import com.readora.application.port.out.UserAccountRepositoryPort;
-import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.NotFoundException;
 import com.readora.domain.identity.UserAccount;
 import com.readora.domain.work.UserId;
 
@@ -18,7 +18,7 @@ public class ProfileService implements ManageProfileUseCase {
     @Override
     public UserAccount getProfile(UserId userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new DomainValidationException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User", userId));
     }
 
     @Override

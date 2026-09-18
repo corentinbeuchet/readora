@@ -5,6 +5,7 @@ import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.NotFoundException;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.TaskId;
@@ -30,8 +31,7 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
 
     @Override
     public WorkflowTask uploadChapterTask(ProjectId projectId, com.readora.domain.work.ChapterNumber chapterNumber, String assetUrl, int pageCount, UserId userId) {
-        ScanlationProject project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new DomainValidationException("Scanlation project not found: " + projectId));
+        ScanlationProject project = requireProject(projectId);
 
         if (project.findMember(userId).isEmpty()) {
             throw new DomainValidationException("User " + userId + " is not a member of project " + project.getName());
@@ -61,8 +61,7 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
 
     @Override
     public WorkflowTask claimTask(ProjectId projectId, TaskId taskId, UserId userId) {
-        ScanlationProject project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new DomainValidationException("Scanlation project not found: " + projectId));
+        ScanlationProject project = requireProject(projectId);
 
         project.claimTask(taskId, userId);
         projectRepository.save(project);
@@ -73,8 +72,7 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
 
     @Override
     public WorkflowTask submitWork(ProjectId projectId, TaskId taskId, UserId userId, String assetUrl, int pageCount) {
-        ScanlationProject project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new DomainValidationException("Scanlation project not found: " + projectId));
+        ScanlationProject project = requireProject(projectId);
 
         project.submitTaskWork(taskId, userId, assetUrl, pageCount);
         projectRepository.save(project);
@@ -85,8 +83,7 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
 
     @Override
     public void publishChapterFromQC(ProjectId projectId, TaskId taskId, UserId publisherId) {
-        ScanlationProject project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new DomainValidationException("Scanlation project not found: " + projectId));
+        ScanlationProject project = requireProject(projectId);
 
         // Validate and mutate both aggregates in memory first; persist only once both transitions succeeded.
         WorkflowTask task = project.approveQualityCheck(taskId, publisherId);
@@ -120,5 +117,10 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
         chapterRepository.save(chapter);
         project.pollDomainEvents().forEach(eventPublisher::publish);
         chapter.pollDomainEvents().forEach(eventPublisher::publish);
+    }
+
+    private ScanlationProject requireProject(ProjectId projectId) {
+        return projectRepository.findById(projectId)
+                .orElseThrow(() -> new NotFoundException("Scanlation project", projectId));
     }
 }

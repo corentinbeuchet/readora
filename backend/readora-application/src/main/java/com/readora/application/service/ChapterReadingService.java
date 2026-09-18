@@ -5,6 +5,7 @@ import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.StoragePort;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.NotFoundException;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.PageAsset;
@@ -27,7 +28,7 @@ public class ChapterReadingService implements ReadChapterUseCase {
     @Override
     public Chapter readChapter(ChapterId chapterId, UserId readerId, String viewMode) {
         Chapter chapter = chapterRepository.findById(chapterId)
-                .orElseThrow(() -> new DomainValidationException("Chapter not found with id: " + chapterId));
+                .orElseThrow(() -> new NotFoundException("Chapter", chapterId));
 
         if (!chapter.isPublished()) {
             throw new DomainValidationException("CHAPTER_NOT_PUBLISHED: Chapter is not available for public reading.");
