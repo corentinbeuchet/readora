@@ -1,5 +1,6 @@
 package com.readora.infrastructure.storage;
 
+import com.readora.application.exception.StorageUnavailableException;
 import com.readora.application.port.out.StoragePort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,7 @@ import java.util.Optional;
 /// Stores media in exactly one place, decided at startup:
 ///
 /// - **S3 mode** (an [S3Client] bean exists, i.e. `aws.s3.enabled=true`): S3/MinIO is the only store. A failed
-///   write throws [StoragePort.StorageUnavailableException] instead of pretending to succeed.
+///   write throws [StorageUnavailableException] instead of pretending to succeed.
 /// - **Local mode** (no S3 client — dev and tests): files live under `aws.storage.local-dir`.
 ///
 /// Nothing is cached in memory, so memory use does not grow with the number of uploads.

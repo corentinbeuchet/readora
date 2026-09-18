@@ -1,6 +1,7 @@
 package com.readora.infrastructure.security;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.readora.application.auth.TokenClaims;
 import com.readora.application.port.out.TokenProviderPort;
 import com.readora.domain.identity.Permission;
 import com.readora.domain.identity.UserAccount;
@@ -28,8 +29,8 @@ import java.util.List;
 @Component
 public class JwtTokenProviderAdapter implements TokenProviderPort {
 
-    public static final String CLAIM_USERNAME = "username";
-    public static final String CLAIM_PERMISSIONS = "permissions";
+    public static final String CLAIM_USERNAME = TokenClaims.USERNAME;
+    public static final String CLAIM_PERMISSIONS = TokenClaims.PERMISSIONS;
     private static final int REFRESH_TOKEN_BYTES = 48;
 
     private final SecurityProperties properties;

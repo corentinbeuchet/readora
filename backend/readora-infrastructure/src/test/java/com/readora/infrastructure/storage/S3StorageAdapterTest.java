@@ -1,6 +1,6 @@
 package com.readora.infrastructure.storage;
 
-import com.readora.application.port.out.StoragePort.StorageUnavailableException;
+import com.readora.application.exception.StorageUnavailableException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

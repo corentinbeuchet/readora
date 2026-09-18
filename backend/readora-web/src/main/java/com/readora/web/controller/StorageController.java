@@ -1,6 +1,6 @@
 package com.readora.web.controller;
 
-import com.readora.application.port.out.StoragePort;
+import com.readora.application.port.in.ManageAssetsUseCase;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.web.dto.ApiResponse;
 import com.readora.web.dto.StorageUploadResponse;
@@ -8,41 +8,25 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.util.Arrays;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/storage")
 @Tag(name = "Storage", description = "Asset upload and storage management")
 public class StorageController {
 
-    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
-            "image/jpeg",
-            "image/jpg",
-            "image/png",
-            "image/webp",
-            "image/gif",
-            "image/avif",
-            "application/zip",
-            "application/x-zip-compressed",
-            "application/octet-stream"
-    );
-    private static final Duration PRESIGNED_UPLOAD_VALIDITY = Duration.ofMinutes(15);
+    private static final String ASSETS_PREFIX = "/api/v1/storage/assets/";
 
-    private final StoragePort storagePort;
+    private final ManageAssetsUseCase assets;
 
-    public StorageController(StoragePort storagePort) {
-        this.storagePort = storagePort;
+    public StorageController(ManageAssetsUseCase assets) {
+        this.assets = assets;
     }
 
     @PostMapping("/upload")
@@ -52,45 +36,28 @@ public class StorageController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "folder", defaultValue = "uploads") String folder
     ) {
-        if (file == null || file.isEmpty()) {
-            throw new DomainValidationException("Uploaded file cannot be empty");
-        }
-
-        String contentType = file.getContentType();
-        if (contentType != null && !contentType.isBlank() && !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
-            throw new DomainValidationException("Unsupported file format: " + contentType);
-        }
-
-        String storageKey = newStorageKey(folder, file.getOriginalFilename());
-
         byte[] bytes;
         try {
             bytes = file.getBytes();
         } catch (IOException e) {
             throw new DomainValidationException("The uploaded file could not be read");
         }
-        storagePort.storeAsset(storageKey, bytes, contentType);
-
-        String cdnUrl = storagePort.getPublicCdnUrl(storageKey);
-        return ResponseEntity.ok(ApiResponse.ok(new StorageUploadResponse(storageKey, cdnUrl)));
+        var stored = assets.upload(folder, file.getOriginalFilename(), file.getContentType(), bytes);
+        return ResponseEntity.ok(ApiResponse.ok(new StorageUploadResponse(stored.storageKey(), stored.publicUrl())));
     }
 
     @GetMapping("/assets/**")
     @Operation(summary = "Get stored asset")
     public ResponseEntity<byte[]> getAsset(HttpServletRequest request) {
         String fullPath = request.getRequestURI();
-        String prefix = "/api/v1/storage/assets/";
-        int idx = fullPath.indexOf(prefix);
-        String objectKey = idx != -1 ? fullPath.substring(idx + prefix.length()) : "";
+        int idx = fullPath.indexOf(ASSETS_PREFIX);
+        String objectKey = idx != -1 ? fullPath.substring(idx + ASSETS_PREFIX.length()) : "";
 
-        return storagePort.loadAsset(objectKey)
-                .map(data -> {
-                    String contentType = storagePort.getContentType(objectKey);
-                    return ResponseEntity.ok()
-                            .header(HttpHeaders.CONTENT_TYPE, contentType)
-                            .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
-                            .body(data);
-                })
+        return assets.load(objectKey)
+                .map(content -> ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_TYPE, content.contentType())
+                        .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
+                        .body(content.data()))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -101,30 +68,11 @@ public class StorageController {
             @RequestParam(defaultValue = "uploads") String folder,
             @RequestParam String filename
     ) {
-        String storageKey = newStorageKey(folder, filename);
-        String uploadUrl = storagePort.generatePresignedUploadUrl(storageKey, PRESIGNED_UPLOAD_VALIDITY);
-        String cdnUrl = storagePort.getPublicCdnUrl(storageKey);
+        var upload = assets.presignUpload(folder, filename);
         return ResponseEntity.ok(ApiResponse.ok(Map.of(
-                "uploadUrl", uploadUrl,
-                "cdnUrl", cdnUrl,
-                "storageKey", storageKey
+                "uploadUrl", upload.uploadUrl(),
+                "cdnUrl", upload.publicUrl(),
+                "storageKey", upload.storageKey()
         )));
-    }
-
-    /// Server-built key `<folder>/<uuid>-<filename>`: the client picks a folder and a filename but never the
-    /// full key, so it cannot overwrite an existing asset or escape the folder with `..`.
-    ///
-    /// @throws DomainValidationException if the folder is empty or contains a `.` or `..` segment
-    private static String newStorageKey(String folder, String originalFilename) {
-        String cleanFolder = folder == null ? "" : folder.trim().replaceAll("[^a-zA-Z0-9/_.-]", "_");
-        cleanFolder = cleanFolder.replaceAll("/{2,}", "/").replaceAll("^/+|/+$", "");
-        if (cleanFolder.isEmpty()
-                || Arrays.stream(cleanFolder.split("/")).anyMatch(segment -> segment.equals("..") || segment.equals("."))) {
-            throw new DomainValidationException("Invalid storage folder");
-        }
-        String safeFilename = originalFilename == null || originalFilename.isBlank()
-                ? "asset"
-                : originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_");
-        return cleanFolder + "/" + UUID.randomUUID() + "-" + safeFilename;
     }
 }

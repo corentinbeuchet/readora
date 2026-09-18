@@ -1,6 +1,6 @@
 package com.readora.infrastructure.payment;
 
-import com.readora.application.port.out.PaymentPort.WebhookVerificationException;
+import com.readora.application.exception.WebhookVerificationException;
 import com.readora.domain.identity.SubscriptionPlan;
 import com.readora.domain.identity.SubscriptionStatus;
 import com.readora.infrastructure.config.StripeProperties;

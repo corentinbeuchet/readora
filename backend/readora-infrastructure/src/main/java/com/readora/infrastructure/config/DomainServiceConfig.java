@@ -3,6 +3,7 @@ package com.readora.infrastructure.config;
 import com.readora.application.port.in.AuthenticateUserUseCase;
 import com.readora.application.port.in.BrowseCatalogUseCase;
 import com.readora.application.port.in.DirectPublishChapterUseCase;
+import com.readora.application.port.in.ManageAssetsUseCase;
 import com.readora.application.port.in.ManageBookmarkUseCase;
 import com.readora.application.port.in.ManageProfileUseCase;
 import com.readora.application.port.in.ManageScanlationTaskUseCase;
@@ -11,6 +12,7 @@ import com.readora.application.port.in.ManageWorkUseCase;
 import com.readora.application.port.in.ReadChapterUseCase;
 import com.readora.application.port.in.ReaderInteractionUseCase;
 import com.readora.application.port.out.*;
+import com.readora.application.service.AssetService;
 import com.readora.application.service.AuthenticationService;
 import com.readora.application.service.BookmarkService;
 import com.readora.application.service.CatalogService;
@@ -120,6 +122,12 @@ public class DomainServiceConfig {
             EventPublisherPort eventPublisher) {
         return transactional(new SubscriptionService(userRepository, paymentPort, eventPublisher),
                 ManageSubscriptionUseCase.class, transactionManager);
+    }
+
+    /// No persistence involved, so no transaction (it would hold a DB connection during large uploads).
+    @Bean
+    public ManageAssetsUseCase manageAssetsUseCase(StoragePort storagePort) {
+        return new AssetService(storagePort);
     }
 
     @Bean

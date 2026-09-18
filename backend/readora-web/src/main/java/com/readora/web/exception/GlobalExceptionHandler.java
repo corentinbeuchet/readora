@@ -1,7 +1,8 @@
 package com.readora.web.exception;
 
-import com.readora.application.port.out.PaymentPort;
-import com.readora.application.port.out.StoragePort;
+import com.readora.application.exception.StorageUnavailableException;
+import com.readora.application.exception.PaymentProviderException;
+import com.readora.application.exception.WebhookVerificationException;
 import com.readora.domain.common.AccessDeniedDomainException;
 import com.readora.domain.common.ConcurrentModificationDomainException;
 import com.readora.domain.common.DomainValidationException;
@@ -116,19 +117,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
     }
 
-    @ExceptionHandler(PaymentPort.WebhookVerificationException.class)
-    public ResponseEntity<ApiResponse<Void>> handleWebhookVerification(PaymentPort.WebhookVerificationException ex) {
+    @ExceptionHandler(WebhookVerificationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleWebhookVerification(WebhookVerificationException ex) {
         log.warn("Rejected payment webhook: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
     }
 
-    @ExceptionHandler(StoragePort.StorageUnavailableException.class)
-    public ResponseEntity<ApiResponse<Void>> handleStorageUnavailable(StoragePort.StorageUnavailableException ex) {
+    @ExceptionHandler(StorageUnavailableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleStorageUnavailable(StorageUnavailableException ex) {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(ApiResponse.error(ex.getMessage()));
     }
 
-    @ExceptionHandler(PaymentPort.PaymentProviderException.class)
-    public ResponseEntity<ApiResponse<Void>> handlePaymentProvider(PaymentPort.PaymentProviderException ex) {
+    @ExceptionHandler(PaymentProviderException.class)
+    public ResponseEntity<ApiResponse<Void>> handlePaymentProvider(PaymentProviderException ex) {
         log.error("Payment provider failure: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(ApiResponse.error(ex.getMessage()));
     }

@@ -1,7 +1,6 @@
 package com.readora.web.security;
 
-import com.readora.infrastructure.config.SecurityProperties;
-import com.readora.infrastructure.security.JwtTokenProviderAdapter;
+import com.readora.application.auth.TokenClaims;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,10 +9,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtValidators;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -26,7 +22,7 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@EnableConfigurationProperties({CorsProperties.class, RateLimitProperties.class})
+@EnableConfigurationProperties({CorsProperties.class, RateLimitProperties.class, RefreshCookieProperties.class})
 public class SecurityConfig {
 
     @Bean
@@ -68,16 +64,6 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JwtDecoder jwtDecoder(SecurityProperties securityProperties) {
-        NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(JwtTokenProviderAdapter.secretKey(securityProperties.jwt().secret()))
-                .macAlgorithm(MacAlgorithm.HS256)
-                .build();
-        // Signature alone is not enough: expiry/not-before (default validators) and our issuer must match too.
-        decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(securityProperties.jwt().issuer()));
-        return decoder;
-    }
-
-    @Bean
     public CorsConfigurationSource corsConfigurationSource(CorsProperties corsProperties) {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(corsProperties.allowedOrigins());
@@ -94,7 +80,7 @@ public class SecurityConfig {
 
     private static JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        authoritiesConverter.setAuthoritiesClaimName(JwtTokenProviderAdapter.CLAIM_PERMISSIONS);
+        authoritiesConverter.setAuthoritiesClaimName(TokenClaims.PERMISSIONS);
         authoritiesConverter.setAuthorityPrefix("");
 
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();

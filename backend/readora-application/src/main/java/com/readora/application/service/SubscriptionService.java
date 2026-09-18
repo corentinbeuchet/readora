@@ -1,5 +1,6 @@
 package com.readora.application.service;
 
+import com.readora.application.exception.WebhookVerificationException;
 import com.readora.application.port.in.ManageSubscriptionUseCase;
 import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.PaymentPort;
@@ -32,7 +33,7 @@ public class SubscriptionService implements ManageSubscriptionUseCase {
     }
 
     @Override
-    public PaymentPort.CheckoutSession startCheckout(UserId userId, SubscriptionPlan plan, String successUrl, String cancelUrl) {
+    public CheckoutRedirect startCheckout(UserId userId, SubscriptionPlan plan, String successUrl, String cancelUrl) {
         if (plan == null || plan == SubscriptionPlan.FREE) {
             throw new DomainValidationException("Only paid plans can be purchased");
         }
@@ -40,14 +41,22 @@ public class SubscriptionService implements ManageSubscriptionUseCase {
         if (account.getSubscription().getPlan() == plan && account.getSubscription().isActive(Instant.now())) {
             throw new DomainValidationException("Subscription to " + plan + " is already active");
         }
-        return paymentPort.createCheckoutSession(userId, account.getEmail().value(), plan, successUrl, cancelUrl);
+        PaymentPort.CheckoutSession session = paymentPort.createCheckoutSession(userId, account.getEmail().value(), plan, successUrl, cancelUrl);
+        return new CheckoutRedirect(session.sessionId(), session.url());
+    }
+
+    @Override
+    public void handleWebhook(String payload, String signature) {
+        if (signature == null || signature.isBlank()) {
+            throw new WebhookVerificationException("Missing webhook signature", null);
+        }
+        handlePaymentEvent(paymentPort.parseWebhook(payload, signature));
     }
 
     /// Applies a verified provider event. Events are idempotent (same id twice is a no-op), ordered (older than the
     /// last applied one: ignored, so a late "updated" can't resurrect a deleted subscription) and fail closed
     /// (an event without a recognised paid plan never grants access).
-    @Override
-    public void handlePaymentEvent(PaymentPort.PaymentEvent event) {
+    void handlePaymentEvent(PaymentPort.PaymentEvent event) {
         Objects.requireNonNull(event, "PaymentEvent cannot be null");
         if (event.type() == PaymentPort.PaymentEventType.IGNORED) {
             return;

@@ -8,18 +8,6 @@ import java.time.Instant;
 
 public interface PaymentPort {
 
-    class WebhookVerificationException extends RuntimeException {
-        public WebhookVerificationException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
-
-    class PaymentProviderException extends RuntimeException {
-        public PaymentProviderException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
-
     record CheckoutSession(String sessionId, String url) {}
 
     enum PaymentEventType {

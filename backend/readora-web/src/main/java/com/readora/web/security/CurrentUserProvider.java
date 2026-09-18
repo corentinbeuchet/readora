@@ -2,7 +2,7 @@ package com.readora.web.security;
 
 import com.readora.domain.identity.Permission;
 import com.readora.domain.work.UserId;
-import com.readora.infrastructure.security.JwtTokenProviderAdapter;
+import com.readora.application.auth.TokenClaims;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,8 +34,8 @@ public class CurrentUserProvider {
     }
 
     static AuthenticatedUser fromJwt(Jwt jwt) {
-        String username = jwt.getClaimAsString(JwtTokenProviderAdapter.CLAIM_USERNAME);
-        List<String> rawPermissions = jwt.getClaimAsStringList(JwtTokenProviderAdapter.CLAIM_PERMISSIONS);
+        String username = jwt.getClaimAsString(TokenClaims.USERNAME);
+        List<String> rawPermissions = jwt.getClaimAsStringList(TokenClaims.PERMISSIONS);
         Set<Permission> permissions = EnumSet.noneOf(Permission.class);
         if (rawPermissions != null) {
             for (String raw : rawPermissions) {

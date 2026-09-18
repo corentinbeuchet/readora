@@ -1,5 +1,6 @@
 package com.readora.web.controller;
 
+import com.readora.application.exception.WebhookVerificationException;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.PaymentPort;
 import com.readora.application.port.out.PaymentPort.PaymentEvent;
@@ -159,7 +160,7 @@ class SubscriptionWebhookIntegrationTest extends AuthTestSupport {
     @DisplayName("Webhook with bad or missing signature returns 400 and does not change state")
     void invalidSignatureIsRejected() throws Exception {
         when(paymentPort.parseWebhook(anyString(), eq("bad")))
-                .thenThrow(new PaymentPort.WebhookVerificationException("Invalid Stripe webhook signature", null));
+                .thenThrow(new WebhookVerificationException("Invalid Stripe webhook signature", null));
 
         mockMvc.perform(post(WEBHOOK).header("Stripe-Signature", "bad").content("{}"))
                 .andExpect(status().isBadRequest())

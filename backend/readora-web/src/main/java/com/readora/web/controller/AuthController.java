@@ -4,13 +4,13 @@ import com.readora.application.port.in.AuthenticateUserUseCase;
 import com.readora.application.port.in.AuthenticateUserUseCase.AuthResult;
 import com.readora.domain.identity.InvalidCredentialsException;
 import com.readora.domain.identity.UserAccount;
-import com.readora.infrastructure.config.SecurityProperties;
 import com.readora.web.dto.ApiResponse;
 import com.readora.web.dto.AuthResponse;
 import com.readora.web.dto.LoginRequest;
 import com.readora.web.dto.RegisterRequest;
 import com.readora.web.dto.UserProfileDto;
 import com.readora.web.security.CurrentUserProvider;
+import com.readora.web.security.RefreshCookieProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -36,11 +36,11 @@ public class AuthController {
 
     private final AuthenticateUserUseCase authenticateUserUseCase;
     private final CurrentUserProvider currentUserProvider;
-    private final SecurityProperties securityProperties;
+    private final RefreshCookieProperties securityProperties;
 
     public AuthController(AuthenticateUserUseCase authenticateUserUseCase,
                           CurrentUserProvider currentUserProvider,
-                          SecurityProperties securityProperties) {
+                          RefreshCookieProperties securityProperties) {
         this.authenticateUserUseCase = authenticateUserUseCase;
         this.currentUserProvider = currentUserProvider;
         this.securityProperties = securityProperties;

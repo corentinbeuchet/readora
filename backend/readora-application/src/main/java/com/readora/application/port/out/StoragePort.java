@@ -10,11 +10,4 @@ public interface StoragePort {
     default void storeAsset(String objectKey, byte[] data, String contentType) {}
     default Optional<byte[]> loadAsset(String objectKey) { return Optional.empty(); }
     default String getContentType(String objectKey) { return "application/octet-stream"; }
-
-    /// The storage backend could not complete the operation; nothing was stored. Mapped to HTTP 503.
-    class StorageUnavailableException extends RuntimeException {
-        public StorageUnavailableException(String message) {
-            super(message);
-        }
-    }
 }

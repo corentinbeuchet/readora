@@ -1,7 +1,6 @@
 package com.readora.web.controller;
 
 import com.readora.application.port.in.ManageSubscriptionUseCase;
-import com.readora.application.port.out.PaymentPort;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.identity.Subscription;
 import com.readora.domain.identity.SubscriptionPlan;
@@ -35,16 +34,13 @@ public class SubscriptionController {
     static final String CANCEL_PATH = "/subscription/cancel";
 
     private final ManageSubscriptionUseCase manageSubscriptionUseCase;
-    private final PaymentPort paymentPort;
     private final CurrentUserProvider currentUserProvider;
     private final FrontendProperties frontendProperties;
 
     public SubscriptionController(ManageSubscriptionUseCase manageSubscriptionUseCase,
-                                  PaymentPort paymentPort,
                                   CurrentUserProvider currentUserProvider,
                                   FrontendProperties frontendProperties) {
         this.manageSubscriptionUseCase = manageSubscriptionUseCase;
-        this.paymentPort = paymentPort;
         this.currentUserProvider = currentUserProvider;
         this.frontendProperties = frontendProperties;
     }
@@ -60,7 +56,7 @@ public class SubscriptionController {
     @Operation(summary = "Start a Stripe Checkout session for a paid plan")
     public ResponseEntity<ApiResponse<CheckoutSessionDto>> startCheckout(@Valid @RequestBody CheckoutRequest request) {
         SubscriptionPlan plan = parsePlan(request.plan());
-        PaymentPort.CheckoutSession session = manageSubscriptionUseCase.startCheckout(
+        ManageSubscriptionUseCase.CheckoutRedirect session = manageSubscriptionUseCase.startCheckout(
                 currentUserProvider.requireUserId(),
                 plan,
                 frontendProperties.url(SUCCESS_PATH),
@@ -82,11 +78,7 @@ public class SubscriptionController {
             @RequestBody String payload,
             @RequestHeader(name = "Stripe-Signature", required = false) String signature
     ) {
-        if (signature == null || signature.isBlank()) {
-            throw new PaymentPort.WebhookVerificationException("Missing Stripe-Signature header", null);
-        }
-        PaymentPort.PaymentEvent event = paymentPort.parseWebhook(payload, signature);
-        manageSubscriptionUseCase.handlePaymentEvent(event);
+        manageSubscriptionUseCase.handleWebhook(payload, signature);
         return ResponseEntity.ok(ApiResponse.ok("received"));
     }
 
