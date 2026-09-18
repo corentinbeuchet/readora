@@ -270,3 +270,17 @@
 .setting {
   margin: 0;
 }
+
+.reader-controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: opacity 0.3s ease;
+}
+
+// Zen mode: invisible and click-through until the mouse moves, the screen is tapped or a control gets focus.
+.controls-hidden {
+  opacity: 0;
+  pointer-events: none;
+}

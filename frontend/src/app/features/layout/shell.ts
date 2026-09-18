@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@angular/aria/menu';
 import { AuthStore } from '@app/core/auth/auth-store';
+import { LayoutStore } from '@app/core/layout/layout-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { Omnisearch } from '@app/features/catalog/components/omnisearch';
 
@@ -18,6 +19,7 @@ import { Omnisearch } from '@app/features/catalog/components/omnisearch';
 })
 export class Shell {
   protected readonly auth = inject(AuthStore);
+  protected readonly layout = inject(LayoutStore);
   private readonly router = inject(Router);
   protected readonly year = new Date().getFullYear();
 

@@ -10,6 +10,8 @@
     </div>
   } @else {
     <!-- Toolbar Controls -->
+    <!-- Controls stay focusable while hidden in zen mode: focusing one shows them again. -->
+    <div class="reader-controls" [class.controls-hidden]="controlsHidden()" (focusin)="revealControls()">
     <header class="viewer-toolbar">
       <div class="chapter-info">
         @if (state.currentChapter()?.work; as work) {
@@ -53,6 +55,10 @@
           </div>
         }
         <div ngToolbarWidgetGroup>
+          <button type="button" ngToolbarWidget value="zen" (click)="setZen(!zen())"
+                  [class.active]="zen()" [attr.aria-pressed]="zen()" title="Hide everything but the pages (Esc to leave)">
+            Zen mode
+          </button>
           <button type="button" ngToolbarWidget value="settings" (click)="settingsOpen.set(!settingsOpen())"
                   [attr.aria-expanded]="settingsOpen()" aria-controls="reader-settings">
             Settings
@@ -128,6 +134,7 @@
         <a routerLink="/subscription">Go Premium</a> to save your reading progress.
       </ng-template>
     </p>
+    </div>
 
     <!-- Viewer Content -->
     <div class="viewer-body" [class]="'fit-' + prefs.fit().toLowerCase()" [style.transform]="'scale(' + state.zoomLevel() / 100 + ')'">

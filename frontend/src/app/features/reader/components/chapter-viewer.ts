@@ -24,6 +24,7 @@ import { ChaptersApi } from '@app/core/api/chapters-api';
 import { ReadingApi } from '@app/core/api/reading-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
+import { LayoutStore } from '@app/core/layout/layout-store';
 import { SeoService } from '@app/core/seo/seo.service';
 import { ChapterComments } from '@app/features/social/components/chapter-comments';
 import { FALLBACK_PAGE_IMAGE, onImageError } from '@app/core/utils/image-utils';
@@ -48,6 +49,8 @@ export const DOUBLE_PAGE_MEDIA_QUERY = '(min-width: 1024px)';
 export const AUTO_SCROLL_PX_PER_SECOND: Record<AutoScrollSpeed, number> = { SLOW: 30, MEDIUM: 60, FAST: 120 };
 /** Any of these from the reader stops auto-scroll. */
 const AUTO_SCROLL_STOP_EVENTS = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const;
+/** In zen mode the controls hide again this long after the last mouse move or tap. */
+export const ZEN_CONTROLS_HIDE_MS = 3000;
 
 interface ProgressUpdate {
   workId: string;
@@ -70,7 +73,11 @@ function pageParamToIndex(raw: string | number | null | undefined): number | nul
   templateUrl: './chapter-viewer.html',
   styleUrl: './chapter-viewer.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '(document:keydown)': 'onKeydown($event)' }
+  host: {
+    '(document:keydown)': 'onKeydown($event)',
+    '(document:mousemove)': 'revealControls()',
+    '(document:pointerdown)': 'revealControls()'
+  }
 })
 export class ChapterViewer {
   readonly state = inject(ReaderState);
@@ -87,6 +94,7 @@ export class ChapterViewer {
   private readonly seo = inject(SeoService);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly layout = inject(LayoutStore);
 
   /** Bound from `read/:chapterId`; `undefined` when the viewer is used standalone with a preloaded chapter. */
   readonly chapterId = input<string | undefined>(undefined);
@@ -119,6 +127,11 @@ export class ChapterViewer {
     return chapter.pages.slice(from, from + PRELOADED_PAGES).filter((page) => !!page.cdnUrl);
   });
   protected readonly settingsOpen = signal(false);
+  /** Zen mode (US-06): no site header, reader controls auto-hide. */
+  protected readonly zen = signal(false);
+  protected readonly controlsVisible = signal(true);
+  protected readonly controlsHidden = computed(() => this.zen() && !this.controlsVisible());
+  private hideControlsTimer: ReturnType<typeof setTimeout> | null = null;
   /** Wide enough for two pages (updated live from a media query in the browser). */
   private readonly wideScreen = signal(false);
   protected readonly canShowDoublePage = computed(() => this.state.viewMode() === 'PAGED' && this.wideScreen());
@@ -201,7 +214,11 @@ export class ChapterViewer {
         untracked(() => this.toggleAutoScroll(false));
       }
     });
-    this.destroyRef.onDestroy(() => this.stopAutoScroll?.());
+    this.destroyRef.onDestroy(() => {
+      this.stopAutoScroll?.();
+      this.clearHideTimer();
+      this.layout.setImmersive(false);
+    });
 
     // Open each chapter in its series' layout: the one the reader chose, or the default for the format.
     effect(() => {
@@ -324,6 +341,10 @@ export class ChapterViewer {
    * Ignored while typing in a field or when a modifier is held (browser shortcuts); vertical mode scrolls natively.
    */
   protected onKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && this.zen() && !event.defaultPrevented) {
+      this.setZen(false);
+      return;
+    }
     if (this.state.viewMode() !== 'PAGED' || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) {
       return;
     }
@@ -384,6 +405,31 @@ export class ChapterViewer {
     }
     this.swiped = true;
     this.turn((dx < 0) !== (this.state.direction() === 'RTL'));
+  }
+
+  /** Zen mode on: site header gone, reader controls hidden until the mouse moves or the screen is tapped. */
+  protected setZen(on: boolean): void {
+    this.zen.set(on);
+    this.layout.setImmersive(on);
+    this.clearHideTimer();
+    this.controlsVisible.set(!on);
+  }
+
+  /** Mouse move, tap, or keyboard focus on a control: show the controls, then hide them again after a pause. */
+  protected revealControls(): void {
+    if (!this.zen()) {
+      return;
+    }
+    this.controlsVisible.set(true);
+    this.clearHideTimer();
+    this.hideControlsTimer = setTimeout(() => this.controlsVisible.set(false), ZEN_CONTROLS_HIDE_MS);
+  }
+
+  private clearHideTimer(): void {
+    if (this.hideControlsTimer !== null) {
+      clearTimeout(this.hideControlsTimer);
+      this.hideControlsTimer = null;
+    }
   }
 
   protected setFit(event: Event): void {

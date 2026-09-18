@@ -5,6 +5,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { Router, provideRouter } from '@angular/router';
 import { Shell } from '@app/features/layout/shell';
 import { AuthStore } from '@app/core/auth/auth-store';
+import { LayoutStore } from '@app/core/layout/layout-store';
 import { mockUser, signIn } from '../../core/auth/auth-fixtures';
 
 @Component({ template: '<h1>Page</h1>' })
@@ -59,5 +60,15 @@ describe('Shell primary navigation', () => {
     await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: ['PROJECT_VIEW'] }));
     fixture.detectChanges();
     expect(links().map((a) => a.textContent?.trim())).toEqual(['Home', 'Catalog', 'Scanlation']);
+  });
+
+  it('hides the site header and footer in the reader zen mode', () => {
+    TestBed.inject(LayoutStore).setImmersive(true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.app-layout').classList).toContain('immersive');
+
+    TestBed.inject(LayoutStore).setImmersive(false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.app-layout').classList).not.toContain('immersive');
   });
 });

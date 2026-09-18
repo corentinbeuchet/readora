@@ -3,9 +3,10 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { By } from '@angular/platform-browser';
-import { ChapterViewer, PROGRESS_SYNC_DEBOUNCE_MS } from '@app/features/reader/components/chapter-viewer';
+import { ChapterViewer, PROGRESS_SYNC_DEBOUNCE_MS, ZEN_CONTROLS_HIDE_MS } from '@app/features/reader/components/chapter-viewer';
 import { ReaderState } from '@app/features/reader/services/reader-state';
 import { AuthStore } from '@app/core/auth/auth-store';
+import { LayoutStore } from '@app/core/layout/layout-store';
 import { Chapter } from '@app/core/models/readora.models';
 import { environment } from '../../../../../src/environments/environment';
 import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
@@ -613,6 +614,45 @@ describe('ChapterViewer (API-driven)', () => {
     fixture.detectChanges();
     expect(toolbarButton('Auto-scroll').getAttribute('aria-pressed')).toBe('false');
     delete (document.documentElement as unknown as Record<string, unknown>)['scrollHeight'];
+  });
+
+  it('Reading in zen mode', async () => {
+    await loadChapter();
+    freezeTime();
+    const layout = TestBed.inject(LayoutStore);
+    const controlsHidden = (): boolean => fixture.nativeElement.querySelector('.reader-controls').classList.contains('controls-hidden');
+
+    toolbarButton('Zen mode').click();
+    fixture.detectChanges();
+    expect(layout.immersive()).toBe(true); // the shell hides the site header
+    expect(controlsHidden()).toBe(true);
+
+    document.dispatchEvent(new MouseEvent('mousemove'));
+    fixture.detectChanges();
+    expect(controlsHidden()).toBe(false);
+    await elapse(ZEN_CONTROLS_HIDE_MS - 100);
+    expect(controlsHidden()).toBe(false);
+    await elapse(100);
+    expect(controlsHidden()).toBe(true);
+
+    // A tap shows them too, and keyboard focus on a control keeps them reachable.
+    document.dispatchEvent(new MouseEvent('pointerdown'));
+    fixture.detectChanges();
+    expect(controlsHidden()).toBe(false);
+
+    press('Escape');
+    expect(layout.immersive()).toBe(false);
+    expect(controlsHidden()).toBe(false);
+    expect(toolbarButton('Zen mode').getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('leaves zen mode when the reader is closed', async () => {
+    await loadChapter();
+    toolbarButton('Zen mode').click();
+    expect(TestBed.inject(LayoutStore).immersive()).toBe(true);
+
+    fixture.destroy();
+    expect(TestBed.inject(LayoutStore).immersive()).toBe(false);
   });
 
   it('records the visit, then the finish, for the reading history (free readers with LIBRARY_USE)', async () => {

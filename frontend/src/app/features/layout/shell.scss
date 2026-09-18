@@ -101,3 +101,11 @@
   border-top: 1px solid var(--border);
   font-size: 0.85rem;
 }
+
+// Reader zen mode: nothing but the pages.
+.immersive {
+  .app-header,
+  .app-footer {
+    display: none;
+  }
+}
