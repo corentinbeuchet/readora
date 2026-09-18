@@ -117,8 +117,6 @@ class UserAccountDomainTest {
                 .hasMessageContaining("Username must be between");
         assertThatThrownBy(() -> newReader().activateSubscription(Subscription.free()))
                 .isInstanceOf(DomainValidationException.class);
-        assertThatThrownBy(() -> newReader().revokeRole(Role.READER))
-                .isInstanceOf(DomainValidationException.class);
     }
 
     @Test

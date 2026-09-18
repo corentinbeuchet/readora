@@ -20,7 +20,7 @@ public class UserAccount extends AggregateRoot<UserId> {
 
     private final Email email;
     private final String username;
-    private PasswordHash passwordHash;
+    private final PasswordHash passwordHash;
     private String displayName;
     private String bio;
     private @Nullable String avatarUrl;
@@ -97,11 +97,6 @@ public class UserAccount extends AggregateRoot<UserId> {
         this.updatedAt = Instant.now();
     }
 
-    public void changePassword(PasswordHash newPasswordHash) {
-        this.passwordHash = Objects.requireNonNull(newPasswordHash, "PasswordHash cannot be null");
-        this.updatedAt = Instant.now();
-    }
-
     public void activateSubscription(Subscription newSubscription) {
         Objects.requireNonNull(newSubscription, "Subscription cannot be null");
         if (newSubscription.getPlan() == SubscriptionPlan.FREE) {
@@ -141,16 +136,6 @@ public class UserAccount extends AggregateRoot<UserId> {
     public void grantRole(Role role) {
         Objects.requireNonNull(role, "Role cannot be null");
         if (this.roles.add(role)) {
-            this.updatedAt = Instant.now();
-        }
-    }
-
-    public void revokeRole(Role role) {
-        Objects.requireNonNull(role, "Role cannot be null");
-        if (role == Role.READER) {
-            throw new DomainValidationException("The READER role cannot be revoked");
-        }
-        if (this.roles.remove(role)) {
             this.updatedAt = Instant.now();
         }
     }

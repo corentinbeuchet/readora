@@ -43,11 +43,6 @@ public class UserAccountRepositoryAdapter implements UserAccountRepositoryPort {
     }
 
     @Override
-    public Optional<UserAccount> findByUsername(String username) {
-        return springDataRepository.findByUsernameIgnoreCase(username).map(this::toDomain);
-    }
-
-    @Override
     public Optional<UserAccount> findByExternalCustomerId(String externalCustomerId) {
         return springDataRepository.findBySubscriptionStripeCustomerId(externalCustomerId).map(this::toDomain);
     }

@@ -53,6 +53,16 @@ public class ReaderViewerStepDefinitions {
                 workStore.put(work.getId(), work);
                 return work;
             }
+
+            @Override
+            public List<Work> findAll(int page, int size) {
+                return workStore.values().stream().skip((long) page * size).limit(size).toList();
+            }
+
+            @Override
+            public long count() {
+                return workStore.size();
+            }
         };
 
         ChapterRepositoryPort chapterRepo = new ChapterRepositoryPort() {
@@ -82,6 +92,21 @@ public class ReaderViewerStepDefinitions {
             @Override
             public String getPublicCdnUrl(String objectKey) {
                 return "https://cdn.readora.com/" + objectKey;
+            }
+
+            @Override
+            public void storeAsset(String objectKey, byte[] data, String contentType) {
+                throw new UnsupportedOperationException("not used by the reader scenarios");
+            }
+
+            @Override
+            public Optional<byte[]> loadAsset(String objectKey) {
+                return Optional.empty();
+            }
+
+            @Override
+            public String getContentType(String objectKey) {
+                return "image/webp";
             }
         };
 

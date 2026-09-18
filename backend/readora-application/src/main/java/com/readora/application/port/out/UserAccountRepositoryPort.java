@@ -9,7 +9,6 @@ import java.util.Optional;
 public interface UserAccountRepositoryPort {
     Optional<UserAccount> findById(UserId id);
     Optional<UserAccount> findByEmail(Email email);
-    Optional<UserAccount> findByUsername(String username);
     Optional<UserAccount> findByExternalCustomerId(String externalCustomerId);
     Optional<UserAccount> findByExternalSubscriptionId(String externalSubscriptionId);
     boolean existsByEmail(Email email);

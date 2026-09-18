@@ -9,7 +9,9 @@ public interface StoragePort {
     /// Presigned PUT URL for `objectKey` in the configured media bucket; callers never choose the bucket.
     String generatePresignedUploadUrl(String objectKey, Duration validity);
     String getPublicCdnUrl(String objectKey);
-    default void storeAsset(String objectKey, byte[] data, @Nullable String contentType) {}
-    default Optional<byte[]> loadAsset(String objectKey) { return Optional.empty(); }
-    default String getContentType(String objectKey) { return "application/octet-stream"; }
+    void storeAsset(String objectKey, byte[] data, @Nullable String contentType);
+
+    Optional<byte[]> loadAsset(String objectKey);
+
+    String getContentType(String objectKey);
 }

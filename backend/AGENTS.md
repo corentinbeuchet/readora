@@ -27,6 +27,11 @@
 ## Application services
 - **Events:** `aggregate.pollDomainEvents()` on the aggregate you mutated, **never** on the object returned by `repository.save(...)`
   (adapters rebuild it via `toDomain`, so it has no events).
+  No event has a consumer yet: `SpringEventPublisherAdapter` only logs them. When a feature needs one (notifications,
+  read models), listen with `@TransactionalEventListener(phase = AFTER_COMMIT)` in infrastructure so rolled-back use
+  cases never trigger side effects.
+- Don't keep speculative code: no unused ports/methods/marker types. Out-ports have no no-op `default` methods; the
+  exception is a `default` that derives from other port methods (e.g. `ChapterRepositoryPort.findPublishedByWorkId`).
 - Every `port.in` bean that touches persistence is wrapped with `UseCaseTransactions.transactional(...)` in
   `DomainServiceConfig`, so each use-case call is one transaction (application layer stays Spring-free). Register new
   use cases the same way; pure I/O use cases (e.g. `ManageAssetsUseCase`) are not wrapped so they don't hold a DB

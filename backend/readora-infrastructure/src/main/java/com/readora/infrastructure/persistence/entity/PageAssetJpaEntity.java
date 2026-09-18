@@ -40,9 +40,7 @@ public class PageAssetJpaEntity {
 
     public UUID getId() { return id; }
     public ChapterJpaEntity getChapter() { return chapter; }
-    public void setChapter(ChapterJpaEntity chapter) { this.chapter = chapter; }
     public int getPageNumber() { return pageNumber; }
-    public void setPageNumber(int pageNumber) { this.pageNumber = pageNumber; }
     public String getStorageKey() { return storageKey; }
     public void setStorageKey(String storageKey) { this.storageKey = storageKey; }
     public String getCdnUrl() { return cdnUrl; }

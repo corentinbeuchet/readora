@@ -9,11 +9,7 @@ public interface WorkRepositoryPort {
     Optional<Work> findById(WorkId id);
     Work save(Work work);
 
-    default List<Work> findAll(int page, int size) {
-        return List.of();
-    }
+    List<Work> findAll(int page, int size);
 
-    default long count() {
-        return 0L;
-    }
+    long count();
 }

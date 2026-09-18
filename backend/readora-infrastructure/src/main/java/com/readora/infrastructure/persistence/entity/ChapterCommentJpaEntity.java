@@ -58,25 +58,14 @@ public class ChapterCommentJpaEntity {
     }
 
     public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
     public UUID getChapterId() { return chapterId; }
-    public void setChapterId(UUID chapterId) { this.chapterId = chapterId; }
     public String getAuthorId() { return authorId; }
-    public void setAuthorId(String authorId) { this.authorId = authorId; }
     public String getAuthorUsername() { return authorUsername; }
-    public void setAuthorUsername(String authorUsername) { this.authorUsername = authorUsername; }
     public String getContent() { return content; }
-    public void setContent(String content) { this.content = content; }
     public Integer getPageReference() { return pageReference; }
-    public void setPageReference(Integer pageReference) { this.pageReference = pageReference; }
     public UUID getParentId() { return parentId; }
-    public void setParentId(UUID parentId) { this.parentId = parentId; }
     public int getDepth() { return depth; }
-    public void setDepth(int depth) { this.depth = depth; }
     public boolean isSpoiler() { return isSpoiler; }
-    public void setSpoiler(boolean spoiler) { isSpoiler = spoiler; }
     public int getUpvotes() { return upvotes; }
-    public void setUpvotes(int upvotes) { this.upvotes = upvotes; }
     public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

@@ -57,7 +57,6 @@ public class SubscriptionJpaEntity {
     }
 
     public String getUserId() { return userId; }
-    public UserAccountJpaEntity getUser() { return user; }
     public void setUser(UserAccountJpaEntity user) {
         this.user = user;
         this.userId = user != null ? user.getId() : null;

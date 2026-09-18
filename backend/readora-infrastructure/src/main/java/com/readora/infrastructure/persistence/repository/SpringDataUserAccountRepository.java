@@ -9,7 +9,6 @@ import java.util.Optional;
 @Repository
 public interface SpringDataUserAccountRepository extends JpaRepository<UserAccountJpaEntity, String> {
     Optional<UserAccountJpaEntity> findByEmail(String email);
-    Optional<UserAccountJpaEntity> findByUsernameIgnoreCase(String username);
     Optional<UserAccountJpaEntity> findBySubscriptionStripeCustomerId(String stripeCustomerId);
     Optional<UserAccountJpaEntity> findBySubscriptionStripeSubscriptionId(String stripeSubscriptionId);
     boolean existsByEmail(String email);

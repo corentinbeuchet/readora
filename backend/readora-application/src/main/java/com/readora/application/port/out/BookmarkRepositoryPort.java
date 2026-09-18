@@ -10,7 +10,5 @@ public interface BookmarkRepositoryPort {
     Optional<Bookmark> findByUserIdAndWorkId(UserId userId, WorkId workId);
     Bookmark save(Bookmark bookmark);
 
-    default List<Bookmark> findByUserId(UserId userId) {
-        return List.of();
-    }
+    List<Bookmark> findByUserId(UserId userId);
 }
