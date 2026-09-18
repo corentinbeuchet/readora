@@ -3,7 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { firstValueFrom } from 'rxjs';
 import { UploadService } from '@app/core/upload/upload.service';
-import { PageUploadItem, naturalCompare, sortFilesNaturally, extractArchiveImages } from '@app/core/upload/file-utils';
+import { ArchiveError, ArchiveLimits, PageUploadItem, naturalCompare, sortFilesNaturally, extractArchiveImages } from '@app/core/upload/file-utils';
 import { environment } from '../../../../src/environments/environment';
 import JSZip from 'jszip';
 
@@ -177,5 +177,78 @@ describe('UploadService and file-utils', () => {
       expect(work.id).toBe('w-1');
       expect(work.title).toBe('Naruto');
     });
+  });
+});
+
+describe('extractArchiveImages limits (zip-bomb guards)', () => {
+  const LIMITS: ArchiveLimits = {
+    maxArchiveBytes: 1024 * 1024,
+    maxImageEntries: 3,
+    maxTotalEntries: 5,
+    maxEntryBytes: 1000,
+    maxTotalUncompressedBytes: 2500,
+  };
+
+  async function archive(files: Record<string, string | Uint8Array>, name = 'ch.cbz'): Promise<File> {
+    const zip = new JSZip();
+    for (const [path, content] of Object.entries(files)) {
+      zip.file(path, content);
+    }
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+    return new File([blob], name, { type: 'application/zip' });
+  }
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it('rejects an archive file above the size limit before reading it', async () => {
+    const loadSpy = vi.spyOn(JSZip.prototype, 'loadAsync');
+    const big = new File([new Uint8Array(LIMITS.maxArchiveBytes + 1)], 'huge.cbz');
+    await expect(extractArchiveImages(big, LIMITS)).rejects.toThrow(/huge\.cbz" is larger than/);
+    expect(loadSpy).not.toHaveBeenCalled();
+  });
+
+  it('rejects too many entries', async () => {
+    const file = await archive({ '1.png': 'a', '2.png': 'b', '3.png': 'c', '4.png': 'd' });
+    await expect(extractArchiveImages(file, LIMITS)).rejects.toBeInstanceOf(ArchiveError);
+    await expect(extractArchiveImages(file, LIMITS)).rejects.toThrow(/too many files/);
+  });
+
+  it('rejects an entry whose declared uncompressed size is too big', async () => {
+    const file = await archive({ '1.png': new Uint8Array(5000) });
+    await expect(extractArchiveImages(file, LIMITS)).rejects.toThrow(/1\.png" is larger than/);
+
+    const tooMuchInTotal = await archive({ '1.png': new Uint8Array(900), '2.png': new Uint8Array(900), '3.png': new Uint8Array(900) });
+    await expect(extractArchiveImages(tooMuchInTotal, LIMITS)).rejects.toThrow(/ch\.cbz" is larger than 0 MB once unpacked/);
+  });
+
+  it('stops inflating when an entry lies about its size (zip bomb)', async () => {
+    const realLoad = JSZip.prototype.loadAsync;
+    vi.spyOn(JSZip.prototype, 'loadAsync').mockImplementation(async function (this: JSZip, data: any) {
+      const zip = await realLoad.call(this, data);
+      zip.forEach((_path, entry) => ((entry as any)._data.uncompressedSize = 1));
+      return zip;
+    });
+    // Small lies are caught by JSZip's own size check at the end of the entry...
+    const file = await archive({ '1.png': new Uint8Array(900) });
+    await expect(extractArchiveImages(file, LIMITS)).rejects.toBeInstanceOf(ArchiveError);
+
+    // ...big ones are cut off by the byte counter as soon as the limit is crossed.
+    const single = await archive({ 'bomb.png': new Uint8Array(200_000) });
+    await expect(extractArchiveImages(single, LIMITS)).rejects.toThrow(/bomb\.png" is larger than/);
+  });
+
+  it('reports invalid archives and archives without images', async () => {
+    await expect(extractArchiveImages(new File(['not a zip'], 'bad.zip'), LIMITS)).rejects.toThrow(/not a valid ZIP/);
+    const noImages = await archive({ 'readme.txt': 'hello' });
+    await expect(extractArchiveImages(noImages, LIMITS)).rejects.toThrow(/does not contain any/);
+  });
+
+  it('extracts within the limits', async () => {
+    const file = await archive({ 'b/2.png': new Uint8Array(800), 'b/1.png': new Uint8Array(800) });
+    const pages = await extractArchiveImages(file, LIMITS);
+    expect(pages.map((p) => [p.name, p.size, p.type])).toEqual([
+      ['1.png', 800, 'image/png'],
+      ['2.png', 800, 'image/png'],
+    ]);
   });
 });

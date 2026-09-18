@@ -125,3 +125,22 @@ describe('mapWithConcurrency', () => {
     expect(max).toBe(2);
   });
 });
+
+describe('PageGridUploader error reporting', () => {
+  it('tells the user which files were rejected and why', async () => {
+    await TestBed.configureTestingModule({ imports: [PageGridUploader] }).compileComponents();
+    const fixture = TestBed.createComponent(PageGridUploader);
+    fixture.detectChanges();
+
+    await fixture.componentInstance.handleFiles([
+      new File(['x'], 'notes.txt', { type: 'text/plain' }),
+      new File(['not a zip'], 'broken.cbz', { type: 'application/zip' }),
+    ]);
+    fixture.detectChanges();
+
+    const alert: HTMLElement = fixture.nativeElement.querySelector('[role="alert"]');
+    expect(alert.textContent).toContain('"notes.txt" was skipped');
+    expect(alert.textContent).toContain('"broken.cbz" is not a valid ZIP/CBZ archive');
+    expect(fixture.componentInstance.pages()).toEqual([]);
+  });
+});

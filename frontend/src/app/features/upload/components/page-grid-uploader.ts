@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, model, signal } from '@angular/core';
 import {
+  ArchiveError,
+  DEFAULT_ARCHIVE_LIMITS,
   PageUploadItem,
   createPreviewUrl,
   extractArchiveImages,
@@ -40,6 +42,8 @@ export class PageGridUploader {
   readonly pages = model<PageUploadItem[]>([]);
   protected readonly isDragging = signal(false);
   protected readonly extracting = signal(false);
+  /** Problems with the last dropped/selected files, shown to the user (role="alert"). */
+  protected readonly problems = signal<string[]>([]);
 
   private dragSourceIndex: number | null = null;
   private destroyed = false;
@@ -79,22 +83,34 @@ export class PageGridUploader {
 
   async handleFiles(incoming: File[]): Promise<void> {
     const imagesToAdd: File[] = [];
+    const problems: string[] = [];
+    const limits = DEFAULT_ARCHIVE_LIMITS;
 
     for (const file of incoming) {
       if (isArchiveFile(file)) {
         this.extracting.set(true);
         try {
-          const extracted = await extractArchiveImages(file);
-          imagesToAdd.push(...extracted);
+          imagesToAdd.push(...(await extractArchiveImages(file, limits)));
         } catch (e) {
-          console.error('Failed to unpack archive', e);
+          problems.push(e instanceof ArchiveError ? e.message : `"${file.name}" could not be unpacked.`);
         } finally {
           this.extracting.set(false);
         }
-      } else if (isImageFile(file)) {
+      } else if (!isImageFile(file)) {
+        problems.push(`"${file.name}" was skipped: only images and .zip/.cbz archives are accepted.`);
+      } else if (file.size > limits.maxEntryBytes) {
+        problems.push(`"${file.name}" was skipped: pages must be at most ${Math.round(limits.maxEntryBytes / (1024 * 1024))} MB.`);
+      } else {
         imagesToAdd.push(file);
       }
     }
+
+    const room = limits.maxImageEntries - this.pages().length;
+    if (imagesToAdd.length > room) {
+      problems.push(`A chapter can have at most ${limits.maxImageEntries} pages: ${imagesToAdd.length - Math.max(0, room)} pages were not added.`);
+      imagesToAdd.splice(Math.max(0, room));
+    }
+    this.problems.set(problems);
 
     if (imagesToAdd.length === 0) return;
 
@@ -137,6 +153,7 @@ export class PageGridUploader {
   clearAll(): void {
     this.pages().forEach((item) => revokePreviewUrl(item.previewUrl));
     this.pages.set([]);
+    this.problems.set([]);
   }
 
   onItemDragStart(index: number, event: DragEvent): void {

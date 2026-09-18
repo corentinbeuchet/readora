@@ -36,6 +36,14 @@
     </div>
   }
 
+  @if (problems().length > 0) {
+    <ul class="form-error upload-problems" role="alert">
+      @for (problem of problems(); track $index) {
+        <li>{{ problem }}</li>
+      }
+    </ul>
+  }
+
   @if (pages().length > 0) {
     <div class="pages-header">
       <div class="pages-count">

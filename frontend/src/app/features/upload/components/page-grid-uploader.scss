@@ -218,3 +218,10 @@
     color: var(--text-muted, #9ca3af);
   }
 }
+
+.upload-problems {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
