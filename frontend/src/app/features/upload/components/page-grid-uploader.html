@@ -1,0 +1,108 @@
+<div class="page-uploader-container">
+  <div
+    class="drop-zone"
+    [class.dragging]="isDragging()"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+    (click)="fileInput.click()"
+    tabindex="0"
+    role="button"
+    aria-label="Upload chapter pages or archive"
+    (keydown.enter)="fileInput.click()"
+    (keydown.space)="fileInput.click()"
+  >
+    <input
+      #fileInput
+      type="file"
+      multiple
+      accept="image/jpeg,image/png,image/webp,image/gif,image/avif,.zip,.cbz"
+      class="sr-only"
+      (change)="onFileInputChange($event)"
+    />
+    <div class="drop-prompt">
+      <span class="upload-icon" aria-hidden="true">📁</span>
+      <p class="primary-text">
+        <strong>Choose image files</strong> or a <strong>.ZIP / .CBZ</strong> archive
+      </p>
+      <p class="muted secondary-text">Drag & drop chapter pages (JPEG, PNG, WebP) or click to browse</p>
+    </div>
+  </div>
+
+  @if (extracting()) {
+    <div class="processing-banner" role="status">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Extracting archive pages…</span>
+    </div>
+  }
+
+  @if (pages().length > 0) {
+    <div class="pages-header">
+      <div class="pages-count">
+        <strong>{{ pages().length }}</strong> {{ pages().length === 1 ? 'page' : 'pages' }} loaded
+      </div>
+      <div class="pages-actions">
+        <button type="button" class="btn btn-sm" (click)="sortNaturally()">
+          Sort Numerically
+        </button>
+        <button type="button" class="btn btn-sm btn-danger-outline" (click)="clearAll()">
+          Clear All
+        </button>
+      </div>
+    </div>
+
+    <ul class="page-grid" role="list">
+      @for (page of pages(); track page.id; let i = $index) {
+        <li
+          class="page-card"
+          draggable="true"
+          (dragstart)="onItemDragStart(i, $event)"
+          (dragover)="onItemDragOver(i, $event)"
+          (drop)="onItemDrop(i, $event)"
+        >
+          <div class="thumbnail-wrapper">
+            <img [src]="page.previewUrl" [alt]="'Page ' + (i + 1)" class="page-thumbnail" loading="lazy" />
+            <span class="page-badge">#{{ i + 1 }}</span>
+            <div class="page-overlay-actions">
+              <button
+                type="button"
+                class="icon-btn"
+                [disabled]="i === 0"
+                (click)="move(i, i - 1); $event.stopPropagation()"
+                title="Move left"
+                aria-label="Move left"
+              >
+                ◀
+              </button>
+              <button
+                type="button"
+                class="icon-btn"
+                [disabled]="i === pages().length - 1"
+                (click)="move(i, i + 1); $event.stopPropagation()"
+                title="Move right"
+                aria-label="Move right"
+              >
+                ▶
+              </button>
+              <button
+                type="button"
+                class="icon-btn btn-delete"
+                (click)="remove(i); $event.stopPropagation()"
+                title="Delete page"
+                aria-label="Delete page"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+          <div class="page-meta">
+            <span class="page-filename" [title]="page.file.name">{{ page.file.name }}</span>
+            @if (page.width && page.height) {
+              <span class="page-dims">{{ page.width }}×{{ page.height }}</span>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</div>

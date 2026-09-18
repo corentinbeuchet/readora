@@ -1,0 +1,220 @@
+.page-uploader-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.drop-zone {
+  border: 2px dashed var(--border-color, #3a3f4b);
+  border-radius: 0.75rem;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  background: var(--surface-1, #1e222b);
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+
+  &:hover,
+  &.dragging {
+    border-color: var(--accent, #3b82f6);
+    background: var(--surface-2, #262b36);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent, #3b82f6);
+    outline-offset: 2px;
+  }
+}
+
+.drop-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+
+  .upload-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .primary-text {
+    font-size: 1.05rem;
+    margin: 0;
+  }
+
+  .secondary-text {
+    font-size: 0.875rem;
+    margin: 0;
+  }
+}
+
+.processing-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--surface-2, #262b36);
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--accent, #3b82f6);
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pages-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-color, #3a3f4b);
+}
+
+.pages-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.btn-danger-outline {
+  color: #ef4444;
+  border-color: #ef4444;
+  background: transparent;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.15);
+  }
+}
+
+.page-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 1rem;
+  padding: 0;
+  margin: 0;
+}
+
+.page-card {
+  background: var(--surface-2, #262b36);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-color, #3a3f4b);
+  transition: transform 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+    .page-overlay-actions {
+      opacity: 1;
+    }
+  }
+}
+
+.thumbnail-wrapper {
+  position: relative;
+  aspect-ratio: 5 / 7;
+  background: #111;
+  overflow: hidden;
+
+  .page-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .page-badge {
+    position: absolute;
+    top: 0.35rem;
+    left: 0.35rem;
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 0.25rem;
+    backdrop-filter: blur(2px);
+  }
+
+  .page-overlay-actions {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent);
+    padding: 0.5rem 0.35rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.35rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .icon-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border: none;
+    border-radius: 0.25rem;
+    width: 1.6rem;
+    height: 1.6rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s;
+
+    &:hover:not(:disabled) {
+      background: var(--accent, #3b82f6);
+    }
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    &.btn-delete:hover:not(:disabled) {
+      background: #ef4444;
+    }
+  }
+}
+
+.page-meta {
+  padding: 0.4rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+
+  .page-filename {
+    font-size: 0.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .page-dims {
+    font-size: 0.68rem;
+    color: var(--text-muted, #9ca3af);
+  }
+}
