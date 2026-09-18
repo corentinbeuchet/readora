@@ -11,6 +11,23 @@ import { CommentTree } from './comment-tree';
 
 export const COMMENT_MAX_LENGTH = 2000;
 
+/**
+ * Inserts a new comment in thread (pre-order) order: a reply goes right after its parent's last
+ * descendant, a top-level comment (or one whose parent is unknown) at the end. Pure.
+ */
+export function insertInThread(list: readonly ChapterComment[], created: ChapterComment): ChapterComment[] {
+  const parentIndex = created.parentId ? list.findIndex((c) => c.id === created.parentId) : -1;
+  if (parentIndex === -1) {
+    return [...list, created];
+  }
+  const parentDepth = list[parentIndex].depth;
+  let insertAt = parentIndex + 1;
+  while (insertAt < list.length && list[insertAt].depth > parentDepth) {
+    insertAt++;
+  }
+  return [...list.slice(0, insertAt), created, ...list.slice(insertAt)];
+}
+
 interface CommentModel {
   content: string;
   pageReference: number | null;
@@ -90,7 +107,7 @@ export class ChapterComments {
             pageReference: parent ? null : pageReference
           })
         );
-        this.comments.update((list) => [...list, created]);
+        this.comments.update((list) => insertInThread(list, created));
         this.model.set({ content: '', pageReference: null, isSpoiler: false });
         this.replyTo.set(null);
       } catch (error) {
