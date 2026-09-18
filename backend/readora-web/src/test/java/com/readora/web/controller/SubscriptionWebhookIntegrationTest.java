@@ -85,7 +85,7 @@ class SubscriptionWebhookIntegrationTest extends AuthTestSupport {
 
         // Stripe sends checkout.session.completed with client_reference_id = our user id
         PaymentEvent completed = new PaymentEvent("evt_1", PaymentEventType.CHECKOUT_COMPLETED, UserId.of(reader.userId()),
-                "cus_123", "sub_123", SubscriptionPlan.PREMIUM, SubscriptionStatus.ACTIVE, Instant.now().plus(Duration.ofDays(30)));
+                "cus_123", "sub_123", SubscriptionPlan.PREMIUM, SubscriptionStatus.ACTIVE, Instant.now().plus(Duration.ofDays(30)), Instant.now(), false);
         when(paymentPort.parseWebhook(anyString(), eq(VALID_SIGNATURE))).thenReturn(completed);
 
         mockMvc.perform(post(WEBHOOK).header("Stripe-Signature", VALID_SIGNATURE)
@@ -120,7 +120,7 @@ class SubscriptionWebhookIntegrationTest extends AuthTestSupport {
 
         // customer.subscription.deleted, matched by external subscription id only
         PaymentEvent deleted = new PaymentEvent("evt_2", PaymentEventType.SUBSCRIPTION_DELETED, null,
-                "cus_123", "sub_123", SubscriptionPlan.PREMIUM, SubscriptionStatus.CANCELED, null);
+                "cus_123", "sub_123", SubscriptionPlan.PREMIUM, SubscriptionStatus.CANCELED, null, Instant.now(), false);
         when(paymentPort.parseWebhook(anyString(), eq(VALID_SIGNATURE))).thenReturn(deleted);
         mockMvc.perform(post(WEBHOOK).header("Stripe-Signature", VALID_SIGNATURE)
                         .contentType(MediaType.APPLICATION_JSON).content("{\"id\":\"evt_2\"}"))
@@ -142,11 +142,11 @@ class SubscriptionWebhookIntegrationTest extends AuthTestSupport {
         Session reader = register();
         when(paymentPort.parseWebhook(anyString(), eq(VALID_SIGNATURE))).thenReturn(
                 new PaymentEvent("evt_a", PaymentEventType.CHECKOUT_COMPLETED, UserId.of(reader.userId()),
-                        "cus_9", "sub_9", SubscriptionPlan.PREMIUM, SubscriptionStatus.ACTIVE, Instant.now().plus(Duration.ofDays(10))));
+                        "cus_9", "sub_9", SubscriptionPlan.PREMIUM, SubscriptionStatus.ACTIVE, Instant.now().plus(Duration.ofDays(10)), Instant.now(), false));
         mockMvc.perform(post(WEBHOOK).header("Stripe-Signature", VALID_SIGNATURE).content("{}")).andExpect(status().isOk());
 
         when(paymentPort.parseWebhook(anyString(), eq(VALID_SIGNATURE))).thenReturn(
-                new PaymentEvent("evt_b", PaymentEventType.PAYMENT_FAILED, null, "cus_9", "sub_9", null, SubscriptionStatus.PAST_DUE, null));
+                new PaymentEvent("evt_b", PaymentEventType.PAYMENT_FAILED, null, "cus_9", "sub_9", null, SubscriptionStatus.PAST_DUE, null, Instant.now(), false));
         mockMvc.perform(post(WEBHOOK).header("Stripe-Signature", VALID_SIGNATURE).content("{}")).andExpect(status().isOk());
 
         Session session = login(reader.email());
@@ -203,7 +203,7 @@ class SubscriptionWebhookIntegrationTest extends AuthTestSupport {
     }
 
     @Test
-    @DisplayName("POST /cancel cancels at Stripe and locally; cancelling without a subscription is 400")
+    @DisplayName("POST /cancel schedules cancellation at period end; cancelling without a subscription or twice is 400")
     void cancelSubscription() throws Exception {
         Session reader = register();
         mockMvc.perform(post("/api/v1/subscriptions/cancel").header("Authorization", reader.bearer()))
@@ -211,14 +211,58 @@ class SubscriptionWebhookIntegrationTest extends AuthTestSupport {
 
         when(paymentPort.parseWebhook(anyString(), eq(VALID_SIGNATURE))).thenReturn(
                 new PaymentEvent("evt_c", PaymentEventType.CHECKOUT_COMPLETED, UserId.of(reader.userId()),
-                        "cus_c", "sub_c", SubscriptionPlan.PREMIUM, SubscriptionStatus.ACTIVE, Instant.now().plus(Duration.ofDays(30))));
+                        "cus_c", "sub_c", SubscriptionPlan.PREMIUM, SubscriptionStatus.ACTIVE, Instant.now().plus(Duration.ofDays(30)), Instant.now(), false));
         mockMvc.perform(post(WEBHOOK).header("Stripe-Signature", VALID_SIGNATURE).content("{}")).andExpect(status().isOk());
 
         Session premium = login(reader.email());
+        // Cancelling stops renewal at Stripe; access continues until the paid period ends.
         mockMvc.perform(post("/api/v1/subscriptions/cancel").header("Authorization", premium.bearer()))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.data.active").value(true))
+                .andExpect(jsonPath("$.data.cancelAtPeriodEnd").value(true));
+        verify(paymentPort).cancelSubscriptionAtPeriodEnd("sub_c");
+
+        mockMvc.perform(post("/api/v1/subscriptions/cancel").header("Authorization", premium.bearer()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("An out-of-order 'updated' event older than the deletion cannot resurrect a cancelled subscription")
+    void staleEventIsIgnored() throws Exception {
+        Session reader = register();
+        Instant t0 = Instant.now().minus(Duration.ofMinutes(10));
+        deliver(new PaymentEvent("evt_s1", PaymentEventType.CHECKOUT_COMPLETED, UserId.of(reader.userId()), "cus_s", "sub_s",
+                SubscriptionPlan.PREMIUM, SubscriptionStatus.ACTIVE, Instant.now().plus(Duration.ofDays(30)), t0, false));
+        deliver(new PaymentEvent("evt_s3", PaymentEventType.SUBSCRIPTION_DELETED, null, "cus_s", "sub_s",
+                SubscriptionPlan.PREMIUM, SubscriptionStatus.CANCELED, null, t0.plusSeconds(120), false));
+        // Delivered late, but created before the deletion:
+        deliver(new PaymentEvent("evt_s2", PaymentEventType.SUBSCRIPTION_UPDATED, null, "cus_s", "sub_s",
+                SubscriptionPlan.PREMIUM, SubscriptionStatus.ACTIVE, Instant.now().plus(Duration.ofDays(30)), t0.plusSeconds(60), false));
+
+        Session session = login(reader.email());
+        mockMvc.perform(get("/api/v1/subscriptions/me").header("Authorization", session.bearer()))
                 .andExpect(jsonPath("$.data.status").value("CANCELED"))
                 .andExpect(jsonPath("$.data.active").value(false));
-        verify(paymentPort).cancelSubscription("sub_c");
+    }
+
+    @Test
+    @DisplayName("A subscription event with an unrecognised price (no plan) never grants PREMIUM")
+    void unknownPlanDoesNotGrantAccess() throws Exception {
+        Session reader = register();
+        deliver(new PaymentEvent("evt_u1", PaymentEventType.SUBSCRIPTION_UPDATED, UserId.of(reader.userId()), "cus_u", "sub_u",
+                null, SubscriptionStatus.ACTIVE, Instant.now().plus(Duration.ofDays(30)), Instant.now(), false));
+
+        Session session = login(reader.email());
+        mockMvc.perform(get("/api/v1/subscriptions/me").header("Authorization", session.bearer()))
+                .andExpect(jsonPath("$.data.plan").value("FREE"))
+                .andExpect(jsonPath("$.data.active").value(false));
+    }
+
+    private void deliver(PaymentEvent event) throws Exception {
+        when(paymentPort.parseWebhook(anyString(), eq(VALID_SIGNATURE))).thenReturn(event);
+        mockMvc.perform(post(WEBHOOK)
+                        .header("Stripe-Signature", VALID_SIGNATURE).content("{}"))
+                .andExpect(status().isOk());
     }
 }

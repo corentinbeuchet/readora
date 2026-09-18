@@ -49,7 +49,10 @@
             <span class="badge" [class.badge-premium]="user.subscription.active">{{ user.subscription.status }}</span>
           </p>
           @if (user.subscription.currentPeriodEnd) {
-            <p class="muted">Current period ends {{ user.subscription.currentPeriodEnd | date: 'medium' }}</p>
+            <p class="muted">
+              {{ user.subscription.cancelAtPeriodEnd ? 'Premium ends' : 'Current period ends' }}
+              {{ user.subscription.currentPeriodEnd | date: 'medium' }}
+            </p>
           }
           <p class="muted">Effective permissions: {{ (user.permissions || []).join(', ') }}</p>
           <a routerLink="/subscription" class="btn btn-primary">Manage subscription</a>

@@ -30,6 +30,10 @@ public interface PaymentPort {
         IGNORED
     }
 
+    /// A provider event translated to Readora terms.
+    ///
+    /// @param occurredAt when the provider created the event; used to drop out-of-order deliveries
+    /// @param plan       `null` when the provider's price is not one of ours — never guess a paid plan
     record PaymentEvent(
             String eventId,
             PaymentEventType type,
@@ -38,12 +42,15 @@ public interface PaymentPort {
             String subscriptionId,
             SubscriptionPlan plan,
             SubscriptionStatus status,
-            Instant currentPeriodEnd
+            Instant currentPeriodEnd,
+            Instant occurredAt,
+            boolean cancelAtPeriodEnd
     ) {}
 
     CheckoutSession createCheckoutSession(UserId userId, String customerEmail, SubscriptionPlan plan, String successUrl, String cancelUrl);
 
     PaymentEvent parseWebhook(String payload, String signature);
 
-    void cancelSubscription(String externalSubscriptionId);
+    /// Stops renewal; the provider ends the subscription (and sends a deletion event) when the paid period is over.
+    void cancelSubscriptionAtPeriodEnd(String externalSubscriptionId);
 }

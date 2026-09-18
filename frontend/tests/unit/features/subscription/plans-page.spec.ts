@@ -86,4 +86,22 @@ describe('PlansPage', () => {
     expect(subscribeBtn()).toBeNull();
     expect(fixture.nativeElement.querySelector('.btn-danger').textContent).toContain('Cancel subscription');
   });
+
+  it('after cancelling, shows when Premium ends and no second Cancel button', async () => {
+    await signIn(
+      store,
+      http,
+      mockUser({
+        permissions: ['COMMENT_WRITE', 'BOOKMARK_READ', 'BOOKMARK_WRITE'],
+        subscription: {
+          plan: 'PREMIUM', status: 'ACTIVE', active: true, currentPeriodEnd: '2027-01-01T00:00:00Z', cancelAtPeriodEnd: true,
+          planPermissions: ['BOOKMARK_READ', 'BOOKMARK_WRITE']
+        }
+      })
+    );
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.btn-danger')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Premium ends');
+    expect(fixture.nativeElement.textContent).not.toContain('Renews');
+  });
 });

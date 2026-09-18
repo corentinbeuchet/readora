@@ -112,6 +112,8 @@ public class UserAccountRepositoryAdapter implements UserAccountRepositoryPort {
                 entity.getStripeCustomerId(),
                 entity.getStripeSubscriptionId(),
                 entity.getLastEventId(),
+                entity.getLastEventAt(),
+                entity.isCancelAtPeriodEnd(),
                 entity.getUpdatedAt()
         );
     }
@@ -154,13 +156,15 @@ public class UserAccountRepositoryAdapter implements UserAccountRepositoryPort {
             subEntity.setStripeCustomerId(subscription.getExternalCustomerId());
             subEntity.setStripeSubscriptionId(subscription.getExternalSubscriptionId());
             subEntity.setLastEventId(subscription.getLastEventId());
+            subEntity.setLastEventAt(subscription.getLastEventAt());
+            subEntity.setCancelAtPeriodEnd(subscription.isCancelAtPeriodEnd());
             subEntity.setUpdatedAt(subscription.getUpdatedAt());
         }
         return entity;
     }
 
     private SubscriptionJpaEntity toSubscriptionEntity(Subscription subscription) {
-        return new SubscriptionJpaEntity(
+        SubscriptionJpaEntity entity = new SubscriptionJpaEntity(
                 subscription.getPlan().name(),
                 subscription.getStatus().name(),
                 subscription.getCurrentPeriodEnd(),
@@ -169,6 +173,9 @@ public class UserAccountRepositoryAdapter implements UserAccountRepositoryPort {
                 subscription.getLastEventId(),
                 subscription.getUpdatedAt()
         );
+        entity.setLastEventAt(subscription.getLastEventAt());
+        entity.setCancelAtPeriodEnd(subscription.isCancelAtPeriodEnd());
+        return entity;
     }
 
     private static String joinRoles(Set<Role> roles) {

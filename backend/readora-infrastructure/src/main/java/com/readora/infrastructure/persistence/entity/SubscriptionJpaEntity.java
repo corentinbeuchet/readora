@@ -34,6 +34,12 @@ public class SubscriptionJpaEntity {
     @Column(name = "last_event_id")
     private String lastEventId;
 
+    @Column(name = "last_event_at")
+    private Instant lastEventAt;
+
+    @Column(name = "cancel_at_period_end", nullable = false)
+    private boolean cancelAtPeriodEnd;
+
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
@@ -68,6 +74,10 @@ public class SubscriptionJpaEntity {
     public void setStripeSubscriptionId(String stripeSubscriptionId) { this.stripeSubscriptionId = stripeSubscriptionId; }
     public String getLastEventId() { return lastEventId; }
     public void setLastEventId(String lastEventId) { this.lastEventId = lastEventId; }
+    public Instant getLastEventAt() { return lastEventAt; }
+    public void setLastEventAt(Instant lastEventAt) { this.lastEventAt = lastEventAt; }
+    public boolean isCancelAtPeriodEnd() { return cancelAtPeriodEnd; }
+    public void setCancelAtPeriodEnd(boolean cancelAtPeriodEnd) { this.cancelAtPeriodEnd = cancelAtPeriodEnd; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }

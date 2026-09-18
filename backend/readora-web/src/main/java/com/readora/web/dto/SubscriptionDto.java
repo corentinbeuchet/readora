@@ -11,6 +11,7 @@ public record SubscriptionDto(
         String status,
         boolean active,
         Instant currentPeriodEnd,
+        boolean cancelAtPeriodEnd,
         List<String> planPermissions
 ) {
     public static SubscriptionDto fromDomain(Subscription subscription) {
@@ -19,6 +20,7 @@ public record SubscriptionDto(
                 subscription.getStatus().name(),
                 subscription.isActive(Instant.now()),
                 subscription.getCurrentPeriodEnd(),
+                subscription.isCancelAtPeriodEnd(),
                 subscription.getPlan().permissions().stream().map(Permission::name).sorted().toList()
         );
     }

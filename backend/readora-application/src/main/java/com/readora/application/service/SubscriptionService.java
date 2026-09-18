@@ -11,12 +11,16 @@ import com.readora.domain.identity.SubscriptionPlan;
 import com.readora.domain.identity.SubscriptionStatus;
 import com.readora.domain.identity.UserAccount;
 import com.readora.domain.work.UserId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 
 public class SubscriptionService implements ManageSubscriptionUseCase {
+    private static final Logger log = LoggerFactory.getLogger(SubscriptionService.class);
+
     private final UserAccountRepositoryPort userRepository;
     private final PaymentPort paymentPort;
     private final EventPublisherPort eventPublisher;
@@ -39,6 +43,9 @@ public class SubscriptionService implements ManageSubscriptionUseCase {
         return paymentPort.createCheckoutSession(userId, account.getEmail().value(), plan, successUrl, cancelUrl);
     }
 
+    /// Applies a verified provider event. Events are idempotent (same id twice is a no-op), ordered (older than the
+    /// last applied one: ignored, so a late "updated" can't resurrect a deleted subscription) and fail closed
+    /// (an event without a recognised paid plan never grants access).
     @Override
     public void handlePaymentEvent(PaymentPort.PaymentEvent event) {
         Objects.requireNonNull(event, "PaymentEvent cannot be null");
@@ -54,41 +61,54 @@ public class SubscriptionService implements ManageSubscriptionUseCase {
         UserAccount account = maybeAccount.get();
         Subscription current = account.getSubscription();
         if (event.eventId() != null && event.eventId().equals(current.getLastEventId())) {
-            // Idempotency: this event has already been applied.
+            return;
+        }
+        if (current.isStale(event.occurredAt())) {
+            log.info("Ignoring out-of-order payment event {} ({})", event.eventId(), event.type());
             return;
         }
 
         switch (event.type()) {
             case CHECKOUT_COMPLETED -> {
-                SubscriptionPlan plan = event.plan() != null ? event.plan() : SubscriptionPlan.PREMIUM;
-                Subscription activated = Subscription.active(plan, event.currentPeriodEnd(), event.customerId(), event.subscriptionId())
-                        .withLastEventId(event.eventId());
-                account.activateSubscription(activated);
+                if (event.plan() == null) {
+                    log.warn("Checkout event {} has no recognised plan; not activating", event.eventId());
+                    return;
+                }
+                boolean sameSubscription = Objects.equals(event.subscriptionId(), current.getExternalSubscriptionId());
+                Instant periodEnd = event.currentPeriodEnd() != null ? event.currentPeriodEnd()
+                        : sameSubscription ? current.getCurrentPeriodEnd() : null;
+                account.activateSubscription(Subscription.active(event.plan(), periodEnd, event.customerId(), event.subscriptionId())
+                        .withLastEvent(event.eventId(), event.occurredAt()));
             }
             case SUBSCRIPTION_UPDATED -> {
-                SubscriptionStatus status = event.status() != null ? event.status() : SubscriptionStatus.ACTIVE;
-                if (current.getPlan() == SubscriptionPlan.FREE) {
-                    SubscriptionPlan plan = event.plan() != null ? event.plan() : SubscriptionPlan.PREMIUM;
-                    account.activateSubscription(new Subscription(plan, status, event.currentPeriodEnd(),
-                            event.customerId(), event.subscriptionId(), event.eventId(), null));
+                SubscriptionStatus status = event.status() != null ? event.status() : SubscriptionStatus.INCOMPLETE;
+                if (current.getPlan() == SubscriptionPlan.FREE || !Objects.equals(event.subscriptionId(), current.getExternalSubscriptionId())) {
+                    if (event.plan() == null) {
+                        log.warn("Subscription event {} has no recognised plan; not activating", event.eventId());
+                        return;
+                    }
+                    account.activateSubscription(new Subscription(event.plan(), status, event.currentPeriodEnd(),
+                            event.customerId(), event.subscriptionId(), null, null, event.cancelAtPeriodEnd(), null)
+                            .withLastEvent(event.eventId(), event.occurredAt()));
                 } else {
                     Subscription updated = current.withStatus(status)
                             .withPeriodEnd(event.currentPeriodEnd() != null ? event.currentPeriodEnd() : current.getCurrentPeriodEnd())
-                            .withLastEventId(event.eventId());
-                    if (event.customerId() != null || event.subscriptionId() != null) {
-                        updated = updated.withExternalIds(
-                                event.customerId() != null ? event.customerId() : current.getExternalCustomerId(),
-                                event.subscriptionId() != null ? event.subscriptionId() : current.getExternalSubscriptionId());
+                            .withCancelAtPeriodEnd(event.cancelAtPeriodEnd())
+                            .withLastEvent(event.eventId(), event.occurredAt());
+                    if (event.customerId() != null) {
+                        updated = updated.withExternalIds(event.customerId(), current.getExternalSubscriptionId());
                     }
                     account.updateSubscription(updated);
                 }
             }
             case SUBSCRIPTION_DELETED -> {
                 account.cancelSubscription();
-                account.updateSubscription(account.getSubscription().withLastEventId(event.eventId()));
+                account.updateSubscription(account.getSubscription()
+                        .withCancelAtPeriodEnd(false)
+                        .withLastEvent(event.eventId(), event.occurredAt()));
             }
             case PAYMENT_FAILED -> account.updateSubscription(
-                    current.withStatus(SubscriptionStatus.PAST_DUE).withLastEventId(event.eventId()));
+                    current.withStatus(SubscriptionStatus.PAST_DUE).withLastEvent(event.eventId(), event.occurredAt()));
             case IGNORED -> { }
         }
 
@@ -101,6 +121,8 @@ public class SubscriptionService implements ManageSubscriptionUseCase {
         return requireAccount(userId).getSubscription();
     }
 
+    /// Stops renewal. A provider-backed subscription stays active until the paid period ends (the provider's
+    /// `deleted` event ends it); one without a provider subscription is cancelled immediately.
     @Override
     public Subscription cancel(UserId userId) {
         UserAccount account = requireAccount(userId);
@@ -108,10 +130,15 @@ public class SubscriptionService implements ManageSubscriptionUseCase {
         if (current.getPlan() == SubscriptionPlan.FREE || current.getStatus() == SubscriptionStatus.CANCELED) {
             throw new DomainValidationException("No active subscription to cancel");
         }
-        if (current.getExternalSubscriptionId() != null) {
-            paymentPort.cancelSubscription(current.getExternalSubscriptionId());
+        if (current.isCancelAtPeriodEnd()) {
+            throw new DomainValidationException("Cancellation is already scheduled for the end of the current period");
         }
-        account.cancelSubscription();
+        if (current.getExternalSubscriptionId() != null) {
+            paymentPort.cancelSubscriptionAtPeriodEnd(current.getExternalSubscriptionId());
+            account.scheduleSubscriptionCancellation();
+        } else {
+            account.cancelSubscription();
+        }
         UserAccount saved = userRepository.save(account);
         account.pollDomainEvents().forEach(eventPublisher::publish);
         return saved.getSubscription();

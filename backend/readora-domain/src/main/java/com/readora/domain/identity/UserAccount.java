@@ -125,6 +125,17 @@ public class UserAccount extends AggregateRoot<UserId> {
         registerEvent(SubscriptionCanceledEvent.now(this.id, previousPlan));
     }
 
+    /// The user stopped renewal: access continues until the paid period ends, when the provider's deletion
+    /// event cancels the subscription for good.
+    public void scheduleSubscriptionCancellation() {
+        if (this.subscription.getPlan() == SubscriptionPlan.FREE || this.subscription.isCancelAtPeriodEnd()) {
+            return;
+        }
+        this.subscription = this.subscription.withCancelAtPeriodEnd(true);
+        this.updatedAt = Instant.now();
+        registerEvent(SubscriptionCanceledEvent.now(this.id, this.subscription.getPlan()));
+    }
+
     public void grantRole(Role role) {
         Objects.requireNonNull(role, "Role cannot be null");
         if (this.roles.add(role)) {

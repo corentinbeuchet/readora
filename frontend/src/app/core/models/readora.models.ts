@@ -147,6 +147,8 @@ export interface Subscription {
   status: SubscriptionStatus;
   active: boolean;
   currentPeriodEnd?: string | null;
+  /** Renewal stopped: access continues until `currentPeriodEnd`, then the plan ends. */
+  cancelAtPeriodEnd?: boolean;
   planPermissions: Permission[];
 }
 

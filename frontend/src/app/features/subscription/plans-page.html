@@ -34,7 +34,11 @@
       @if (isPremium()) {
         <span class="badge badge-premium">Current plan</span>
         @if (subscription()?.currentPeriodEnd; as periodEnd) {
-          <p class="muted">Renews {{ periodEnd | date: 'mediumDate' }}</p>
+          @if (subscription()?.cancelAtPeriodEnd) {
+            <p class="muted" role="status">Cancelled — Premium ends {{ periodEnd | date: 'mediumDate' }}</p>
+          } @else {
+            <p class="muted">Renews {{ periodEnd | date: 'mediumDate' }}</p>
+          }
         }
         @if (canCancel()) {
           <button type="button" class="btn btn-danger" (click)="cancel()" [disabled]="busy() !== null">

@@ -37,7 +37,7 @@ export class PlansPage {
   protected readonly isPremium = this.auth.isPremium;
   protected readonly canCancel = computed(() => {
     const sub = this.subscription();
-    return !!sub && sub.plan !== 'FREE' && sub.status !== 'CANCELED';
+    return !!sub && sub.plan !== 'FREE' && sub.status !== 'CANCELED' && !sub.cancelAtPeriodEnd;
   });
 
   constructor() {
@@ -66,7 +66,7 @@ export class PlansPage {
   }
 
   protected async cancel(): Promise<void> {
-    if (!this.document.defaultView?.confirm('Cancel your Premium subscription? You will lose access to bookmarks.')) {
+    if (!this.document.defaultView?.confirm('Cancel your Premium subscription? You keep Premium until the end of the current period.')) {
       return;
     }
     this.error.set(null);
