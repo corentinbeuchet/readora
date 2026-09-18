@@ -137,7 +137,7 @@ Backlog ids used in commit `Refs:` (status: `git log --grep "review-2026-09/B<n>
 - B11 EAGER collections + load-all-then-filter (N+1); no `@OrderBy` on pages/chapters.
 - B12 Refresh-token reuse undetected; no expired-token cleanup; no issuer check; no rate limit; Swagger public in prod.
 - B13 Layer leaks: controllers → out-ports, web → infrastructure, `UserId` in `domain.work`; missing ArchUnit rules.
-- B14 Tests: web tests skip Flyway; fakes return same instance; CI runs `mvn test` not `verify`.
+- B14 Tests: web tests skip Flyway; fakes return same instance; CI runs `mvn test` not `verify`. — fixed (see `git log --grep review-2026-09/B14`)
 
 Improvements from best-practice research (2026-09), not bugs:
 - B15 Virtual threads: `spring.threads.virtual.enabled=true`, sized against the Hikari pool; `@ConcurrencyLimit` on scarce resources.

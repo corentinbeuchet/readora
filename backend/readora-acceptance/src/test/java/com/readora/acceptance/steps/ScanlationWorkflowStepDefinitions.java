@@ -52,7 +52,9 @@ public class ScanlationWorkflowStepDefinitions {
             @Override
             public ScanlationProject save(ScanlationProject project) {
                 projectStore.put(project.getId(), project);
-                return project;
+                // Like the JPA adapter: the returned object is rebuilt from state and carries no pending events.
+                return new ScanlationProject(project.getId(), project.getName(), project.getWorkId(), project.getMembers(),
+                        project.getTasks(), project.getCreatedAt(), project.getUpdatedAt());
             }
         };
 
@@ -70,7 +72,10 @@ public class ScanlationWorkflowStepDefinitions {
             @Override
             public Chapter save(Chapter chapter) {
                 chapterStore.put(chapter.getId(), chapter);
-                return chapter;
+                // Like the JPA adapter: the returned object is rebuilt from state and carries no pending events.
+                return new Chapter(chapter.getId(), chapter.getWorkId(), chapter.getChapterNumber(), chapter.getTitle(),
+                        chapter.getStatus(), chapter.getPages(), chapter.getScanlationProjectId(), chapter.getCreatedAt(),
+                        chapter.getPublishedAt(), chapter.getUpdatedAt());
             }
         };
 
