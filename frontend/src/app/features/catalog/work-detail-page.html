@@ -44,6 +44,11 @@
       <h2 id="chapters-heading">Chapters</h2>
       @if (chapters.isLoading()) {
         <p class="muted" role="status">Loading chapters…</p>
+      } @else if (chapters.error()) {
+        <p class="form-error" role="alert">
+          The chapter list could not be loaded.
+          <button type="button" class="btn btn-link" (click)="chapters.reload()">Retry</button>
+        </p>
       } @else if (!chapters.value() || chapters.value().length === 0) {
         <p class="muted">No chapters have been published yet.</p>
       } @else {

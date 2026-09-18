@@ -1,8 +1,8 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Injectable, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiResponse, Chapter } from '../models/readora.models';
-import { ApiClient } from './api-client';
+import { Chapter } from '../models/readora.models';
+import { ApiClient, parseEnvelope } from './api-client';
 
 export type ViewMode = 'VERTICAL' | 'PAGED';
 
@@ -26,7 +26,7 @@ export class ChaptersApi {
         const id = chapterId();
         return id ? this.api.url(`/chapters/${id}`) : undefined;
       },
-      { parse: (raw) => (raw as ApiResponse<Chapter>).data ?? undefined }
+      { parse: (raw) => parseEnvelope<Chapter>(raw) }
     );
   }
 }

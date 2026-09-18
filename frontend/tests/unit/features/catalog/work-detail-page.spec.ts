@@ -53,4 +53,18 @@ describe('WorkDetailPage', () => {
     expect(link.textContent).toContain('Continue reading (page 5)');
     expect(link.getAttribute('href')).toBe('/read/chap-7?page=5');
   });
+
+  it('shows an error (not "no chapters") when the chapter list answers success:false', async () => {
+    fixture = TestBed.createComponent(WorkDetailPage);
+    fixture.componentRef.setInput('workId', WORK.id);
+    await settle(fixture);
+
+    http.expectOne(`${API}/works/${WORK.id}`).flush({ success: true, data: WORK, error: null });
+    http.expectOne(`${API}/works/${WORK.id}/chapters`).flush({ success: false, data: null, error: 'Chapters unavailable' });
+    await settle(fixture);
+
+    const alert: HTMLElement = fixture.nativeElement.querySelector('.chapters [role="alert"]');
+    expect(alert.textContent).toContain('The chapter list could not be loaded.');
+    expect(fixture.nativeElement.textContent).not.toContain('No chapters have been published yet.');
+  });
 });

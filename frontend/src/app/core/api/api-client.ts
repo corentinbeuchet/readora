@@ -94,6 +94,19 @@ export function apiErrorMessage(error: unknown, fallback = 'Something went wrong
   return fallback;
 }
 
+/**
+ * `httpResource` parser for the API envelope: returns `data`, and throws an `ApiError` (so the
+ * resource enters its error state) for `success: false` or a body that is not an envelope, instead
+ * of silently turning a failure into an empty value.
+ */
+export function parseEnvelope<T>(raw: unknown): T {
+  const body = raw as Partial<ApiResponse<T>> | null;
+  if (!body || typeof body !== 'object' || typeof body.success !== 'boolean') {
+    throw new ApiError(200, 'Unexpected response from the server', raw);
+  }
+  return unwrap(body as ApiResponse<T>);
+}
+
 export function unwrap<T>(response: ApiResponse<T>): T {
   if (!response.success) {
     throw new ApiError(200, response.error ?? 'Request failed');

@@ -25,7 +25,7 @@ export class WorksPage {
   protected readonly works = this.catalogApi.worksResource(this.page, this.pageSize);
 
   protected readonly hasPrevious = computed(() => this.page() > 0);
-  protected readonly hasNext = computed(() => this.page() + 1 < (this.works.value()?.totalPages ?? 0));
+  protected readonly hasNext = computed(() => this.page() + 1 < (this.works.hasValue() ? this.works.value().totalPages : 0));
 
   constructor() {
     this.seo.update({

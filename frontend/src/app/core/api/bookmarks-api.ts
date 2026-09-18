@@ -1,8 +1,8 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Injectable, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiResponse, Bookmark, UpdateProgressRequest } from '../models/readora.models';
-import { ApiClient } from './api-client';
+import { Bookmark, UpdateProgressRequest } from '../models/readora.models';
+import { ApiClient, parseEnvelope } from './api-client';
 
 /** `/api/v1/bookmarks` (requires `BOOKMARK_READ` / `BOOKMARK_WRITE`). */
 @Injectable({ providedIn: 'root' })
@@ -24,7 +24,7 @@ export class BookmarksApi {
   /** Reactive list of bookmarks; pass a signal that is `false` to skip loading (e.g. no permission). */
   listResource(enabled: Signal<boolean>): HttpResourceRef<Bookmark[]> {
     return httpResource<Bookmark[]>(() => (enabled() ? this.api.url('/bookmarks') : undefined), {
-      parse: (raw) => (raw as ApiResponse<Bookmark[]>).data ?? [],
+      parse: (raw) => parseEnvelope<Bookmark[]>(raw) ?? [],
       defaultValue: []
     });
   }

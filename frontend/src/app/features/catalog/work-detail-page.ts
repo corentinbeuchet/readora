@@ -31,9 +31,9 @@ export class WorkDetailPage {
   /** Bookmark of the current user for this work (only fetched with BOOKMARK_READ). */
   private readonly canReadBookmark = computed(() => this.auth.can('BOOKMARK_READ'));
   protected readonly bookmarks = this.bookmarksApi.listResource(this.canReadBookmark);
-  protected readonly bookmark = computed(() => this.bookmarks.value()?.find((b) => b.workId === this.workId()) ?? null);
+  protected readonly bookmark = computed(() => (this.bookmarks.hasValue() ? this.bookmarks.value() : []).find((b) => b.workId === this.workId()) ?? null);
 
-  protected readonly firstChapterId = computed(() => this.chapters.value()?.[0]?.id ?? null);
+  protected readonly firstChapterId = computed(() => (this.chapters.hasValue() ? this.chapters.value()[0]?.id : null) ?? null);
 
   constructor() {
     effect(() => {
