@@ -20,7 +20,7 @@ export type ProfileTab = 'overview' | 'bookmarks' | 'subscription';
 export class ProfilePage {
   protected readonly auth = inject(AuthStore);
   private readonly seo = inject(SeoService);
-  protected selectedTab = model<ProfileTab>('overview');
+  protected readonly selectedTab = model<ProfileTab>('overview');
   protected readonly tabList = viewChild<TabList>(TabList);
 
   constructor() {

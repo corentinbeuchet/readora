@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, forkJoin, from, map, mergeMap, of, toArray } from 'rxjs';
+import { Observable, from, map, mergeMap, of, toArray } from 'rxjs';
 import { ApiClient } from '../api/api-client';
 import { CatalogApi } from '../api/catalog-api';
 import { ScanlationApi } from '../api/scanlation-api';

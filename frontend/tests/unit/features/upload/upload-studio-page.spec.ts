@@ -46,6 +46,24 @@ describe('UploadStudioPage', () => {
     expect(component.currentStep()).toBe('chapter');
   });
 
+  it('renders the publishing mode as a labelled native radio group', () => {
+    component.title.set('Tower of God');
+    component.nextFromManga();
+    fixture.detectChanges();
+
+    const el: HTMLElement = fixture.nativeElement;
+    const legend = [...el.querySelectorAll('legend')].map((l) => l.textContent?.trim());
+    expect(legend).toContain('Publishing Pipeline');
+    const radios = el.querySelectorAll<HTMLInputElement>('input[type="radio"][name="publishing-mode"]');
+    expect(radios.length).toBe(2);
+    expect(radios[0].checked).toBe(true);
+
+    radios[1].click();
+    fixture.detectChanges();
+    expect(component.publishingMode()).toBe('SCANLATION');
+    expect(radios[1].checked).toBe(true);
+  });
+
   it('toggles genre selections and adds custom genres', () => {
     expect(component.selectedGenres()).toContain('Action');
     component.toggleGenre('Action');

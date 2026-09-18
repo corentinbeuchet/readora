@@ -7,7 +7,6 @@ import {
   getImageDimensions,
   isArchiveFile,
   isImageFile,
-  sortFilesNaturally,
 } from '@app/core/upload/file-utils';
 
 @Component({
