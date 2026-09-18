@@ -16,6 +16,7 @@ spring:
 
 aws:
   s3:
+    enabled: ${AWS_S3_ENABLED:true}
     bucket-name: ${AWS_S3_BUCKET_NAME:readora-media-staging}
     region: ${AWS_REGION:eu-west-1}
     endpoint: ${AWS_S3_ENDPOINT:}

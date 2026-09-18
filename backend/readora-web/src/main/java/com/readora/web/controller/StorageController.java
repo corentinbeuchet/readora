@@ -14,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Map;
@@ -62,11 +63,13 @@ public class StorageController {
 
         String storageKey = newStorageKey(folder, file.getOriginalFilename());
 
+        byte[] bytes;
         try {
-            storagePort.storeAsset(storageKey, file.getBytes(), contentType);
-        } catch (Exception e) {
-            throw new DomainValidationException("Failed to process uploaded file: " + e.getMessage());
+            bytes = file.getBytes();
+        } catch (IOException e) {
+            throw new DomainValidationException("The uploaded file could not be read");
         }
+        storagePort.storeAsset(storageKey, bytes, contentType);
 
         String cdnUrl = storagePort.getPublicCdnUrl(storageKey);
         return ResponseEntity.ok(ApiResponse.ok(new StorageUploadResponse(storageKey, cdnUrl)));

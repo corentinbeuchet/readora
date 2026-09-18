@@ -59,6 +59,7 @@ services:
       SPRING_DATASOURCE_USERNAME: readora_user
       SPRING_DATASOURCE_PASSWORD: readora_pass
 
+      AWS_S3_ENABLED: "true"
       AWS_S3_BUCKET_NAME: readora-media-dev
       AWS_S3_ENDPOINT: http://minio:9000
       AWS_ACCESS_KEY_ID: minioadmin

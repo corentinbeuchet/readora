@@ -2,6 +2,7 @@ package com.readora.infrastructure.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
@@ -17,7 +18,10 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import java.net.URI;
 
+/// S3/MinIO clients exist only when `aws.s3.enabled=true`; otherwise [com.readora.infrastructure.storage.S3StorageAdapter]
+/// runs in local-disk mode.
 @Configuration
+@ConditionalOnProperty(name = "aws.s3.enabled", havingValue = "true")
 public class S3ClientConfig {
 
     @Bean

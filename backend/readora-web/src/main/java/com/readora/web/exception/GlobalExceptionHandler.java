@@ -1,6 +1,7 @@
 package com.readora.web.exception;
 
 import com.readora.application.port.out.PaymentPort;
+import com.readora.application.port.out.StoragePort;
 import com.readora.domain.common.AccessDeniedDomainException;
 import com.readora.domain.common.ConcurrentModificationDomainException;
 import com.readora.domain.common.DomainValidationException;
@@ -119,6 +120,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleWebhookVerification(PaymentPort.WebhookVerificationException ex) {
         log.warn("Rejected payment webhook: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(StoragePort.StorageUnavailableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleStorageUnavailable(StoragePort.StorageUnavailableException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(PaymentPort.PaymentProviderException.class)

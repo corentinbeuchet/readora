@@ -1,4 +1,8 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: ${READORA_MAX_UPLOAD_FILE_SIZE:50MB}
+      max-request-size: ${READORA_MAX_UPLOAD_REQUEST_SIZE:55MB}
   application:
     name: readora-platform
   datasource:
@@ -21,6 +25,8 @@ spring:
 
 aws:
   s3:
+    # false = local-disk storage (dev without MinIO); staging/production enable S3.
+    enabled: ${AWS_S3_ENABLED:false}
     bucket-name: ${AWS_S3_BUCKET_NAME:readora-media-dev}
     region: ${AWS_REGION:us-east-1}
     endpoint: ${AWS_S3_ENDPOINT:}

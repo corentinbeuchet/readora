@@ -6,15 +6,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 import java.io.IOException;
@@ -22,10 +19,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.Map;
+import java.util.Locale;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
+/// Stores media in exactly one place, decided at startup:
+///
+/// - **S3 mode** (an [S3Client] bean exists, i.e. `aws.s3.enabled=true`): S3/MinIO is the only store. A failed
+///   write throws [StoragePort.StorageUnavailableException] instead of pretending to succeed.
+/// - **Local mode** (no S3 client — dev and tests): files live under `aws.storage.local-dir`.
+///
+/// Nothing is cached in memory, so memory use does not grow with the number of uploads.
 @Component
 public class S3StorageAdapter implements StoragePort {
 
@@ -36,8 +39,6 @@ public class S3StorageAdapter implements StoragePort {
     private final String defaultBucketName;
     private final String cdnDomain;
     private final Path localStorageDir;
-    private final Map<String, byte[]> inMemoryCache = new ConcurrentHashMap<>();
-    private final Map<String, String> contentTypeCache = new ConcurrentHashMap<>();
 
     @Autowired
     public S3StorageAdapter(
@@ -59,45 +60,43 @@ public class S3StorageAdapter implements StoragePort {
         }
         this.cdnDomain = trimmed;
 
-        Path dir;
-        if (localDir != null && !localDir.isBlank()) {
-            dir = Paths.get(localDir);
-        } else {
-            dir = Paths.get(System.getProperty("java.io.tmpdir"), "readora-storage");
-        }
-        this.localStorageDir = dir;
-        try {
-            Files.createDirectories(this.localStorageDir);
-        } catch (IOException e) {
-            log.warn("Could not create local storage directory {}: {}", this.localStorageDir, e.getMessage());
+        this.localStorageDir = (localDir != null && !localDir.isBlank()
+                ? Paths.get(localDir)
+                : Paths.get(System.getProperty("java.io.tmpdir"), "readora-storage")).toAbsolutePath().normalize();
+        if (s3Client == null) {
+            try {
+                Files.createDirectories(this.localStorageDir);
+            } catch (IOException e) {
+                log.warn("Could not create local storage directory {}: {}", this.localStorageDir, e.getMessage());
+            }
+            log.info("Storage: local mode ({}); S3 is disabled", this.localStorageDir);
         }
     }
 
     @Override
     public String generatePresignedUploadUrl(String objectKey, Duration validity) {
-        String cleanKey = objectKey.startsWith("/") ? objectKey.substring(1) : objectKey;
-
-        if (s3Presigner != null) {
-            try {
-                PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
-                        .signatureDuration(validity)
-                        .putObjectRequest(PutObjectRequest.builder()
-                                .bucket(defaultBucketName)
-                                .key(cleanKey)
-                                .build())
-                        .build();
-                PresignedPutObjectRequest presigned = s3Presigner.presignPutObject(presignRequest);
-                return presigned.url().toString();
-            } catch (Exception e) {
-                log.warn("Could not generate presigned S3 URL for {}: {}", cleanKey, e.getMessage());
-            }
+        if (s3Presigner == null) {
+            throw new StorageUnavailableException("Presigned uploads require S3 storage, which is not enabled");
         }
-        return "https://" + defaultBucketName + ".s3.amazonaws.com/" + cleanKey + "?expires=" + validity.toMinutes();
+        String cleanKey = clean(objectKey);
+        try {
+            PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
+                    .signatureDuration(validity)
+                    .putObjectRequest(PutObjectRequest.builder()
+                            .bucket(defaultBucketName)
+                            .key(cleanKey)
+                            .build())
+                    .build();
+            return s3Presigner.presignPutObject(presignRequest).url().toString();
+        } catch (RuntimeException e) {
+            log.error("Could not generate presigned S3 URL for {}", cleanKey, e);
+            throw new StorageUnavailableException("Could not generate an upload URL");
+        }
     }
 
     @Override
     public String getPublicCdnUrl(String objectKey) {
-        String cleanKey = objectKey.startsWith("/") ? objectKey.substring(1) : objectKey;
+        String cleanKey = clean(objectKey);
         if (cdnDomain.isEmpty()) {
             return "/api/v1/storage/assets/" + cleanKey;
         }
@@ -106,94 +105,88 @@ public class S3StorageAdapter implements StoragePort {
 
     @Override
     public void storeAsset(String objectKey, byte[] data, String contentType) {
-        String cleanKey = objectKey.startsWith("/") ? objectKey.substring(1) : objectKey;
-        inMemoryCache.put(cleanKey, data);
-        if (contentType != null && !contentType.isBlank()) {
-            contentTypeCache.put(cleanKey, contentType);
-        }
-        try {
-            Path targetPath = localStorageDir.resolve(cleanKey).normalize();
-            if (targetPath.startsWith(localStorageDir)) {
-                if (targetPath.getParent() != null) {
-                    Files.createDirectories(targetPath.getParent());
-                }
-                Files.write(targetPath, data);
-            }
-        } catch (IOException e) {
-            log.warn("Failed to persist asset {} to disk: {}", cleanKey, e.getMessage());
-        }
-
+        String cleanKey = clean(objectKey);
         if (s3Client != null) {
             try {
-                PutObjectRequest.Builder reqBuilder = PutObjectRequest.builder()
+                PutObjectRequest.Builder request = PutObjectRequest.builder()
                         .bucket(defaultBucketName)
                         .key(cleanKey);
                 if (contentType != null && !contentType.isBlank()) {
-                    reqBuilder.contentType(contentType);
+                    request.contentType(contentType);
                 }
-                s3Client.putObject(reqBuilder.build(), RequestBody.fromBytes(data));
-                log.debug("Successfully stored asset {} to S3/MinIO bucket {}", cleanKey, defaultBucketName);
-            } catch (Exception e) {
-                log.warn("Could not upload asset {} to S3/MinIO bucket {}: {}", cleanKey, defaultBucketName, e.getMessage());
+                s3Client.putObject(request.build(), RequestBody.fromBytes(data));
+                return;
+            } catch (RuntimeException e) {
+                log.error("Could not upload asset {} to bucket {}", cleanKey, defaultBucketName, e);
+                throw new StorageUnavailableException("The file could not be stored, please retry");
             }
+        }
+
+        Path target = localPath(cleanKey);
+        try {
+            if (target.getParent() != null) {
+                Files.createDirectories(target.getParent());
+            }
+            Files.write(target, data);
+        } catch (IOException e) {
+            log.error("Could not write asset {} to {}", cleanKey, target, e);
+            throw new StorageUnavailableException("The file could not be stored, please retry");
         }
     }
 
     @Override
     public Optional<byte[]> loadAsset(String objectKey) {
-        String cleanKey = objectKey.startsWith("/") ? objectKey.substring(1) : objectKey;
-        byte[] cached = inMemoryCache.get(cleanKey);
-        if (cached != null) {
-            return Optional.of(cached);
-        }
-        try {
-            Path targetPath = localStorageDir.resolve(cleanKey).normalize();
-            if (targetPath.startsWith(localStorageDir) && Files.exists(targetPath)) {
-                byte[] bytes = Files.readAllBytes(targetPath);
-                inMemoryCache.put(cleanKey, bytes);
-                return Optional.of(bytes);
-            }
-        } catch (IOException e) {
-            log.warn("Failed to read asset {} from disk: {}", cleanKey, e.getMessage());
-        }
-
+        String cleanKey = clean(objectKey);
         if (s3Client != null) {
             try {
-                ResponseBytes<GetObjectResponse> responseBytes = s3Client.getObjectAsBytes(
-                        GetObjectRequest.builder()
-                                .bucket(defaultBucketName)
-                                .key(cleanKey)
-                                .build()
-                );
-                byte[] data = responseBytes.asByteArray();
-                inMemoryCache.put(cleanKey, data);
-                if (responseBytes.response().contentType() != null) {
-                    contentTypeCache.put(cleanKey, responseBytes.response().contentType());
-                }
-                return Optional.of(data);
+                return Optional.of(s3Client.getObjectAsBytes(GetObjectRequest.builder()
+                        .bucket(defaultBucketName)
+                        .key(cleanKey)
+                        .build()).asByteArray());
             } catch (NoSuchKeyException e) {
-                log.debug("Asset {} not found in S3/MinIO bucket {}", cleanKey, defaultBucketName);
-            } catch (Exception e) {
-                log.warn("Could not retrieve asset {} from S3/MinIO bucket {}: {}", cleanKey, defaultBucketName, e.getMessage());
+                return Optional.empty();
+            } catch (RuntimeException e) {
+                log.warn("Could not retrieve asset {} from bucket {}: {}", cleanKey, defaultBucketName, e.getMessage());
+                return Optional.empty();
             }
         }
 
-        return Optional.empty();
+        Path target;
+        try {
+            target = localPath(cleanKey);
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+        try {
+            return Files.isRegularFile(target) ? Optional.of(Files.readAllBytes(target)) : Optional.empty();
+        } catch (IOException e) {
+            log.warn("Could not read asset {} from disk: {}", cleanKey, e.getMessage());
+            return Optional.empty();
+        }
     }
 
     @Override
     public String getContentType(String objectKey) {
-        String cleanKey = objectKey.startsWith("/") ? objectKey.substring(1) : objectKey;
-        String type = contentTypeCache.get(cleanKey);
-        if (type != null) {
-            return type;
-        }
-        String lower = cleanKey.toLowerCase();
+        String lower = clean(objectKey).toLowerCase(Locale.ROOT);
         if (lower.endsWith(".png")) return "image/png";
         if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
         if (lower.endsWith(".webp")) return "image/webp";
         if (lower.endsWith(".gif")) return "image/gif";
         if (lower.endsWith(".avif")) return "image/avif";
+        if (lower.endsWith(".zip") || lower.endsWith(".cbz")) return "application/zip";
         return "application/octet-stream";
+    }
+
+    private static String clean(String objectKey) {
+        return objectKey.startsWith("/") ? objectKey.substring(1) : objectKey;
+    }
+
+    /// @throws IllegalArgumentException if the key would escape the storage directory
+    private Path localPath(String cleanKey) {
+        Path target = localStorageDir.resolve(cleanKey).normalize();
+        if (!target.startsWith(localStorageDir)) {
+            throw new IllegalArgumentException("Storage key escapes the storage directory: " + cleanKey);
+        }
+        return target;
     }
 }
