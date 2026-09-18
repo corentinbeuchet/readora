@@ -85,9 +85,13 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
         WorkflowTask task = findTask(taskId)
                 .orElseThrow(() -> new DomainValidationException("Task not found with id: " + taskId));
 
+        requireOpenStage(task);
         ScanlationRole required = task.getStage().requiredRole();
         if (!member.hasRole(required)) {
             throw new DomainValidationException("User lacks required role: " + required + " for stage: " + task.getStage());
+        }
+        if (isHeldBySomeoneElse(task, userId) && !isLeader(member)) {
+            throw new DomainValidationException("Task is already claimed by " + task.getAssigneeId());
         }
 
         task.assignTo(userId);
@@ -99,12 +103,19 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
         WorkflowTask task = findTask(taskId)
                 .orElseThrow(() -> new DomainValidationException("Task not found with id: " + taskId));
 
+        requireOpenStage(task);
+        if (task.getStage() == WorkflowStage.QC_REVIEW) {
+            throw new DomainValidationException("A task in QC_REVIEW is published through QC approval, not submitted");
+        }
         if (task.getAssigneeId() == null || !task.getAssigneeId().equals(userId)) {
-            // Leader override or direct claim
+            // Unassigned: any member with the stage role may submit directly. Assigned to someone else: leader override only.
             TeamMember member = findMember(userId)
                     .orElseThrow(() -> new DomainValidationException("User is not a member of project: " + name));
             if (!member.hasRole(task.getStage().requiredRole())) {
                 throw new DomainValidationException("User lacks required role: " + task.getStage().requiredRole());
+            }
+            if (isHeldBySomeoneElse(task, userId) && !isLeader(member)) {
+                throw new DomainValidationException("Task is claimed by " + task.getAssigneeId() + "; only they or the leader can submit it");
             }
         }
 
@@ -146,6 +157,20 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
         registerEvent(TaskStageAdvancedEvent.now(this.id, taskId, WorkflowStage.QC_REVIEW, WorkflowStage.PUBLISHED));
         registerEvent(WorkflowCompletedEvent.now(this.id, task.getChapterNumber()));
         return task;
+    }
+
+    private static void requireOpenStage(WorkflowTask task) {
+        if (task.getStage() == WorkflowStage.PUBLISHED) {
+            throw new DomainValidationException("Task for chapter " + task.getChapterNumber() + " is already published");
+        }
+    }
+
+    private static boolean isHeldBySomeoneElse(WorkflowTask task, UserId userId) {
+        return task.getStatus() == TaskStatus.IN_PROGRESS && task.getAssigneeId() != null && !task.getAssigneeId().equals(userId);
+    }
+
+    private static boolean isLeader(TeamMember member) {
+        return member.roles().contains(ScanlationRole.LEADER);
     }
 
     public String getName() {

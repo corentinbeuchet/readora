@@ -79,4 +79,64 @@ class ScanlationProjectDomainTest {
         project.submitTaskWork(task.getId(), UserId.of("Leader1"), "s3://media/cleaned.zip", 20);
         assertThat(task.getStage()).isEqualTo(WorkflowStage.TRANSLATING);
     }
+
+    @Test
+    @DisplayName("A member cannot claim a task already in progress for someone else")
+    void claimingTaskHeldBySomeoneElseIsRejected() {
+        ScanlationProject project = ScanlationProject.create("Asura", WorkId.generate(), UserId.of("Leader1"));
+        project.addMember(TeamMember.of(UserId.of("Cleaner1"), ScanlationRole.CLEANER_REDRAWER));
+        project.addMember(TeamMember.of(UserId.of("Cleaner2"), ScanlationRole.CLEANER_REDRAWER));
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("5"));
+        project.claimTask(task.getId(), UserId.of("Cleaner1"));
+
+        assertThatThrownBy(() -> project.claimTask(task.getId(), UserId.of("Cleaner2")))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessageContaining("already claimed");
+        assertThat(task.getAssigneeId()).isEqualTo(UserId.of("Cleaner1"));
+    }
+
+    @Test
+    @DisplayName("The leader can reassign a task that is in progress for someone else")
+    void leaderCanReassignTask() {
+        ScanlationProject project = ScanlationProject.create("Asura", WorkId.generate(), UserId.of("Leader1"));
+        project.addMember(TeamMember.of(UserId.of("Cleaner1"), ScanlationRole.CLEANER_REDRAWER));
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("5"));
+        project.claimTask(task.getId(), UserId.of("Cleaner1"));
+
+        project.claimTask(task.getId(), UserId.of("Leader1"));
+
+        assertThat(task.getAssigneeId()).isEqualTo(UserId.of("Leader1"));
+    }
+
+    @Test
+    @DisplayName("A member cannot submit work on a task claimed by someone else")
+    void submittingTaskHeldBySomeoneElseIsRejected() {
+        ScanlationProject project = ScanlationProject.create("Asura", WorkId.generate(), UserId.of("Leader1"));
+        project.addMember(TeamMember.of(UserId.of("Cleaner1"), ScanlationRole.CLEANER_REDRAWER));
+        project.addMember(TeamMember.of(UserId.of("Cleaner2"), ScanlationRole.CLEANER_REDRAWER));
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("5"));
+        project.claimTask(task.getId(), UserId.of("Cleaner1"));
+
+        assertThatThrownBy(() -> project.submitTaskWork(task.getId(), UserId.of("Cleaner2"), "s3://x.zip", 10))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessageContaining("claimed by");
+        assertThat(task.getStage()).isEqualTo(WorkflowStage.RAW_UPLOADED);
+    }
+
+    @Test
+    @DisplayName("Published tasks can be neither claimed nor submitted, and QC_REVIEW tasks are not submitted")
+    void closedStagesRejectClaimAndSubmit() {
+        ScanlationProject project = ScanlationProject.create("Asura", WorkId.generate(), UserId.of("Leader1"));
+        WorkflowTask published = project.addChapterTask(ChapterNumber.of("5"));
+        published.advanceStage(WorkflowStage.PUBLISHED);
+        WorkflowTask inQc = project.addChapterTask(ChapterNumber.of("6"));
+        inQc.advanceStage(WorkflowStage.QC_REVIEW);
+
+        assertThatThrownBy(() -> project.claimTask(published.getId(), UserId.of("Leader1")))
+                .isInstanceOf(DomainValidationException.class).hasMessageContaining("already published");
+        assertThatThrownBy(() -> project.submitTaskWork(published.getId(), UserId.of("Leader1"), "s3://x.zip", 1))
+                .isInstanceOf(DomainValidationException.class).hasMessageContaining("already published");
+        assertThatThrownBy(() -> project.submitTaskWork(inQc.getId(), UserId.of("Leader1"), "s3://x.zip", 1))
+                .isInstanceOf(DomainValidationException.class).hasMessageContaining("QC approval");
+    }
 }
