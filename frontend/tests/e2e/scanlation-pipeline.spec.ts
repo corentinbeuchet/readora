@@ -24,20 +24,33 @@ test.describe('Scanlation Collaborative Multi-Role Pipeline Suite', () => {
     await expect(page.getByRole('heading', { name: 'Access denied' })).toBeVisible();
   });
 
-  test('multi-role collaboration context simulation (two isolated sessions)', async ({ browser }) => {
-    // Isolated Cleaner session
+  test('two collaborators have isolated sessions (one browser context each)', async ({ browser }) => {
+    // Multi-role work happens in parallel sessions: signing in one must never leak into another.
+    const suffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
     const cleanerContext = await browser.newContext();
-    const cleanerPage = await cleanerContext.newPage();
-    await cleanerPage.goto('/');
-    await expect(cleanerPage.locator('.logo-text')).toHaveText('Readora');
-
-    // Isolated Translator session
     const translatorContext = await browser.newContext();
-    const translatorPage = await translatorContext.newPage();
-    await translatorPage.goto('/');
-    await expect(translatorPage.locator('.logo-text')).toHaveText('Readora');
+    try {
+      const cleaner = await cleanerContext.newPage();
+      await cleaner.goto('/register');
+      await cleaner.getByLabel('Email').fill(`cleaner_${suffix}@readora.test`);
+      await cleaner.getByLabel('Username').fill(`cleaner_${suffix}`);
+      await cleaner.getByLabel('Password', { exact: true }).fill('Sup3rSecret!');
+      await cleaner.getByLabel('Confirm password').fill('Sup3rSecret!');
+      await cleaner.getByRole('button', { name: 'Sign up' }).click();
+      await expect(cleaner).toHaveURL(/\/profile$/);
+      await expect(cleaner.getByRole('heading', { level: 1 })).toContainText(`cleaner_${suffix}`);
 
-    await cleanerContext.close();
-    await translatorContext.close();
+      const translator = await translatorContext.newPage();
+      await translator.goto('/profile');
+      await expect(translator).toHaveURL(/\/login\?returnUrl=%2Fprofile/);
+      await expect(translator.getByRole('link', { name: 'Log in' })).toBeVisible();
+
+      // The first session is unaffected by the second context.
+      await cleaner.reload();
+      await expect(cleaner.getByRole('heading', { level: 1 })).toContainText(`cleaner_${suffix}`);
+    } finally {
+      await cleanerContext.close();
+      await translatorContext.close();
+    }
   });
 });

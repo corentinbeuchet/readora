@@ -17,10 +17,10 @@ class FakeImage {
     FakeImage.srcs.push(value);
     FakeImage.inFlight++;
     FakeImage.maxInFlight = Math.max(FakeImage.maxInFlight, FakeImage.inFlight);
-    setTimeout(() => {
+    queueMicrotask(() => {
       FakeImage.inFlight--;
       this.onload?.();
-    }, 0);
+    });
   }
 }
 
@@ -112,17 +112,23 @@ describe('PageGridUploader', () => {
 
 describe('mapWithConcurrency', () => {
   it('keeps input order and never exceeds the limit', async () => {
-    let inFlight = 0;
-    let max = 0;
-    const result = await mapWithConcurrency([5, 1, 4, 2, 3], 2, async (n) => {
-      inFlight++;
-      max = Math.max(max, inFlight);
-      await new Promise((r) => setTimeout(r, n));
-      inFlight--;
-      return n * 10;
-    });
-    expect(result).toEqual([50, 10, 40, 20, 30]);
-    expect(max).toBe(2);
+    vi.useFakeTimers();
+    try {
+      let inFlight = 0;
+      let max = 0;
+      const pending = mapWithConcurrency([5, 1, 4, 2, 3], 2, async (n) => {
+        inFlight++;
+        max = Math.max(max, inFlight);
+        await new Promise((r) => setTimeout(r, n));
+        inFlight--;
+        return n * 10;
+      });
+      await vi.runAllTimersAsync();
+      expect(await pending).toEqual([50, 10, 40, 20, 30]);
+      expect(max).toBe(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
