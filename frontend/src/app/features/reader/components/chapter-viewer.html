@@ -75,19 +75,23 @@
         </div>
       } @else {
         <div class="paged-flow">
-          @if (state.currentPage(); as page) {
-            @if (page.cdnUrl) {
-              <img
-                [ngSrc]="page.cdnUrl"
-                [width]="page.width || defaultPageWidth"
-                [height]="page.height || defaultPageHeight"
-                priority
-                [alt]="'Page ' + page.pageNumber"
-                (error)="handlePageError($event, fallbackPage)"
-                class="page-image active-page"
-              />
-            } @else {
-              <img [src]="fallbackPage" [alt]="'Page ' + page.pageNumber" class="page-image active-page" width="800" height="1200" />
+          @if (state.currentPage(); as current) {
+            <!-- Keyed by page number: each page gets a fresh <img>. NgOptimizedImage forbids changing
+                 width/height on an existing image (NG02953), and pages have different sizes. -->
+            @for (page of [current]; track page.pageNumber) {
+              @if (page.cdnUrl) {
+                <img
+                  [ngSrc]="page.cdnUrl"
+                  [width]="page.width || defaultPageWidth"
+                  [height]="page.height || defaultPageHeight"
+                  priority
+                  [alt]="'Page ' + page.pageNumber"
+                  (error)="handlePageError($event, fallbackPage)"
+                  class="page-image active-page"
+                />
+              } @else {
+                <img [src]="fallbackPage" [alt]="'Page ' + page.pageNumber" class="page-image active-page" width="800" height="1200" />
+              }
             }
           }
           <nav class="paged-nav" aria-label="Page navigation">

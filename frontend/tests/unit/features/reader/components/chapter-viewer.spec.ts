@@ -88,7 +88,7 @@ describe('ChapterViewer (API-driven)', () => {
   const commentsUrl = `${API}/comments/chapter/${MOCK_CHAPTER.id}`;
 
   /** Renders the viewer for `read/:chapterId[?page=N]`, answering the chapter + comments requests. */
-  async function loadChapter(page?: string): Promise<void> {
+  async function loadChapter(page?: string, chapter: Chapter = MOCK_CHAPTER): Promise<void> {
     fixture.componentRef.setInput('chapterId', MOCK_CHAPTER.id);
     if (page !== undefined) {
       fixture.componentRef.setInput('page', page);
@@ -97,7 +97,7 @@ describe('ChapterViewer (API-driven)', () => {
 
     const req = http.expectOne(chapterUrl);
     expect(req.request.method).toBe('GET');
-    req.flush({ success: true, data: MOCK_CHAPTER, error: null });
+    req.flush({ success: true, data: chapter, error: null });
     await settle(fixture);
 
     http.match(commentsUrl).forEach((r) => r.flush({ success: true, data: [], error: null }));
@@ -154,6 +154,29 @@ describe('ChapterViewer (API-driven)', () => {
     expect(fixture.debugElement.query(By.css('img.active-page')).nativeElement.src).toContain('p1.webp');
     click('button.btn-next');
     expect(fixture.debugElement.query(By.css('img.active-page')).nativeElement.src).toContain('p2.webp');
+  });
+
+  it('paged mode moves between pages of different sizes without NgOptimizedImage errors (NG02953)', async () => {
+    const errors = vi.spyOn(console, 'error');
+    await loadChapter(undefined, {
+      ...MOCK_CHAPTER,
+      pages: [
+        { pageNumber: 1, storageKey: 'p1.webp', cdnUrl: 'https://cdn.readora.com/p1.webp', width: 800, height: 1200 },
+        { pageNumber: 2, storageKey: 'p2.webp', cdnUrl: 'https://cdn.readora.com/p2.webp', width: 720, height: 5000 },
+        { pageNumber: 3, storageKey: 'p3.webp', cdnUrl: 'https://cdn.readora.com/p3.webp', width: 800, height: 1150 }
+      ]
+    });
+    await switchMode('Paged');
+    const first = fixture.debugElement.query(By.css('img.active-page')).nativeElement as HTMLImageElement;
+
+    click('button.btn-next');
+    const second = fixture.debugElement.query(By.css('img.active-page')).nativeElement as HTMLImageElement;
+
+    // A fresh image per page carries that page's own intrinsic size.
+    expect(second).not.toBe(first);
+    expect([second.getAttribute('width'), second.getAttribute('height')]).toEqual(['720', '5000']);
+    expect(errors.mock.calls.flat().join(' ')).not.toContain('NG02953');
+    errors.mockRestore();
   });
 
   it('keeps the current page when switching view mode', async () => {
