@@ -123,6 +123,8 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 
 ## Tests
 - `@DisplayName("Full sentence describing behaviour")` + camelCase method name.
+- User stories (`.readora/context/user-stories/*.feature`) run as Cucumber acceptance tests. A story without step
+  definitions yet is tagged `@wip` (skipped by `CucumberAcceptanceTest`); remove the tag when implementing it.
 - Web integration tests go through real HTTP and real auth (`AuthTestSupport`); assert JSON error bodies and status codes.
 - Fakes must behave like real adapters: `save` returns a **new** instance (otherwise event bugs are hidden).
 - Every state transition and authorization rule gets a test, including the negative case (wrong stage, wrong user, wrong role).
