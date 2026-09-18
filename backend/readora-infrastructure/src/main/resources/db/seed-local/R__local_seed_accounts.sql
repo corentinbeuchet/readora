@@ -59,6 +59,47 @@ SELECT CAST('00000000-0000-4000-9000-000000000001' AS UUID), g.genre
 FROM (SELECT 'Action' AS genre UNION ALL SELECT 'Fantasy') g
 WHERE NOT EXISTS (SELECT 1 FROM work_genres wg WHERE wg.work_id = CAST('00000000-0000-4000-9000-000000000001' AS UUID) AND wg.genre = g.genre);
 
+-- US-04 catalog discovery: a few series to try the filters and the search on (no chapters: no page images).
+INSERT INTO works (id, title, synopsis, work_type, status, author, demographic, cover_image_url, created_at, updated_at, version)
+SELECT CAST('00000000-0000-4000-9000-000000000011' AS UUID), 'Solo Leveling', 'Seeded locally to try catalog search and filters.', 'MANHWA', 'COMPLETED', 'Chugong', 'SHOUNEN', NULL,
+       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
+WHERE NOT EXISTS (SELECT 1 FROM works WHERE id = CAST('00000000-0000-4000-9000-000000000011' AS UUID));
+
+INSERT INTO work_genres (work_id, genre)
+SELECT CAST('00000000-0000-4000-9000-000000000011' AS UUID), g.genre
+FROM (SELECT 'Action' AS genre UNION ALL SELECT 'Fantasy') g
+WHERE NOT EXISTS (SELECT 1 FROM work_genres wg WHERE wg.work_id = CAST('00000000-0000-4000-9000-000000000011' AS UUID) AND wg.genre = g.genre);
+
+INSERT INTO works (id, title, synopsis, work_type, status, author, demographic, cover_image_url, created_at, updated_at, version)
+SELECT CAST('00000000-0000-4000-9000-000000000012' AS UUID), 'Omniscient Reader', 'Seeded locally to try catalog search and filters.', 'MANHWA', 'ONGOING', 'Sing Shong', 'SHOUNEN', NULL,
+       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
+WHERE NOT EXISTS (SELECT 1 FROM works WHERE id = CAST('00000000-0000-4000-9000-000000000012' AS UUID));
+
+INSERT INTO work_genres (work_id, genre)
+SELECT CAST('00000000-0000-4000-9000-000000000012' AS UUID), g.genre
+FROM (SELECT 'Action' AS genre UNION ALL SELECT 'Fantasy' UNION ALL SELECT 'Apocalypse') g
+WHERE NOT EXISTS (SELECT 1 FROM work_genres wg WHERE wg.work_id = CAST('00000000-0000-4000-9000-000000000012' AS UUID) AND wg.genre = g.genre);
+
+INSERT INTO works (id, title, synopsis, work_type, status, author, demographic, cover_image_url, created_at, updated_at, version)
+SELECT CAST('00000000-0000-4000-9000-000000000013' AS UUID), 'Horimiya', 'Seeded locally to try catalog search and filters.', 'MANGA', 'COMPLETED', 'HERO', 'SHOUNEN', NULL,
+       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
+WHERE NOT EXISTS (SELECT 1 FROM works WHERE id = CAST('00000000-0000-4000-9000-000000000013' AS UUID));
+
+INSERT INTO work_genres (work_id, genre)
+SELECT CAST('00000000-0000-4000-9000-000000000013' AS UUID), g.genre
+FROM (SELECT 'Romance' AS genre UNION ALL SELECT 'Comedy' UNION ALL SELECT 'Slice of Life') g
+WHERE NOT EXISTS (SELECT 1 FROM work_genres wg WHERE wg.work_id = CAST('00000000-0000-4000-9000-000000000013' AS UUID) AND wg.genre = g.genre);
+
+INSERT INTO works (id, title, synopsis, work_type, status, author, demographic, cover_image_url, created_at, updated_at, version)
+SELECT CAST('00000000-0000-4000-9000-000000000014' AS UUID), 'Berserk', 'Seeded locally to try catalog search and filters.', 'MANGA', 'HIATUS', 'Kentaro Miura', 'SEINEN', NULL,
+       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
+WHERE NOT EXISTS (SELECT 1 FROM works WHERE id = CAST('00000000-0000-4000-9000-000000000014' AS UUID));
+
+INSERT INTO work_genres (work_id, genre)
+SELECT CAST('00000000-0000-4000-9000-000000000014' AS UUID), g.genre
+FROM (SELECT 'Action' AS genre UNION ALL SELECT 'Dark Fantasy' UNION ALL SELECT 'Horror') g
+WHERE NOT EXISTS (SELECT 1 FROM work_genres wg WHERE wg.work_id = CAST('00000000-0000-4000-9000-000000000014' AS UUID) AND wg.genre = g.genre);
+
 INSERT INTO scanlation_projects (id, name, work_id, created_at, updated_at, version)
 SELECT CAST('00000000-0000-4000-9000-000000000101' AS UUID), 'Readora Demo Team', CAST('00000000-0000-4000-9000-000000000001' AS UUID),
        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0

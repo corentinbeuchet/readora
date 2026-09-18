@@ -13,6 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -64,6 +65,18 @@ class LocalSeedIntegrationTest extends AuthTestSupport {
                 .andExpect(jsonPath("$.data.name").value("Readora Demo Team"))
                 .andExpect(jsonPath("$.data.members.length()").value(6))
                 .andExpect(jsonPath("$.data.tasks.length()").value(5));
+    }
+
+    @Test
+    @DisplayName("The seeded catalog answers the US-04 searches (genres wanted/excluded, author search)")
+    void seededCatalogIsSearchable() throws Exception {
+        mockMvc.perform(get("/api/v1/works").param("genre", "Action").param("excludeGenre", "Romance").param("q", "e"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.items[*].title", hasItems("Omniscient Reader", "Berserk")))
+                .andExpect(jsonPath("$.data.items[*].title", not(hasItem("Horimiya"))));
+        mockMvc.perform(get("/api/v1/works").param("q", "miura"))
+                .andExpect(jsonPath("$.data.items[0].title").value("Berserk"))
+                .andExpect(jsonPath("$.data.items[0].demographic").value("SEINEN"));
     }
 
     private String loginAs(String username) throws Exception {

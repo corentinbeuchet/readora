@@ -22,6 +22,8 @@ Manga/comics reading and scanlation platform. Monorepo:
   e.g. `--spring.profiles.active=local`). Password for all: `readora-dev`. Emails `<username>@readora.local`:
   `reader` (free), `premium` (PREMIUM until 2099), `admin`, and the "Readora Demo Team" scanlators `leader`, `cleaner`,
   `translator`, `typesetter`, `proofreader`, `quality` (QC) with one open task per stage (chapters 1–5; QC can publish ch. 5).
+  The catalog also has four US-04 series (Solo Leveling, Omniscient Reader, Horimiya, Berserk; no chapters) to try
+  search and filters.
   Seed file: `backend/readora-infrastructure/src/main/resources/db/seed-local/R__local_seed_accounts.sql`.
   Never enabled with `production` (startup guard).
 
