@@ -32,7 +32,13 @@ describe('WorkDetailPage', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    // The ratings section (its own spec) loads with the page.
+    http.match((r) => /\/works\/[^/]+\/(ratings|reviews|rating\/mine)$/.test(r.url)).forEach((r) =>
+      r.flush({ success: true, data: r.request.url.endsWith('ratings') ? { average: 0, count: 0 } : [], error: null })
+    );
+    http.verify();
+  });
 
   it('"Continue reading" restores the saved page via ?page=N', async () => {
     await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: ['BOOKMARK_READ', 'BOOKMARK_WRITE'] }));

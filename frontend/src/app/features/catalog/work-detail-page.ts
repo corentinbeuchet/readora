@@ -9,13 +9,14 @@ import { LibraryApi } from '@app/core/api/library-api';
 import { ReadingApi } from '@app/core/api/reading-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
+import { WorkRatings } from './components/work-ratings';
 import { READING_STATUS_LABELS, ReadingStatus } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
 import { FALLBACK_COVER_IMAGE, onImageError } from '@app/core/utils/image-utils';
 
 @Component({
   selector: 'app-work-detail-page',
-  imports: [RouterLink, DatePipe, NgOptimizedImage, HasPermissionDirective],
+  imports: [RouterLink, DatePipe, NgOptimizedImage, HasPermissionDirective, WorkRatings],
   templateUrl: './work-detail-page.html',
   styleUrl: './work-detail-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -1,0 +1,85 @@
+<section class="ratings" aria-labelledby="ratings-heading">
+  <h2 id="ratings-heading">Ratings &amp; reviews</h2>
+
+  <p class="rating-summary">
+    @if (summary.hasValue() && summary.value().count > 0) {
+      <span class="score" aria-hidden="true">★</span>
+      <strong>{{ summary.value().average.toFixed(1) }}</strong>
+      <span class="muted">/ 10 from {{ summary.value().count }} {{ summary.value().count === 1 ? 'rating' : 'ratings' }}</span>
+    } @else {
+      <span class="muted">No ratings yet.</span>
+    }
+  </p>
+
+  @if (error(); as message) {
+    <p class="form-error" role="alert">{{ message }}</p>
+  }
+
+  <ng-container *appHasPermission="'RATE_WORK'">
+    <fieldset class="my-rating" [disabled]="saving()">
+      <legend>Your rating</legend>
+      <div class="score-options">
+        @for (score of scores; track score) {
+          <label class="score-option" [class.selected]="myScore() === score">
+            <input type="radio" name="my-rating" [value]="score" [checked]="myScore() === score" (change)="rate(score)" />
+            <span>{{ score }}</span>
+          </label>
+        }
+      </div>
+    </fieldset>
+
+    @if (!reviewOpen()) {
+      <button type="button" class="btn" (click)="reviewOpen.set(true)">{{ reviewModel().verdict ? 'Edit my review' : 'Write a review' }}</button>
+    } @else {
+      <form class="card form review-form" (submit)="sendReview($event)" novalidate>
+        <div class="field">
+          <label for="review-liked">What you liked</label>
+          <textarea id="review-liked" rows="3" [formField]="reviewForm.liked"></textarea>
+        </div>
+        <div class="field">
+          <label for="review-disliked">What you didn't like</label>
+          <textarea id="review-disliked" rows="3" [formField]="reviewForm.disliked"></textarea>
+        </div>
+        <div class="field">
+          <label for="review-verdict">Verdict</label>
+          <textarea id="review-verdict" rows="3" [formField]="reviewForm.verdict"
+                    [attr.aria-invalid]="errors(reviewForm.verdict).length > 0" aria-describedby="review-verdict-error"></textarea>
+          <div id="review-verdict-error" class="field-errors">
+            @for (msg of errors(reviewForm.verdict); track $index) {
+              <span class="field-error">{{ msg }}</span>
+            }
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn" (click)="reviewOpen.set(false)">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">Publish review</button>
+        </div>
+      </form>
+    }
+  </ng-container>
+
+  @if (reviews.hasValue() && reviews.value().length > 0) {
+    <ul class="review-list">
+      @for (review of reviews.value(); track review.id) {
+        <li class="card review">
+          <p class="review-header"><strong>{{ review.authorUsername }}</strong> · {{ review.score }}/10</p>
+          @if (review.liked) {
+            <p><span class="review-label">Liked:</span> {{ review.liked }}</p>
+          }
+          @if (review.disliked) {
+            <p><span class="review-label">Didn't like:</span> {{ review.disliked }}</p>
+          }
+          <p><span class="review-label">Verdict:</span> {{ review.verdict }}</p>
+          <p class="review-footer muted">
+            {{ helpfulVotes(review) }} found this helpful
+            @if (review.authorId !== myUserId()) {
+              <button *appHasPermission="'RATE_WORK'" type="button" class="btn btn-link" [disabled]="saving()" (click)="markHelpful(review)">
+                Helpful<span class="sr-only">: review by {{ review.authorUsername }}</span>
+              </button>
+            }
+          </p>
+        </li>
+      }
+    </ul>
+  }
+</section>

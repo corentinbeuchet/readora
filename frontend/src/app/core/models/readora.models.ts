@@ -145,7 +145,8 @@ export const PERMISSIONS = [
   'USER_MANAGE',
   'WORK_CREATE',
   'LIBRARY_USE',
-  'PAGE_REPORT'
+  'PAGE_REPORT',
+  'RATE_WORK'
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -285,6 +286,44 @@ export interface ChapterRead {
 export interface HistoryItem {
   work: WorkSummary;
   lastRead: ChapterRead;
+}
+
+// ---------------------------------------------------------------------------
+// Ratings & reviews (US-09)
+// ---------------------------------------------------------------------------
+
+export interface RatingSummary {
+  /** One decimal; 0 without ratings. */
+  average: number;
+  count: number;
+}
+
+export interface MyRating {
+  id: string;
+  workId: string;
+  score: number;
+  liked?: string | null;
+  disliked?: string | null;
+  verdict?: string | null;
+}
+
+export interface ReviewPayload {
+  score: number;
+  liked?: string;
+  disliked?: string;
+  verdict: string;
+}
+
+export interface WorkReview {
+  id: string;
+  authorId: string;
+  authorUsername: string;
+  score: number;
+  liked?: string | null;
+  disliked?: string | null;
+  verdict: string;
+  helpfulVotes: number;
+  updatedAt: string;
 }
 
 // ---------------------------------------------------------------------------
