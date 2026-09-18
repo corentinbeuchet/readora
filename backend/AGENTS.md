@@ -38,8 +38,13 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 ## Persistence
 - Every schema change = new Flyway migration in `readora-infrastructure/src/main/resources/db/migration`. Never edit an applied one.
 - Entity column lengths == DTO `@Size` limits == migration column sizes.
-- Aggregate entities carry `@Version`. Ordered collections carry `@OrderBy` (pages, chapters).
-- No "load everything then filter in memory"; write a query (`findByWorkIdAndStatus`). Prefer LAZY + fetch joins over EAGER.
+- Aggregate entities carry `@Version`; map `OptimisticLockException` / `ObjectOptimisticLockingFailureException` to 409.
+  Ordered collections carry `@OrderBy` (pages, chapters).
+- Every association declares `fetch = FetchType.LAZY` explicitly (`@ManyToOne`/`@OneToOne` default to EAGER); load what
+  a use case needs with `JOIN FETCH` or an entity graph. Keep `spring.jpa.open-in-view=false`.
+- `@Transactional` at the use-case boundary (see Application services), `readOnly = true` for queries; never on controllers.
+- No "load everything then filter in memory"; write a query (`findByWorkIdAndStatus`). Hot queries get a statement-count
+  assertion in tests (Hibernate statistics or datasource-proxy) to catch N+1.
 
 ## Web
 - Requests: records with Bean Validation + messages (model: `dto/RegisterRequest.java`). Validate nested lists with `@Valid`.
@@ -58,6 +63,28 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 ## Config
 - `@ConfigurationProperties` records (model: `SecurityProperties`), not `@Value`. Never a `@DefaultValue` on a secret.
 - Profile file names must match the profile: `application-{profile}.yml` with matching `on-profile`.
+
+## Java 25 language (final features only)
+- Records for value objects, commands, DTOs and events. Sealed interfaces + exhaustive pattern-matching `switch`
+  (with record patterns) for domain results/errors instead of `instanceof` chains or boolean flags.
+- `_` for unused lambda params / catch variables / pattern components (JEP 456).
+- Sequenced collections: `list.getFirst()` / `getLast()` / `reversed()` instead of index arithmetic.
+- Flexible constructor bodies (JEP 513): validate arguments before `super(...)` / `this(...)`.
+- `ScopedValue` (final in 25) instead of `ThreadLocal` for per-request context.
+- **No preview features** (no `--enable-preview`): structured concurrency, stable values / `LazyConstant`,
+  primitive patterns. Don't use module imports or compact source files in application code.
+
+## Spring Boot 4 / Framework 7 / Security 7
+- Null safety: JSpecify `@NullMarked` in each package's `package-info.java`, `@Nullable` only where null is legal.
+  New packages start null-marked; existing ones migrate module by module (domain first).
+- Errors are RFC 9457 `ProblemDetail` (`spring.mvc.problemdetails.enabled=true`, off by default).
+- Outbound HTTP: `RestClient` or `@HttpExchange` interfaces registered with `@ImportHttpServices`; never `RestTemplate`.
+- Resilience from Framework 7 core: `@Retryable` / `@ConcurrencyLimit` (enable with `@EnableResilientMethods`) on
+  infrastructure adapters calling S3/Stripe — never retry inside a DB transaction; only retry idempotent calls.
+- Jackson 3 only (`tools.jackson.*` packages, `JsonMapper`); no `com.fasterxml.jackson.databind` imports.
+- Security 7: lambda DSL only, `authorizeHttpRequests`, `PathPatternRequestMatcher`; no `.and()`, no Ant/MVC matchers.
+- Starters are modular: every technology needs its own `spring-boot-starter-*` (e.g. `spring-boot-starter-flyway`).
+- Fix deprecation warnings when you see them: Boot 4.1 removed what 4.0 deprecated.
 
 ## Documentation comments (Java 23+ Markdown, JEP 467)
 - Write doc comments as `///` Markdown lines, never `/** */`. Every line of the comment starts with `///`,
@@ -81,12 +108,15 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 - Web integration tests go through real HTTP and real auth (`AuthTestSupport`); assert JSON error bodies and status codes.
 - Fakes must behave like real adapters: `save` returns a **new** instance (otherwise event bugs are hidden).
 - Every state transition and authorization rule gets a test, including the negative case (wrong stage, wrong user, wrong role).
-- Schema/entity alignment must be tested with Flyway enabled (Testcontainers Postgres preferred).
+- Schema/entity alignment must be tested with Flyway enabled: Testcontainers 2
+  (`org.testcontainers.postgresql.PostgreSQLContainer`) + `@ServiceConnection`.
+- Boot 4 test APIs: `@MockitoBean` / `@MockitoSpyBean` (never `@MockBean`), `@AutoConfigureMockMvc` explicitly,
+  `MockMvcTester` or `RestTestClient` for new web tests.
 
 ## Known pitfalls found in review (2026-09) — don't reintroduce
 Backlog ids used in commit `Refs:` (status: `git log --grep "review-2026-09/B<n>"`).
 - B1 `application-prod.yml` guarded by `on-profile: production` → never loaded; dev JWT secret default in `application.yml`. — fixed 61ef652
-- B2 `/storage/presigned-url` lets any authenticated user choose bucket, key and duration.
+- B2 `/storage/presigned-url` lets any authenticated user choose bucket, key and duration. — fixed 9ffff17
 - B3 Direct publish without project-membership check (IDOR).
 - B4 Publish-from-QC without `stage == QC_REVIEW` guard; `Chapter.publish` re-publishable.
 - B5 `saved.pollDomainEvents()` in `ScanlationTaskService` / `ReaderSocialService` drops events.
@@ -99,3 +129,9 @@ Backlog ids used in commit `Refs:` (status: `git log --grep "review-2026-09/B<n>
 - B12 Refresh-token reuse undetected; no expired-token cleanup; no issuer check; no rate limit; Swagger public in prod.
 - B13 Layer leaks: controllers → out-ports, web → infrastructure, `UserId` in `domain.work`; missing ArchUnit rules.
 - B14 Tests: web tests skip Flyway; fakes return same instance; CI runs `mvn test` not `verify`.
+
+Improvements from best-practice research (2026-09), not bugs:
+- B15 Virtual threads: `spring.threads.virtual.enabled=true`, sized against the Hikari pool; `@ConcurrencyLimit` on scarce resources.
+- B16 Observability: `spring-boot-starter-opentelemetry` (OTLP metrics + traces).
+- B17 JSpecify `@NullMarked` + NullAway (Error Prone) build check, module by module starting with `readora-domain`.
+- B18 Optional: Spring Framework 7 API versioning (`spring.mvc.apiversion.*`) if `/api/v1` needs a successor.

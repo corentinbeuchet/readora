@@ -1,13 +1,21 @@
 # Frontend conventions (Angular 22, standalone, zoneless, signals, SSR)
 
 ## Components
-- Standalone, `changeDetection: ChangeDetectionStrategy.OnPush`, zoneless (no zone.js, no `provideZoneChangeDetection`).
-- Dependencies via `inject()` in fields: `private readonly api = inject(CatalogApi);`
-- Members used only by the template are **`private readonly`** (Angular 22 templates can read private members).
-  Use `protected`/public only when a subclass, parent, or directive API genuinely needs it.
-  (Existing code still has `protected` in many places — migrate opportunistically, don't copy it.)
-- `input()` / `input.required()` / `model()` / `output()`; never `@Input`/`@Output` decorators.
-- `templateUrl` + `styleUrl`. No inline `styles:` blocks, no `CommonModule`, no `FormsModule`/`ngModel`.
+- Standalone and OnPush are the Angular 22 defaults: don't write `standalone: true` and don't add `changeDetection`
+  (existing explicit `OnPush` is harmless, leave it). Zoneless: no zone.js, no `provideZoneChangeDetection`,
+  no `NgZone.onStable` — use `afterNextRender()` / `afterEveryRender()`.
+- Dependencies via `inject()` in fields: `private readonly api = inject(CatalogApi);` (never constructor injection).
+- Template visibility (user rule, version-gated):
+  - **Now (Angular 22.1.x installed):** members read by the template are `protected readonly`. `private` members in
+    templates do **not** compile before 22.2.
+  - **From stable Angular 22.2** (compiler PR #70188): template-only members become `private readonly` (tracked as F18).
+  - Truly internal state: `private` or `#field`. Public only for the component's API (inputs/outputs/methods others call).
+- `input()` / `input.required()` / `model()` / `output()`; never `@Input`/`@Output` decorators. Mark them `readonly`.
+- Host bindings/listeners in the `host: {}` metadata object, never `@HostBinding` / `@HostListener`.
+- `[class.x]` / `[style.x]` bindings, never `ngClass` / `ngStyle`. No `CommonModule`, no `FormsModule`/`ngModel`.
+- `templateUrl` + `styleUrl` (relative paths). No inline `styles:` blocks.
+- Order members: injected deps, inputs/models/outputs, queries, then state and methods. Name handlers for what they do
+  (`saveProfile()`, not `handleClick()`).
 
 ## State
 - Signal stores: private writable signal, public readonly view, derived via `computed` (model: `core/auth/auth-store.ts`):
@@ -18,6 +26,10 @@
   ```
 - Name stores `*Store` in `*-store.ts`. Only app-wide state is `providedIn: 'root'`; page-scoped state is provided on the
   route/component so it resets on navigation (the root-scoped `ScanlationState` shows stale data — don't copy).
+- New singleton services use the Angular 22 `@Service()` decorator (root-provided, `inject()`-only) instead of
+  `@Injectable({ providedIn: 'root' })`; existing ones migrate under F22.
+- Derived read-only state → `computed()`; derived but locally overridable state → `linkedSignal()`. Never `mutate`,
+  only `set` / `update`. Keep transformations pure.
 - Inside `effect`, wrap writes/reads you don't want tracked in `untracked(...)`. Check `resource.hasValue()` before `value()`.
 - Effects that seed form models must not overwrite in-progress user edits.
 
@@ -26,12 +38,16 @@
 - Reads: `httpResource` factories on the API service, fed by signals; return `undefined` URL to keep the resource idle:
   ```ts
   readonly workId = input.required<string>();            // route param via withComponentInputBinding
-  private readonly work = this.catalogApi.workResource(this.workId);
+  protected readonly work = this.catalogApi.workResource(this.workId);   // read by the template
   ```
   Resource `parse` must surface `success: false` as an error, not silently return `[]`.
 - Writes: `await firstValueFrom(this.api.x(...))` — never `new Promise(res => obs.subscribe(...))`.
 - User-facing error text via `apiErrorMessage(err)` (`features/auth/auth-form.utils.ts`). No `console.error` as handling.
 - Multi-step flows (upload/publish) must be retry-safe: reuse already-created entities, mark failed items, surface errors.
+- `HttpClient` uses the fetch backend by default in v22: don't add `withFetch()` (deprecated). Upload progress needs
+  `provideHttpClient(withXhr())` + `reportUploadProgress: true` (`reportProgress` is deprecated).
+- SSR transfer cache: exclude user-specific endpoints with `withHttpTransferCacheOptions({ filter })`; never include
+  auth headers in cached keys.
 
 ## RxJS
 - Only at the HTTP edge and for genuine streams (debounce). Manual subscriptions use `takeUntilDestroyed(this.destroyRef)`.
@@ -46,6 +62,12 @@
 - Every `<label>` has a control; custom radios/toggles need `role`, `aria-checked/pressed`, and keyboard handlers;
   dialogs need focus trap, Escape, initial focus and focus return; hover-only controls must also show on `:focus-visible`.
 - Use global styles `.field`, `.form-error`, `.sr-only` — no Bootstrap-style classes, no per-component `.visually-hidden`.
+- Every page must pass AXE checks and WCAG 2.2 AA (focus management, contrast, ARIA).
+- Images: `NgOptimizedImage` (`ngSrc`, `width`/`height` or `fill`, `priority` on the LCP image such as the first
+  cover or first reader page). Not for inline base64 images.
+- `@defer` heavy or below-the-fold UI (comments, kanban modal, upload studio widgets) with an `@placeholder`;
+  never defer what is visible in the initial viewport (layout shift). Deferred deps must be standalone and not
+  imported elsewhere in the file. Tests use `DeferBlockBehavior.Manual`.
 
 ## Routing & auth
 - Every route uses `loadComponent`. Permissions in route data: `canActivate: [permissionGuard], data: { permission: 'PROJECT_VIEW' }`.
@@ -56,8 +78,17 @@
   (Stripe) must check the host. Never send the user's identity in request bodies.
 
 ## SSR
-- No direct `window`, `document`, `localStorage`. Use `inject(DOCUMENT)` and `DOCUMENT.defaultView?`.
-- App initializers must be server-safe (`isPlatformServer` → skip) and have a `timeout()`.
+- No direct `window`, `document`, `navigator`, `localStorage`. Use `inject(DOCUMENT)` / `DOCUMENT.defaultView?`, and
+  run browser-only work in `afterNextRender()`. Prefer platform-specific providers over `isPlatformBrowser`; never
+  branch on platform inside templates (hydration mismatch).
+- App initializers must be server-safe (skip on the server) and have a `timeout()`. Async server work that must finish
+  before render is registered with `PendingTasks`.
+- `getPrerenderParams` calls `inject()` before any `await`.
+- Hydration: `provideClientHydration(withEventReplay())` — incremental hydration is on by default in v22; use
+  `@defer (hydrate on viewport|interaction)` for heavy prerendered sections.
+- Security: `security.allowedHosts` (or `NG_ALLOWED_HOSTS`) set for SSR; CSP via `autoCsp` / per-request nonce; keep
+  Trusted Types compatible; build `SafeValue`s as close to the input as possible and never bypass sanitization on
+  user content.
 - Browser side effects go behind an overridable method (model: `plans-page.ts` `protected redirectTo(url)`).
 
 ## Browser resources
@@ -100,3 +131,12 @@ Backlog ids used in commit `Refs:` (status: `git log --grep "review-2026-09/F<n>
 - F15 Eager routes (`ChapterViewer`, `KanbanBoard`).
 - F16 Low: shell double navigation; Stripe redirect host unchecked; unused `proxy.conf.json`; POSIX env in `e2e:staging`.
 - F17 Tests: upload happy-path only; real timers; placeholder e2e; e2e not on SSR build; `tests/**` not linted.
+
+Improvements from best-practice research (2026-09), not bugs:
+- F18 Upgrade to stable Angular 22.2, then switch template-only members from `protected` to `private` (~106 today).
+- F19 Remove `withFetch()` (`app.config.ts`); upload progress via `withXhr()` + `reportUploadProgress`.
+- F20 `NgOptimizedImage` for covers and reader pages (none today; also fixes reader layout shift from F13).
+- F21 `@defer` the comments section and the kanban modal.
+- F22 Migrate the 14 `@Injectable` root services to `@Service()` (check angular-eslint for a `prefer-service-decorator` rule).
+- F23 `autoCsp` + `security.allowedHosts` for SSR.
+- F24 Axe accessibility assertions in Playwright e2e (`@axe-core/playwright`).
