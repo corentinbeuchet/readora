@@ -31,6 +31,10 @@ import { ReaderState } from '../services/reader-state';
 import { ReaderPreferencesStore, ReadingDirection, ViewMode } from '../services/reader-preferences-store';
 
 export const PROGRESS_SYNC_DEBOUNCE_MS = 800;
+/** Pages downloaded ahead of the current one in paged mode. */
+export const PRELOADED_PAGES = 2;
+/** Minimum horizontal travel (px) for a touch swipe to turn the page. */
+const SWIPE_THRESHOLD_PX = 50;
 
 interface ProgressUpdate {
   workId: string;
@@ -52,7 +56,8 @@ function pageParamToIndex(raw: string | number | null | undefined): number | nul
   imports: [RouterLink, NgOptimizedImage, Toolbar, ToolbarWidget, ToolbarWidgetGroup, HasPermissionDirective, ChapterComments],
   templateUrl: './chapter-viewer.html',
   styleUrl: './chapter-viewer.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(document:keydown)': 'onKeydown($event)' }
 })
 export class ChapterViewer {
   readonly state = inject(ReaderState);
@@ -84,6 +89,25 @@ export class ChapterViewer {
   private readonly canTrackReading = computed(() => this.auth.can('LIBRARY_USE'));
   /** What was already sent for the current chapter: once on open, once when the last page is reached. */
   private recorded: { chapterId: string; finished: boolean } | null = null;
+
+  /** Paged mode reads right to left: arrows, swipes and click zones are mirrored. */
+  protected readonly rightToLeftPages = computed(() => this.state.viewMode() === 'PAGED' && this.state.direction() === 'RTL');
+  protected readonly progressPercent = computed(() => {
+    const total = this.state.totalPages();
+    return total === 0 ? 0 : Math.round(((this.state.currentPageIndex() + 1) / total) * 100);
+  });
+  /** Next pages to preload (paged mode; vertical mode lets the browser lazy-load as the reader scrolls). */
+  protected readonly upcomingPages = computed(() => {
+    const chapter = this.state.currentChapter();
+    if (!chapter || this.state.viewMode() !== 'PAGED') {
+      return [];
+    }
+    const from = this.state.currentPageIndex() + 1;
+    return chapter.pages.slice(from, from + PRELOADED_PAGES).filter((page) => !!page.cdnUrl);
+  });
+  private swipeStart: { x: number; y: number } | null = null;
+  /** A swipe also ends with a click on a turn zone: that click must not turn a second page. */
+  private swiped = false;
 
   /**
    * Saved layouts live in the browser: they are applied only after hydration, so the prerendered HTML
@@ -246,6 +270,90 @@ export class ChapterViewer {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe();
+  }
+
+  /**
+   * Paged mode keys: arrows follow the reading direction, Space / Page Down go forward, Shift+Space / Page Up back.
+   * Ignored while typing in a field or when a modifier is held (browser shortcuts); vertical mode scrolls natively.
+   */
+  protected onKeydown(event: KeyboardEvent): void {
+    if (this.state.viewMode() !== 'PAGED' || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) {
+      return;
+    }
+    const target = event.target as HTMLElement | null;
+    if (target?.closest?.('input, textarea, select, [contenteditable="true"], [role="dialog"]')) {
+      return;
+    }
+    const rtl = this.state.direction() === 'RTL';
+    let forward: boolean;
+    switch (event.key) {
+      case 'ArrowRight':
+        forward = !rtl;
+        break;
+      case 'ArrowLeft':
+        forward = rtl;
+        break;
+      case ' ':
+        forward = !event.shiftKey;
+        break;
+      case 'PageDown':
+        forward = true;
+        break;
+      case 'PageUp':
+        forward = false;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    this.turn(forward);
+  }
+
+  /** Click zones: the side the next page is on depends on the reading direction. */
+  protected turnFromSide(side: 'left' | 'right'): void {
+    if (this.swiped) {
+      this.swiped = false;
+      return;
+    }
+    this.turn((side === 'right') !== (this.state.direction() === 'RTL'));
+  }
+
+  protected onPointerDown(event: PointerEvent): void {
+    this.swipeStart = { x: event.clientX, y: event.clientY };
+    this.swiped = false;
+  }
+
+  /** Swiping left brings the page on the right (next page left-to-right, previous page right-to-left). */
+  protected onPointerUp(event: PointerEvent): void {
+    const start = this.swipeStart;
+    this.swipeStart = null;
+    if (!start) {
+      return;
+    }
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    if (Math.abs(dx) < SWIPE_THRESHOLD_PX || Math.abs(dx) < Math.abs(dy)) {
+      return;
+    }
+    this.swiped = true;
+    this.turn((dx < 0) !== (this.state.direction() === 'RTL'));
+  }
+
+  /** Range input: 1-based page number. Vertical mode scrolls to the page. */
+  protected jumpToPage(event: Event): void {
+    const index = Number((event.target as HTMLInputElement).value) - 1;
+    this.state.goToPage(index);
+    if (this.state.viewMode() === 'VERTICAL') {
+      this.pageWrappers()[index]?.nativeElement.scrollIntoView?.({ block: 'start' });
+    }
+  }
+
+  private turn(forward: boolean): void {
+    if (forward) {
+      this.state.nextPage();
+    } else {
+      this.state.previousPage();
+    }
   }
 
   /** Switches view mode, keeping the current page, and remembers it for this series. */

@@ -12,6 +12,9 @@
     <!-- Toolbar Controls -->
     <header class="viewer-toolbar">
       <div class="chapter-info">
+        @if (state.currentChapter()?.work; as work) {
+          <a class="series-link" [routerLink]="['/works', work.id]">{{ work.title }}</a>
+        }
         <h1 class="chapter-title">{{ state.currentChapter()?.title || 'No Chapter Loaded' }}</h1>
         <span class="page-indicator" aria-live="polite">
           Page {{ state.currentPageIndex() + 1 }} / {{ state.totalPages() }}
@@ -47,6 +50,23 @@
         </div>
       </div>
     </header>
+
+    <div class="progress-row">
+      <label class="sr-only" for="page-jump">Go to page</label>
+      <!-- Fills from the right in right-to-left reading, like the pages. -->
+      <input
+        id="page-jump"
+        class="page-progress"
+        type="range"
+        min="1"
+        [max]="state.totalPages() || 1"
+        [value]="state.currentPageIndex() + 1"
+        [attr.dir]="rightToLeftPages() ? 'rtl' : 'ltr'"
+        [attr.aria-valuetext]="'Page ' + (state.currentPageIndex() + 1) + ' of ' + state.totalPages()"
+        (input)="jumpToPage($event)"
+      />
+      <span class="progress-percent" aria-hidden="true">{{ progressPercent() }}%</span>
+    </div>
 
     <p class="sync-hint muted">
       <ng-container *appHasPermission="'BOOKMARK_WRITE'; else upsell">
@@ -87,6 +107,8 @@
         </div>
       } @else {
         <div class="paged-flow">
+          <!-- Swipe to turn pages on touch screens (the buttons below are the accessible equivalent). -->
+          <div class="page-stage" (pointerdown)="onPointerDown($event)" (pointerup)="onPointerUp($event)">
           @if (state.currentPage(); as current) {
             <!-- Keyed by page number: each page gets a fresh <img>. NgOptimizedImage forbids changing
                  width/height on an existing image (NG02953), and pages have different sizes. -->
@@ -106,6 +128,17 @@
               }
             }
           }
+            <!-- Click the left or right third to turn the page: a mouse shortcut for the buttons below, so hidden
+                 from assistive tech and not a tab stop. -->
+            <button type="button" class="turn-zone turn-zone-left" tabindex="-1" aria-hidden="true" (click)="turnFromSide('left')"></button>
+            <button type="button" class="turn-zone turn-zone-right" tabindex="-1" aria-hidden="true" (click)="turnFromSide('right')"></button>
+          </div>
+          <!-- The next pages download while the current one is read, so turning is instant (hidden images still load). -->
+          <div class="preload" hidden>
+            @for (page of upcomingPages(); track page.pageNumber) {
+              <img class="preloaded-page" [src]="page.cdnUrl" alt="" decoding="async" />
+            }
+          </div>
           <!-- Buttons sit on the side the page turns to: in right-to-left reading "Next" is on the left. -->
           <nav class="paged-nav" aria-label="Page navigation">
             @if (state.direction() === 'RTL') {
@@ -129,6 +162,24 @@
     </div>
 
     @if (state.currentChapter(); as current) {
+      @if (state.viewMode() === 'VERTICAL' || state.isLastPage()) {
+        <nav class="chapter-end" aria-label="Chapter navigation">
+          <p class="chapter-end-title">End of chapter {{ current.chapterNumber }}</p>
+          <div class="chapter-end-actions">
+            @if (current.previousChapterId) {
+              <a class="btn" [routerLink]="['/read', current.previousChapterId]">Previous chapter</a>
+            }
+            <a class="btn" [routerLink]="['/works', current.workId]" fragment="chapters">Chapter list</a>
+            @if (current.nextChapterId) {
+              <a class="btn btn-primary" [routerLink]="['/read', current.nextChapterId]">Next chapter</a>
+            }
+          </div>
+          @if (!current.nextChapterId) {
+            <p class="muted">You're up to date: no newer chapter yet.</p>
+          }
+        </nav>
+      }
+
       <!-- Below the pages: load the comments code and data only when the reader gets there. -->
       @defer (on viewport) {
         <app-chapter-comments [chapterId]="current.id" />

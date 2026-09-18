@@ -109,6 +109,22 @@ describe('ChapterViewer (API-driven)', () => {
     return { ...MOCK_CHAPTER, id, workId, work: { id: workId, title: workId, type } };
   }
 
+  function press(key: string, init: KeyboardEventInit = {}, target: EventTarget = document.body): KeyboardEvent {
+    const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init });
+    target.dispatchEvent(event);
+    fixture.detectChanges();
+    return event;
+  }
+
+  /** A horizontal drag on the page: negative = finger moves left. Ends with the click a real tap produces. */
+  function swipe(dx: number): void {
+    const stage: HTMLElement = fixture.nativeElement.querySelector('.page-stage');
+    stage.dispatchEvent(new MouseEvent('pointerdown', { clientX: 200, clientY: 300, bubbles: true }));
+    stage.dispatchEvent(new MouseEvent('pointerup', { clientX: 200 + dx, clientY: 305, bubbles: true }));
+    fixture.nativeElement.querySelector(dx < 0 ? '.turn-zone-left' : '.turn-zone-right').click();
+    fixture.detectChanges();
+  }
+
   const navButtons = (): string[] =>
     Array.from(fixture.nativeElement.querySelectorAll('.paged-nav button') as NodeListOf<HTMLButtonElement>).map((b) => b.textContent!.trim());
 
@@ -341,8 +357,13 @@ describe('ChapterViewer (API-driven)', () => {
 
     expect(toolbarButton('Right to left').getAttribute('aria-pressed')).toBe('true');
     expect(navButtons()).toEqual(['← Next', 'Prev →']);
-    click('button.btn-next');
+    press('ArrowLeft');
     expect(stateService.currentPageIndex()).toBe(1);
+    press('ArrowRight');
+    expect(stateService.currentPageIndex()).toBe(0);
+    swipe(+120);
+    expect(stateService.currentPageIndex()).toBe(1);
+    expect(fixture.nativeElement.querySelector('#page-jump').getAttribute('dir')).toBe('rtl');
   });
 
   it('The reader opens in the right mode for the format', async () => {
@@ -369,6 +390,100 @@ describe('ChapterViewer (API-driven)', () => {
     expect(stateService.viewMode()).toBe('VERTICAL');
     await loadChapter(undefined, chapterOf('sl-2', 'solo-leveling', 'MANHWA'));
     expect(stateService.viewMode()).toBe('PAGED');
+  });
+
+  it('Turning pages with the keyboard or a click', async () => {
+    const long: Chapter = { ...MOCK_CHAPTER, pages: [1, 2, 3, 4, 5, 6].map((n) => ({ pageNumber: n, storageKey: `p${n}`, cdnUrl: `https://cdn.readora.com/p${n}.webp` })) };
+    await loadChapter(undefined, long);
+    await switchMode('Paged');
+
+    expect(press('ArrowRight').defaultPrevented).toBe(true);
+    press(' ');
+    press('PageDown');
+    expect(stateService.currentPageIndex()).toBe(3);
+    press('PageUp');
+    press(' ', { shiftKey: true });
+    expect(stateService.currentPageIndex()).toBe(1);
+
+    fixture.nativeElement.querySelector('.turn-zone-right').click();
+    expect(stateService.currentPageIndex()).toBe(2);
+    fixture.nativeElement.querySelector('.turn-zone-left').click();
+    expect(stateService.currentPageIndex()).toBe(1);
+    swipe(-120);
+    expect(stateService.currentPageIndex()).toBe(2);
+    swipe(-20); // too short: a tap on the left zone, which goes back
+    expect(stateService.currentPageIndex()).toBe(1);
+  });
+
+  it('keys are ignored while typing, with modifiers, and in vertical mode', async () => {
+    await loadChapter();
+    press('ArrowRight');
+    expect(stateService.currentPageIndex()).toBe(0);
+
+    await switchMode('Paged');
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    expect(press('ArrowRight', {}, input).defaultPrevented).toBe(false);
+    press('ArrowRight', { ctrlKey: true });
+    expect(stateService.currentPageIndex()).toBe(0);
+    input.remove();
+  });
+
+  it('Pages turn instantly', async () => {
+    const long: Chapter = { ...MOCK_CHAPTER, pages: [1, 2, 3, 4, 5, 6].map((n) => ({ pageNumber: n, storageKey: `p${n}`, cdnUrl: `https://cdn.readora.com/p${n}.webp` })) };
+    await loadChapter('3', long);
+    await switchMode('Paged');
+
+    const preloaded = (): string[] =>
+      Array.from(fixture.nativeElement.querySelectorAll('.preload img') as NodeListOf<HTMLImageElement>).map((img) => img.getAttribute('src')!);
+    expect(preloaded()).toEqual(['https://cdn.readora.com/p4.webp', 'https://cdn.readora.com/p5.webp']);
+
+    click('button.btn-next');
+    expect(fixture.nativeElement.querySelector('img.active-page').getAttribute('src')).toContain('p4.webp');
+    expect(preloaded()).toEqual(['https://cdn.readora.com/p5.webp', 'https://cdn.readora.com/p6.webp']);
+  });
+
+  it('Seeing where I am and jumping to a page', async () => {
+    const twenty: Chapter = {
+      ...MOCK_CHAPTER,
+      pages: Array.from({ length: 20 }, (_, i) => ({ pageNumber: i + 1, storageKey: `p${i + 1}`, cdnUrl: `https://cdn.readora.com/p${i + 1}.webp` }))
+    };
+    await loadChapter('8', twenty);
+
+    const bar: HTMLInputElement = fixture.nativeElement.querySelector('#page-jump');
+    expect(fixture.nativeElement.querySelector('.progress-percent').textContent.trim()).toBe('40%');
+    expect(bar.getAttribute('aria-valuetext')).toBe('Page 8 of 20');
+
+    bar.value = '20';
+    bar.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(stateService.currentPageIndex()).toBe(19);
+    expect(fixture.nativeElement.querySelector('.progress-percent').textContent.trim()).toBe('100%');
+  });
+
+  it('shows previous / next chapter and the chapter list at the end of a chapter', async () => {
+    const middle: Chapter = { ...chapterOf('sl-5', 'solo-leveling', 'MANHWA'), chapterNumber: '5', previousChapterId: 'sl-4', nextChapterId: 'sl-6' };
+    await loadChapter(undefined, middle);
+    await switchMode('Paged');
+    expect(fixture.nativeElement.querySelector('.chapter-end')).toBeNull();
+
+    click('button.btn-next');
+    click('button.btn-next');
+    const links = Array.from(fixture.nativeElement.querySelectorAll('.chapter-end a') as NodeListOf<HTMLAnchorElement>).map((a) => [
+      a.textContent!.trim(),
+      a.getAttribute('href')
+    ]);
+    expect(links).toEqual([
+      ['Previous chapter', '/read/sl-4'],
+      ['Chapter list', '/works/solo-leveling#chapters'],
+      ['Next chapter', '/read/sl-6']
+    ]);
+
+    const latest: Chapter = { ...middle, id: 'sl-6', chapterNumber: '6', previousChapterId: 'sl-5', nextChapterId: null };
+    await loadChapter(undefined, latest);
+    await switchMode('Vertical');
+    expect(fixture.nativeElement.querySelector('.chapter-end').textContent).toContain("You're up to date");
   });
 
   it('records the visit, then the finish, for the reading history (free readers with LIBRARY_USE)', async () => {

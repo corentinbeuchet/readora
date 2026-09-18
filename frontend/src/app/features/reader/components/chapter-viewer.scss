@@ -121,3 +121,78 @@
   display: flex;
   gap: 1rem;
 }
+
+.series-link {
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
+.progress-row {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.page-progress {
+  flex: 1;
+  accent-color: var(--accent);
+  height: 0.35rem;
+  cursor: pointer;
+}
+
+.progress-percent {
+  font-size: 0.8rem;
+  color: var(--muted);
+  min-width: 2.5rem;
+  text-align: right;
+}
+
+.page-stage {
+  position: relative;
+  touch-action: pan-y pinch-zoom;
+}
+
+.turn-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 33%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.turn-zone-left {
+  left: 0;
+}
+
+.turn-zone-right {
+  right: 0;
+}
+
+.chapter-end {
+  width: 100%;
+  max-width: 900px;
+  margin: 1rem 0 2rem;
+  padding: 1.25rem;
+  text-align: center;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+}
+
+.chapter-end-title {
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.chapter-end-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
