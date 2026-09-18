@@ -4,6 +4,7 @@ import {
   DOCUMENT,
   DestroyRef,
   ElementRef,
+  afterNextRender,
   afterRenderEffect,
   computed,
   effect,
@@ -27,6 +28,7 @@ import { SeoService } from '@app/core/seo/seo.service';
 import { ChapterComments } from '@app/features/social/components/chapter-comments';
 import { FALLBACK_PAGE_IMAGE, onImageError } from '@app/core/utils/image-utils';
 import { ReaderState } from '../services/reader-state';
+import { ReaderPreferencesStore, ReadingDirection, ViewMode } from '../services/reader-preferences-store';
 
 export const PROGRESS_SYNC_DEBOUNCE_MS = 800;
 
@@ -54,6 +56,7 @@ function pageParamToIndex(raw: string | number | null | undefined): number | nul
 })
 export class ChapterViewer {
   readonly state = inject(ReaderState);
+  protected readonly prefs = inject(ReaderPreferencesStore);
   protected readonly auth = inject(AuthStore);
   protected readonly fallbackPage = FALLBACK_PAGE_IMAGE;
   protected readonly handlePageError = onImageError;
@@ -81,6 +84,14 @@ export class ChapterViewer {
   private readonly canTrackReading = computed(() => this.auth.can('LIBRARY_USE'));
   /** What was already sent for the current chapter: once on open, once when the last page is reached. */
   private recorded: { chapterId: string; finished: boolean } | null = null;
+
+  /**
+   * Saved layouts live in the browser: they are applied only after hydration, so the prerendered HTML
+   * (default layout) and the first client render match.
+   */
+  private readonly hydrated = signal(false);
+  /** Chapter whose series layout was already applied (the reader may change it afterwards). */
+  private layoutAppliedFor: string | null = null;
 
   private readonly progress$ = new Subject<ProgressUpdate>();
   /**
@@ -117,6 +128,22 @@ export class ChapterViewer {
           });
         });
       }
+    });
+
+    afterNextRender(() => this.hydrated.set(true));
+
+    // Open each chapter in its series' layout: the one the reader chose, or the default for the format.
+    effect(() => {
+      const current = this.state.currentChapter();
+      if (!current || !this.hydrated() || this.layoutAppliedFor === current.id) {
+        return;
+      }
+      this.layoutAppliedFor = current.id;
+      untracked(() => {
+        const layout = this.prefs.layoutFor(current.workId, current.work?.type);
+        this.applyViewMode(layout.mode);
+        this.state.setDirection(layout.direction);
+      });
     });
 
     // Reading history and read markers: record the visit, then the finish.
@@ -221,8 +248,20 @@ export class ChapterViewer {
       .subscribe();
   }
 
-  /** Switches view mode, keeping the current page (vertical mode scrolls back to it). */
-  protected setViewMode(mode: 'VERTICAL' | 'PAGED'): void {
+  /** Switches view mode, keeping the current page, and remembers it for this series. */
+  protected setViewMode(mode: ViewMode): void {
+    this.applyViewMode(mode);
+    this.rememberLayout();
+  }
+
+  /** Paged mode only: which side the next page is on. Remembered for this series. */
+  protected setDirection(direction: ReadingDirection): void {
+    this.state.setDirection(direction);
+    this.rememberLayout();
+  }
+
+  /** Changes the mode without saving it (vertical mode scrolls back to the current page). */
+  private applyViewMode(mode: ViewMode): void {
     if (mode === this.state.viewMode()) {
       return;
     }
@@ -230,6 +269,13 @@ export class ChapterViewer {
       this.pendingScrollIndex = this.state.currentPageIndex();
     }
     this.state.setViewMode(mode);
+  }
+
+  private rememberLayout(): void {
+    const current = this.state.currentChapter();
+    if (current) {
+      this.prefs.saveLayout(current.workId, { mode: this.state.viewMode(), direction: this.state.direction() });
+    }
   }
 
   zoomIn(): void {

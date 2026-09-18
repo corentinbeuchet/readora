@@ -89,20 +89,28 @@ describe('ChapterViewer (API-driven)', () => {
 
   /** Renders the viewer for `read/:chapterId[?page=N]`, answering the chapter + comments requests. */
   async function loadChapter(page?: string, chapter: Chapter = MOCK_CHAPTER): Promise<void> {
-    fixture.componentRef.setInput('chapterId', MOCK_CHAPTER.id);
+    fixture.componentRef.setInput('chapterId', chapter.id);
     if (page !== undefined) {
       fixture.componentRef.setInput('page', page);
     }
     await settle(fixture);
 
-    const req = http.expectOne(chapterUrl);
+    const req = http.expectOne((r) => r.url === `${API}/chapters/${chapter.id}`);
     expect(req.request.method).toBe('GET');
     req.flush({ success: true, data: chapter, error: null });
     await settle(fixture);
 
-    http.match(commentsUrl).forEach((r) => r.flush({ success: true, data: [], error: null }));
+    http.match(`${API}/comments/chapter/${chapter.id}`).forEach((r) => r.flush({ success: true, data: [], error: null }));
     await settle(fixture);
   }
+
+  /** A chapter of a given series and format, as the reader endpoint returns it. */
+  function chapterOf(id: string, workId: string, type: 'MANGA' | 'MANHWA' | 'COMIC'): Chapter {
+    return { ...MOCK_CHAPTER, id, workId, work: { id: workId, title: workId, type } };
+  }
+
+  const navButtons = (): string[] =>
+    Array.from(fixture.nativeElement.querySelectorAll('.paged-nav button') as NodeListOf<HTMLButtonElement>).map((b) => b.textContent!.trim());
 
   /** From here on, time only moves when the test says so (debounce assertions). */
   function freezeTime(): void {
@@ -321,6 +329,46 @@ describe('ChapterViewer (API-driven)', () => {
     expect(fixture.nativeElement.querySelector('app-chapter-comments')).not.toBeNull();
     http.expectOne(commentsUrl).flush({ success: true, data: [], error: null });
     await settle(fixture);
+  });
+
+  it('Reading manga right to left', async () => {
+    await loadChapter(undefined, chapterOf('sl-1', 'solo-leveling', 'MANHWA'));
+    await switchMode('Paged');
+    expect(navButtons()).toEqual(['← Prev', 'Next →']);
+
+    toolbarButton('Right to left').click();
+    await settle(fixture);
+
+    expect(toolbarButton('Right to left').getAttribute('aria-pressed')).toBe('true');
+    expect(navButtons()).toEqual(['← Next', 'Prev →']);
+    click('button.btn-next');
+    expect(stateService.currentPageIndex()).toBe(1);
+  });
+
+  it('The reader opens in the right mode for the format', async () => {
+    await loadChapter(undefined, chapterOf('sl-1', 'solo-leveling', 'MANHWA'));
+    expect(stateService.viewMode()).toBe('VERTICAL');
+
+    await loadChapter(undefined, chapterOf('op-1', 'one-piece', 'MANGA'));
+    expect(stateService.viewMode()).toBe('PAGED');
+    expect(stateService.direction()).toBe('RTL');
+    expect(navButtons()).toEqual(['← Next', 'Prev →']);
+  });
+
+  it('The reader remembers my mode for each series', async () => {
+    await loadChapter(undefined, chapterOf('op-1', 'one-piece', 'MANGA'));
+    await switchMode('Vertical');
+
+    await loadChapter(undefined, chapterOf('op-2', 'one-piece', 'MANGA'));
+    expect(stateService.viewMode()).toBe('VERTICAL');
+
+    await loadChapter(undefined, chapterOf('sl-1', 'solo-leveling', 'MANHWA'));
+    expect(stateService.viewMode()).toBe('VERTICAL');
+    await switchMode('Paged');
+    await loadChapter(undefined, chapterOf('op-3', 'one-piece', 'MANGA'));
+    expect(stateService.viewMode()).toBe('VERTICAL');
+    await loadChapter(undefined, chapterOf('sl-2', 'solo-leveling', 'MANHWA'));
+    expect(stateService.viewMode()).toBe('PAGED');
   });
 
   it('records the visit, then the finish, for the reading history (free readers with LIBRARY_USE)', async () => {

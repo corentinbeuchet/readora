@@ -1,18 +1,22 @@
 import { Service, computed, signal } from '@angular/core';
 import { Chapter, PageAsset } from '@app/core/models/readora.models';
+import { ReadingDirection, ViewMode } from './reader-preferences-store';
 
-export type ViewMode = 'VERTICAL' | 'PAGED';
+export type { ViewMode };
 
 @Service()
 export class ReaderState {
   private readonly _currentChapter = signal<Chapter | null>(null);
   private readonly _currentPageIndex = signal<number>(0);
   private readonly _viewMode = signal<ViewMode>('VERTICAL');
+  private readonly _direction = signal<ReadingDirection>('LTR');
   private readonly _zoomLevel = signal<number>(100);
 
   readonly currentChapter = this._currentChapter.asReadonly();
   readonly currentPageIndex = this._currentPageIndex.asReadonly();
   readonly viewMode = this._viewMode.asReadonly();
+  /** Page-turn direction in paged mode: `RTL` for Japanese manga (next page is on the left). */
+  readonly direction = this._direction.asReadonly();
   readonly zoomLevel = this._zoomLevel.asReadonly();
 
   readonly totalPages = computed(() => this._currentChapter()?.pages.length ?? 0);
@@ -42,6 +46,10 @@ export class ReaderState {
 
   setViewMode(mode: ViewMode): void {
     this._viewMode.set(mode);
+  }
+
+  setDirection(direction: ReadingDirection): void {
+    this._direction.set(direction);
   }
 
   setZoom(percent: number): void {

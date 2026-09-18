@@ -29,6 +29,18 @@
             Paged
           </button>
         </div>
+        @if (state.viewMode() === 'PAGED') {
+          <div ngToolbarWidgetGroup aria-label="Reading direction">
+            <button type="button" ngToolbarWidget value="LTR" (click)="setDirection('LTR')"
+                    [class.active]="state.direction() === 'LTR'" [attr.aria-pressed]="state.direction() === 'LTR'">
+              Left to right
+            </button>
+            <button type="button" ngToolbarWidget value="RTL" (click)="setDirection('RTL')"
+                    [class.active]="state.direction() === 'RTL'" [attr.aria-pressed]="state.direction() === 'RTL'">
+              Right to left
+            </button>
+          </div>
+        }
         <div ngToolbarWidgetGroup>
           <button type="button" ngToolbarWidget value="zoom-in" (click)="zoomIn()" aria-label="Zoom in">Zoom +</button>
           <button type="button" ngToolbarWidget value="zoom-out" (click)="zoomOut()" aria-label="Zoom out">Zoom -</button>
@@ -94,13 +106,23 @@
               }
             }
           }
+          <!-- Buttons sit on the side the page turns to: in right-to-left reading "Next" is on the left. -->
           <nav class="paged-nav" aria-label="Page navigation">
-            <button type="button" (click)="state.previousPage()" [disabled]="state.isFirstPage()" class="btn btn-prev">
-              &larr; Prev
-            </button>
-            <button type="button" (click)="state.nextPage()" [disabled]="state.isLastPage()" class="btn btn-next">
-              Next &rarr;
-            </button>
+            @if (state.direction() === 'RTL') {
+              <button type="button" (click)="state.nextPage()" [disabled]="state.isLastPage()" class="btn btn-next">
+                &larr; Next
+              </button>
+              <button type="button" (click)="state.previousPage()" [disabled]="state.isFirstPage()" class="btn btn-prev">
+                Prev &rarr;
+              </button>
+            } @else {
+              <button type="button" (click)="state.previousPage()" [disabled]="state.isFirstPage()" class="btn btn-prev">
+                &larr; Prev
+              </button>
+              <button type="button" (click)="state.nextPage()" [disabled]="state.isLastPage()" class="btn btn-next">
+                Next &rarr;
+              </button>
+            }
           </nav>
         </div>
       }

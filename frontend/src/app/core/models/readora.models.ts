@@ -59,6 +59,11 @@ export interface Chapter {
   pages: PageAsset[];
   scanlationProjectId?: string;
   publishedAt?: string;
+  /** Reader view only (`GET /chapters/{id}`): the series, for its title and default reading mode. */
+  work?: { id: string; title: string; type: WorkType } | null;
+  /** Reader view only: published neighbours, `null` at either end. */
+  previousChapterId?: string | null;
+  nextChapterId?: string | null;
 }
 
 export type ScanlationRole = 'LEADER' | 'CLEANER_REDRAWER' | 'TRANSLATOR' | 'TYPESETTER' | 'PROOFREADER' | 'QUALITY_CHECKER';
