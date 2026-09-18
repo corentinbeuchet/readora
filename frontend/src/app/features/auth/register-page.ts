@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { SeoService } from '@app/core/seo/seo.service';
 import {
+  PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
@@ -43,6 +44,7 @@ export class RegisterPage {
 
     required(path.password, { message: 'Password is required' });
     minLength(path.password, PASSWORD_MIN_LENGTH, { message: `Password must be at least ${PASSWORD_MIN_LENGTH} characters` });
+    maxLength(path.password, PASSWORD_MAX_LENGTH, { message: `Password must be at most ${PASSWORD_MAX_LENGTH} characters` });
 
     required(path.confirmPassword, { message: 'Please confirm your password' });
     validate(path.confirmPassword, ({ value, valueOf }) =>

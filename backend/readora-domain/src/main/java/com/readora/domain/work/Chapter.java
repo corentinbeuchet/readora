@@ -45,6 +45,7 @@ public class Chapter extends AggregateRoot<ChapterId> {
         if (pages == null || pages.isEmpty()) {
             throw new DomainValidationException("Cannot publish chapter with zero pages.");
         }
+        requireUniquePageNumbers(pages);
         Instant now = Instant.now();
         Chapter chapter = new Chapter(ChapterId.generate(), workId, chapterNumber, title, ChapterStatus.PUBLISHED, pages, scanlationProjectId, now, now, now);
         chapter.registerEvent(ChapterPublishedEvent.now(chapter.getId(), workId, chapterNumber));
@@ -52,6 +53,7 @@ public class Chapter extends AggregateRoot<ChapterId> {
     }
 
     public void updatePages(List<PageAsset> newPages) {
+        requireUniquePageNumbers(newPages);
         this.pages.clear();
         if (newPages != null) {
             this.pages.addAll(newPages);
@@ -71,6 +73,16 @@ public class Chapter extends AggregateRoot<ChapterId> {
         this.publishedAt = Instant.now();
         this.updatedAt = this.publishedAt;
         registerEvent(ChapterPublishedEvent.now(this.id, this.workId, this.chapterNumber));
+    }
+
+    private static void requireUniquePageNumbers(List<PageAsset> pages) {
+        if (pages == null) {
+            return;
+        }
+        long distinct = pages.stream().mapToInt(PageAsset::pageNumber).distinct().count();
+        if (distinct != pages.size()) {
+            throw new DomainValidationException("Page numbers must be unique within a chapter");
+        }
     }
 
     public boolean isPublished() {
