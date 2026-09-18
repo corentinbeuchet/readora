@@ -59,7 +59,6 @@ class ScanlationTaskServiceTest {
 
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(projectRepository.save(any(ScanlationProject.class))).thenAnswer(i -> i.getArgument(0));
-        when(chapterRepository.findByWorkId(workId)).thenReturn(List.of());
         when(chapterRepository.save(any(Chapter.class))).thenAnswer(i -> i.getArgument(0));
 
         WorkflowTask task = taskService.uploadChapterTask(

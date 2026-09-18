@@ -91,7 +91,6 @@ class WorkManagementServiceTest {
         ScanlationProject project = ScanlationProject.create("One Piece Workspace", work.getId(), publisherId);
         when(workRepository.findById(work.getId())).thenReturn(Optional.of(work));
         when(projectRepository.findByWorkId(work.getId())).thenReturn(List.of(project));
-        when(chapterRepository.findByWorkId(work.getId())).thenReturn(List.of());
         when(chapterRepository.save(any(Chapter.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         List<PageAsset> pages = List.of(
@@ -118,7 +117,7 @@ class WorkManagementServiceTest {
         when(workRepository.findById(work.getId())).thenReturn(Optional.of(work));
         when(projectRepository.findByWorkId(work.getId()))
                 .thenReturn(List.of(ScanlationProject.create("One Piece Workspace", work.getId(), publisherId)));
-        when(chapterRepository.findByWorkId(work.getId())).thenReturn(List.of(existing));
+        when(chapterRepository.findByWorkIdAndChapterNumber(work.getId(), ChapterNumber.of("1"))).thenReturn(Optional.of(existing));
 
         List<PageAsset> pages = List.of(PageAsset.create(1, "c1/p1.webp", "https://cdn.readora.com/c1/p1.webp"));
 
@@ -154,7 +153,6 @@ class WorkManagementServiceTest {
         when(workRepository.findById(work.getId())).thenReturn(Optional.of(work));
         when(projectRepository.findByWorkId(work.getId())).thenReturn(List.of());
         when(userRepository.findById(adminId)).thenReturn(Optional.of(admin));
-        when(chapterRepository.findByWorkId(work.getId())).thenReturn(List.of());
         when(chapterRepository.save(any(Chapter.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Chapter chapter = service.directPublishChapter(work.getId(), "1", "Admin", List.of(PageAsset.create(1, "p1.webp", null)), adminId);

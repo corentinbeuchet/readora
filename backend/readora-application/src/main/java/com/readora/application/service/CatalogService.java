@@ -42,9 +42,7 @@ public class CatalogService implements BrowseCatalogUseCase {
 
     @Override
     public List<Chapter> listPublishedChapters(WorkId workId) {
-        return chapterRepository.findByWorkId(workId).stream()
-                .filter(Chapter::isPublished)
-                .toList();
+        return chapterRepository.findPublishedByWorkId(workId);
     }
 
     @Override

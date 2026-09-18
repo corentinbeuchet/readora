@@ -22,11 +22,28 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Chapter> findById(ChapterId id) {
         return springDataRepository.findById(id.value()).map(this::toDomain);
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<Chapter> findByWorkIdAndChapterNumber(WorkId workId, ChapterNumber chapterNumber) {
+        return springDataRepository.findByWorkIdAndChapterNumber(workId.value(), chapterNumber.value()).map(this::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Chapter> findPublishedByWorkId(WorkId workId) {
+        return springDataRepository.findByWorkIdAndStatus(workId.value(), ChapterStatus.PUBLISHED.name()).stream()
+                .map(this::toDomain)
+                .sorted(Comparator.comparing(Chapter::getChapterNumber))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Chapter> findByWorkId(WorkId workId) {
         return springDataRepository.findByWorkId(workId.value()).stream()
                 .map(this::toDomain)

@@ -10,4 +10,8 @@ import java.util.UUID;
 @Repository
 public interface SpringDataChapterRepository extends JpaRepository<ChapterJpaEntity, UUID> {
     List<ChapterJpaEntity> findByWorkId(UUID workId);
+
+    List<ChapterJpaEntity> findByWorkIdAndStatus(UUID workId, String status);
+
+    java.util.Optional<ChapterJpaEntity> findByWorkIdAndChapterNumber(UUID workId, String chapterNumber);
 }

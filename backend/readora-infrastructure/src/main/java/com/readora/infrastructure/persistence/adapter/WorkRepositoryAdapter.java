@@ -24,11 +24,13 @@ public class WorkRepositoryAdapter implements WorkRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Work> findById(WorkId id) {
         return springDataRepository.findById(id.value()).map(this::toDomain);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Work> findAll(int page, int size) {
         return springDataRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt")))
                 .map(this::toDomain)
@@ -36,6 +38,7 @@ public class WorkRepositoryAdapter implements WorkRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long count() {
         return springDataRepository.count();
     }

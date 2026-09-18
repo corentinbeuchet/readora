@@ -25,11 +25,13 @@ public class ScanlationProjectRepositoryAdapter implements ScanlationProjectRepo
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<ScanlationProject> findById(ProjectId id) {
         return springDataRepository.findById(id.value()).map(this::toDomain);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ScanlationProject> findByWorkId(WorkId workId) {
         return springDataRepository.findByWorkId(workId.value()).stream()
                 .map(this::toDomain)

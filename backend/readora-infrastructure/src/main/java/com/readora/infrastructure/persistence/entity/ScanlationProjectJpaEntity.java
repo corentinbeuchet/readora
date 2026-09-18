@@ -1,6 +1,7 @@
 package com.readora.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,10 +20,12 @@ public class ScanlationProjectJpaEntity {
     @Column(name = "work_id", nullable = false)
     private UUID workId;
 
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @BatchSize(size = 64)
     private List<TeamMemberJpaEntity> members = new ArrayList<>();
 
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @BatchSize(size = 64)
     private List<WorkflowTaskJpaEntity> tasks = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false)

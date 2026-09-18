@@ -77,10 +77,7 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
         }
 
         ChapterNumber chapterNumber = ChapterNumber.of(chapterNumberStr.trim());
-        List<Chapter> existingChapters = chapterRepository.findByWorkId(workId);
-        boolean duplicate = existingChapters.stream()
-                .anyMatch(c -> c.getChapterNumber().equals(chapterNumber));
-        if (duplicate) {
+        if (chapterRepository.findByWorkIdAndChapterNumber(workId, chapterNumber).isPresent()) {
             throw new DomainValidationException("Chapter " + chapterNumberStr + " already exists for this work");
         }
 

@@ -1,6 +1,7 @@
 package com.readora.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -20,7 +21,8 @@ public class TeamMemberJpaEntity {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
+    @BatchSize(size = 64)
     @CollectionTable(name = "member_roles", joinColumns = @JoinColumn(name = "member_id"))
     @Column(name = "role")
     private List<String> roles;

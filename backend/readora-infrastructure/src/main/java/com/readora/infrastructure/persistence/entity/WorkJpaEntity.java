@@ -1,6 +1,7 @@
 package com.readora.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -27,7 +28,8 @@ public class WorkJpaEntity {
     @Column(name = "cover_image_url")
     private String coverImageUrl;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
+    @BatchSize(size = 64)
     @CollectionTable(name = "work_genres", joinColumns = @JoinColumn(name = "work_id"))
     @Column(name = "genre")
     private List<String> genres;

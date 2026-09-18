@@ -16,6 +16,8 @@ spring:
     open-in-view: false
     properties:
       hibernate:
+        # Lazy collections of N loaded parents are fetched in IN (...) batches, not N separate queries.
+        default_batch_fetch_size: 64
         format_sql: true
         jdbc:
           batch_size: 25
