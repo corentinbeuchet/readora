@@ -52,6 +52,21 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    # Rebuild the image on every `docker compose up`: unchanged code is all cache hits (seconds),
+    # changed code re-runs only `mvn package`. No need for `--build` any more.
+    pull_policy: build
+    # `docker compose up --watch` (or `docker compose watch`): rebuild + restart on every save.
+    develop:
+      watch:
+        - { action: rebuild, path: ./backend/pom.xml }
+        - { action: rebuild, path: ./backend/readora-domain/pom.xml }
+        - { action: rebuild, path: ./backend/readora-domain/src/main }
+        - { action: rebuild, path: ./backend/readora-application/pom.xml }
+        - { action: rebuild, path: ./backend/readora-application/src/main }
+        - { action: rebuild, path: ./backend/readora-infrastructure/pom.xml }
+        - { action: rebuild, path: ./backend/readora-infrastructure/src/main }
+        - { action: rebuild, path: ./backend/readora-web/pom.xml }
+        - { action: rebuild, path: ./backend/readora-web/src/main }
     container_name: readora-backend
     environment:
       SPRING_PROFILES_ACTIVE: staging

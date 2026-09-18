@@ -1,0 +1,7 @@
+# Keep the build context small: each `docker compose up` rebuilds the backend image (pull_policy: build),
+# so build output and IDE files must not be uploaded to the Docker daemon.
+**/target/
+.idea/
+**/*.iml
+*.log
+.mvn/wrapper/*.jar

@@ -15,6 +15,9 @@ Manga/comics reading and scanlation platform. Monorepo:
 ## Commands
 - Backend: `mvn -f backend/pom.xml verify` (ArchUnit + unit + integration + acceptance)
 - Frontend (from `frontend/`): `npm test`, `npm run lint`, `npm run build`, `npm run e2e` (needs running backend)
+- Local stack: `docker compose up` (Postgres, MinIO, backend). The backend image is rebuilt on every `up`
+  (`pull_policy: build`, cached layers make it fast), so it always runs the current code. `docker compose up --watch`
+  also rebuilds and restarts the backend whenever a backend source or pom changes.
 
 ## Cross-cutting rules
 - `.feature` files in `.readora/context/user-stories/` are the source of truth for behaviour. New behaviour → scenario first.
