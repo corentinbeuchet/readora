@@ -1,4 +1,8 @@
 spring:
+  # Requests run on virtual threads; the Hikari pool (not thread count) bounds DB concurrency.
+  threads:
+    virtual:
+      enabled: true
   servlet:
     multipart:
       max-file-size: ${READORA_MAX_UPLOAD_FILE_SIZE:50MB}

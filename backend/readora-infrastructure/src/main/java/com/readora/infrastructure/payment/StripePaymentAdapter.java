@@ -20,6 +20,7 @@ import com.stripe.param.SubscriptionUpdateParams;
 import com.stripe.param.checkout.SessionCreateParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.resilience.annotation.ConcurrencyLimit;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -43,7 +44,9 @@ public class StripePaymentAdapter implements PaymentPort {
         }
     }
 
+    /// Not retried: creating a checkout session is not idempotent.
     @Override
+    @ConcurrencyLimit(16)
     public CheckoutSession createCheckoutSession(UserId userId, String customerEmail, SubscriptionPlan plan, String successUrl, String cancelUrl) {
         if (!properties.isConfigured()) {
             throw new PaymentProviderException("Stripe is not configured on this server", null);
@@ -121,6 +124,7 @@ public class StripePaymentAdapter implements PaymentPort {
     }
 
     @Override
+    @ConcurrencyLimit(16)
     public void cancelSubscriptionAtPeriodEnd(String externalSubscriptionId) {
         try {
             client.subscriptions().update(externalSubscriptionId,

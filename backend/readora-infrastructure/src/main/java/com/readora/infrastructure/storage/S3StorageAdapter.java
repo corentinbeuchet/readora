@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.resilience.annotation.ConcurrencyLimit;
+import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -104,7 +106,11 @@ public class S3StorageAdapter implements StoragePort {
         return cdnDomain + "/" + cleanKey;
     }
 
+    /// Retried (a PUT of the same key is idempotent) and capped so a burst of uploads on virtual threads cannot
+    /// open unbounded connections to S3.
     @Override
+    @Retryable(includes = StorageUnavailableException.class, maxRetries = 2, delay = 200, multiplier = 2)
+    @ConcurrencyLimit(32)
     public void storeAsset(String objectKey, byte[] data, String contentType) {
         String cleanKey = clean(objectKey);
         if (s3Client != null) {
