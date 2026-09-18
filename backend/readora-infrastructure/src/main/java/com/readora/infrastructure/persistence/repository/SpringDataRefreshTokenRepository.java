@@ -20,6 +20,10 @@ public interface SpringDataRefreshTokenRepository extends JpaRepository<RefreshT
     int revokeAllForUser(@Param("userId") String userId, @Param("now") Instant now);
 
     @Modifying
+    @Query("update RefreshTokenJpaEntity t set t.revokedAt = :now where t.tokenHash = :tokenHash and t.revokedAt is null")
+    int revokeIfActive(@Param("tokenHash") String tokenHash, @Param("now") Instant now);
+
+    @Modifying
     @Query("delete from RefreshTokenJpaEntity t where t.expiresAt < :threshold")
     int deleteExpiredBefore(@Param("threshold") Instant threshold);
 }

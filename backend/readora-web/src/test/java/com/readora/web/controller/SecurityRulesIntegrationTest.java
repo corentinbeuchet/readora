@@ -88,6 +88,30 @@ class SecurityRulesIntegrationTest extends AuthTestSupport {
     }
 
     @Test
+    @DisplayName("A correctly signed JWT from another issuer is rejected with 401")
+    void foreignIssuerIsUnauthorized() throws Exception {
+        Session reader = register();
+        var key = com.readora.infrastructure.security.JwtTokenProviderAdapter.secretKey(
+                "test-only-readora-jwt-secret-0123456789abcdef0123456789");
+        var encoder = new org.springframework.security.oauth2.jwt.NimbusJwtEncoder(
+                new com.nimbusds.jose.jwk.source.ImmutableSecret<>(key));
+        java.time.Instant now = java.time.Instant.now();
+        var claims = org.springframework.security.oauth2.jwt.JwtClaimsSet.builder()
+                .issuer("someone-else")
+                .subject(reader.userId())
+                .issuedAt(now)
+                .expiresAt(now.plusSeconds(600))
+                .claim("permissions", List.of("COMMENT_WRITE"))
+                .build();
+        var header = org.springframework.security.oauth2.jwt.JwsHeader.with(
+                org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256).build();
+        String forged = encoder.encode(org.springframework.security.oauth2.jwt.JwtEncoderParameters.from(header, claims)).getTokenValue();
+
+        mockMvc.perform(get("/api/v1/profile").header("Authorization", "Bearer " + forged))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     @DisplayName("READER posts a comment under their own identity (author taken from JWT, not from the body)")
     void readerCommentsUnderOwnIdentity() throws Exception {
         Session reader = register();

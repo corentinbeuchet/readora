@@ -26,6 +26,7 @@ public class RefreshTokenRepositoryAdapter implements RefreshTokenRepositoryPort
     }
 
     @Override
+    @Transactional
     public RefreshToken save(RefreshToken token) {
         RefreshTokenJpaEntity saved = springDataRepository.save(toEntity(token));
         return toDomain(saved);
@@ -35,6 +36,12 @@ public class RefreshTokenRepositoryAdapter implements RefreshTokenRepositoryPort
     @Transactional
     public void revokeAllForUser(UserId userId) {
         springDataRepository.revokeAllForUser(userId.value(), Instant.now());
+    }
+
+    @Override
+    @Transactional
+    public boolean revokeIfActive(String tokenHash, Instant now) {
+        return springDataRepository.revokeIfActive(tokenHash, now) == 1;
     }
 
     @Override

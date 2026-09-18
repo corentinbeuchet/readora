@@ -115,4 +115,24 @@ class AuthControllerIntegrationTest extends AuthTestSupport {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false));
     }
+
+    @Test
+    @DisplayName("Replaying a rotated refresh token revokes every session of that user (theft detection)")
+    void refreshTokenReuseRevokesAllSessions() throws Exception {
+        Session session = register();
+        Cookie stolen = session.refreshCookie();
+
+        MvcResult rotated = mockMvc.perform(post("/api/v1/auth/refresh").cookie(stolen))
+                .andExpect(status().isOk())
+                .andReturn();
+        Cookie legitimate = rotated.getResponse().getCookie(REFRESH_COOKIE);
+
+        // The attacker replays the old token (grace period is 0 in tests) ...
+        mockMvc.perform(post("/api/v1/auth/refresh").cookie(stolen))
+                .andExpect(status().isUnauthorized());
+
+        // ... which also invalidates the legitimate, newer session.
+        mockMvc.perform(post("/api/v1/auth/refresh").cookie(legitimate))
+                .andExpect(status().isUnauthorized());
+    }
 }

@@ -14,12 +14,17 @@ import com.readora.domain.identity.PasswordHash;
 import com.readora.domain.identity.RefreshToken;
 import com.readora.domain.identity.UserAccount;
 import com.readora.domain.work.UserId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 
 public class AuthenticationService implements AuthenticateUserUseCase {
+    private static final Logger log = LoggerFactory.getLogger(AuthenticationService.class);
+
     public static final int PASSWORD_MIN_LENGTH = 8;
 
     private final UserAccountRepositoryPort userRepository;
@@ -27,17 +32,34 @@ public class AuthenticationService implements AuthenticateUserUseCase {
     private final PasswordHasherPort passwordHasher;
     private final TokenProviderPort tokenProvider;
     private final EventPublisherPort eventPublisher;
+    private final Duration refreshReuseGrace;
+    /// Compared against when the email is unknown, so a failed login costs the same time either way.
+    private final PasswordHash timingDummyHash;
 
     public AuthenticationService(UserAccountRepositoryPort userRepository,
                                  RefreshTokenRepositoryPort refreshTokenRepository,
                                  PasswordHasherPort passwordHasher,
                                  TokenProviderPort tokenProvider,
                                  EventPublisherPort eventPublisher) {
+        this(userRepository, refreshTokenRepository, passwordHasher, tokenProvider, eventPublisher, Duration.ofSeconds(30));
+    }
+
+    /// @param refreshReuseGrace a revoked refresh token presented again *later* than this after its revocation is
+    ///                          treated as theft and revokes every session of its owner; within the grace period
+    ///                          (e.g. two tabs refreshing at once) it is only rejected
+    public AuthenticationService(UserAccountRepositoryPort userRepository,
+                                 RefreshTokenRepositoryPort refreshTokenRepository,
+                                 PasswordHasherPort passwordHasher,
+                                 TokenProviderPort tokenProvider,
+                                 EventPublisherPort eventPublisher,
+                                 Duration refreshReuseGrace) {
+        this.refreshReuseGrace = Objects.requireNonNull(refreshReuseGrace, "Refresh reuse grace cannot be null");
         this.userRepository = Objects.requireNonNull(userRepository, "UserAccountRepositoryPort cannot be null");
         this.refreshTokenRepository = Objects.requireNonNull(refreshTokenRepository, "RefreshTokenRepositoryPort cannot be null");
         this.passwordHasher = Objects.requireNonNull(passwordHasher, "PasswordHasherPort cannot be null");
         this.tokenProvider = Objects.requireNonNull(tokenProvider, "TokenProviderPort cannot be null");
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "EventPublisherPort cannot be null");
+        this.timingDummyHash = passwordHasher.hash("readora-timing-equaliser");
     }
 
     @Override
@@ -65,22 +87,42 @@ public class AuthenticationService implements AuthenticateUserUseCase {
         } catch (DomainValidationException e) {
             throw new InvalidCredentialsException("Invalid email or password");
         }
-        UserAccount account = userRepository.findByEmail(email)
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
-        if (rawPassword == null || !passwordHasher.matches(rawPassword, account.getPasswordHash())) {
+        Optional<UserAccount> maybeAccount = userRepository.findByEmail(email);
+        // Always run one hash comparison so response time does not reveal whether the email is registered.
+        PasswordHash expected = maybeAccount.map(UserAccount::getPasswordHash).orElse(timingDummyHash);
+        boolean passwordMatches = rawPassword != null && passwordHasher.matches(rawPassword, expected);
+        if (maybeAccount.isEmpty() || !passwordMatches) {
             throw new InvalidCredentialsException("Invalid email or password");
         }
-        return issueTokens(account);
+        return issueTokens(maybeAccount.get());
     }
 
     @Override
     public AuthResult refresh(String rawRefreshToken) {
-        RefreshToken current = findValidToken(rawRefreshToken);
+        if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
+            throw new InvalidCredentialsException("Missing refresh token");
+        }
+        RefreshToken current = refreshTokenRepository.findByTokenHash(tokenProvider.hashRefreshToken(rawRefreshToken))
+                .orElseThrow(() -> new InvalidCredentialsException("Unknown refresh token"));
+        Instant now = Instant.now();
+
+        if (current.getRevokedAt() != null) {
+            if (current.getRevokedAt().plus(refreshReuseGrace).isBefore(now)) {
+                // A rotated/revoked token came back long after: assume it was stolen and end every session.
+                log.warn("Refresh token reuse detected for user {}; revoking all sessions", current.getUserId());
+                refreshTokenRepository.revokeAllForUser(current.getUserId());
+            }
+            throw new InvalidCredentialsException("Refresh token expired or revoked");
+        }
+        if (!current.isValid(now)) {
+            throw new InvalidCredentialsException("Refresh token expired or revoked");
+        }
+        if (!refreshTokenRepository.revokeIfActive(current.getTokenHash(), now)) {
+            // Lost a race with a concurrent refresh of the same token.
+            throw new InvalidCredentialsException("Refresh token expired or revoked");
+        }
         UserAccount account = userRepository.findById(current.getUserId())
                 .orElseThrow(() -> new InvalidCredentialsException("Refresh token owner no longer exists"));
-
-        current.revoke();
-        refreshTokenRepository.save(current);
         return issueTokens(account);
     }
 
@@ -99,18 +141,6 @@ public class AuthenticationService implements AuthenticateUserUseCase {
     @Override
     public Optional<UserAccount> currentAccount(UserId userId) {
         return userRepository.findById(userId);
-    }
-
-    private RefreshToken findValidToken(String rawRefreshToken) {
-        if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
-            throw new InvalidCredentialsException("Missing refresh token");
-        }
-        RefreshToken token = refreshTokenRepository.findByTokenHash(tokenProvider.hashRefreshToken(rawRefreshToken))
-                .orElseThrow(() -> new InvalidCredentialsException("Unknown refresh token"));
-        if (!token.isValid(Instant.now())) {
-            throw new InvalidCredentialsException("Refresh token expired or revoked");
-        }
-        return token;
     }
 
     private AuthResult issueTokens(UserAccount account) {

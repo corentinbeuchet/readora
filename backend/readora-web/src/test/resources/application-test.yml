@@ -26,12 +26,18 @@ readora:
     base-url: http://localhost:4200
   cors:
     allowed-origins: http://localhost:4200
+  jobs:
+    enabled: false
   security:
     cookie-secure: false
+    rate-limit:
+      enabled: false
     jwt:
       secret: test-only-readora-jwt-secret-0123456789abcdef0123456789
       access-ttl: PT15M
       refresh-ttl: P30D
+      # Reuse of a rotated refresh token is treated as theft immediately in tests.
+      refresh-reuse-grace: PT0S
   stripe:
     secret-key: sk_test_dummy
     webhook-secret: whsec_test_dummy

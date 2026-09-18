@@ -41,4 +41,5 @@ readora:
     premium-price-id: ${STRIPE_PREMIUM_PRICE_ID:}
 
 server:
+  forward-headers-strategy: native
   port: ${PORT:8080}

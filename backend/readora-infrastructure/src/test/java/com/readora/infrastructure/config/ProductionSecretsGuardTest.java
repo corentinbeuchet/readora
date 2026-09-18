@@ -56,7 +56,7 @@ class ProductionSecretsGuardTest {
 
     private static SecurityProperties props(String secret) {
         return new SecurityProperties(
-                new SecurityProperties.Jwt(secret, "readora", Duration.ofMinutes(15), Duration.ofDays(30)),
+                new SecurityProperties.Jwt(secret, "readora", Duration.ofMinutes(15), Duration.ofDays(30), Duration.ofSeconds(30)),
                 "readora_refresh",
                 true);
     }

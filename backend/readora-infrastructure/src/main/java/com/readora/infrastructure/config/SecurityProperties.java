@@ -15,7 +15,8 @@ public record SecurityProperties(
             String secret,
             @DefaultValue("readora") String issuer,
             @DefaultValue("PT15M") Duration accessTtl,
-            @DefaultValue("P30D") Duration refreshTtl
+            @DefaultValue("P30D") Duration refreshTtl,
+        @DefaultValue("PT30S") Duration refreshReuseGrace
     ) {
         public Jwt {
             if (secret == null || secret.isBlank()) {
@@ -25,7 +26,8 @@ public record SecurityProperties(
 
         @Override
         public String toString() {
-            return "Jwt[secret=****, issuer=" + issuer + ", accessTtl=" + accessTtl + ", refreshTtl=" + refreshTtl + "]";
+            return "Jwt[secret=****, issuer=" + issuer + ", accessTtl=" + accessTtl + ", refreshTtl=" + refreshTtl
+                    + ", refreshReuseGrace=" + refreshReuseGrace + "]";
         }
     }
 }

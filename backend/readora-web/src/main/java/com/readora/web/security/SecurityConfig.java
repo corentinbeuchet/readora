@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
@@ -25,7 +26,7 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@EnableConfigurationProperties(CorsProperties.class)
+@EnableConfigurationProperties({CorsProperties.class, RateLimitProperties.class})
 public class SecurityConfig {
 
     @Bean
@@ -68,9 +69,12 @@ public class SecurityConfig {
 
     @Bean
     public JwtDecoder jwtDecoder(SecurityProperties securityProperties) {
-        return NimbusJwtDecoder.withSecretKey(JwtTokenProviderAdapter.secretKey(securityProperties.jwt().secret()))
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(JwtTokenProviderAdapter.secretKey(securityProperties.jwt().secret()))
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
+        // Signature alone is not enough: expiry/not-before (default validators) and our issuer must match too.
+        decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(securityProperties.jwt().issuer()));
+        return decoder;
     }
 
     @Bean

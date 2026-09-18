@@ -91,8 +91,10 @@ public class DomainServiceConfig {
             RefreshTokenRepositoryPort refreshTokenRepository,
             PasswordHasherPort passwordHasher,
             TokenProviderPort tokenProvider,
-            EventPublisherPort eventPublisher) {
-        return transactional(new AuthenticationService(userRepository, refreshTokenRepository, passwordHasher, tokenProvider, eventPublisher),
+            EventPublisherPort eventPublisher,
+            SecurityProperties securityProperties) {
+        return transactional(new AuthenticationService(userRepository, refreshTokenRepository, passwordHasher, tokenProvider,
+                        eventPublisher, securityProperties.jwt().refreshReuseGrace()),
                 AuthenticateUserUseCase.class, transactionManager);
     }
 
