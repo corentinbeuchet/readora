@@ -75,8 +75,8 @@ public class ReaderViewerStepDefinitions {
 
         StoragePort storagePort = new StoragePort() {
             @Override
-            public String generatePresignedUploadUrl(String bucketName, String objectKey, long durationMinutes) {
-                return "https://s3.amazonaws.com/" + bucketName + "/" + objectKey + "?signature=mock";
+            public String generatePresignedUploadUrl(String objectKey, java.time.Duration validity) {
+                return "https://s3.amazonaws.com/readora-media-test/" + objectKey + "?signature=mock";
             }
 
             @Override

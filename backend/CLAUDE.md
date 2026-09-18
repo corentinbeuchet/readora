@@ -68,7 +68,7 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 
 ## Known pitfalls found in review (2026-09) — don't reintroduce
 Backlog ids used in commit `Refs:` (status: `git log --grep "review-2026-09/B<n>"`).
-- B1 `application-prod.yml` guarded by `on-profile: production` → never loaded; dev JWT secret default in `application.yml`.
+- B1 `application-prod.yml` guarded by `on-profile: production` → never loaded; dev JWT secret default in `application.yml`. — fixed 61ef652
 - B2 `/storage/presigned-url` lets any authenticated user choose bucket, key and duration.
 - B3 Direct publish without project-membership check (IDOR).
 - B4 Publish-from-QC without `stage == QC_REVIEW` guard; `Chapter.publish` re-publishable.
@@ -76,7 +76,7 @@ Backlog ids used in commit `Refs:` (status: `git log --grep "review-2026-09/B<n>
 - B6 No transactions across multi-save use cases.
 - B7 No `@Version`; `WorkflowTask.assignTo` steals claimed tasks; unlimited upvotes.
 - B8 Stripe: null `currentPeriodEnd` = infinite access; unknown status → ACTIVE; any price → PREMIUM; out-of-order events; immediate cancel.
-- B9 `S3StorageAdapter` unbounded in-memory `byte[]` cache; S3 failure swallowed; no multipart size config; `..` in folder.
+- B9 `S3StorageAdapter` unbounded in-memory `byte[]` cache; S3 failure swallowed; no multipart size config; fake presigned URL fallback. (`..` in folder fixed with B2.)
 - B10 500 handler leaks `ex.getMessage()`; framework exceptions → 500; not-found → 400; DTO sizes ≠ DB sizes.
 - B11 EAGER collections + load-all-then-filter (N+1); no `@OrderBy` on pages/chapters.
 - B12 Refresh-token reuse undetected; no expired-token cleanup; no issuer check; no rate limit; Swagger public in prod.

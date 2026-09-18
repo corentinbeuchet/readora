@@ -19,6 +19,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -144,8 +145,13 @@ class S3StorageAdapterTest {
                 tempDir.toString()
         );
 
-        String url = adapter.generatePresignedUploadUrl("readora-media-dev", "scans/p1.png", 30);
+        String url = adapter.generatePresignedUploadUrl("scans/p1.png", Duration.ofMinutes(15));
         assertThat(url).contains("http://localhost:9000/readora-media-dev/upload-key");
+
+        ArgumentCaptor<PutObjectPresignRequest> captor = ArgumentCaptor.forClass(PutObjectPresignRequest.class);
+        verify(mockS3Presigner).presignPutObject(captor.capture());
+        assertThat(captor.getValue().putObjectRequest().bucket()).isEqualTo("readora-media-dev");
+        assertThat(captor.getValue().signatureDuration()).isEqualTo(Duration.ofMinutes(15));
     }
 
     @Test

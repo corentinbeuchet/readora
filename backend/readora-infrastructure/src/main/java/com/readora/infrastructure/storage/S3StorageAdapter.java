@@ -74,16 +74,15 @@ public class S3StorageAdapter implements StoragePort {
     }
 
     @Override
-    public String generatePresignedUploadUrl(String bucketName, String objectKey, long durationMinutes) {
+    public String generatePresignedUploadUrl(String objectKey, Duration validity) {
         String cleanKey = objectKey.startsWith("/") ? objectKey.substring(1) : objectKey;
-        String targetBucket = (bucketName != null && !bucketName.isBlank()) ? bucketName.trim() : defaultBucketName;
 
         if (s3Presigner != null) {
             try {
                 PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
-                        .signatureDuration(Duration.ofMinutes(durationMinutes > 0 ? durationMinutes : 15))
+                        .signatureDuration(validity)
                         .putObjectRequest(PutObjectRequest.builder()
-                                .bucket(targetBucket)
+                                .bucket(defaultBucketName)
                                 .key(cleanKey)
                                 .build())
                         .build();
@@ -93,7 +92,7 @@ public class S3StorageAdapter implements StoragePort {
                 log.warn("Could not generate presigned S3 URL for {}: {}", cleanKey, e.getMessage());
             }
         }
-        return "https://" + targetBucket + ".s3.amazonaws.com/" + cleanKey + "?expires=" + durationMinutes;
+        return "https://" + defaultBucketName + ".s3.amazonaws.com/" + cleanKey + "?expires=" + validity.toMinutes();
     }
 
     @Override

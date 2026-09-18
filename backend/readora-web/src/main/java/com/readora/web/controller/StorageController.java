@@ -14,6 +14,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -34,6 +36,7 @@ public class StorageController {
             "application/x-zip-compressed",
             "application/octet-stream"
     );
+    private static final Duration PRESIGNED_UPLOAD_VALIDITY = Duration.ofMinutes(15);
 
     private final StoragePort storagePort;
 
@@ -57,10 +60,7 @@ public class StorageController {
             throw new DomainValidationException("Unsupported file format: " + contentType);
         }
 
-        String originalFilename = file.getOriginalFilename();
-        String safeFilename = originalFilename != null ? originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_") : "asset";
-        String cleanFolder = folder.replaceAll("[^a-zA-Z0-9/_.-]", "_");
-        String storageKey = cleanFolder + "/" + UUID.randomUUID() + "-" + safeFilename;
+        String storageKey = newStorageKey(folder, file.getOriginalFilename());
 
         try {
             storagePort.storeAsset(storageKey, file.getBytes(), contentType);
@@ -92,19 +92,36 @@ public class StorageController {
     }
 
     @GetMapping("/presigned-url")
-    @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Generate presigned upload URL")
+    @PreAuthorize("hasAuthority('CHAPTER_PUBLISH') or hasAuthority('WORK_CREATE')")
+    @Operation(summary = "Generate presigned upload URL for a server-generated key in the media bucket")
     public ResponseEntity<ApiResponse<Map<String, String>>> getPresignedUrl(
-            @RequestParam String objectKey,
-            @RequestParam(defaultValue = "readora-assets") String bucketName,
-            @RequestParam(defaultValue = "15") long durationMinutes
+            @RequestParam(defaultValue = "uploads") String folder,
+            @RequestParam String filename
     ) {
-        String uploadUrl = storagePort.generatePresignedUploadUrl(bucketName, objectKey, durationMinutes);
-        String cdnUrl = storagePort.getPublicCdnUrl(objectKey);
+        String storageKey = newStorageKey(folder, filename);
+        String uploadUrl = storagePort.generatePresignedUploadUrl(storageKey, PRESIGNED_UPLOAD_VALIDITY);
+        String cdnUrl = storagePort.getPublicCdnUrl(storageKey);
         return ResponseEntity.ok(ApiResponse.ok(Map.of(
                 "uploadUrl", uploadUrl,
                 "cdnUrl", cdnUrl,
-                "storageKey", objectKey
+                "storageKey", storageKey
         )));
+    }
+
+    /**
+     * Server-built key {@code <folder>/<uuid>-<filename>}: the client picks a folder and a filename but never the
+     * full key, so it cannot overwrite an existing asset or escape the folder with {@code ..}.
+     */
+    private static String newStorageKey(String folder, String originalFilename) {
+        String cleanFolder = folder == null ? "" : folder.trim().replaceAll("[^a-zA-Z0-9/_.-]", "_");
+        cleanFolder = cleanFolder.replaceAll("/{2,}", "/").replaceAll("^/+|/+$", "");
+        if (cleanFolder.isEmpty()
+                || Arrays.stream(cleanFolder.split("/")).anyMatch(segment -> segment.equals("..") || segment.equals("."))) {
+            throw new DomainValidationException("Invalid storage folder");
+        }
+        String safeFilename = originalFilename == null || originalFilename.isBlank()
+                ? "asset"
+                : originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_");
+        return cleanFolder + "/" + UUID.randomUUID() + "-" + safeFilename;
     }
 }

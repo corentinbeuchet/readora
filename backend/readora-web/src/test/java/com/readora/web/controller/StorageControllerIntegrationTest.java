@@ -8,7 +8,11 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -93,16 +97,63 @@ class StorageControllerIntegrationTest extends AuthTestSupport {
     }
 
     @Test
-    @DisplayName("GET /api/v1/storage/presigned-url generates upload URL")
+    @DisplayName("A scanlator gets a presigned upload URL for a server-generated key in the requested folder")
     void getPresignedUrl() throws Exception {
         Session session = registerScanlator();
 
-        mockMvc.perform(get("/api/v1/storage/presigned-url")
-                        .param("objectKey", "raw/test-page.jpg")
+        var result = mockMvc.perform(get("/api/v1/storage/presigned-url")
+                        .param("folder", "raw")
+                        .param("filename", "test-page.jpg")
                         .header("Authorization", session.bearer()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.uploadUrl", containsString("raw/test-page.jpg")))
-                .andExpect(jsonPath("$.data.cdnUrl", containsString("raw/test-page.jpg")));
+                .andExpect(jsonPath("$.data.storageKey", startsWith("raw/")))
+                .andExpect(jsonPath("$.data.storageKey", endsWith("-test-page.jpg")))
+                .andReturn();
+
+        String storageKey = json(result).path("data").path("storageKey").asString();
+        assertThat(storageKey).isNotEqualTo("raw/test-page.jpg");
+        assertThat(json(result).path("data").path("uploadUrl").asString()).contains(storageKey);
+        assertThat(json(result).path("data").path("cdnUrl").asString()).contains(storageKey);
+    }
+
+    @Test
+    @DisplayName("A plain reader cannot obtain a presigned upload URL")
+    void readerCannotGetPresignedUrl() throws Exception {
+        Session session = register();
+
+        mockMvc.perform(get("/api/v1/storage/presigned-url")
+                        .param("filename", "page.jpg")
+                        .header("Authorization", session.bearer()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("The presigned URL endpoint ignores a client-chosen bucket and duration")
+    void presignedUrlIgnoresClientBucketAndDuration() throws Exception {
+        Session session = registerScanlator();
+
+        mockMvc.perform(get("/api/v1/storage/presigned-url")
+                        .param("filename", "page.jpg")
+                        .param("bucketName", "someone-elses-bucket")
+                        .param("durationMinutes", "100000")
+                        .header("Authorization", session.bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.uploadUrl", not(containsString("someone-elses-bucket"))))
+                .andExpect(jsonPath("$.data.uploadUrl", not(containsString("expires=100000"))));
+    }
+
+    @Test
+    @DisplayName("Upload into a folder containing '..' is rejected")
+    void uploadWithTraversalFolderFails() throws Exception {
+        Session session = registerScanlator();
+        MockMultipartFile file = new MockMultipartFile("file", "cover.png", "image/png", "img".getBytes());
+
+        mockMvc.perform(multipart("/api/v1/storage/upload")
+                        .file(file)
+                        .param("folder", "covers/../../etc")
+                        .header("Authorization", session.bearer()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
     }
 }
