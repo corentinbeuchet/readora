@@ -38,9 +38,8 @@ describe('KanbanBoard (API-driven, permission gated)', () => {
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     store = TestBed.inject(AuthStore);
-    state = TestBed.inject(ScanlationState);
-    state.clear();
     fixture = TestBed.createComponent(KanbanBoard);
+    state = fixture.debugElement.injector.get(ScanlationState);
     fixture.componentRef.setInput('projectId', PROJECT_ID);
   });
 
@@ -163,5 +162,27 @@ describe('KanbanBoard (API-driven, permission gated)', () => {
     expect(uploadLink).not.toBeNull();
     expect(uploadLink.getAttribute('href')).toBe('/upload');
     expect(uploadLink.textContent).toContain('Upload Studio');
+  });
+
+  it('does not show the previous project while another one loads or when it fails', async () => {
+    await signIn(store, http, mockUser({ permissions: ['PROJECT_VIEW'] }));
+    await render();
+    expect(state.currentProject()?.id).toBe(PROJECT_ID);
+
+    fixture.componentRef.setInput('projectId', 'proj-2');
+    await settle(fixture);
+    expect(state.currentProject()).toBeNull();
+    expect(all('.task-card').length).toBe(0);
+
+    http.expectOne(`${API}/scanlation/projects/proj-2`).flush({ success: false, data: null, error: 'not found' }, { status: 404, statusText: 'Not Found' });
+    await settle(fixture);
+    expect(state.currentProject()).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('FlameScans Solo Leveling');
+  });
+
+  it('gives every board its own state (not a root singleton)', () => {
+    const other = TestBed.createComponent(KanbanBoard);
+    expect(other.debugElement.injector.get(ScanlationState)).not.toBe(state);
+    expect(() => TestBed.inject(ScanlationState)).toThrow();
   });
 });

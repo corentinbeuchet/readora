@@ -20,6 +20,8 @@ interface SubmitModel {
   imports: [RouterLink, FormField, HasPermissionDirective],
   templateUrl: './kanban-board.html',
   styleUrl: './kanban-board.scss',
+  // Page-scoped state: a fresh ScanlationState per board, discarded on navigation.
+  providers: [ScanlationState],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class KanbanBoard {
@@ -58,11 +60,17 @@ export class KanbanBoard {
   constructor() {
     this.seo.private_('Scanlation workspace');
     effect(() => {
+      const id = this.projectId();
       // `value()` throws while the resource is in error state: check `hasValue()` first.
       const loaded = this.project.hasValue() ? this.project.value() : undefined;
-      if (loaded) {
-        untracked(() => this.state.setProject(loaded));
-      }
+      untracked(() => {
+        if (loaded && loaded.id === id) {
+          this.state.setProject(loaded);
+        } else if (this.state.currentProject()?.id !== id || this.project.error()) {
+          // Another project is loading, or it failed: never keep showing the previous project.
+          this.state.clear();
+        }
+      });
     });
   }
 

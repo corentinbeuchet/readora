@@ -1,9 +1,12 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { ScanlationProject, WorkflowTask, WorkflowStage, TaskStatus } from '@app/core/models/readora.models';
 
-@Injectable({
-  providedIn: 'root'
-})
+/**
+ * State of the project shown by one Kanban board. Page-scoped: provided by `KanbanBoard`
+ * (`providers: [ScanlationState]`), so it starts empty on every board and never shows the
+ * previous project's tasks.
+ */
+@Injectable()
 export class ScanlationState {
   private readonly _currentProject = signal<ScanlationProject | null>(null);
 
