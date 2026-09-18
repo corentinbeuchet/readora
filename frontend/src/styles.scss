@@ -112,6 +112,37 @@ a {
   background: transparent;
 }
 
+.btn-sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.btn-danger-outline {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: transparent;
+
+  &:hover:not(:disabled) {
+    background: rgba(248, 113, 113, 0.15);
+  }
+}
+
+.spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .btn-link {
   background: none;
   border: none;
@@ -131,7 +162,8 @@ a {
   flex-direction: column;
   gap: 0.35rem;
 
-  label {
+  label,
+  legend {
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--muted);
@@ -162,6 +194,11 @@ a {
     min-height: 6rem;
     resize: vertical;
   }
+}
+
+fieldset.field {
+  border: 0;
+  min-width: 0;
 }
 
 .field-errors {

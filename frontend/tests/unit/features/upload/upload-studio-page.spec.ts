@@ -334,16 +334,26 @@ describe('UploadStudioPage', () => {
 
     afterEach(() => vi.restoreAllMocks());
 
+    /** Picks a cover through the cover picker's (visually hidden) file input. */
     const selectCover = (name: string): void => {
-      const input = { files: [new File(['x'], name, { type: 'image/png' })] } as unknown as HTMLInputElement;
-      component.onCoverSelected({ target: input } as unknown as Event);
+      fixture.detectChanges();
+      const input: HTMLInputElement = fixture.nativeElement.querySelector('app-cover-picker input[type="file"]');
+      Object.defineProperty(input, 'files', { value: [new File(['x'], name, { type: 'image/png' })], configurable: true });
+      input.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+    };
+    const changeCover = (): void => {
+      (fixture.nativeElement.querySelector('.remove-cover-btn') as HTMLButtonElement).click();
+      fixture.detectChanges();
     };
 
-    it('revokes the previous cover preview on replace and remove', () => {
+    it('revokes the cover preview when it is changed or removed', () => {
       selectCover('a.png');
-      selectCover('b.png');
+      expect(fixture.nativeElement.querySelector('app-cover-picker img').getAttribute('src')).toBe('blob:cover/1');
+      changeCover();
       expect(revoked).toEqual(['blob:cover/1']);
-      component.removeCover();
+      selectCover('b.png');
+      changeCover();
       expect(revoked).toEqual(['blob:cover/1', 'blob:cover/2']);
       expect(component.coverPreviewUrl()).toBe('');
     });
@@ -380,5 +390,21 @@ describe('UploadStudioPage', () => {
     expect(bar.getAttribute('aria-valuemax')).toBe('100');
     expect(Number(bar.getAttribute('aria-valuenow'))).toBe(component.uploadProgress());
     expect(bar.getAttribute('aria-valuetext')).toContain('Creating series in catalog');
+  });
+
+  it('step indicator marks the current step and only enables reachable steps', () => {
+    const buttons = (): HTMLButtonElement[] => Array.from(fixture.nativeElement.querySelectorAll('app-wizard-steps button'));
+    expect(buttons().map((b) => b.disabled)).toEqual([false, true, true, true]);
+    expect(buttons()[0].getAttribute('aria-current')).toBe('step');
+
+    component.title.set('Tower of God');
+    fixture.detectChanges();
+    expect(buttons().map((b) => b.disabled)).toEqual([false, false, false, true]);
+
+    buttons()[1].click();
+    fixture.detectChanges();
+    expect(component.currentStep()).toBe('chapter');
+    expect(buttons()[1].getAttribute('aria-current')).toBe('step');
+    expect(buttons()[0].classList.contains('completed')).toBe(true);
   });
 });

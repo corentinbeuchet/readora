@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -14,9 +13,11 @@ import {
   WorkType,
 } from '@app/core/models/readora.models';
 import { PageUploadItem, createPreviewUrl, isImageFile, revokePreviewUrl } from '@app/core/upload/file-utils';
+import { CoverPicker } from './components/cover-picker';
 import { PageGridUploader } from './components/page-grid-uploader';
+import { UploadStep, WizardSteps } from './components/wizard-steps';
 
-export type UploadStep = 'manga' | 'chapter' | 'pages' | 'review' | 'success';
+export type { UploadStep } from './components/wizard-steps';
 export type PublishingMode = 'DIRECT' | 'SCANLATION';
 
 /** Positive chapter number such as `1`, `10` or `12.5` (backend: `@Positive BigDecimal`, max 50 chars). */
@@ -58,7 +59,7 @@ export const GENRE_PRESETS = [
 
 @Component({
   selector: 'app-upload-studio-page',
-  imports: [CommonModule, FormsModule, RouterLink, PageGridUploader],
+  imports: [FormsModule, RouterLink, PageGridUploader, CoverPicker, WizardSteps],
   templateUrl: './upload-studio-page.html',
   styleUrl: './upload-studio-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -148,21 +149,7 @@ export class UploadStudioPage {
   }
 
   // Cover image management
-  onCoverSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      this.setCoverFile(input.files[0]);
-    }
-  }
-
-  onCoverDrop(event: DragEvent): void {
-    event.preventDefault();
-    if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
-      this.setCoverFile(event.dataTransfer.files[0]);
-    }
-  }
-
-  private setCoverFile(file: File): void {
+  protected setCoverFile(file: File): void {
     if (isImageFile(file)) {
       revokePreviewUrl(this.coverPreviewUrl());
       this.coverFile.set(file);

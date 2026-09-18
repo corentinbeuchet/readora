@@ -6,58 +6,18 @@
 
   <!-- Step Progress Indicator -->
   @if (currentStep() !== 'success') {
-    <nav class="wizard-nav" aria-label="Upload steps">
-      <button
-        type="button"
-        class="wizard-step"
-        [class.active]="currentStep() === 'manga'"
-        [class.completed]="isMangaStepValid() && currentStep() !== 'manga'"
-        (click)="goToStep('manga')"
-      >
-        <span class="step-number">1</span>
-        <span class="step-label">Manga Details</span>
-      </button>
-
-      <button
-        type="button"
-        class="wizard-step"
-        [class.active]="currentStep() === 'chapter'"
-        [class.completed]="isChapterStepValid() && (currentStep() === 'pages' || currentStep() === 'review')"
-        [disabled]="!isMangaStepValid()"
-        (click)="goToStep('chapter')"
-      >
-        <span class="step-number">2</span>
-        <span class="step-label">Chapter Setup</span>
-      </button>
-
-      <button
-        type="button"
-        class="wizard-step"
-        [class.active]="currentStep() === 'pages'"
-        [class.completed]="isPagesStepValid() && currentStep() === 'review'"
-        [disabled]="!isMangaStepValid() || !isChapterStepValid()"
-        (click)="goToStep('pages')"
-      >
-        <span class="step-number">3</span>
-        <span class="step-label">Page Uploader</span>
-      </button>
-
-      <button
-        type="button"
-        class="wizard-step"
-        [class.active]="currentStep() === 'review'"
-        [disabled]="!isMangaStepValid() || !isChapterStepValid() || !isPagesStepValid()"
-        (click)="goToStep('review')"
-      >
-        <span class="step-number">4</span>
-        <span class="step-label">Review & Publish</span>
-      </button>
-    </nav>
+    <app-wizard-steps
+      [current]="currentStep()"
+      [mangaValid]="isMangaStepValid()"
+      [chapterValid]="isChapterStepValid()"
+      [pagesValid]="isPagesStepValid()"
+      (stepSelected)="goToStep($event)"
+    />
   }
 
   <!-- Error alert -->
   @if (errorMessage()) {
-    <div class="alert alert-danger" role="alert">
+    <div class="form-error studio-alert" role="alert">
       <span>{{ errorMessage() }}</span>
     </div>
   }
@@ -70,12 +30,11 @@
 
       <div class="form-layout">
         <div class="form-fields">
-          <div class="form-group">
+          <div class="field">
             <label for="manga-title">Series Title <span class="required">*</span></label>
             <input
               id="manga-title"
               type="text"
-              class="form-control"
               placeholder="e.g. Solo Leveling, Berserk"
               maxlength="255"
               [ngModel]="title()"
@@ -85,11 +44,10 @@
           </div>
 
           <div class="form-row">
-            <div class="form-group">
+            <div class="field">
               <label for="manga-type">Work Type</label>
               <select
                 id="manga-type"
-                class="form-control"
                 [ngModel]="type()"
                 (ngModelChange)="type.set($event)"
               >
@@ -100,11 +58,10 @@
               </select>
             </div>
 
-            <div class="form-group">
+            <div class="field">
               <label for="manga-status">Publication Status</label>
               <select
                 id="manga-status"
-                class="form-control"
                 [ngModel]="status()"
                 (ngModelChange)="status.set($event)"
               >
@@ -115,7 +72,7 @@
             </div>
           </div>
 
-          <fieldset class="form-group">
+          <fieldset class="field">
             <legend>Genres</legend>
             <div class="genre-pill-container">
               @for (genre of availableGenres; track genre) {
@@ -133,7 +90,7 @@
             <div class="custom-genre-row">
               <input
                 type="text"
-                class="form-control form-control-sm"
+                class="input-sm"
                 placeholder="Add custom genre"
                 aria-label="Custom genre"
                 [ngModel]="customGenreInput()"
@@ -144,11 +101,10 @@
             </div>
           </fieldset>
 
-          <div class="form-group">
+          <div class="field">
             <label for="manga-synopsis">Synopsis</label>
             <textarea
               id="manga-synopsis"
-              class="form-control"
               rows="4"
               placeholder="Brief summary of the story, characters, and setting…"
               [ngModel]="synopsis()"
@@ -158,40 +114,7 @@
         </div>
 
         <!-- Cover Image Uploader -->
-        <div class="cover-uploader-section" role="group" aria-labelledby="cover-image-label">
-          <span id="cover-image-label" class="group-label">Cover Image</span>
-          @if (coverPreviewUrl()) {
-            <div class="cover-preview-card">
-              <img [src]="coverPreviewUrl()" alt="Cover preview" class="cover-img" />
-              <button type="button" class="btn btn-danger-outline btn-sm remove-cover-btn" (click)="removeCover()">
-                Change Cover
-              </button>
-            </div>
-          } @else {
-            <div
-              class="cover-drop-zone"
-              (dragover)="$event.preventDefault()"
-              (drop)="onCoverDrop($event)"
-              (click)="coverInput.click()"
-              (keydown.enter)="coverInput.click()"
-              (keydown.space)="$event.preventDefault(); coverInput.click()"
-              tabindex="0"
-              role="button"
-              aria-label="Upload cover image"
-            >
-              <input
-                #coverInput
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                class="sr-only"
-                (change)="onCoverSelected($event)"
-              />
-              <span class="cover-icon">🖼️</span>
-              <p><strong>Upload Cover</strong></p>
-              <p class="muted small">Drag & drop or browse (JPEG, PNG, WebP)</p>
-            </div>
-          }
-        </div>
+        <app-cover-picker [previewUrl]="coverPreviewUrl()" (fileSelected)="setCoverFile($event)" (removed)="removeCover()" />
       </div>
 
       <div class="wizard-actions">
@@ -209,12 +132,11 @@
       <h2>2. Initial Chapter Details</h2>
       <p class="muted">Configure chapter metadata and choose your preferred publishing mode.</p>
 
-      <div class="form-group">
+      <div class="field">
         <label for="chapter-number">Chapter Number <span class="required">*</span></label>
         <input
           id="chapter-number"
           type="text"
-          class="form-control"
           placeholder="e.g. 1, 1.5, 10"
           [ngModel]="chapterNumber()"
           (ngModelChange)="chapterNumber.set($event)"
@@ -222,12 +144,11 @@
         />
       </div>
 
-      <div class="form-group">
+      <div class="field">
         <label for="chapter-title">Chapter Title (Optional)</label>
         <input
           id="chapter-title"
           type="text"
-          class="form-control"
           placeholder="e.g. Prologue, The Beginning"
           [ngModel]="chapterTitle()"
           (ngModelChange)="chapterTitle.set($event)"
@@ -235,7 +156,7 @@
       </div>
 
       <!-- Native radios: arrow keys, Space and checked state come from the browser. -->
-      <fieldset class="form-group">
+      <fieldset class="field">
         <legend>Publishing Pipeline</legend>
         <div class="mode-cards">
           <label class="mode-card" [class.selected]="publishingMode() === 'DIRECT'">

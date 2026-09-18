@@ -1,0 +1,20 @@
+<nav aria-label="Upload steps">
+  <ol class="wizard-nav">
+    @for (step of steps; track step.key; let i = $index) {
+      <li>
+        <button
+          type="button"
+          class="wizard-step"
+          [class.active]="current() === step.key"
+          [class.completed]="isCompleted(step.key)"
+          [attr.aria-current]="current() === step.key ? 'step' : null"
+          [disabled]="!isReachable(step.key)"
+          (click)="stepSelected.emit(step.key)"
+        >
+          <span class="step-number" aria-hidden="true">{{ i + 1 }}</span>
+          <span class="step-label">{{ step.label }}</span>
+        </button>
+      </li>
+    }
+  </ol>
+</nav>
