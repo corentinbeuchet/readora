@@ -5,10 +5,11 @@ import java.util.EnumSet;
 import java.util.Set;
 
 public enum Role {
-    READER(EnumSet.of(Permission.COMMENT_WRITE, Permission.COMMENT_UPVOTE)),
+    READER(EnumSet.of(Permission.COMMENT_WRITE, Permission.COMMENT_UPVOTE, Permission.LIBRARY_USE)),
     SCANLATOR(EnumSet.of(
             Permission.COMMENT_WRITE,
             Permission.COMMENT_UPVOTE,
+            Permission.LIBRARY_USE,
             Permission.PROJECT_VIEW,
             Permission.TASK_CLAIM,
             Permission.TASK_SUBMIT,

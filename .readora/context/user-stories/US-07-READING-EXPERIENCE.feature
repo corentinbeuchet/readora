@@ -71,7 +71,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     And the choice is kept for his next chapters
 
   # Inspired by: Mihon, MangaDex
-  @must @wip
+  @must
   Scenario: Seeing which chapters I already read
     Given "Kenji" finished chapters 1 to 4 of "Solo Leveling"
     When he opens the chapter list
@@ -79,7 +79,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     And chapter 5 is highlighted as the next one to read
 
   # Inspired by: WEBTOON "My" page
-  @must @wip
+  @must
   Scenario: Finding what I was reading
     Given "Kenji" read "Solo Leveling" yesterday and "One Piece" today
     When he opens his History page
@@ -118,7 +118,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     Then the space around the pages uses that colour
 
   # Inspired by: Mihon, WEBTOON
-  @should @wip
+  @should
   Scenario: Knowing when new chapters are out
     Given "Kenji" has "Solo Leveling" in his library and read up to chapter 5
     When chapters 6 and 7 are published

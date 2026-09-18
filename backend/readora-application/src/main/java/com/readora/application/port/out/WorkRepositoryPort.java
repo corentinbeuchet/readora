@@ -7,6 +7,7 @@ import com.readora.domain.work.WorkStatus;
 import com.readora.domain.work.WorkType;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -14,6 +15,9 @@ import java.util.Set;
 public interface WorkRepositoryPort {
     Optional<Work> findById(WorkId id);
     Work save(Work work);
+
+    /// The works that exist among `ids`, in no particular order (one query, for list pages).
+    List<Work> findAllById(Collection<WorkId> ids);
 
     /// Criteria are combined with AND; empty sets and a `null` text don't filter.
     /// Genres arrive lower-cased and match case-insensitively: every `includedGenres` entry must be present,

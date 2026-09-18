@@ -2,7 +2,6 @@
 # (it also feeds the "new chapters" badge of US-07). Public lists are kept as a @could idea.
 # The library is free for every signed-in reader; exact-page progress sync stays Premium (US-01).
 
-@wip
 Feature: My library
   As a reader
   I want to keep the series I follow in one place, each with a reading status

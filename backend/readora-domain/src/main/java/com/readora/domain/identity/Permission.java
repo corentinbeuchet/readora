@@ -11,5 +11,7 @@ public enum Permission {
     PROJECT_VIEW,
     PROJECT_MANAGE,
     USER_MANAGE,
-    WORK_CREATE
+    WORK_CREATE,
+    /// Personal library, reading history and read markers (free for every signed-in reader).
+    LIBRARY_USE
 }

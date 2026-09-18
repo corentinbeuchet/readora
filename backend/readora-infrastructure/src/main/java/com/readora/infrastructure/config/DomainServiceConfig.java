@@ -5,20 +5,24 @@ import com.readora.application.port.in.BrowseCatalogUseCase;
 import com.readora.application.port.in.DirectPublishChapterUseCase;
 import com.readora.application.port.in.ManageAssetsUseCase;
 import com.readora.application.port.in.ManageBookmarkUseCase;
+import com.readora.application.port.in.ManageLibraryUseCase;
 import com.readora.application.port.in.ManageProfileUseCase;
 import com.readora.application.port.in.ManageScanlationTaskUseCase;
 import com.readora.application.port.in.ManageSubscriptionUseCase;
 import com.readora.application.port.in.ManageWorkUseCase;
 import com.readora.application.port.in.ReadChapterUseCase;
 import com.readora.application.port.in.ReaderInteractionUseCase;
+import com.readora.application.port.in.TrackReadingUseCase;
 import com.readora.application.port.out.*;
 import com.readora.application.service.AssetService;
 import com.readora.application.service.AuthenticationService;
 import com.readora.application.service.BookmarkService;
 import com.readora.application.service.CatalogService;
 import com.readora.application.service.ChapterReadingService;
+import com.readora.application.service.LibraryService;
 import com.readora.application.service.ProfileService;
 import com.readora.application.service.ReaderSocialService;
+import com.readora.application.service.ReadingTrackerService;
 import com.readora.application.service.ScanlationTaskService;
 import com.readora.application.service.SubscriptionService;
 import com.readora.application.service.WorkManagementService;
@@ -26,6 +30,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
+
+import java.time.Clock;
 
 import static com.readora.infrastructure.config.UseCaseTransactions.transactional;
 
@@ -128,6 +134,24 @@ public class DomainServiceConfig {
     @Bean
     public ManageAssetsUseCase manageAssetsUseCase(StoragePort storagePort) {
         return new AssetService(storagePort);
+    }
+
+    @Bean
+    public ManageLibraryUseCase manageLibraryUseCase(
+            LibraryRepositoryPort libraryRepository,
+            WorkRepositoryPort workRepository,
+            ChapterReadRepositoryPort chapterReadRepository) {
+        return transactional(new LibraryService(libraryRepository, workRepository, chapterReadRepository, Clock.systemUTC()),
+                ManageLibraryUseCase.class, transactionManager);
+    }
+
+    @Bean
+    public TrackReadingUseCase trackReadingUseCase(
+            ChapterReadRepositoryPort chapterReadRepository,
+            ChapterRepositoryPort chapterRepository,
+            WorkRepositoryPort workRepository) {
+        return transactional(new ReadingTrackerService(chapterReadRepository, chapterRepository, workRepository, Clock.systemUTC()),
+                TrackReadingUseCase.class, transactionManager);
     }
 
     @Bean

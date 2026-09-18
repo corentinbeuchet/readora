@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,6 +29,16 @@ public class InMemoryWorkRepository implements WorkRepositoryPort {
     public Work save(Work work) {
         works.put(work.getId(), work);
         return work;
+    }
+
+    @Override
+    public List<Work> findAllById(Collection<WorkId> ids) {
+        return ids.stream().map(works::get).filter(Objects::nonNull).toList();
+    }
+
+    public Work byTitle(String title) {
+        return works.values().stream().filter(w -> w.getTitle().equals(title)).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No work titled " + title));
     }
 
     @Override

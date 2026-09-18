@@ -4,7 +4,12 @@ import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.work.*;
+import com.readora.domain.library.ChapterRead;
+import com.readora.domain.library.LibraryEntry;
+import com.readora.domain.social.ReadingStatus;
+import com.readora.infrastructure.persistence.adapter.ChapterReadRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.ChapterRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.LibraryRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.ScanlationProjectRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.WorkRepositoryAdapter;
 import org.junit.jupiter.api.DisplayName;
@@ -89,5 +94,43 @@ class PostgresMigrationTest {
         assertThat(page.totalElements()).isEqualTo(1);
         assertThat(page.items()).singleElement().extracting(Work::getAuthor).isEqualTo("Chugong");
         assertThat(workRepository.findAllGenres()).contains("Action", "PG-run", "Romance");
+    }
+
+    @Autowired
+    private ChapterReadRepositoryAdapter chapterReads;
+
+    @Autowired
+    private LibraryRepositoryAdapter library;
+
+    @Test
+    @DisplayName("Library and reading queries (latest read per work, new chapters since last read) run on PostgreSQL")
+    void libraryQueriesRunOnPostgres() {
+        Work work = workRepository.save(Work.create("PG Library", "", WorkType.MANGA, "c.png", Set.of("Action")));
+        UserId kenji = UserId.of("pg-kenji");
+        Chapter one = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", null);
+        one.updatePages(List.of(PageAsset.create(1, "p1.webp", null)));
+        one.publish(UserId.of("qc"));
+        chapterRepository.save(one);
+        library.save(LibraryEntry.add(kenji, work.getId(), ReadingStatus.READING, java.time.Instant.now()));
+        // Read right when chapter 1 came out; chapter 2 is published afterwards.
+        chapterReads.save(new ChapterRead(kenji, work.getId(), one.getId(), one.getChapterNumber(), one.getPublishedAt(), true));
+        sleepPastClockTick();
+
+        Chapter two = Chapter.createDraft(work.getId(), ChapterNumber.of("2"), "Ch 2", null);
+        two.updatePages(List.of(PageAsset.create(1, "p1.webp", null)));
+        two.publish(UserId.of("qc"));
+        chapterRepository.save(two);
+
+        assertThat(chapterReads.findLatestPerWork(kenji, 10)).singleElement().extracting(ChapterRead::chapterId).isEqualTo(one.getId());
+        assertThat(chapterReads.countChaptersPublishedSinceLastRead(kenji, List.of(work.getId()))).containsEntry(work.getId(), 1L);
+        assertThat(library.findByUser(kenji, ReadingStatus.READING)).hasSize(1);
+    }
+
+    private static void sleepPastClockTick() {
+        try {
+            Thread.sleep(5);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }

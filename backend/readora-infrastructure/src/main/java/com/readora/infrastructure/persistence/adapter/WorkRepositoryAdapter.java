@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +31,12 @@ public class WorkRepositoryAdapter implements WorkRepositoryPort {
     @Transactional(readOnly = true)
     public Optional<Work> findById(WorkId id) {
         return springDataRepository.findById(id.value()).map(this::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Work> findAllById(Collection<WorkId> ids) {
+        return springDataRepository.findAllById(ids.stream().map(WorkId::value).toList()).stream().map(this::toDomain).toList();
     }
 
     @Override

@@ -23,7 +23,7 @@ class UserAccountDomainTest {
 
         assertThat(account.getRoles()).containsExactly(Role.READER);
         assertThat(account.getEmail().value()).isEqualTo("reader@example.com");
-        assertThat(account.effectivePermissions()).containsExactlyInAnyOrder(Permission.COMMENT_WRITE, Permission.COMMENT_UPVOTE);
+        assertThat(account.effectivePermissions()).containsExactlyInAnyOrder(Permission.COMMENT_WRITE, Permission.COMMENT_UPVOTE, Permission.LIBRARY_USE);
         assertThat(account.can(Permission.BOOKMARK_WRITE)).isFalse();
         assertThat(account.getDomainEvents()).singleElement().isInstanceOf(UserRegisteredEvent.class);
     }
