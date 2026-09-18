@@ -53,7 +53,7 @@ public class WorkRepositoryAdapter implements WorkRepositoryPort {
             existing.setCoverImageUrl(work.getCoverImageUrl());
             existing.setGenres(new ArrayList<>(work.getGenres()));
             existing.setUpdatedAt(work.getUpdatedAt());
-            WorkJpaEntity saved = springDataRepository.saveAndFlush(existing);
+            WorkJpaEntity saved = OptimisticLocking.flush(work, "Work", () -> springDataRepository.saveAndFlush(existing));
             work.restoreVersion(saved.getVersion());
             return toDomain(saved);
         } else {

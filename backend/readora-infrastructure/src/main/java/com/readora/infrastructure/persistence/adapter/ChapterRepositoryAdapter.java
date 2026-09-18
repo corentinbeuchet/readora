@@ -65,7 +65,7 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
                 }
             }
 
-            ChapterJpaEntity saved = springDataRepository.saveAndFlush(existing);
+            ChapterJpaEntity saved = OptimisticLocking.flush(chapter, "Chapter", () -> springDataRepository.saveAndFlush(existing));
             chapter.restoreVersion(saved.getVersion());
             return toDomain(saved);
         } else {

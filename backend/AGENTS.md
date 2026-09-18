@@ -23,8 +23,9 @@
 ## Application services
 - **Events:** `aggregate.pollDomainEvents()` on the aggregate you mutated, **never** on the object returned by `repository.save(...)`
   (adapters rebuild it via `toDomain`, so it has no events).
-- A use case that writes more than once runs in a single transaction (transactional decorator in `DomainServiceConfig`,
-  keeping the application layer Spring-free). External calls (Stripe) happen after/outside the DB write, idempotently.
+- Every `port.in` bean is wrapped with `UseCaseTransactions.transactional(...)` in `DomainServiceConfig`, so each
+  use-case call is one transaction (application layer stays Spring-free). Register new use cases the same way.
+  Validate/mutate all aggregates in memory before the first save. External calls (Stripe) must be idempotent.
 - Every write on a resource checks ownership/membership, not just the global permission (e.g. publisher must belong to the work's project).
 - Not-found is a dedicated not-found exception → 404. Don't use `DomainValidationException` (400) for missing entities.
 - Use-case signatures take value objects (`ChapterNumber`, `WorkId`), not raw strings. Validation lives in the domain; web only
@@ -38,7 +39,9 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 ## Persistence
 - Every schema change = new Flyway migration in `readora-infrastructure/src/main/resources/db/migration`. Never edit an applied one.
 - Entity column lengths == DTO `@Size` limits == migration column sizes.
-- Aggregate entities carry `@Version`; map `OptimisticLockException` / `ObjectOptimisticLockingFailureException` to 409.
+- Aggregate entities carry `@Version`. Adapters call `OptimisticLocking.verify(...)` before copying state, save with
+  `OptimisticLocking.flush(..., saveAndFlush)` and `restoreVersion` after; conflicts surface as
+  `ConcurrentModificationDomainException` → 409.
   Ordered collections carry `@OrderBy` (pages, chapters).
 - Every association declares `fetch = FetchType.LAZY` explicitly (`@ManyToOne`/`@OneToOne` default to EAGER); load what
   a use case needs with `JOIN FETCH` or an entity graph. Keep `spring.jpa.open-in-view=false`.
@@ -120,7 +123,7 @@ Backlog ids used in commit `Refs:` (status: `git log --grep "review-2026-09/B<n>
 - B3 Direct publish without project-membership check (IDOR). — fixed 90afc6f
 - B4 Publish-from-QC without `stage == QC_REVIEW` guard; `Chapter.publish` re-publishable. — fixed ee8a113
 - B5 `saved.pollDomainEvents()` in `ScanlationTaskService` / `ReaderSocialService` drops events. — fixed 84acc60
-- B6 No transactions across multi-save use cases.
+- B6 No transactions across multi-save use cases. — fixed (see `git log --grep review-2026-09/B6`)
 - B7 No `@Version`; `WorkflowTask.assignTo` steals claimed tasks; unlimited upvotes. — fixed 83a6779, c64ad65, 8b9bd25
 - B8 Stripe: null `currentPeriodEnd` = infinite access; unknown status → ACTIVE; any price → PREMIUM; out-of-order events; immediate cancel.
 - B9 `S3StorageAdapter` unbounded in-memory `byte[]` cache; S3 failure swallowed; no multipart size config; fake presigned URL fallback. (`..` in folder fixed with B2.)

@@ -94,7 +94,7 @@ public class ScanlationProjectRepositoryAdapter implements ScanlationProjectRepo
                 }
             }
 
-            ScanlationProjectJpaEntity saved = springDataRepository.saveAndFlush(existing);
+            ScanlationProjectJpaEntity saved = OptimisticLocking.flush(project, "ScanlationProject", () -> springDataRepository.saveAndFlush(existing));
             project.restoreVersion(saved.getVersion());
             return toDomain(saved);
         } else {

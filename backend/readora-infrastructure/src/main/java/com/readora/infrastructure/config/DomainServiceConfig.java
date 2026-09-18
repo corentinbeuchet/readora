@@ -23,10 +23,21 @@ import com.readora.application.service.WorkManagementService;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.PlatformTransactionManager;
 
+import static com.readora.infrastructure.config.UseCaseTransactions.transactional;
+
+/// Wires the framework-free application services. Every `port.in` bean is wrapped by
+/// [UseCaseTransactions#transactional] so each use-case call is atomic.
 @Configuration
 @EnableConfigurationProperties({SecurityProperties.class, StripeProperties.class})
 public class DomainServiceConfig {
+
+    private final PlatformTransactionManager transactionManager;
+
+    public DomainServiceConfig(PlatformTransactionManager transactionManager) {
+        this.transactionManager = transactionManager;
+    }
 
     @Bean
     public WorkManagementService workManagementService(
@@ -40,12 +51,12 @@ public class DomainServiceConfig {
 
     @Bean
     public ManageWorkUseCase manageWorkUseCase(WorkManagementService workManagementService) {
-        return workManagementService;
+        return transactional(workManagementService, ManageWorkUseCase.class, transactionManager);
     }
 
     @Bean
     public DirectPublishChapterUseCase directPublishChapterUseCase(WorkManagementService workManagementService) {
-        return workManagementService;
+        return transactional(workManagementService, DirectPublishChapterUseCase.class, transactionManager);
     }
 
     @Bean
@@ -53,7 +64,8 @@ public class DomainServiceConfig {
             ChapterRepositoryPort chapterRepository,
             StoragePort storagePort,
             EventPublisherPort eventPublisher) {
-        return new ChapterReadingService(chapterRepository, storagePort, eventPublisher);
+        return transactional(new ChapterReadingService(chapterRepository, storagePort, eventPublisher),
+                ReadChapterUseCase.class, transactionManager);
     }
 
     @Bean
@@ -61,7 +73,8 @@ public class DomainServiceConfig {
             ScanlationProjectRepositoryPort projectRepository,
             ChapterRepositoryPort chapterRepository,
             EventPublisherPort eventPublisher) {
-        return new ScanlationTaskService(projectRepository, chapterRepository, eventPublisher);
+        return transactional(new ScanlationTaskService(projectRepository, chapterRepository, eventPublisher),
+                ManageScanlationTaskUseCase.class, transactionManager);
     }
 
     @Bean
@@ -69,7 +82,8 @@ public class DomainServiceConfig {
             CommentRepositoryPort commentRepository,
             BookmarkRepositoryPort bookmarkRepository,
             EventPublisherPort eventPublisher) {
-        return new ReaderSocialService(commentRepository, bookmarkRepository, eventPublisher);
+        return transactional(new ReaderSocialService(commentRepository, bookmarkRepository, eventPublisher),
+                ReaderInteractionUseCase.class, transactionManager);
     }
 
     @Bean
@@ -79,12 +93,13 @@ public class DomainServiceConfig {
             PasswordHasherPort passwordHasher,
             TokenProviderPort tokenProvider,
             EventPublisherPort eventPublisher) {
-        return new AuthenticationService(userRepository, refreshTokenRepository, passwordHasher, tokenProvider, eventPublisher);
+        return transactional(new AuthenticationService(userRepository, refreshTokenRepository, passwordHasher, tokenProvider, eventPublisher),
+                AuthenticateUserUseCase.class, transactionManager);
     }
 
     @Bean
     public ManageProfileUseCase manageProfileUseCase(UserAccountRepositoryPort userRepository) {
-        return new ProfileService(userRepository);
+        return transactional(new ProfileService(userRepository), ManageProfileUseCase.class, transactionManager);
     }
 
     @Bean
@@ -92,7 +107,8 @@ public class DomainServiceConfig {
             BookmarkRepositoryPort bookmarkRepository,
             UserAccountRepositoryPort userRepository,
             EventPublisherPort eventPublisher) {
-        return new BookmarkService(bookmarkRepository, userRepository, eventPublisher);
+        return transactional(new BookmarkService(bookmarkRepository, userRepository, eventPublisher),
+                ManageBookmarkUseCase.class, transactionManager);
     }
 
     @Bean
@@ -100,7 +116,8 @@ public class DomainServiceConfig {
             UserAccountRepositoryPort userRepository,
             PaymentPort paymentPort,
             EventPublisherPort eventPublisher) {
-        return new SubscriptionService(userRepository, paymentPort, eventPublisher);
+        return transactional(new SubscriptionService(userRepository, paymentPort, eventPublisher),
+                ManageSubscriptionUseCase.class, transactionManager);
     }
 
     @Bean
@@ -108,6 +125,7 @@ public class DomainServiceConfig {
             WorkRepositoryPort workRepository,
             ChapterRepositoryPort chapterRepository,
             ScanlationProjectRepositoryPort projectRepository) {
-        return new CatalogService(workRepository, chapterRepository, projectRepository);
+        return transactional(new CatalogService(workRepository, chapterRepository, projectRepository),
+                BrowseCatalogUseCase.class, transactionManager);
     }
 }

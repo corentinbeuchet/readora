@@ -76,7 +76,7 @@ public class UserAccountRepositoryAdapter implements UserAccountRepositoryPort {
                     return updateEntity(existing, account);
                 })
                 .orElseGet(() -> toEntity(account));
-        UserAccountJpaEntity saved = springDataRepository.saveAndFlush(entity);
+        UserAccountJpaEntity saved = OptimisticLocking.flush(account, "UserAccount", () -> springDataRepository.saveAndFlush(entity));
         account.restoreVersion(saved.getVersion());
         return toDomain(saved);
     }
