@@ -27,6 +27,8 @@ Manga/comics reading and scanlation platform. Monorepo:
 
 ## Cross-cutting rules
 - `.feature` files in `.readora/context/user-stories/` are the source of truth for behaviour. New behaviour → scenario first.
+  Scenario tags: `@must`/`@should`/`@could` (priority), `@wip` (not built yet, skipped), `@ui` (frontend-only: not run by
+  Cucumber; a frontend Vitest `it(...)` carries the exact scenario title). Everything else runs as a Cucumber test.
 - Identity comes **only** from the JWT. Never accept `userId` / `authorId` / `publisherId` in a request body;
   tests on both sides assert this, keep it that way.
 - One API envelope: backend `ApiResponse.ok/error` ↔ frontend `ApiClient` unwraps it into typed values / `ApiError`.

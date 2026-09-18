@@ -112,6 +112,8 @@
   `tests/unit/test-utils.ts` for `httpResource` components. `http.verify()` in `afterEach`.
 - Drive the real DOM and assert request bodies; don't poke component internals.
 - `vi.useFakeTimers()` for debounce/timeouts — no real `setTimeout` waits. `tests/**` is linted by `npm run lint`.
+- A user-story scenario tagged `@ui` (`.readora/context/user-stories/*.feature`) is verified here: one `it(...)` whose
+  name is the exact scenario title, driving the real DOM.
 - Cover failure and retry paths, not only the happy path. No placeholder e2e tests; no `test.skip` on missing data.
 
 ## Known pitfalls found in review (2026-09) — don't reintroduce

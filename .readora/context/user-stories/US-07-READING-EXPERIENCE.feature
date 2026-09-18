@@ -1,9 +1,10 @@
 # Ideas from the most popular reading platforms (research 2026-09): WEBTOON (~157M monthly users), Piccoma,
 # MangaDex, MANGA Plus, Mihon (Tachiyomi successor), Shonen Jump, Tapas.
-# Priority tags: @must / @should / @could. Everything here is @wip: no step definitions yet (see backend/AGENTS.md).
-# Backend work needed for: read markers, reading history, new-chapter badges. The rest is frontend-only.
+# Priority tags: @must / @should / @could.
+# @ui = frontend-only, verified by a Vitest test named after the scenario (not run by Cucumber).
+# @wip = not built yet. Data saver needs server-side image variants; offline, top comments and page descriptions are later ideas.
+# Untagged scenarios (next chapter, read markers, history, new-chapter badges) run as Cucumber acceptance tests.
 
-@wip
 Feature: A reading experience as good as the best manga and webtoon apps
   As a reader
   I want the reader to adapt to what I read and get out of my way
@@ -16,7 +17,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
   # ---------------------------------------------------------------- @must
 
   # Inspired by: WEBTOON, MANGA Plus
-  @must
+  @must @wip
   Scenario: Going to the next chapter from the end of a chapter
     Given "Kenji" is on the last page of chapter 5 of "Solo Leveling"
     Then he sees a "Next chapter" button, a "Previous chapter" button and the chapter list
@@ -24,7 +25,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     Then chapter 6 opens on its first page
 
   # Inspired by: MANGA Plus, Mihon
-  @must
+  @must @ui
   Scenario: Reading manga right to left
     Given "Kenji" reads "One Piece" in paged mode
     When he chooses "Right to left"
@@ -32,7 +33,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     And the page order follows the Japanese reading direction
 
   # Inspired by: Mihon, MangaDex
-  @must
+  @must @ui
   Scenario: The reader opens in the right mode for the format
     When "Kenji" opens a chapter of the manhwa "Solo Leveling"
     Then it opens in vertical mode
@@ -40,7 +41,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     Then it opens in paged right-to-left mode
 
   # Inspired by: Mihon
-  @must
+  @must @ui
   Scenario: The reader remembers my mode for each series
     Given "Kenji" switched "One Piece" to vertical mode
     When he opens another chapter of "One Piece"
@@ -48,7 +49,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     And "Solo Leveling" keeps its own mode
 
   # Inspired by: MangaDex, Mihon
-  @must
+  @must @ui
   Scenario: Turning pages with the keyboard or a click
     Given "Kenji" reads a chapter in paged mode
     When he presses the right arrow, Space or Page Down
@@ -56,21 +57,21 @@ Feature: A reading experience as good as the best manga and webtoon apps
     And clicking the left or right third of the page also turns it
 
   # Inspired by: all major reading apps
-  @must
+  @must @ui
   Scenario: Pages turn instantly
     Given "Kenji" is on page 3 of a chapter
     Then pages 4 and 5 are already loaded
     And turning the page shows the next image without waiting
 
   # Inspired by: Mihon, MangaDex
-  @must
+  @must @ui
   Scenario: Fitting the page to my screen
     When "Kenji" chooses "Fit width", "Fit height" or "Original size"
     Then the page is resized that way
     And the choice is kept for his next chapters
 
   # Inspired by: Mihon, MangaDex
-  @must
+  @must @wip
   Scenario: Seeing which chapters I already read
     Given "Kenji" finished chapters 1 to 4 of "Solo Leveling"
     When he opens the chapter list
@@ -78,7 +79,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     And chapter 5 is highlighted as the next one to read
 
   # Inspired by: WEBTOON "My" page
-  @must
+  @must @wip
   Scenario: Finding what I was reading
     Given "Kenji" read "Solo Leveling" yesterday and "One Piece" today
     When he opens his History page
@@ -88,7 +89,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
   # ---------------------------------------------------------------- @should
 
   # Inspired by: MangaDex
-  @should
+  @should @ui
   Scenario: Seeing where I am and jumping to a page
     Given "Kenji" is on page 8 of 20
     Then a thin progress bar shows he is 40% through the chapter
@@ -96,14 +97,14 @@ Feature: A reading experience as good as the best manga and webtoon apps
     Then page 20 is shown
 
   # Inspired by: Shonen Jump, MangaDex
-  @should
+  @should @ui
   Scenario: Reading two pages side by side
     Given "Kenji" reads "One Piece" on a wide screen
     When he turns on "Double page"
     Then two pages are shown side by side like a printed book
 
   # Inspired by: most-requested missing feature in WEBTOON and Tachiyomi forks
-  @should
+  @should @ui
   Scenario: Letting a webtoon scroll by itself
     Given "Kenji" reads "Solo Leveling" in vertical mode
     When he turns on auto-scroll at medium speed
@@ -111,20 +112,20 @@ Feature: A reading experience as good as the best manga and webtoon apps
     And it stops as soon as he touches or scrolls the page
 
   # Inspired by: Mihon
-  @should
+  @should @ui
   Scenario: Changing the background colour
     When "Kenji" picks a black, gray or white background
     Then the space around the pages uses that colour
 
   # Inspired by: Mihon, WEBTOON
-  @should
+  @should @wip
   Scenario: Knowing when new chapters are out
     Given "Kenji" has "Solo Leveling" in his library and read up to chapter 5
     When chapters 6 and 7 are published
     Then his library shows a "2 new" badge on "Solo Leveling"
 
   # Inspired by: MangaDex
-  @should
+  @should @wip
   Scenario: Saving mobile data
     When "Kenji" turns on "Data saver"
     Then chapters load lighter, lower-quality images
@@ -132,21 +133,21 @@ Feature: A reading experience as good as the best manga and webtoon apps
   # ---------------------------------------------------------------- @could
 
   # Inspired by: WEBTOON, Shonen Jump, Mihon
-  @could
+  @could @wip
   Scenario: Reading without internet
     Given "Kenji" downloaded chapter 6 of "Solo Leveling"
     When he loses his connection
     Then he can still read chapter 6
 
   # Inspired by: WEBTOON
-  @could
+  @could @wip
   Scenario: Seeing the best comments at the end of a chapter
     Given chapter 5 has many comments
     When "Kenji" reaches the last page
     Then the three most-upvoted comments without spoilers are shown under it
 
   # Differentiator: no major platform does this well
-  @could
+  @could @wip
   Scenario: Reading with a screen reader
     Given "Aiko" uses a screen reader
     When she turns a page
