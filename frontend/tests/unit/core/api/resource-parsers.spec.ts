@@ -44,7 +44,7 @@ describe('httpResource envelope parsing', () => {
   });
 
   it('the paged works resource surfaces success:false as an error instead of an empty page', async () => {
-    const works = TestBed.runInInjectionContext(() => TestBed.inject(CatalogApi).worksResource(signal(0), signal(20)));
+    const works = TestBed.runInInjectionContext(() => TestBed.inject(CatalogApi).worksResource(signal({ page: 0, size: 20 })));
     await settle();
     http.expectOne((r) => r.url === `${API}/works`).flush({ success: false, data: null, error: 'Catalog unavailable' });
     await settle();

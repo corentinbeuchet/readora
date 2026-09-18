@@ -9,6 +9,74 @@
     </ng-container>
   </header>
 
+  <section class="catalog-filters" aria-label="Filter the catalog">
+    <div class="facet-row">
+      <label class="field facet">
+        <span>Type</span>
+        <select (change)="setFacet('type', $event)">
+          <option value="" [selected]="!query().type">Any type</option>
+          @for (option of workTypes; track option) {
+            <option [value]="option" [selected]="query().type === option">{{ option }}</option>
+          }
+        </select>
+      </label>
+      <label class="field facet">
+        <span>Status</span>
+        <select (change)="setFacet('status', $event)">
+          <option value="" [selected]="!query().status">Any status</option>
+          @for (option of workStatuses; track option) {
+            <option [value]="option" [selected]="query().status === option">{{ option }}</option>
+          }
+        </select>
+      </label>
+      <label class="field facet">
+        <span>Audience</span>
+        <select (change)="setFacet('demographic', $event)">
+          <option value="" [selected]="!query().demographic">Any audience</option>
+          @for (option of demographics; track option) {
+            <option [value]="option" [selected]="query().demographic === option">{{ option }}</option>
+          }
+        </select>
+      </label>
+      @if (hasFilters()) {
+        <button type="button" class="btn btn-link clear-filters" (click)="clearFilters()">Clear all filters</button>
+      }
+    </div>
+
+    @if (genres.hasValue() && genres.value().length > 0) {
+      <fieldset class="genre-filter">
+        <legend>Genres</legend>
+        <p class="muted genre-hint" id="genre-hint">Click a genre once to want it, twice to exclude it, a third time to clear it.</p>
+        <ul class="genre-chips">
+          @for (genre of genres.value(); track genre) {
+            @let state = genreState(genre);
+            <li>
+              <button
+                type="button"
+                class="chip"
+                [class.chip-wanted]="state === 'wanted'"
+                [class.chip-excluded]="state === 'excluded'"
+                [attr.aria-label]="genreLabel(genre)"
+                aria-describedby="genre-hint"
+                (click)="cycleGenre(genre)"
+              >
+                <span class="chip-mark" aria-hidden="true">{{ state === 'wanted' ? '+' : state === 'excluded' ? '−' : '' }}</span>
+                {{ genre }}
+              </button>
+            </li>
+          }
+        </ul>
+      </fieldset>
+    }
+
+    @if (query().text; as text) {
+      <p class="search-summary">
+        Results for “{{ text }}”
+        <button type="button" class="btn btn-link" (click)="clearText()">Clear search</button>
+      </p>
+    }
+  </section>
+
   @if (works.isLoading()) {
     <p class="muted" role="status">Loading works…</p>
   } @else if (works.error()) {
@@ -18,7 +86,13 @@
     </p>
   } @else if (works.value(); as workList) {
     @if (workList.items.length === 0) {
-      <p class="muted">No works have been published yet.</p>
+      <p class="muted" role="status">
+        @if (hasFilters()) {
+          No series match these filters.
+        } @else {
+          No works have been published yet.
+        }
+      </p>
     } @else {
       <ul class="work-grid">
         @for (work of workList.items; track work.id; let first = $first) {
@@ -39,6 +113,9 @@
                 <img class="work-cover" [src]="fallbackCover" [alt]="'Cover of ' + work.title" width="200" height="280" />
               }
               <h2 class="work-title">{{ work.title }}</h2>
+              @if (work.author) {
+                <p class="work-author muted">{{ work.author }}</p>
+              }
               <p class="work-meta">
                 <span class="badge">{{ work.type }}</span>
                 <span class="badge">{{ work.status }}</span>

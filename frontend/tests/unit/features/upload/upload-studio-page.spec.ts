@@ -119,6 +119,8 @@ describe('UploadStudioPage', () => {
   it('submits upload workflow successfully in DIRECT mode', async () => {
     component.title.set('Omniscient Reader');
     component.synopsis.set('Only I know the end of this world');
+    component.author.set('  Sing Shong ');
+    component.demographic.set('SHOUNEN');
     component.chapterNumber.set('1');
     component.chapterTitle.set('Prologue');
     component.publishingMode.set('DIRECT');
@@ -171,6 +173,7 @@ describe('UploadStudioPage', () => {
 
     await component.submitUpload();
 
+    expect(uploadService.createWork).toHaveBeenCalledWith(expect.objectContaining({ author: 'Sing Shong', demographic: 'SHOUNEN' }));
     expect(component.currentStep()).toBe('success');
     expect(component.createdWork()?.id).toBe('work-123');
     expect(component.createdChapterId()).toBe('chap-999');

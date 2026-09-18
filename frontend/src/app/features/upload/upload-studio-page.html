@@ -72,6 +72,35 @@
             </div>
           </div>
 
+          <div class="form-row">
+            <div class="field">
+              <label for="manga-author">Author</label>
+              <input
+                id="manga-author"
+                type="text"
+                placeholder="e.g. Chugong"
+                maxlength="120"
+                [ngModel]="author()"
+                (ngModelChange)="author.set($event)"
+              />
+            </div>
+
+            <div class="field">
+              <label for="manga-demographic">Audience</label>
+              <select
+                id="manga-demographic"
+                [ngModel]="demographic()"
+                (ngModelChange)="demographic.set($event)"
+              >
+                <option value="">Not specified</option>
+                <option value="SHOUNEN">Shounen</option>
+                <option value="SHOUJO">Shoujo</option>
+                <option value="SEINEN">Seinen</option>
+                <option value="JOSEI">Josei</option>
+              </select>
+            </div>
+          </div>
+
           <fieldset class="field">
             <legend>Genres</legend>
             <div class="genre-pill-container">

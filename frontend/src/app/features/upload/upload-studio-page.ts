@@ -7,6 +7,7 @@ import { SeoService } from '@app/core/seo/seo.service';
 import { UploadService } from '@app/core/upload/upload.service';
 import {
   CreateWorkPayload,
+  Demographic,
   PageAsset,
   Work,
   WorkStatus,
@@ -75,6 +76,8 @@ export class UploadStudioPage {
   readonly title = signal('');
   readonly type = signal<WorkType>('MANGA');
   readonly status = signal<WorkStatus>('ONGOING');
+  readonly author = signal('');
+  readonly demographic = signal<Demographic | ''>('');
   readonly synopsis = signal('');
   readonly selectedGenres = signal<string[]>(['Action']);
   readonly customGenreInput = signal('');
@@ -280,6 +283,8 @@ export class UploadStudioPage {
       synopsis: this.synopsis().trim(),
       type: this.type(),
       status: this.status(),
+      author: this.author().trim() || undefined,
+      demographic: this.demographic() || undefined,
       coverImageUrl: this.uploadedCoverUrl() || undefined,
       genres: this.selectedGenres(),
     };
@@ -330,6 +335,8 @@ export class UploadStudioPage {
     this.title.set('');
     this.type.set('MANGA');
     this.status.set('ONGOING');
+    this.author.set('');
+    this.demographic.set('');
     this.synopsis.set('');
     this.selectedGenres.set(['Action']);
     this.coverFile.set(null);

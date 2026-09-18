@@ -28,7 +28,8 @@ export class ApiError extends Error {
   }
 }
 
-export type QueryParams = Record<string, string | number | boolean | null | undefined>;
+/** Array values become repeated parameters (`?genre=a&genre=b`). */
+export type QueryParams = Record<string, string | number | boolean | readonly string[] | null | undefined>;
 
 export interface RequestOptions {
   params?: QueryParams;
@@ -75,7 +76,11 @@ export class ApiClient {
   private toHttpOptions(options: RequestOptions): { params?: HttpParams; withCredentials?: boolean } {
     let params = new HttpParams();
     for (const [key, value] of Object.entries(options.params ?? {})) {
-      if (value !== null && value !== undefined) {
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          params = params.append(key, item);
+        }
+      } else if (value !== null && value !== undefined) {
         params = params.set(key, String(value));
       }
     }
