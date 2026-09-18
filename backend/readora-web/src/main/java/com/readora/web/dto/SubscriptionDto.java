@@ -2,6 +2,7 @@ package com.readora.web.dto;
 
 import com.readora.domain.identity.Permission;
 import com.readora.domain.identity.Subscription;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.List;
@@ -10,7 +11,7 @@ public record SubscriptionDto(
         String plan,
         String status,
         boolean active,
-        Instant currentPeriodEnd,
+        @Nullable Instant currentPeriodEnd,
         boolean cancelAtPeriodEnd,
         List<String> planPermissions
 ) {

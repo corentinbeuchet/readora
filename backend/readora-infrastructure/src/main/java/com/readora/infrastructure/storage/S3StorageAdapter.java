@@ -2,6 +2,7 @@ package com.readora.infrastructure.storage;
 
 import com.readora.application.exception.StorageUnavailableException;
 import com.readora.application.port.out.StoragePort;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -111,7 +112,7 @@ public class S3StorageAdapter implements StoragePort {
     @Override
     @Retryable(includes = StorageUnavailableException.class, maxRetries = 2, delay = 200, multiplier = 2)
     @ConcurrencyLimit(32)
-    public void storeAsset(String objectKey, byte[] data, String contentType) {
+    public void storeAsset(String objectKey, byte[] data, @Nullable String contentType) {
         String cleanKey = clean(objectKey);
         if (s3Client != null) {
             try {

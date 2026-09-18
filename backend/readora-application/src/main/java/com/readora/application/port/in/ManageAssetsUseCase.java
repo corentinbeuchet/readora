@@ -1,5 +1,7 @@
 package com.readora.application.port.in;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Optional;
 
 /// Upload and serve media assets. Storage keys are always built by the server.
@@ -7,7 +9,7 @@ public interface ManageAssetsUseCase {
 
     /// @throws com.readora.domain.common.DomainValidationException for an empty file, an unsupported type or an
     ///         invalid folder
-    StoredAsset upload(String folder, String originalFilename, String contentType, byte[] data);
+    StoredAsset upload(String folder, @Nullable String originalFilename, @Nullable String contentType, byte[] data);
 
     Optional<AssetContent> load(String storageKey);
 

@@ -3,6 +3,7 @@ package com.readora.web.dto;
 import com.readora.domain.identity.Permission;
 import com.readora.domain.identity.Role;
 import com.readora.domain.identity.UserAccount;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.List;
@@ -13,7 +14,7 @@ public record UserProfileDto(
         String username,
         String displayName,
         String bio,
-        String avatarUrl,
+        @Nullable String avatarUrl,
         List<String> roles,
         List<String> permissions,
         SubscriptionDto subscription,

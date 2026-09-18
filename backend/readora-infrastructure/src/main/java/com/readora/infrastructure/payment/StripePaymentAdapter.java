@@ -18,6 +18,7 @@ import com.stripe.model.SubscriptionItem;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.SubscriptionUpdateParams;
 import com.stripe.param.checkout.SessionCreateParams;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.resilience.annotation.ConcurrencyLimit;
@@ -96,7 +97,7 @@ public class StripePaymentAdapter implements PaymentPort {
         Instant occurredAt = event.getCreated() != null ? Instant.ofEpochSecond(event.getCreated()) : null;
         log.debug("Stripe webhook received: {} ({})", type, eventId);
 
-        PaymentEvent translated = switch (type) {
+        @Nullable PaymentEvent translated = switch (type) {
             case "checkout.session.completed" -> object
                     .filter(Session.class::isInstance).map(Session.class::cast)
                     .map(session -> fromCheckoutSession(eventId, occurredAt, session))
@@ -135,7 +136,7 @@ public class StripePaymentAdapter implements PaymentPort {
         }
     }
 
-    private PaymentEvent fromCheckoutSession(String eventId, Instant occurredAt, Session session) {
+    private PaymentEvent fromCheckoutSession(String eventId, @Nullable Instant occurredAt, Session session) {
         UserId userId = session.getClientReferenceId() != null ? UserId.of(session.getClientReferenceId()) : null;
         return new PaymentEvent(
                 eventId,
@@ -152,7 +153,7 @@ public class StripePaymentAdapter implements PaymentPort {
     }
 
     /// The session itself carries no billing period; read it from the subscription so access has a real end date.
-    private Instant periodEndOf(String subscriptionId) {
+    private @Nullable Instant periodEndOf(@Nullable String subscriptionId) {
         if (subscriptionId == null) {
             return null;
         }
@@ -164,18 +165,18 @@ public class StripePaymentAdapter implements PaymentPort {
         }
     }
 
-    private static Instant currentPeriodEnd(Subscription subscription) {
+    private static @Nullable Instant currentPeriodEnd(Subscription subscription) {
         SubscriptionItem firstItem = firstItem(subscription);
         return firstItem != null && firstItem.getCurrentPeriodEnd() != null
                 ? Instant.ofEpochSecond(firstItem.getCurrentPeriodEnd()) : null;
     }
 
-    private static SubscriptionItem firstItem(Subscription subscription) {
+    private static @Nullable SubscriptionItem firstItem(Subscription subscription) {
         return subscription.getItems() != null && subscription.getItems().getData() != null
                 && !subscription.getItems().getData().isEmpty() ? subscription.getItems().getData().getFirst() : null;
     }
 
-    private PaymentEvent fromSubscription(String eventId, Instant occurredAt, PaymentEventType type, Subscription subscription) {
+    private PaymentEvent fromSubscription(String eventId, @Nullable Instant occurredAt, PaymentEventType type, Subscription subscription) {
         String rawUserId = subscription.getMetadata() != null ? subscription.getMetadata().get(METADATA_USER_ID) : null;
         UserId userId = rawUserId != null && !rawUserId.isBlank() ? UserId.of(rawUserId) : null;
 
@@ -197,7 +198,7 @@ public class StripePaymentAdapter implements PaymentPort {
         );
     }
 
-    private PaymentEvent fromFailedInvoice(String eventId, Instant occurredAt, Invoice invoice) {
+    private PaymentEvent fromFailedInvoice(String eventId, @Nullable Instant occurredAt, Invoice invoice) {
         String subscriptionId = invoice.getParent() != null && invoice.getParent().getSubscriptionDetails() != null
                 ? invoice.getParent().getSubscriptionDetails().getSubscription() : null;
         return new PaymentEvent(
@@ -226,7 +227,7 @@ public class StripePaymentAdapter implements PaymentPort {
     }
 
     /// Fail closed: only the configured PREMIUM price maps to a plan; anything else yields `null` (no access).
-    SubscriptionPlan planFor(String priceId) {
+    @Nullable SubscriptionPlan planFor(@Nullable String priceId) {
         if (priceId != null && priceId.equals(properties.premiumPriceId())) {
             return SubscriptionPlan.PREMIUM;
         }
@@ -234,7 +235,7 @@ public class StripePaymentAdapter implements PaymentPort {
         return null;
     }
 
-    private static SubscriptionPlan planFromMetadata(String rawPlan) {
+    private static @Nullable SubscriptionPlan planFromMetadata(@Nullable String rawPlan) {
         if (rawPlan == null || rawPlan.isBlank()) {
             return null;
         }
@@ -248,7 +249,7 @@ public class StripePaymentAdapter implements PaymentPort {
     }
 
     /// Fail closed: statuses Stripe may add in the future map to `INCOMPLETE` (no access), never to `ACTIVE`.
-    static SubscriptionStatus mapStatus(String stripeStatus) {
+    static SubscriptionStatus mapStatus(@Nullable String stripeStatus) {
         if (stripeStatus == null) {
             return SubscriptionStatus.INCOMPLETE;
         }

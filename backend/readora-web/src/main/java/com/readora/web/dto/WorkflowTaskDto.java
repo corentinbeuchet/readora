@@ -1,6 +1,7 @@
 package com.readora.web.dto;
 
 import com.readora.domain.scanlation.WorkflowTask;
+import org.jspecify.annotations.Nullable;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -9,8 +10,8 @@ public record WorkflowTaskDto(
         String chapterNumber,
         String stage,
         String status,
-        String assigneeId,
-        String assetPackageUrl,
+        @Nullable String assigneeId,
+        @Nullable String assetPackageUrl,
         int pageCount,
         Instant updatedAt
 ) {

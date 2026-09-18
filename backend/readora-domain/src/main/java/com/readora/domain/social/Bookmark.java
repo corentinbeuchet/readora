@@ -3,6 +3,7 @@ package com.readora.domain.social;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.common.UserId;
 import com.readora.domain.work.WorkId;
+import org.jspecify.annotations.Nullable;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -11,12 +12,12 @@ import java.util.Objects;
 public class Bookmark implements Serializable {
     private final UserId userId;
     private final WorkId workId;
-    private ChapterId lastReadChapterId;
+    private @Nullable ChapterId lastReadChapterId;
     private int lastReadPageIndex;
     private ReadingStatus status;
     private Instant updatedAt;
 
-    public Bookmark(UserId userId, WorkId workId, ChapterId lastReadChapterId, int lastReadPageIndex, ReadingStatus status, Instant updatedAt) {
+    public Bookmark(UserId userId, WorkId workId, @Nullable ChapterId lastReadChapterId, int lastReadPageIndex, ReadingStatus status, Instant updatedAt) {
         this.userId = Objects.requireNonNull(userId, "UserId cannot be null");
         this.workId = Objects.requireNonNull(workId, "WorkId cannot be null");
         this.lastReadChapterId = lastReadChapterId;
@@ -49,7 +50,7 @@ public class Bookmark implements Serializable {
         return workId;
     }
 
-    public ChapterId getLastReadChapterId() {
+    public @Nullable ChapterId getLastReadChapterId() {
         return lastReadChapterId;
     }
 

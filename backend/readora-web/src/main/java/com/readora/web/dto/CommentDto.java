@@ -1,6 +1,7 @@
 package com.readora.web.dto;
 
 import com.readora.domain.social.ChapterComment;
+import org.jspecify.annotations.Nullable;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -10,8 +11,8 @@ public record CommentDto(
         String authorId,
         String authorUsername,
         String content,
-        Integer pageReference,
-        UUID parentId,
+        @Nullable Integer pageReference,
+        @Nullable UUID parentId,
         int depth,
         boolean isSpoiler,
         int upvotes,

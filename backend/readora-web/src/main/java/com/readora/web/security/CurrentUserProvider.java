@@ -3,6 +3,7 @@ package com.readora.web.security;
 import com.readora.domain.identity.Permission;
 import com.readora.domain.common.UserId;
 import com.readora.application.auth.TokenClaims;
+import com.readora.domain.identity.InvalidCredentialsException;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -46,6 +47,10 @@ public class CurrentUserProvider {
                 }
             }
         }
-        return new AuthenticatedUser(UserId.of(jwt.getSubject()), username, permissions);
+        String subject = jwt.getSubject();
+        if (subject == null) {
+            throw new InvalidCredentialsException("Access token has no subject");
+        }
+        return new AuthenticatedUser(UserId.of(subject), username != null ? username : subject, permissions);
     }
 }

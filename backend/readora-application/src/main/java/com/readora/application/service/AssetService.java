@@ -3,6 +3,7 @@ package com.readora.application.service;
 import com.readora.application.port.in.ManageAssetsUseCase;
 import com.readora.application.port.out.StoragePort;
 import com.readora.domain.common.DomainValidationException;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -34,7 +35,7 @@ public class AssetService implements ManageAssetsUseCase {
     }
 
     @Override
-    public StoredAsset upload(String folder, String originalFilename, String contentType, byte[] data) {
+    public StoredAsset upload(String folder, @Nullable String originalFilename, @Nullable String contentType, byte[] data) {
         if (data == null || data.length == 0) {
             throw new DomainValidationException("Uploaded file cannot be empty");
         }
@@ -62,7 +63,7 @@ public class AssetService implements ManageAssetsUseCase {
     /// full key, so it cannot overwrite an existing asset or escape the folder with `..`.
     ///
     /// @throws DomainValidationException if the folder is empty or contains a `.` or `..` segment
-    static String newStorageKey(String folder, String originalFilename) {
+    static String newStorageKey(@Nullable String folder, @Nullable String originalFilename) {
         String cleanFolder = folder == null ? "" : folder.trim().replaceAll("[^a-zA-Z0-9/_.-]", "_");
         cleanFolder = cleanFolder.replaceAll("/{2,}", "/").replaceAll("^/+|/+$", "");
         if (cleanFolder.isEmpty()
