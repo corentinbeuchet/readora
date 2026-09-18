@@ -31,7 +31,7 @@ public class ReaderSocialService implements ReaderInteractionUseCase {
     public ChapterComment postRootComment(ChapterId chapterId, UserId authorId, String username, String text, Integer pageRef, boolean isSpoiler) {
         ChapterComment comment = ChapterComment.createRoot(chapterId, authorId, username, text, pageRef, isSpoiler);
         ChapterComment saved = commentRepository.save(comment);
-        saved.pollDomainEvents().forEach(eventPublisher::publish);
+        comment.pollDomainEvents().forEach(eventPublisher::publish);
         return saved;
     }
 
@@ -42,7 +42,7 @@ public class ReaderSocialService implements ReaderInteractionUseCase {
 
         ChapterComment reply = ChapterComment.createReply(parent, authorId, username, text, isSpoiler);
         ChapterComment saved = commentRepository.save(reply);
-        saved.pollDomainEvents().forEach(eventPublisher::publish);
+        reply.pollDomainEvents().forEach(eventPublisher::publish);
         return saved;
     }
 

@@ -38,8 +38,8 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
         }
 
         WorkflowTask task = project.addChapterTask(chapterNumber, assetUrl, pageCount);
-        ScanlationProject saved = projectRepository.save(project);
-        saved.pollDomainEvents().forEach(eventPublisher::publish);
+        projectRepository.save(project);
+        project.pollDomainEvents().forEach(eventPublisher::publish);
 
         List<Chapter> chapters = chapterRepository.findByWorkId(project.getWorkId());
         boolean chapterExists = chapters.stream().anyMatch(c -> c.getChapterNumber().equals(chapterNumber));
@@ -52,11 +52,11 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
                 }
                 draft.updatePages(pages);
             }
-            Chapter savedChapter = chapterRepository.save(draft);
-            savedChapter.pollDomainEvents().forEach(eventPublisher::publish);
+            chapterRepository.save(draft);
+            draft.pollDomainEvents().forEach(eventPublisher::publish);
         }
 
-        return saved.findTask(task.getId()).orElse(task);
+        return task;
     }
 
     @Override
@@ -65,10 +65,10 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
                 .orElseThrow(() -> new DomainValidationException("Scanlation project not found: " + projectId));
 
         project.claimTask(taskId, userId);
-        ScanlationProject saved = projectRepository.save(project);
-        saved.pollDomainEvents().forEach(eventPublisher::publish);
+        projectRepository.save(project);
+        project.pollDomainEvents().forEach(eventPublisher::publish);
 
-        return saved.findTask(taskId).orElseThrow();
+        return project.findTask(taskId).orElseThrow();
     }
 
     @Override
@@ -77,10 +77,10 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
                 .orElseThrow(() -> new DomainValidationException("Scanlation project not found: " + projectId));
 
         project.submitTaskWork(taskId, userId, assetUrl, pageCount);
-        ScanlationProject saved = projectRepository.save(project);
-        saved.pollDomainEvents().forEach(eventPublisher::publish);
+        projectRepository.save(project);
+        project.pollDomainEvents().forEach(eventPublisher::publish);
 
-        return saved.findTask(taskId).orElseThrow();
+        return project.findTask(taskId).orElseThrow();
     }
 
     @Override
@@ -94,6 +94,7 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
         // Submit and transition to PUBLISHED
         project.submitTaskWork(taskId, publisherId, task.getAssetPackageUrl(), task.getPageCount());
         projectRepository.save(project);
+        project.pollDomainEvents().forEach(eventPublisher::publish);
 
         // Find or create the chapter to publish
         List<Chapter> chapters = chapterRepository.findByWorkId(project.getWorkId());
@@ -119,7 +120,7 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
         }
 
         chapter.publish(publisherId);
-        Chapter savedChapter = chapterRepository.save(chapter);
-        savedChapter.pollDomainEvents().forEach(eventPublisher::publish);
+        chapterRepository.save(chapter);
+        chapter.pollDomainEvents().forEach(eventPublisher::publish);
     }
 }

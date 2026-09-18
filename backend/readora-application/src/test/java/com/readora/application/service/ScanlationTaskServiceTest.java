@@ -6,6 +6,8 @@ import com.readora.application.port.out.ScanlationProjectRepositoryPort;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.TaskAssignedEvent;
+import com.readora.domain.scanlation.TaskStageAdvancedEvent;
 import com.readora.domain.scanlation.WorkflowStage;
 import com.readora.domain.scanlation.WorkflowTask;
 import com.readora.domain.work.Chapter;
@@ -103,6 +105,45 @@ class ScanlationTaskServiceTest {
 
         verify(projectRepository, never()).save(any());
         verify(chapterRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Claiming a task publishes TaskAssignedEvent even though save returns a rebuilt copy")
+    void claimPublishesEventsFromMutatedAggregate() {
+        UserId leaderId = UserId.of("leader-1");
+        ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), leaderId);
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"));
+        project.pollDomainEvents();
+
+        when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        when(projectRepository.save(any(ScanlationProject.class))).thenAnswer(i -> rebuilt(i.getArgument(0)));
+
+        WorkflowTask claimed = taskService.claimTask(project.getId(), task.getId(), leaderId);
+
+        assertThat(claimed.getAssigneeId()).isEqualTo(leaderId);
+        verify(eventPublisher).publish(any(TaskAssignedEvent.class));
+    }
+
+    @Test
+    @DisplayName("Submitting work publishes TaskStageAdvancedEvent even though save returns a rebuilt copy")
+    void submitPublishesEventsFromMutatedAggregate() {
+        UserId leaderId = UserId.of("leader-1");
+        ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), leaderId);
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"));
+        project.pollDomainEvents();
+
+        when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        when(projectRepository.save(any(ScanlationProject.class))).thenAnswer(i -> rebuilt(i.getArgument(0)));
+
+        taskService.submitWork(project.getId(), task.getId(), leaderId, "scans/1/clean.zip", 20);
+
+        verify(eventPublisher).publish(any(TaskStageAdvancedEvent.class));
+    }
+
+    /// Mimics the JPA adapter: `save` returns a new instance rebuilt from state, without pending events.
+    private static ScanlationProject rebuilt(ScanlationProject source) {
+        return new ScanlationProject(source.getId(), source.getName(), source.getWorkId(), source.getMembers(),
+                source.getTasks(), source.getCreatedAt(), source.getUpdatedAt());
     }
 
     @Test
