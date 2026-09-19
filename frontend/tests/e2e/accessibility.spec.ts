@@ -1,15 +1,18 @@
 import { Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from './support/fixtures';
-import { signUp } from './support/helpers';
+import { givenMyThemeIs, signUp } from './support/helpers';
 
 /**
  * axe finds about half of the WCAG issues: this guards against regressions, a manual pass still matters.
- * Every scan runs in both themes: colours come from light-dark() tokens, so contrast differs per scheme.
+ * Every scan runs in both themes: colours come from light-dark() tokens, so contrast differs per theme. The theme is
+ * the reader's saved choice (the app is dark by default and does not follow the device unless asked to).
  */
-for (const colorScheme of ['light', 'dark'] as const) {
-  test.describe(`Accessibility (axe, WCAG 2.2 AA, ${colorScheme} theme)`, () => {
-    test.use({ colorScheme });
+for (const theme of ['light', 'dark'] as const) {
+  test.describe(`Accessibility (axe, WCAG 2.2 AA, ${theme} theme)`, () => {
+    test.beforeEach(async ({ page }) => {
+      await givenMyThemeIs(page, theme);
+    });
 
     for (const url of ['/', '/works', '/updates', '/rankings', '/lists', '/login', '/register', '/subscription']) {
       test(`${url} has no axe violations`, async ({ page, axe }) => {

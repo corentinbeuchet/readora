@@ -15,14 +15,14 @@ describe('ThemeStore', () => {
 
   afterEach(() => TestBed.inject(DOCUMENT).documentElement.removeAttribute('data-theme'));
 
-  it('follows the device until the reader picks a theme', () => {
+  it('is dark until the reader picks a theme', () => {
     givenTheStoreStarts();
 
-    thenThePreferenceIs('system');
-    thenThePageThemeIs(null);
+    thenThePreferenceIs('dark');
+    thenThePageThemeIs('dark');
   });
 
-  it('applies and remembers an explicit choice, and System removes it again', () => {
+  it('applies and remembers an explicit choice, and System follows the device again', () => {
     givenTheStoreStarts();
 
     whenIChoose('light');
@@ -37,9 +37,10 @@ describe('ThemeStore', () => {
   });
 
   it.each<[string, ThemePreference, string | null]>([
-    ['"dark"', 'dark', 'dark'],
-    ['"purple"', 'system', null],
-    ['{not json', 'system', null]
+    ['"light"', 'light', 'light'],
+    ['"system"', 'system', null],
+    ['"purple"', 'dark', 'dark'],
+    ['{not json', 'dark', 'dark']
   ])('restores the saved value %s as %s', (raw, preference, pageTheme) => {
     givenTheSavedValueIs(raw);
 

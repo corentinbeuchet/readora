@@ -8,14 +8,17 @@ export const THEME_KEY = 'readora.theme';
 
 const PREFERENCES: readonly ThemePreference[] = ['system', 'light', 'dark'];
 
-/** A stored or submitted value as a preference; anything unknown means "follow the device". */
+/** Readora is dark-first: the theme of a reader who has not chosen one. */
+export const DEFAULT_THEME: ThemePreference = 'dark';
+
+/** A stored or submitted value as a preference; nothing stored or anything unknown means the default theme. */
 export function toThemePreference(value: unknown): ThemePreference {
-  return PREFERENCES.find((preference) => preference === value) ?? 'system';
+  return PREFERENCES.find((preference) => preference === value) ?? DEFAULT_THEME;
 }
 
 /**
- * Light / dark choice, kept in the browser. "system" leaves `<html>` without `data-theme`, so the CSS follows
- * `prefers-color-scheme` (`styles/_tokens.scss`); "light" or "dark" pins it.
+ * Theme choice, kept in the browser: dark until the reader picks another one. "light" or "dark" pins `data-theme` on
+ * `<html>`; "system" removes it, so the CSS follows `prefers-color-scheme` (`styles/_tokens.scss`).
  */
 @Service()
 export class ThemeStore {

@@ -1,19 +1,25 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <title>Readora — read manga, manhwa & comics</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="Read manga, manhwa, manhua and comics published by scanlation teams. Free reading, comments, and Premium bookmarks.">
-  <meta name="theme-color" content="#f7f7f5" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#0e0e10" media="(prefers-color-scheme: dark)">
-  <meta name="color-scheme" content="light dark">
-  <!-- Applies a saved light/dark choice before the first paint (ThemeStore, key readora.theme, keeps it in sync). -->
+  <meta name="theme-color" content="#0e0e10">
+  <meta name="color-scheme" content="dark light">
+  <!--
+    Readora is dark unless the reader chose Light or System (ThemeStore, key readora.theme, keeps it in sync). Applied
+    before the first paint; the colours are --bg of each theme (src/styles/_tokens.scss).
+  -->
   <script>
     try {
       var theme = JSON.parse(localStorage.getItem('readora.theme'));
-      if (theme === 'light' || theme === 'dark') document.documentElement.setAttribute('data-theme', theme);
+      if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+      if (theme === 'system') document.documentElement.removeAttribute('data-theme');
+      if (theme === 'light' || (theme === 'system' && matchMedia('(prefers-color-scheme: light)').matches)) {
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f7f7f5');
+      }
     } catch (e) {}
   </script>
   <meta name="robots" content="index, follow">

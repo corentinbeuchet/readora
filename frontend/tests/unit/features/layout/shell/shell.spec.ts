@@ -291,11 +291,11 @@ describe('Shell theme picker', () => {
 
   afterEach(() => TestBed.inject(DOCUMENT).documentElement.removeAttribute('data-theme'));
 
-  it('follows the device by default; choosing Light pins it and is remembered', () => {
+  it('is dark by default; choosing Light pins it and is remembered', () => {
     givenIAmOnTheSite();
 
-    thenTheThemePickerShows('system');
-    thenThePageThemeIs(null);
+    thenTheThemePickerShows('dark');
+    thenThePageThemeIs('dark');
 
     whenIChooseTheTheme('light');
 

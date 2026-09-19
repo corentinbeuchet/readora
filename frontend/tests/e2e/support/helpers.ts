@@ -22,6 +22,14 @@ export function uniqueSuffix(): string {
   return `${Date.now().toString(36)}_${crypto.randomUUID().slice(0, 8)}`;
 }
 
+/**
+ * The reader's saved theme choice, written before the app starts (it is dark without one). Same key and JSON format
+ * as `ThemeStore`; call it before the first `goto`.
+ */
+export async function givenMyThemeIs(page: Page, theme: 'light' | 'dark'): Promise<void> {
+  await page.addInitScript((choice) => localStorage.setItem('readora.theme', JSON.stringify(choice)), theme);
+}
+
 /** Signs up a fresh reader through the UI and waits for the profile page. Returns the username. */
 export async function signUp(page: Page, prefix = 'e2e'): Promise<string> {
   const username = `${prefix}_${uniqueSuffix()}`;
