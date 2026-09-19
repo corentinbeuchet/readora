@@ -78,6 +78,7 @@ function pageParamToIndex(raw: string | number | null | undefined): number | nul
   templateUrl: './chapter-viewer.html',
   styleUrl: './chapter-viewer.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [ReaderState],
   host: {
     '(document:keydown)': 'onKeydown($event)',
     '(document:mousemove)': 'revealControls()',

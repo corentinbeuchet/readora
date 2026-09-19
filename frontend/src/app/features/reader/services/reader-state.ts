@@ -4,7 +4,11 @@ import { ReadingDirection, ViewMode } from './reader-preferences-store';
 
 export type { ViewMode };
 
-@Service()
+/**
+ * State of the chapter being read. Page-scoped: provided by the reader component (`providers: [ReaderState]`), so
+ * every visit of the reader starts clean instead of reusing the previous visit's chapter, page and layout.
+ */
+@Service({ autoProvided: false })
 export class ReaderState {
   private readonly _currentChapter = signal<Chapter | null>(null);
   private readonly _currentPageIndex = signal<number>(0);

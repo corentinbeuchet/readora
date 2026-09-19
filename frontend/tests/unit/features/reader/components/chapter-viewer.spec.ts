@@ -70,14 +70,14 @@ describe('ChapterViewer (API-driven)', () => {
     vi.stubGlobal('IntersectionObserver', FakeIntersectionObserver);
     await TestBed.configureTestingModule({
       imports: [ChapterViewer],
-      providers: [ReaderState, provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
       deferBlockBehavior: DeferBlockBehavior.Manual
     }).compileComponents();
 
-    stateService = TestBed.inject(ReaderState);
     http = TestBed.inject(HttpTestingController);
     store = TestBed.inject(AuthStore);
     fixture = TestBed.createComponent(ChapterViewer);
+    stateService = fixture.debugElement.injector.get(ReaderState);
   });
 
   afterEach(() => {
@@ -335,6 +335,18 @@ describe('ChapterViewer (API-driven)', () => {
       ['800', '1200'],
       ['800', '1200']
     ]);
+  });
+
+  it('gives every reader visit its own state (nothing carried over from the previous visit)', async () => {
+    await loadChapter();
+    expect(stateService.currentChapter()?.id).toBe(MOCK_CHAPTER.id);
+    fixture.destroy();
+
+    const next = TestBed.createComponent(ChapterViewer);
+    const nextState = next.debugElement.injector.get(ReaderState);
+    expect(nextState).not.toBe(stateService);
+    expect(nextState.currentChapter()).toBeNull();
+    next.destroy();
   });
 
   it('defers the comments section: placeholder first, thread loaded only once the block renders', async () => {

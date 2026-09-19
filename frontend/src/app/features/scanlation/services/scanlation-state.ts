@@ -1,4 +1,4 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Service, computed, signal } from '@angular/core';
 import { ScanlationProject, WorkflowTask, WorkflowStage, TaskStatus } from '@app/core/models/readora.models';
 
 /**
@@ -6,7 +6,7 @@ import { ScanlationProject, WorkflowTask, WorkflowStage, TaskStatus } from '@app
  * (`providers: [ScanlationState]`), so it starts empty on every board and never shows the
  * previous project's tasks.
  */
-@Injectable()
+@Service({ autoProvided: false })
 export class ScanlationState {
   private readonly _currentProject = signal<ScanlationProject | null>(null);
 
