@@ -29,9 +29,17 @@
   margin-bottom: 0.2rem;
 }
 
+// Standalone links (not inside a sentence): at least 24px tall (WCAG 2.5.8), spaced apart.
 .series-link {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 1.5rem;
   font-size: 0.85rem;
   color: var(--accent);
+}
+
+.team-link {
+  margin-inline-start: 0.75rem;
 }
 
 .viewer-actions {
