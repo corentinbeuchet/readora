@@ -50,9 +50,7 @@
 
   @if (pages().length > 0) {
     <div class="pages-header">
-      <div class="pages-count" i18n="@@upload.pages.loadedCount">
-        {pages().length, plural, =1 {1 page loaded} other {{{ pages().length }} pages loaded}}
-      </div>
+      <div class="pages-count" i18n="@@upload.pages.loadedCount">{pages().length, plural, =1 {1 page loaded} other {{{ pages().length }} pages loaded}}</div>
       <div class="pages-actions">
         <button type="button" class="btn btn-sm" (click)="sortNaturally()" i18n="@@upload.pages.sort">
           Sort Numerically

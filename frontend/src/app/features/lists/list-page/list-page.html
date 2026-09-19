@@ -50,7 +50,7 @@
       <header>
         <h1>{{ l.title }}</h1>
         <p class="muted">
-          <ng-container i18n="@@lists.list.byline">by <a [routerLink]="['/u', l.ownerUsername]">{{ l.ownerUsername }}</a> · {l.items.length, plural, other {{{ l.items.length }} series}}</ng-container>
+          <ng-container i18n="@@lists.list.byline">by <a [routerLink]="['/u', l.ownerUsername]">{{ l.ownerUsername }}</a></ng-container> · <ng-container i18n="@@lists.list.seriesCount">{l.items.length, plural, other {{{ l.items.length }} series}}</ng-container>
           @if (!l.published) {
             · <span class="badge" i18n="@@lists.list.private">private</span>
           }

@@ -9,9 +9,9 @@
   } @else if (team.hasValue() && team.value(); as t) {
     <header class="profile-header">
       <h1>{{ t.name }}</h1>
-      <p class="muted" i18n="@@community.team.summary">
-        Translates <a [routerLink]="['/works', t.series.id]">{{ t.series.title }}</a>
-        · {followers(), plural, =1 {1 follower} other {{{ followers() }} followers}}
+      <p class="muted">
+        <ng-container i18n="@@community.team.translates">Translates <a [routerLink]="['/works', t.series.id]">{{ t.series.title }}</a></ng-container>
+        · <ng-container i18n="@@community.team.followers">{followers(), plural, =1 {1 follower} other {{{ followers() }} followers}}</ng-container>
       </p>
       <button *appHasPermission="'LIBRARY_USE'" type="button" class="btn" [class.btn-primary]="!following()"
               [attr.aria-pressed]="following()" [disabled]="follow.busy()" (click)="toggleFollow()">

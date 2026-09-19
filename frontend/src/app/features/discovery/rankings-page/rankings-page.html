@@ -33,7 +33,7 @@
           <a class="ranking-title" [routerLink]="['/works', entry.work.id]">{{ entry.work.title }}</a>
           <span class="muted">
             @if (topRatedSelected()) {
-              <ng-container i18n="@@discovery.rankings.score">★ {{ entry.score | number: '1.1-1' }} · {entry.ratings, plural, =1 {1 rating} other {{{ entry.ratings }} ratings}}</ng-container>
+              ★ {{ entry.score | number: '1.1-1' }} · <ng-container i18n="@@discovery.rankings.ratingCount">{entry.ratings, plural, =1 {1 rating} other {{{ entry.ratings }} ratings}}</ng-container>
             } @else {
               {{ typeLabels[entry.work.type] }}
             }

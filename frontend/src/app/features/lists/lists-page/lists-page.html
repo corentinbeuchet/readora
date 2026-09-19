@@ -27,7 +27,7 @@
         @for (list of mine.value(); track list.id) {
           <li class="card">
             <a [routerLink]="['/lists', list.id]" class="list-title">{{ list.title }}</a>
-            <span class="muted" i18n="@@lists.page.mine.summary">{list.items.length, plural, other {{{ list.items.length }} series}} · {list.published, select, true {public} other {private}} · ▲ {{ list.upvotes }}</span>
+            <span class="muted"><ng-container i18n="@@lists.page.seriesCount">{list.items.length, plural, other {{{ list.items.length }} series}}</ng-container> · <ng-container i18n="@@lists.page.visibility">{list.published, select, true {public} other {private}}</ng-container> · ▲ {{ list.upvotes }}</span>
           </li>
         }
       </ul>
@@ -46,7 +46,7 @@
       @for (list of top.value(); track list.id) {
         <li class="card">
           <a [routerLink]="['/lists', list.id]" class="list-title">{{ list.title }}</a>
-          <span class="muted" i18n="@@lists.page.top.summary">by {{ list.ownerUsername }} · {list.items.length, plural, other {{{ list.items.length }} series}} · ▲ {{ list.upvotes }}</span>
+          <span class="muted"><ng-container i18n="@@lists.page.top.by">by {{ list.ownerUsername }}</ng-container> · <ng-container i18n="@@lists.page.seriesCount">{list.items.length, plural, other {{{ list.items.length }} series}}</ng-container> · ▲ {{ list.upvotes }}</span>
         </li>
       }
     </ul>

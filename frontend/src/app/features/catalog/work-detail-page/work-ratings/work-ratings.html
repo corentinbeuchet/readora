@@ -8,7 +8,7 @@
     @if (summary.hasValue() && summary.value().count > 0) {
       <span class="score" aria-hidden="true">★</span>
       <strong>{{ summary.value().average | number: '1.1-1' }}</strong>
-      <span class="muted" i18n="@@catalog.ratings.outOfTen">/ 10 from {summary.value().count, plural, =1 {1 rating} other {{{ summary.value().count }} ratings}}</span>
+      <span class="muted"><ng-container i18n="@@catalog.ratings.outOfTen">/ 10 from</ng-container>&ngsp;<ng-container i18n="@@catalog.ratings.count">{summary.value().count, plural, =1 {1 rating} other {{{ summary.value().count }} ratings}}</ng-container></span>
     } @else {
       <span class="muted" i18n="@@catalog.ratings.none">No ratings yet.</span>
     }
