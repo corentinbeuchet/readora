@@ -64,6 +64,7 @@ export class WorkDetailPage {
   protected readonly libraryError = signal<string | null>(null);
 
   private readonly progress = this.readingApi.progressResource(this.workId, this.canUseLibrary);
+  protected readonly markingRead = signal(false);
   private readonly finished = computed(() => new Set(this.progress.hasValue() ? (this.progress.value()?.finishedChapterIds ?? []) : []));
   protected readonly nextChapterId = computed(() => (this.progress.hasValue() ? (this.progress.value()?.nextChapterId ?? null) : null));
   /** "Continue" for a free reader who already finished chapters here. */
@@ -94,6 +95,24 @@ export class WorkDetailPage {
 
   protected isFinished(chapterId: string): boolean {
     return this.finished().has(chapterId);
+  }
+
+  /** Offers "Mark all previous as read" only where it would change something. */
+  protected hasUnreadBefore(index: number): boolean {
+    if (!this.canUseLibrary() || !this.progress.hasValue() || !this.chapters.hasValue()) return false;
+    return this.chapters.value().slice(0, index).some((chapter) => !this.finished().has(chapter.id));
+  }
+
+  protected async markPreviousAsRead(chapterId: string): Promise<void> {
+    this.markingRead.set(true);
+    this.libraryError.set(null);
+    try {
+      this.progress.set(await firstValueFrom(this.readingApi.markReadUpTo(chapterId)));
+    } catch (error) {
+      this.libraryError.set(apiErrorMessage(error, 'Could not update your read chapters. Please try again.'));
+    } finally {
+      this.markingRead.set(false);
+    }
   }
 
   protected async addToLibrary(): Promise<void> {

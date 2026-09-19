@@ -14,6 +14,11 @@ export class ReadingApi {
     return this.api.put<ChapterRead>(`/reading/chapters/${chapterId}`, { finished });
   }
 
+  /** "Mark all previous as read": every published chapter before this one becomes finished. */
+  markReadUpTo(chapterId: string): Observable<WorkProgress> {
+    return this.api.post<WorkProgress>(`/reading/chapters/${chapterId}/read-up-to`);
+  }
+
   historyResource(enabled: Signal<boolean>): HttpResourceRef<HistoryItem[]> {
     return httpResource<HistoryItem[]>(() => (enabled() ? this.api.url('/reading/history') : undefined), {
       parse: (raw) => parseEnvelope<HistoryItem[]>(raw) ?? [],

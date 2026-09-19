@@ -120,6 +120,25 @@ describe('WorkDetailPage', () => {
       expect(fixture.nativeElement.querySelector('.library-status select').value).toBe('READING');
     });
 
+    it('Marking all previous chapters as read', async () => {
+      await openAsFreeReader(true);
+      const markButtons = (): HTMLButtonElement[] => Array.from(fixture.nativeElement.querySelectorAll('.mark-previous'));
+      // Chapter 1 has nothing before it and is read; chapter 2 only has read chapters before it.
+      expect(markButtons()).toHaveLength(1);
+      expect(markButtons()[0].textContent).toContain('before chapter 3');
+
+      markButtons()[0].click();
+      const req = http.expectOne(`${API}/reading/chapters/c-3/read-up-to`);
+      expect(req.request.method).toBe('POST');
+      req.flush({ success: true, data: { workId: WORK.id, finishedChapterIds: ['c-1', 'c-2'], nextChapterId: 'c-3' }, error: null });
+      await settle(fixture);
+
+      const links: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.chapter-link'));
+      expect(links[1].classList).toContain('chapter-read');
+      expect(links[2].classList).toContain('chapter-next');
+      expect(markButtons()).toHaveLength(0);
+    });
+
     it('adds the series to the library, then removes it', async () => {
       await openAsFreeReader(false);
 
