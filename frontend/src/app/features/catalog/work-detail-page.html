@@ -101,6 +101,11 @@
       }
     </section>
 
-    <app-work-ratings [workId]="w.id" />
+    <!-- Below the fold: loaded when scrolled to; on the prerendered page it is server-rendered and hydrated then. -->
+    @defer (on viewport; hydrate on viewport) {
+      <app-work-ratings [workId]="w.id" />
+    } @placeholder {
+      <p class="muted">Ratings and reviews</p>
+    }
   }
 </section>

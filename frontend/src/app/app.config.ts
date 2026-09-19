@@ -1,5 +1,13 @@
 import { ApplicationConfig } from '@angular/core';
-import { provideRouter, withComponentInputBinding, withInMemoryScrolling, withNavigationErrorHandler } from '@angular/router';
+import {
+  PreloadAllModules,
+  provideRouter,
+  withComponentInputBinding,
+  withInMemoryScrolling,
+  withNavigationErrorHandler,
+  withPreloading,
+  withViewTransitions
+} from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideClientHydration, withEventReplay, withHttpTransferCacheOptions } from '@angular/platform-browser';
 import { routes } from './app.routes';
@@ -14,7 +22,11 @@ export const appConfig: ApplicationConfig = {
       withComponentInputBinding(),
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
       // After a deploy, old tabs can't load the removed lazy chunks: reload the page once to get the new build.
-      withNavigationErrorHandler((error) => recoverFromChunkLoadFailure(error))
+      withNavigationErrorHandler((error) => recoverFromChunkLoadFailure(error)),
+      // Lazy pages download in the background after the first render, so later navigations are instant.
+      withPreloading(PreloadAllModules),
+      // Cross-fade between pages where the browser supports the View Transitions API (no-op elsewhere).
+      withViewTransitions()
     ),
     // FetchBackend is the default HttpBackend in Angular 22 (withFetch() is deprecated).
     provideHttpClient(withInterceptors([authInterceptor])),
