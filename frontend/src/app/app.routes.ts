@@ -18,27 +18,27 @@ export const routes: Routes = [
   },
   {
     path: 'updates',
-    loadComponent: () => import('@app/features/discovery/updates-page').then((m) => m.UpdatesPage)
+    loadComponent: () => import('@app/features/discovery/updates-page/updates-page').then((m) => m.UpdatesPage)
   },
   {
     path: 'rankings',
-    loadComponent: () => import('@app/features/discovery/rankings-page').then((m) => m.RankingsPage)
+    loadComponent: () => import('@app/features/discovery/rankings-page/rankings-page').then((m) => m.RankingsPage)
   },
   {
     path: 'lists',
-    loadComponent: () => import('@app/features/lists/lists-page').then((m) => m.ListsPage)
+    loadComponent: () => import('@app/features/lists/lists-page/lists-page').then((m) => m.ListsPage)
   },
   {
     path: 'lists/:listId',
-    loadComponent: () => import('@app/features/lists/list-page').then((m) => m.ListPage)
+    loadComponent: () => import('@app/features/lists/list-page/list-page').then((m) => m.ListPage)
   },
   {
     path: 'u/:username',
-    loadComponent: () => import('@app/features/community/public-profile-page').then((m) => m.PublicProfilePage)
+    loadComponent: () => import('@app/features/community/public-profile-page/public-profile-page').then((m) => m.PublicProfilePage)
   },
   {
     path: 'teams/:projectId',
-    loadComponent: () => import('@app/features/community/team-page').then((m) => m.TeamPage)
+    loadComponent: () => import('@app/features/community/team-page/team-page').then((m) => m.TeamPage)
   },
   {
     path: 'works/:workId',
@@ -70,32 +70,32 @@ export const routes: Routes = [
 
   {
     path: 'library',
-    loadComponent: () => import('@app/features/library/library-page').then((m) => m.LibraryPage),
+    loadComponent: () => import('@app/features/library/library-page/library-page').then((m) => m.LibraryPage),
     canActivate: [permissionGuard],
     data: { permission: 'LIBRARY_USE' }
   },
   {
     path: 'history',
-    loadComponent: () => import('@app/features/library/history-page').then((m) => m.HistoryPage),
+    loadComponent: () => import('@app/features/library/history-page/history-page').then((m) => m.HistoryPage),
     canActivate: [permissionGuard],
     data: { permission: 'LIBRARY_USE' }
   },
 
   {
     path: 'moderation',
-    loadComponent: () => import('@app/features/moderation/moderation-page').then((m) => m.ModerationPage),
+    loadComponent: () => import('@app/features/moderation/moderation-page/moderation-page').then((m) => m.ModerationPage),
     canActivate: [permissionGuard],
     data: { permission: 'COMMENT_MODERATE' }
   },
 
   {
     path: 'login',
-    loadComponent: () => import('@app/features/auth/login-page').then((m) => m.LoginPage),
+    loadComponent: () => import('@app/features/auth/login-page/login-page').then((m) => m.LoginPage),
     canActivate: [guestGuard]
   },
   {
     path: 'register',
-    loadComponent: () => import('@app/features/auth/register-page').then((m) => m.RegisterPage),
+    loadComponent: () => import('@app/features/auth/register-page/register-page').then((m) => m.RegisterPage),
     canActivate: [guestGuard]
   },
   {
@@ -105,17 +105,17 @@ export const routes: Routes = [
   },
   {
     path: 'subscription',
-    loadComponent: () => import('@app/features/subscription/plans-page').then((m) => m.PlansPage)
+    loadComponent: () => import('@app/features/subscription/plans-page/plans-page').then((m) => m.PlansPage)
   },
   {
     path: 'subscription/success',
-    loadComponent: () => import('@app/features/subscription/checkout-result-page').then((m) => m.CheckoutResultPage),
+    loadComponent: () => import('@app/features/subscription/checkout-result-page/checkout-result-page').then((m) => m.CheckoutResultPage),
     canActivate: [authGuard],
     data: { outcome: 'success' }
   },
   {
     path: 'subscription/cancel',
-    loadComponent: () => import('@app/features/subscription/checkout-result-page').then((m) => m.CheckoutResultPage),
+    loadComponent: () => import('@app/features/subscription/checkout-result-page/checkout-result-page').then((m) => m.CheckoutResultPage),
     data: { outcome: 'cancel' }
   },
   {

@@ -1,11 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { TeamPage } from '@app/features/community/team-page';
+import { TeamPage } from '@app/features/community/team-page/team-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { TeamProfile } from '@app/core/models/readora.models';
-import { mockUser, signIn } from '../../core/auth/auth-fixtures';
-import { API, ok, provideHttpTesting, settle } from '../../test-utils';
+import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
+import { API, ok, provideHttpTesting, settle } from '../../../test-utils';
 
 const TEAM: TeamProfile = {
   id: 't-1',

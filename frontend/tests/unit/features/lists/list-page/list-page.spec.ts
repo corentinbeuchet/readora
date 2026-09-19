@@ -1,11 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { ListPage } from '@app/features/lists/list-page';
+import { ListPage } from '@app/features/lists/list-page/list-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { ReadingList } from '@app/core/models/readora.models';
-import { mockUser, signIn } from '../../core/auth/auth-fixtures';
-import { API, ok, provideHttpTesting, settle } from '../../test-utils';
+import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
+import { API, ok, provideHttpTesting, settle } from '../../../test-utils';
 
 const LIST: ReadingList = {
   id: 'l-1',

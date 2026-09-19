@@ -1,11 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
-import { PlansPage } from '@app/features/subscription/plans-page';
+import { PlansPage } from '@app/features/subscription/plans-page/plans-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { Subscription } from '@app/core/models/readora.models';
-import { mockUser, signIn } from '../../core/auth/auth-fixtures';
-import { API, fail, ok, provideHttpTesting } from '../../test-utils';
+import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
+import { API, fail, ok, provideHttpTesting } from '../../../test-utils';
 
 const CHECKOUT_URL = `${API}/subscriptions/checkout`;
 

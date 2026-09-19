@@ -2,9 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { RankingsPage } from '@app/features/discovery/rankings-page';
+import { RankingsPage } from '@app/features/discovery/rankings-page/rankings-page';
 import { RankedWork } from '@app/core/models/readora.models';
-import { API, ok, provideHttpTesting, settle } from '../../test-utils';
+import { API, ok, provideHttpTesting, settle } from '../../../test-utils';
 
 function ranked(rank: number, title: string, score: number, ratings = 0): RankedWork {
   return { rank, work: { id: `w-${rank}`, title, type: 'MANGA', status: 'ONGOING', coverImageUrl: '', genres: [] }, score, ratings };

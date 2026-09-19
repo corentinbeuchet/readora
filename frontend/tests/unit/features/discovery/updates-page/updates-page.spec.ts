@@ -2,11 +2,11 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { UpdatesPage } from '@app/features/discovery/updates-page';
+import { UpdatesPage } from '@app/features/discovery/updates-page/updates-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { Release } from '@app/core/models/readora.models';
-import { mockUser, signIn } from '../../core/auth/auth-fixtures';
-import { API, FIXED_NOW, fail, freezeDate, ok, provideHttpTesting, settle } from '../../test-utils';
+import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
+import { API, FIXED_NOW, fail, freezeDate, ok, provideHttpTesting, settle } from '../../../test-utils';
 
 function release(id: string, title: string, number: string, minutesAgo: number, read = false): Release {
   return {

@@ -1,10 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
-import { LoginPage } from '@app/features/auth/login-page';
+import { LoginPage } from '@app/features/auth/login-page/login-page';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { mockAuthResponse } from '../../core/auth/auth-fixtures';
-import { API, fail, provideHttpTesting } from '../../test-utils';
+import { mockAuthResponse } from '../../../core/auth/auth-fixtures';
+import { API, fail, provideHttpTesting } from '../../../test-utils';
 
 interface Credentials {
   email: string;

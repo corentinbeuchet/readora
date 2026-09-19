@@ -2,11 +2,11 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { LibraryPage } from '@app/features/library/library-page';
+import { LibraryPage } from '@app/features/library/library-page/library-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { LibraryItem } from '@app/core/models/readora.models';
-import { mockUser, signIn } from '../../core/auth/auth-fixtures';
-import { API, fail, ok, provideHttpTesting, settle } from '../../test-utils';
+import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
+import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 
 const READER = mockUser({ permissions: ['COMMENT_WRITE', 'LIBRARY_USE'] });
 
