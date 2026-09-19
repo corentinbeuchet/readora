@@ -1,6 +1,8 @@
 package com.readora.domain.list;
 
+import com.readora.domain.common.CodedException;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.UserId;
 import com.readora.domain.work.WorkId;
 import org.junit.jupiter.api.DisplayName;
@@ -22,7 +24,8 @@ class ReadingListTest {
     void rules() {
         assertThatThrownBy(() -> ReadingList.create(UserId.of("k"), "k", " ", "", List.of(), false, NOW)).isInstanceOf(DomainValidationException.class);
         assertThatThrownBy(() -> ReadingList.create(UserId.of("k"), "k", "T", "", List.of(new ListItem(solo, null), new ListItem(solo, "x")), false, NOW))
-                .isInstanceOf(DomainValidationException.class);
+                .isInstanceOf(DomainValidationException.class)
+                .satisfies(e -> assertThat(((CodedException) e).code()).isEqualTo(ErrorCodes.LIST_DUPLICATE_SERIES));
 
         ReadingList list = ReadingList.create(UserId.of("k"), "k", "Peak Webtoons", "", List.of(new ListItem(solo, "Art")), false, NOW);
         list.add(new ListItem(solo, "Masterpiece dungeon art"), NOW);

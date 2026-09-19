@@ -2,6 +2,7 @@ package com.readora.domain.report;
 
 import com.readora.domain.common.AggregateRoot;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.work.ChapterId;
@@ -58,7 +59,7 @@ public class PageReport extends AggregateRoot<PageReportId> {
     /// @throws DomainValidationException if the report was already marked fixed
     public void resolve(UserId by, Instant now) {
         if (status == PageReportStatus.RESOLVED) {
-            throw new DomainValidationException("This report is already marked as fixed");
+            throw DomainValidationException.withCode(ErrorCodes.ALREADY_HANDLED, "This report is already marked as fixed");
         }
         this.status = PageReportStatus.RESOLVED;
         this.resolvedAt = now;

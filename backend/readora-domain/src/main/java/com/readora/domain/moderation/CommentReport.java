@@ -1,6 +1,7 @@
 package com.readora.domain.moderation;
 
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.UserId;
 import com.readora.domain.social.CommentId;
 import org.jspecify.annotations.Nullable;
@@ -41,7 +42,7 @@ public class CommentReport {
     /// @throws DomainValidationException if it is already closed, or `outcome` is `OPEN`
     public void close(CommentReportStatus outcome, UserId moderator, Instant now) {
         if (status != CommentReportStatus.OPEN) {
-            throw new DomainValidationException("This report is already closed");
+            throw DomainValidationException.withCode(ErrorCodes.ALREADY_HANDLED, "This report is already closed");
         }
         if (outcome == CommentReportStatus.OPEN) {
             throw new DomainValidationException("A report is closed as hidden or dismissed");

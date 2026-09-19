@@ -28,5 +28,5 @@ Feature: Reading Readora in my language
   Scenario: Every refused request carries a stable error code
     When a visitor logs in with a wrong password
     Then the request is refused with the error code "INVALID_CREDENTIALS"
-    When a visitor asks for a series that does not exist
+    When reader "Camille" rates a series that does not exist
     Then the request is refused with the error code "NOT_FOUND"

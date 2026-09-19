@@ -2,6 +2,7 @@ package com.readora.domain.social;
 
 import com.readora.domain.common.AggregateRoot;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.common.UserId;
 import org.jspecify.annotations.Nullable;
@@ -72,7 +73,7 @@ public class ChapterComment extends AggregateRoot<CommentId> {
     /// @throws DomainValidationException if the voter is the comment's author
     public void ensureCanBeUpvotedBy(UserId voterId) {
         if (this.authorId.equals(voterId)) {
-            throw new DomainValidationException("You can't upvote your own comment");
+            throw DomainValidationException.withCode(ErrorCodes.OWN_CONTENT, "You can't upvote your own comment");
         }
     }
 
@@ -121,7 +122,7 @@ public class ChapterComment extends AggregateRoot<CommentId> {
     /// @throws DomainValidationException if it is already hidden
     public void hide() {
         if (hidden) {
-            throw new DomainValidationException("This comment is already hidden");
+            throw DomainValidationException.withCode(ErrorCodes.ALREADY_HANDLED, "This comment is already hidden");
         }
         hidden = true;
     }

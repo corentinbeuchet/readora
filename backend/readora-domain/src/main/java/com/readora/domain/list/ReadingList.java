@@ -1,6 +1,7 @@
 package com.readora.domain.list;
 
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.UserId;
 import com.readora.domain.work.WorkId;
 
@@ -75,7 +76,7 @@ public class ReadingList {
         var seen = new HashSet<WorkId>();
         for (ListItem item : newItems) {
             if (!seen.add(item.workId())) {
-                throw new DomainValidationException("A series appears only once in a list");
+                throw DomainValidationException.withCode(ErrorCodes.LIST_DUPLICATE_SERIES, "A series appears only once in a list");
             }
         }
         items.clear();

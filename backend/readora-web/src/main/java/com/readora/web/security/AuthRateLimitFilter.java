@@ -1,5 +1,6 @@
 package com.readora.web.security;
 
+import com.readora.domain.common.ErrorCodes;
 import com.readora.web.dto.ApiResponse;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -49,6 +50,6 @@ public class AuthRateLimitFilter extends OncePerRequestFilter {
         response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
         response.setHeader(HttpHeaders.RETRY_AFTER, String.valueOf(limiter.secondsUntilReset(key)));
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        objectMapper.writeValue(response.getOutputStream(), ApiResponse.error("Too many attempts, please try again later"));
+        objectMapper.writeValue(response.getOutputStream(), ApiResponse.error(ErrorCodes.RATE_LIMITED, "Too many attempts, please try again later"));
     }
 }

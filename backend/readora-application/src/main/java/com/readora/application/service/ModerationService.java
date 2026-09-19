@@ -6,6 +6,7 @@ import com.readora.application.port.out.CommentRepositoryPort;
 import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.domain.common.AccessDeniedDomainException;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.NotFoundException;
 import com.readora.domain.common.UserId;
 import com.readora.domain.identity.Permission;
@@ -39,7 +40,7 @@ public class ModerationService implements ModerateCommentsUseCase {
     public CommentReport report(UserId reporterId, CommentId commentId, CommentReportReason reason) {
         ChapterComment comment = visibleComment(commentId);
         if (comment.getAuthorId().equals(reporterId)) {
-            throw new DomainValidationException("You cannot report your own comment");
+            throw DomainValidationException.withCode(ErrorCodes.OWN_CONTENT, "You cannot report your own comment");
         }
         return reports.findOpen(reporterId, commentId)
                 .orElseGet(() -> reports.save(CommentReport.open(commentId, reporterId, reason, clock.instant())));

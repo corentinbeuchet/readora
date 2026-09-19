@@ -6,6 +6,7 @@ import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.PaymentPort;
 import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.NotFoundException;
 import com.readora.domain.identity.Subscription;
 import com.readora.domain.identity.SubscriptionPlan;
@@ -138,10 +139,10 @@ public class SubscriptionService implements ManageSubscriptionUseCase {
         UserAccount account = requireAccount(userId);
         Subscription current = account.getSubscription();
         if (current.getPlan() == SubscriptionPlan.FREE || current.getStatus() == SubscriptionStatus.CANCELED) {
-            throw new DomainValidationException("No active subscription to cancel");
+            throw DomainValidationException.withCode(ErrorCodes.NO_ACTIVE_SUBSCRIPTION, "No active subscription to cancel");
         }
         if (current.isCancelAtPeriodEnd()) {
-            throw new DomainValidationException("Cancellation is already scheduled for the end of the current period");
+            throw DomainValidationException.withCode(ErrorCodes.CANCELLATION_ALREADY_SCHEDULED, "Cancellation is already scheduled for the end of the current period");
         }
         if (current.getExternalSubscriptionId() != null) {
             paymentPort.cancelSubscriptionAtPeriodEnd(current.getExternalSubscriptionId());

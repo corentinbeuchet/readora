@@ -1,5 +1,6 @@
 package com.readora.web.security;
 
+import com.readora.domain.common.ErrorCodes;
 import com.readora.web.dto.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,6 +26,6 @@ public class RestAccessDeniedHandler implements AccessDeniedHandler {
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException {
         response.setStatus(HttpStatus.FORBIDDEN.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        objectMapper.writeValue(response.getOutputStream(), ApiResponse.error("You do not have permission to perform this action"));
+        objectMapper.writeValue(response.getOutputStream(), ApiResponse.error(ErrorCodes.FORBIDDEN, "You do not have permission to perform this action"));
     }
 }

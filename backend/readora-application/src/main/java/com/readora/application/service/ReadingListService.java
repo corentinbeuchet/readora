@@ -5,6 +5,7 @@ import com.readora.application.port.out.ReadingListRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.AccessDeniedDomainException;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.NotFoundException;
 import com.readora.domain.common.UserId;
 import com.readora.domain.list.ListItem;
@@ -81,7 +82,7 @@ public class ReadingListService implements ManageListsUseCase {
     public long upvote(UserId userId, UUID listId) {
         ReadingList list = lists.findById(listId).filter(ReadingList::isPublished).orElseThrow(() -> new NotFoundException("List", listId));
         if (list.isOwnedBy(userId)) {
-            throw new DomainValidationException("You cannot upvote your own list");
+            throw DomainValidationException.withCode(ErrorCodes.OWN_CONTENT, "You cannot upvote your own list");
         }
         return lists.addUpvote(listId, userId);
     }

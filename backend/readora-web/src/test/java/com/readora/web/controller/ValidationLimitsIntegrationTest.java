@@ -40,7 +40,8 @@ class ValidationLimitsIntegrationTest extends AuthTestSupport {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new UpdateProfileRequest("Kenji", null, "javascript:alert(1)"))))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("Avatar URL")));
+                .andExpect(jsonPath("$.error", containsString("Avatar URL")))
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
 
         mockMvc.perform(put("/api/v1/profile")
                         .header("Authorization", user.bearer())

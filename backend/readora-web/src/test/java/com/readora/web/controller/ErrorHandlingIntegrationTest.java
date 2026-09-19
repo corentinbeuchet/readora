@@ -39,7 +39,8 @@ class ErrorHandlingIntegrationTest extends AuthTestSupport {
         mockMvc.perform(post("/api/v1/scanlation/projects/" + UUID.randomUUID() + "/tasks/" + UUID.randomUUID() + "/claim")
                         .header("Authorization", scanlator.bearer()))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error", containsString("not found")));
+                .andExpect(jsonPath("$.error", containsString("not found")))
+                .andExpect(jsonPath("$.code").value("NOT_FOUND"));
     }
 
     @Test
@@ -61,6 +62,7 @@ class ErrorHandlingIntegrationTest extends AuthTestSupport {
                         .content("{\"displayName\": "))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Malformed or invalid request"))
+                .andExpect(jsonPath("$.code").value("MALFORMED_REQUEST"))
                 .andExpect(jsonPath("$.error", not(containsString("Jackson"))));
     }
 

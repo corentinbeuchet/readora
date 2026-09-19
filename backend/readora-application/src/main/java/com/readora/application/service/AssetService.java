@@ -4,6 +4,7 @@ import com.readora.application.port.in.ManageAssetsUseCase;
 import com.readora.application.port.out.ImageVariantPort;
 import com.readora.application.port.out.StoragePort;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Duration;
@@ -43,10 +44,10 @@ public class AssetService implements ManageAssetsUseCase {
     @Override
     public StoredAsset upload(String folder, @Nullable String originalFilename, @Nullable String contentType, byte[] data) {
         if (data == null || data.length == 0) {
-            throw new DomainValidationException("Uploaded file cannot be empty");
+            throw DomainValidationException.withCode(ErrorCodes.EMPTY_FILE, "Uploaded file cannot be empty");
         }
         if (contentType != null && !contentType.isBlank() && !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase(Locale.ROOT))) {
-            throw new DomainValidationException("Unsupported file format: " + contentType);
+            throw DomainValidationException.withCode(ErrorCodes.UNSUPPORTED_FILE_FORMAT, "Unsupported file format: " + contentType);
         }
         String storageKey = newStorageKey(folder, originalFilename);
         storagePort.storeAsset(storageKey, data, contentType);

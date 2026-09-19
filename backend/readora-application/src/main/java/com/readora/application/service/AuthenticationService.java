@@ -67,10 +67,10 @@ public class AuthenticationService implements AuthenticateUserUseCase {
         Email email = Email.of(rawEmail);
         validatePassword(rawPassword);
         if (userRepository.existsByEmail(email)) {
-            throw new EmailAlreadyUsedException("Email already registered: " + email);
+            throw EmailAlreadyUsedException.emailTaken(email);
         }
         if (userRepository.existsByUsername(username)) {
-            throw new EmailAlreadyUsedException("Username already taken: " + username);
+            throw EmailAlreadyUsedException.usernameTaken(username);
         }
 
         UserAccount account = UserAccount.register(email, username, passwordHasher.hash(rawPassword));
@@ -100,10 +100,10 @@ public class AuthenticationService implements AuthenticateUserUseCase {
     @Override
     public AuthResult refresh(String rawRefreshToken) {
         if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
-            throw new InvalidCredentialsException("Missing refresh token");
+            throw InvalidCredentialsException.sessionExpired("Missing refresh token");
         }
         RefreshToken current = refreshTokenRepository.findByTokenHash(tokenProvider.hashRefreshToken(rawRefreshToken))
-                .orElseThrow(() -> new InvalidCredentialsException("Unknown refresh token"));
+                .orElseThrow(() -> InvalidCredentialsException.sessionExpired("Unknown refresh token"));
         Instant now = Instant.now();
 
         if (current.getRevokedAt() != null) {
@@ -112,17 +112,17 @@ public class AuthenticationService implements AuthenticateUserUseCase {
                 log.warn("Refresh token reuse detected for user {}; revoking all sessions", current.getUserId());
                 refreshTokenRepository.revokeAllForUser(current.getUserId());
             }
-            throw new InvalidCredentialsException("Refresh token expired or revoked");
+            throw InvalidCredentialsException.sessionExpired("Refresh token expired or revoked");
         }
         if (!current.isValid(now)) {
-            throw new InvalidCredentialsException("Refresh token expired or revoked");
+            throw InvalidCredentialsException.sessionExpired("Refresh token expired or revoked");
         }
         if (!refreshTokenRepository.revokeIfActive(current.getTokenHash(), now)) {
             // Lost a race with a concurrent refresh of the same token.
-            throw new InvalidCredentialsException("Refresh token expired or revoked");
+            throw InvalidCredentialsException.sessionExpired("Refresh token expired or revoked");
         }
         UserAccount account = userRepository.findById(current.getUserId())
-                .orElseThrow(() -> new InvalidCredentialsException("Refresh token owner no longer exists"));
+                .orElseThrow(() -> InvalidCredentialsException.sessionExpired("Refresh token owner no longer exists"));
         return issueTokens(account);
     }
 

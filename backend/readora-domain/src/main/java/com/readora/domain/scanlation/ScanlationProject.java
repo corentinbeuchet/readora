@@ -2,6 +2,7 @@ package com.readora.domain.scanlation;
 
 import com.readora.domain.common.AggregateRoot;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.NotFoundException;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.common.UserId;
@@ -65,7 +66,7 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
 
     public WorkflowTask addChapterTask(ChapterNumber chapterNumber, @Nullable String assetUrl, int pageCount) {
         if (findTaskByChapter(chapterNumber).isPresent()) {
-            throw new DomainValidationException("Task for chapter " + chapterNumber + " already exists in project " + name);
+            throw DomainValidationException.withCode(ErrorCodes.TASK_ALREADY_EXISTS, "Task for chapter " + chapterNumber + " already exists in project " + name);
         }
         WorkflowTask task = WorkflowTask.create(chapterNumber, assetUrl, pageCount);
         this.tasks.add(task);
@@ -94,7 +95,7 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
             throw new DomainValidationException("User lacks required role: " + required + " for stage: " + task.getStage());
         }
         if (isHeldBySomeoneElse(task, userId) && !isLeader(member)) {
-            throw new DomainValidationException("Task is already claimed by " + task.getAssigneeId());
+            throw DomainValidationException.withCode(ErrorCodes.TASK_ALREADY_CLAIMED, "Task is already claimed by " + task.getAssigneeId());
         }
 
         task.assignTo(userId);
@@ -118,7 +119,7 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
                 throw new DomainValidationException("User lacks required role: " + task.getStage().requiredRole());
             }
             if (isHeldBySomeoneElse(task, userId) && !isLeader(member)) {
-                throw new DomainValidationException("Task is claimed by " + task.getAssigneeId() + "; only they or the leader can submit it");
+                throw DomainValidationException.withCode(ErrorCodes.TASK_CLAIMED_BY_OTHER, "Task is claimed by " + task.getAssigneeId() + "; only they or the leader can submit it");
             }
         }
 

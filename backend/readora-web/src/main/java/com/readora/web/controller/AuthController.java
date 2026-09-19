@@ -67,7 +67,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> refresh(
             @CookieValue(name = "${readora.security.refresh-cookie-name:readora_refresh}", required = false) String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
-            throw new InvalidCredentialsException("Missing refresh token");
+            throw InvalidCredentialsException.sessionExpired("Missing refresh token");
         }
         AuthResult result = authenticateUserUseCase.refresh(refreshToken);
         return withRefreshCookie(ResponseEntity.ok(), result)
@@ -88,7 +88,7 @@ public class AuthController {
     @Operation(summary = "Get the authenticated user's profile and effective permissions")
     public ResponseEntity<ApiResponse<UserProfileDto>> me() {
         UserAccount account = authenticateUserUseCase.currentAccount(currentUserProvider.requireUserId())
-                .orElseThrow(() -> new InvalidCredentialsException("Account no longer exists"));
+                .orElseThrow(() -> InvalidCredentialsException.sessionExpired("Account no longer exists"));
         return ResponseEntity.ok(ApiResponse.ok(UserProfileDto.fromDomain(account)));
     }
 

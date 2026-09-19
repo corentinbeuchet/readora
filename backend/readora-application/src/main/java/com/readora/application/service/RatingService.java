@@ -4,6 +4,7 @@ import com.readora.application.port.in.RateWorkUseCase;
 import com.readora.application.port.out.RatingRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.NotFoundException;
 import com.readora.domain.common.UserId;
 import com.readora.domain.rating.RatingId;
@@ -66,7 +67,7 @@ public class RatingService implements RateWorkUseCase {
                 .filter(r -> r.getReview() != null)
                 .orElseThrow(() -> new NotFoundException("Review", reviewId));
         if (rating.getUserId().equals(voterId)) {
-            throw new DomainValidationException("You cannot mark your own review as helpful");
+            throw DomainValidationException.withCode(ErrorCodes.OWN_CONTENT, "You cannot mark your own review as helpful");
         }
         return ratingRepository.addHelpfulVote(reviewId, voterId);
     }

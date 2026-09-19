@@ -1,5 +1,6 @@
 package com.readora.web.security;
 
+import com.readora.domain.common.ErrorCodes;
 import com.readora.web.dto.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,6 +27,6 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setHeader("WWW-Authenticate", "Bearer");
-        objectMapper.writeValue(response.getOutputStream(), ApiResponse.error("Authentication required"));
+        objectMapper.writeValue(response.getOutputStream(), ApiResponse.error(ErrorCodes.UNAUTHENTICATED, "Authentication required"));
     }
 }

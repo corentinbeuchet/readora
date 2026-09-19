@@ -57,7 +57,8 @@ class AuthControllerIntegrationTest extends AuthTestSupport {
                         .content(objectMapper.writeValueAsString(new RegisterRequest(first.email(), "another_name", PASSWORD))))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.error", containsString("already")));
+                .andExpect(jsonPath("$.error", containsString("already")))
+                .andExpect(jsonPath("$.code").value("EMAIL_TAKEN"));
     }
 
     @Test
@@ -69,7 +70,8 @@ class AuthControllerIntegrationTest extends AuthTestSupport {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new LoginRequest(registered.email(), "wrong-password"))))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
 
         Session logged = login(registered.email());
         assertThat(logged.accessToken()).isNotBlank();

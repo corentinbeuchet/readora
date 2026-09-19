@@ -49,7 +49,7 @@ public class CurrentUserProvider {
         }
         String subject = jwt.getSubject();
         if (subject == null) {
-            throw new InvalidCredentialsException("Access token has no subject");
+            throw InvalidCredentialsException.sessionExpired("Access token has no subject");
         }
         return new AuthenticatedUser(UserId.of(subject), username != null ? username : subject, permissions);
     }

@@ -1,6 +1,8 @@
 package com.readora.domain.scanlation;
 
+import com.readora.domain.common.CodedException;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.common.UserId;
 import com.readora.domain.work.WorkId;
@@ -91,7 +93,8 @@ class ScanlationProjectDomainTest {
 
         assertThatThrownBy(() -> project.claimTask(task.getId(), UserId.of("Cleaner2")))
                 .isInstanceOf(DomainValidationException.class)
-                .hasMessageContaining("already claimed");
+                .hasMessageContaining("already claimed")
+                .satisfies(e -> assertThat(((CodedException) e).code()).isEqualTo(ErrorCodes.TASK_ALREADY_CLAIMED));
         assertThat(task.getAssigneeId()).isEqualTo(UserId.of("Cleaner1"));
     }
 

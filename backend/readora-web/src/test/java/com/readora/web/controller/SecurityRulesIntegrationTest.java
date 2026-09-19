@@ -71,7 +71,8 @@ class SecurityRulesIntegrationTest extends AuthTestSupport {
                         .content(objectMapper.writeValueAsString(new CreateCommentRequest("Hello", null, null, false))))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("UNAUTHENTICATED"));
 
         mockMvc.perform(get("/api/v1/profile"))
                 .andExpect(status().isUnauthorized())
@@ -135,7 +136,8 @@ class SecurityRulesIntegrationTest extends AuthTestSupport {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new UpdateProgressRequest(chapter.getId().value(), 1))))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
 
         mockMvc.perform(get("/api/v1/bookmarks").header("Authorization", reader.bearer()))
                 .andExpect(status().isForbidden());
