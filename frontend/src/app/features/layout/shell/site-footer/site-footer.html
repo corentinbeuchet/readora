@@ -1,0 +1,42 @@
+<footer class="site-footer">
+  <div class="footer-brand">
+    <p class="footer-name">Readora</p>
+    <p class="muted" i18n="@@shell.footer.tagline">Manga, manhwa and comics, translated by the teams who love them.</p>
+  </div>
+
+  <nav class="footer-links" aria-label="Sections" i18n-aria-label="@@shell.footer.sections">
+    <ul>
+      <li><a routerLink="/works" i18n="@@shell.footer.browse">Browse the catalog</a></li>
+      <li><a routerLink="/updates" i18n="@@shell.footer.updates">Latest updates</a></li>
+      <li><a routerLink="/rankings" i18n="@@shell.footer.rankings">Rankings</a></li>
+      <li><a routerLink="/lists" i18n="@@shell.footer.lists">Reading lists</a></li>
+      <li><a routerLink="/subscription" i18n="@@shell.footer.plans">Premium plans</a></li>
+    </ul>
+  </nav>
+
+  <div class="footer-settings">
+    <label class="field theme-picker">
+      <span i18n="@@shell.theme.label">Theme</span>
+      <select #themeSelect (change)="chooseTheme(themeSelect.value)">
+        <option value="dark" [selected]="theme.preference() === 'dark'" i18n="@@shell.theme.dark">Dark</option>
+        <option value="light" [selected]="theme.preference() === 'light'" i18n="@@shell.theme.light">Light</option>
+        <option value="system" [selected]="theme.preference() === 'system'" i18n="@@shell.theme.system">System</option>
+      </select>
+    </label>
+    <nav class="language-picker" aria-label="Language" i18n-aria-label="@@shell.language.label">
+      <ul>
+        @for (language of languages(); track language.code) {
+          <li>
+            @if (language.current) {
+              <span aria-current="true" [attr.lang]="language.code">{{ language.label }}</span>
+            } @else {
+              <a [href]="language.href" [attr.lang]="language.code" [attr.hreflang]="language.code">{{ language.label }}</a>
+            }
+          </li>
+        }
+      </ul>
+    </nav>
+  </div>
+
+  <p class="footer-legal muted" i18n="@@shell.footer.copyright">© Readora. Series belong to their authors and publishers.</p>
+</footer>

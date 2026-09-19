@@ -6,6 +6,7 @@ import { NotificationStore } from '@app/core/notifications/notification-store';
 import { ReaderNotification } from '@app/core/models/notifications';
 import { asyncAction } from '@app/core/utils/async-action';
 import { TimeAgoPipe } from '@app/shared/ui/time-ago.pipe';
+import { Icon } from '@app/shared/ui/icon/icon';
 
 /** How often the unread count is refreshed while the app is open. */
 export const NOTIFICATION_POLL_MS = 60_000;
@@ -13,7 +14,7 @@ export const NOTIFICATION_POLL_MS = 60_000;
 /** Header bell (US-10): unread count, recent notifications, "Mark all as read". */
 @Component({
   selector: 'app-notification-bell',
-  imports: [TimeAgoPipe],
+  imports: [TimeAgoPipe, Icon],
   templateUrl: './notification-bell.html',
   styleUrl: './notification-bell.scss',
   host: { '(document:keydown.escape)': 'closeAndFocusTrigger()' }

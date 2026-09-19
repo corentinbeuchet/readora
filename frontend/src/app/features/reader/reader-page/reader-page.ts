@@ -93,6 +93,8 @@ export class ReaderPage {
   private hideControlsTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
+    // Reading takes the whole screen: no tab bar over the pages on a phone.
+    this.layout.setTabBarHidden(true);
     this.state.connect(
       computed(() => (this.chapter.hasValue() ? (this.chapter.value() ?? null) : null)),
       computed(() => pageParamToIndex(this.page()))
@@ -131,6 +133,7 @@ export class ReaderPage {
     this.destroyRef.onDestroy(() => {
       this.clearHideTimer();
       this.layout.setImmersive(false);
+      this.layout.setTabBarHidden(false);
     });
   }
 

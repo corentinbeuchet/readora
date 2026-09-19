@@ -1,5 +1,6 @@
 import { Page } from '@playwright/test';
 import { test, expect } from './support/fixtures';
+import { thenNoNavigationLabelIsClipped } from './support/helpers';
 
 const VIEWPORTS = [
   { name: 'small phone', width: 320, height: 640 },
@@ -10,7 +11,7 @@ const VIEWPORTS = [
 
 const PUBLIC_PAGES = ['/', '/works', '/updates', '/rankings', '/lists', '/login', '/register', '/subscription'];
 
-/** WCAG 1.4.10 reflow (no horizontal scrolling) and 2.5.8 target size, plus the small-screen header. */
+/** WCAG 1.4.10 reflow (no horizontal scrolling) and 2.5.8 target size, plus the two shapes of the navigation (US-14). */
 test.describe('Responsive layout', () => {
   for (const viewport of VIEWPORTS) {
     test(`no page scrolls sideways on a ${viewport.name} (${viewport.width}px)`, async ({ page, publishedChapter }) => {
@@ -28,29 +29,38 @@ test.describe('Responsive layout', () => {
     });
   }
 
-  test('on a phone the navigation hides behind the Menu button', async ({ page }) => {
+  test('on a phone the navigation is a tab bar at the bottom of the screen', async ({ page }) => {
     await givenMyScreenIs(page, VIEWPORTS[1]);
     await whenIVisit(page, '/works');
 
-    await thenTheNavigationIsHidden(page);
-
-    await whenIOpenTheMenu(page);
-
-    await thenTheNavigationShowsTheLink(page, 'Rankings');
+    await thenThereIsNoMenuButton(page);
+    await thenTheNavigationIsAtTheBottomOfTheScreen(page);
+    await thenTheNavigationShowsTheLink(page, 'Home');
+    await thenEveryControlIsAtLeast24px(page, 'nav[aria-label="Primary"]');
 
     await whenIChooseTheLink(page, 'Rankings');
 
     await thenIAmOn(page, '/rankings');
-    await thenTheNavigationIsHidden(page);
+    await thenTheNavigationShowsTheLink(page, 'Rankings');
   });
 
-  test('from a tablet in landscape the navigation is always shown', async ({ page }) => {
+  test('on a small phone no tab label is cut', async ({ page }) => {
+    await givenMyScreenIs(page, VIEWPORTS[0]);
+
+    await whenIVisit(page, '/works');
+
+    await thenNoNavigationLabelIsClipped(page, 'Primary');
+  });
+
+  test('from a tablet in landscape the navigation is in the header, and the logo is the way home', async ({ page }) => {
     await givenMyScreenIs(page, VIEWPORTS[3]);
 
     await whenIVisit(page, '/works');
 
     await thenThereIsNoMenuButton(page);
+    await thenTheNavigationIsInTheHeader(page);
     await thenTheNavigationShowsTheLink(page, 'Rankings');
+    await thenTheNavigationHidesTheLink(page, 'Home');
   });
 
   test('controls in the header and the reader toolbar are at least 24px on a phone', async ({ page, publishedChapter }) => {
@@ -79,10 +89,6 @@ async function whenIOpenTheChapter(page: Page, chapter: { chapterId: string; wor
   await expect(page.getByRole('link', { name: 'Translation team' }).or(page.locator(`a[href="/works/${chapter.workId}"]`)).first()).toBeVisible();
 }
 
-async function whenIOpenTheMenu(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Menu' }).click();
-}
-
 async function whenIChooseTheLink(page: Page, name: string): Promise<void> {
   await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name }).click();
 }
@@ -96,9 +102,22 @@ async function thenThePageDoesNotScrollSideways(page: Page, url: string): Promis
     .toBeLessThanOrEqual(0);
 }
 
-async function thenTheNavigationIsHidden(page: Page): Promise<void> {
-  await expect(page.getByRole('navigation', { name: 'Primary' })).toBeHidden();
-  await expect(page.getByRole('button', { name: 'Menu' })).toHaveAttribute('aria-expanded', 'false');
+/** The bar touches the bottom edge of the screen, whatever the page length. */
+async function thenTheNavigationIsAtTheBottomOfTheScreen(page: Page): Promise<void> {
+  await expect
+    .poll(() => page.getByRole('navigation', { name: 'Primary' }).evaluate((nav) => Math.round(window.innerHeight - nav.getBoundingClientRect().bottom)), { timeout: 5000 })
+    .toBe(0);
+}
+
+async function thenTheNavigationIsInTheHeader(page: Page): Promise<void> {
+  await expect(page.getByRole('banner').getByRole('navigation', { name: 'Primary' })).toBeVisible();
+  await expect
+    .poll(() => page.getByRole('navigation', { name: 'Primary' }).evaluate((nav) => Math.round(nav.getBoundingClientRect().top)), { timeout: 5000 })
+    .toBeLessThan(80);
+}
+
+async function thenTheNavigationHidesTheLink(page: Page, name: string): Promise<void> {
+  await expect(page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name })).toBeHidden();
 }
 
 async function thenTheNavigationShowsTheLink(page: Page, name: string): Promise<void> {
@@ -106,7 +125,7 @@ async function thenTheNavigationShowsTheLink(page: Page, name: string): Promise<
 }
 
 async function thenThereIsNoMenuButton(page: Page): Promise<void> {
-  await expect(page.getByRole('button', { name: 'Menu' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Menu' })).toHaveCount(0);
 }
 
 async function thenIAmOn(page: Page, path: string): Promise<void> {

@@ -15,7 +15,8 @@ import { MemoryStorage } from '../../../test-utils';
 @Component({ template: '<h1>Page</h1>' })
 class DummyPage {}
 
-describe('Shell primary navigation', () => {
+/** US-14 "Home and navigation": which entries exist. Which shape they take (tab bar or header) is CSS, checked end to end. */
+describe('Shell navigation', () => {
   let fixture: ComponentFixture<Shell>;
   let http: HttpTestingController;
   let router: Router;
@@ -40,76 +41,74 @@ describe('Shell primary navigation', () => {
 
   afterEach(() => http.verify());
 
-  it('is a list of links, not an ARIA menubar', () => {
+  it('The main sections are always one tap away', () => {
     givenIAmOnTheSite();
 
-    thenThereIsNoMenubar();
-    thenTheNavigationLinksAre(['Home', 'Catalog', 'Updates', 'Rankings', 'Lists']);
+    thenTheNavigationLinksAre(['Home', 'Browse', 'Updates', 'Rankings', 'Lists']);
     thenEveryNavigationLinkHasAnHref();
+    thenThereIsNoMenuButton();
+    thenThereIsNoMenubar();
+  });
+
+  it('My library is in the navigation once I am signed in', async () => {
+    givenIAmOnTheSite();
+    thenTheNavigationLinksAre(['Home', 'Browse', 'Updates', 'Rankings', 'Lists']);
+
+    await whenISignInAsAReaderWithALibrary();
+
+    thenTheNavigationLinksAre(['Home', 'Browse', 'Updates', 'Rankings', 'Lists', 'Library']);
+  });
+
+  it('Team tools live in the account menu', async () => {
+    givenIAmOnTheSite();
+    await whenISignInWithoutTheNotificationBell(['PROJECT_VIEW', 'WORK_CREATE']);
+
+    whenIOpenTheAccountMenu();
+
+    thenTheAccountMenuOffers(['Profile', 'History', 'Subscription', 'Scanlation workspace', 'Upload Studio', 'Log out']);
+    thenTheTeamToolsAreAGroupNamed('Team tools');
+    thenTheNavigationLinksAre(['Home', 'Browse', 'Updates', 'Rankings', 'Lists']);
+  });
+
+  it('a reader has no team tools in the account menu', async () => {
+    givenIAmOnTheSite();
+    await whenISignInWithoutTheNotificationBell([]);
+
+    whenIOpenTheAccountMenu();
+
+    thenTheAccountMenuOffers(['Profile', 'History', 'Subscription', 'Log out']);
   });
 
   it('navigates exactly once per click and marks the current page', async () => {
     givenIAmOnTheSite();
 
-    await whenIClickTheNavigationLink('Catalog');
+    await whenIClickTheNavigationLink('Browse');
 
     thenTheRouterNavigatedTimes(1);
     thenIAmOn('/works');
-    thenTheCurrentPageLinkIs('Catalog');
+    thenTheCurrentPageLinkIs('Browse');
   });
 
-  it('shows permission-gated entries only to allowed users', async () => {
-    givenIAmOnTheSite();
-
-    await whenISignInWith(['PROJECT_VIEW']);
-
-    thenTheNavigationLinksAre(['Home', 'Catalog', 'Updates', 'Rankings', 'Lists', 'Scanlation']);
-  });
-
-  it('hides the site header and footer in the reader zen mode', () => {
+  it('hides the site header, footer and tab bar in the reader zen mode', () => {
     givenIAmOnTheSite();
 
     whenTheReaderSwitchesZenMode(true);
 
     thenTheLayoutIsImmersive(true);
+    thenTheTabBarIsHidden(true);
 
     whenTheReaderSwitchesZenMode(false);
 
     thenTheLayoutIsImmersive(false);
+    thenTheTabBarIsHidden(false);
   });
 
-  it('on small screens the navigation is a disclosure opened by the Menu button', () => {
+  it('hides the tab bar while a page asks for the whole screen (the reader)', () => {
     givenIAmOnTheSite();
 
-    thenTheNavigationIsOpen(false);
+    whenAPageAsksForTheWholeScreen(true);
 
-    whenIPressTheMenuButton();
-
-    thenTheNavigationIsOpen(true);
-
-    whenIPressTheMenuButton();
-
-    thenTheNavigationIsOpen(false);
-  });
-
-  it('Escape closes the open navigation and gives focus back to the Menu button', () => {
-    givenIAmOnTheSite();
-    whenIPressTheMenuButton();
-
-    whenIPressEscapeInTheNavigation();
-
-    thenTheNavigationIsOpen(false);
-    thenTheMenuButtonHasFocus();
-  });
-
-  it('choosing a page closes the navigation', async () => {
-    givenIAmOnTheSite();
-    whenIPressTheMenuButton();
-
-    await whenIClickTheNavigationLink('Catalog');
-
-    thenIAmOn('/works');
-    thenTheNavigationIsOpen(false);
+    thenTheTabBarIsHidden(true);
   });
 
   it('after moving to another page, focus goes to its heading', async () => {
@@ -124,11 +123,11 @@ describe('Shell primary navigation', () => {
   it('changing only the query string keeps the focus where it is', async () => {
     givenIAmOnTheSite();
     await givenIHaveOpened('/works');
-    givenTheFocusIsOnTheNavigationLink('Catalog');
+    givenTheFocusIsOnTheNavigationLink('Browse');
 
     await whenINavigateTo('/works?genre=Action');
 
-    thenTheFocusIsOnTheNavigationLink('Catalog');
+    thenTheFocusIsOnTheNavigationLink('Browse');
   });
 
   it('the first page load does not move the focus', async () => {
@@ -142,7 +141,7 @@ describe('Shell primary navigation', () => {
   it('logging out from the account menu ends the session and goes home', async () => {
     givenIAmOnTheSite();
     await givenIHaveOpened('/works');
-    await givenIAmSignedInWithoutTheNotificationBell();
+    await whenISignInWithoutTheNotificationBell([]);
 
     await whenILogOutFromTheAccountMenu();
 
@@ -157,11 +156,6 @@ describe('Shell primary navigation', () => {
 
   async function givenIHaveOpened(url: string): Promise<void> {
     await whenINavigateTo(url);
-  }
-
-  /** The bell (shown with `LIBRARY_USE`) polls the API and has its own spec. */
-  async function givenIAmSignedInWithoutTheNotificationBell(): Promise<void> {
-    await whenISignInWith([]);
   }
 
   function givenTheFocusIsOnTheNavigationLink(label: string): void {
@@ -181,16 +175,27 @@ describe('Shell primary navigation', () => {
     fixture.detectChanges();
   }
 
-  async function whenISignInWith(permissions: Permission[]): Promise<void> {
+  /** Without `LIBRARY_USE` there is no notification bell, which polls the API and has its own spec. */
+  async function whenISignInWithoutTheNotificationBell(permissions: Permission[]): Promise<void> {
     await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions }));
     fixture.detectChanges();
   }
 
-  async function whenILogOutFromTheAccountMenu(): Promise<void> {
+  async function whenISignInAsAReaderWithALibrary(): Promise<void> {
+    await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: ['LIBRARY_USE'] }));
+    fixture.detectChanges();
+    // The bell of a reader with a library asks for the unread count; it has its own spec.
+    http.match((request) => request.url.includes('/notifications')).forEach((request) => request.flush({ success: true, data: 0 }));
+  }
+
+  function whenIOpenTheAccountMenu(): void {
     fixture.nativeElement.querySelector('button[aria-label="Account menu"]').click();
     fixture.detectChanges();
-    const items: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('[role="menuitem"]'));
-    items.find((item) => item.textContent?.trim() === 'Log out')!.click();
+  }
+
+  async function whenILogOutFromTheAccountMenu(): Promise<void> {
+    whenIOpenTheAccountMenu();
+    menuItems().find((item) => item.textContent?.trim() === 'Log out')!.click();
     http.expectOne((r) => r.method === 'POST' && r.url.endsWith('/auth/logout')).flush({ success: true, data: null });
     await fixture.whenStable();
     fixture.detectChanges();
@@ -201,23 +206,9 @@ describe('Shell primary navigation', () => {
     fixture.detectChanges();
   }
 
-  function whenIPressTheMenuButton(): void {
-    menuButton().click();
+  function whenAPageAsksForTheWholeScreen(on: boolean): void {
+    TestBed.inject(LayoutStore).setTabBarHidden(on);
     fixture.detectChanges();
-  }
-
-  function whenIPressEscapeInTheNavigation(): void {
-    links()[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    fixture.detectChanges();
-  }
-
-  function thenTheNavigationIsOpen(open: boolean): void {
-    expect(menuButton().getAttribute('aria-expanded')).toBe(String(open));
-    expect(fixture.nativeElement.querySelector('#primary-nav').classList.contains('nav-open')).toBe(open);
-  }
-
-  function thenTheMenuButtonHasFocus(): void {
-    expect(document.activeElement).toBe(menuButton());
   }
 
   function thenTheFocusIsOnThePageHeading(): void {
@@ -236,12 +227,26 @@ describe('Shell primary navigation', () => {
     expect(fixture.nativeElement.querySelector('[role="menubar"]')).toBeNull();
   }
 
+  function thenThereIsNoMenuButton(): void {
+    expect(fixture.nativeElement.querySelector('button[aria-controls="primary-nav"]')).toBeNull();
+  }
+
   function thenTheNavigationLinksAre(labels: string[]): void {
     expect(links().map((a) => a.textContent?.trim())).toEqual(labels);
   }
 
   function thenEveryNavigationLinkHasAnHref(): void {
     expect(links().every((a) => a.getAttribute('href'))).toBe(true);
+  }
+
+  function thenTheAccountMenuOffers(labels: string[]): void {
+    expect(menuItems().map((item) => item.textContent?.trim())).toEqual(labels);
+  }
+
+  function thenTheTeamToolsAreAGroupNamed(name: string): void {
+    const group: HTMLElement = fixture.nativeElement.querySelector('[role="menu"] [role="group"]');
+    expect(group.getAttribute('aria-label')).toBe(name);
+    expect(Array.from(group.querySelectorAll('[role="menuitem"]')).map((item) => item.textContent?.trim())).toEqual(['Scanlation workspace', 'Upload Studio']);
   }
 
   function thenTheRouterNavigatedTimes(times: number): void {
@@ -264,8 +269,12 @@ describe('Shell primary navigation', () => {
     expect(fixture.nativeElement.querySelector('.app-layout').classList.contains('immersive')).toBe(immersive);
   }
 
-  function menuButton(): HTMLButtonElement {
-    return fixture.nativeElement.querySelector('button[aria-controls="primary-nav"]');
+  function thenTheTabBarIsHidden(hidden: boolean): void {
+    expect(fixture.nativeElement.querySelector('app-primary-nav').classList.contains('tabbar-hidden')).toBe(hidden);
+  }
+
+  function menuItems(): HTMLElement[] {
+    return Array.from(fixture.nativeElement.querySelectorAll('[role="menuitem"]'));
   }
 
   function links(): HTMLAnchorElement[] {
@@ -277,7 +286,7 @@ describe('Shell primary navigation', () => {
   }
 });
 
-describe('Shell theme picker', () => {
+describe('Shell theme switch', () => {
   let fixture: ComponentFixture<Shell>;
   let storage: MemoryStorage;
 
@@ -291,16 +300,19 @@ describe('Shell theme picker', () => {
 
   afterEach(() => TestBed.inject(DOCUMENT).documentElement.removeAttribute('data-theme'));
 
-  it('is dark by default; choosing Light pins it and is remembered', () => {
+  it('switches to the light theme and back from the header, and remembers the choice', () => {
     givenIAmOnTheSite();
-
-    thenTheThemePickerShows('dark');
     thenThePageThemeIs('dark');
 
-    whenIChooseTheTheme('light');
+    whenIPressTheHeaderButton('Switch to the light theme');
 
     thenThePageThemeIs('light');
     thenMyThemeChoiceIsSaved('light');
+
+    whenIPressTheHeaderButton('Switch to the dark theme');
+
+    thenThePageThemeIs('dark');
+    thenMyThemeChoiceIsSaved('dark');
   });
 
   function givenIAmOnTheSite(): void {
@@ -308,14 +320,9 @@ describe('Shell theme picker', () => {
     fixture.detectChanges();
   }
 
-  function whenIChooseTheTheme(value: string): void {
-    themePicker().value = value;
-    themePicker().dispatchEvent(new Event('change'));
+  function whenIPressTheHeaderButton(label: string): void {
+    fixture.nativeElement.querySelector(`header button[aria-label="${label}"]`).click();
     fixture.detectChanges();
-  }
-
-  function thenTheThemePickerShows(value: string): void {
-    expect(themePicker().value).toBe(value);
   }
 
   function thenThePageThemeIs(theme: string | null): void {
@@ -324,10 +331,5 @@ describe('Shell theme picker', () => {
 
   function thenMyThemeChoiceIsSaved(value: string): void {
     expect(storage.read(THEME_KEY)).toBe(value);
-  }
-
-  function themePicker(): HTMLSelectElement {
-    const labels: HTMLLabelElement[] = Array.from(fixture.nativeElement.querySelectorAll('footer label'));
-    return labels.find((label) => label.textContent?.includes('Theme'))!.querySelector('select')!;
   }
 });

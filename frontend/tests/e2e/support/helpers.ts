@@ -30,6 +30,34 @@ export async function givenMyThemeIs(page: Page, theme: 'light' | 'dark'): Promi
   await page.addInitScript((choice) => localStorage.setItem('readora.theme', JSON.stringify(choice)), theme);
 }
 
+/**
+ * No entry of the primary navigation (the phone tab bar) has its text cut: tabs are narrow, and French labels are
+ * longer. Polled, so a measurement taken before the font arrives is retried.
+ */
+export async function thenNoNavigationLabelIsClipped(page: Page, navigationName: string): Promise<void> {
+  const navigation = page.getByRole('navigation', { name: navigationName });
+  await expect
+    .poll(
+      () =>
+        navigation.evaluate((nav) =>
+          Array.from(nav.querySelectorAll<HTMLElement>('a span'))
+            .filter((label) => label.scrollWidth > label.clientWidth)
+            .map((label) => label.textContent ?? '')
+        ),
+      { timeout: 5000 }
+    )
+    .toEqual([]);
+}
+
+/** Team tools (US-14) are entries of the account menu, for scanlators, uploaders and moderators only. */
+export async function thenTheAccountMenuHasNoTeamTools(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Account menu' }).click();
+  await expect(page.getByRole('menuitem', { name: 'Profile' })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: 'Scanlation workspace' })).toHaveCount(0);
+  await expect(page.getByRole('menuitem', { name: 'Upload Studio' })).toHaveCount(0);
+  await page.keyboard.press('Escape');
+}
+
 /** Signs up a fresh reader through the UI and waits for the profile page. Returns the username. */
 export async function signUp(page: Page, prefix = 'e2e'): Promise<string> {
   const username = `${prefix}_${uniqueSuffix()}`;

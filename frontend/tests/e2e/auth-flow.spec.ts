@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
 import { test, expect } from './support/fixtures';
-import { PASSWORD, uniqueSuffix } from './support/helpers';
+import { PASSWORD, thenTheAccountMenuHasNoTeamTools, uniqueSuffix } from './support/helpers';
 
 interface Account {
   email: string;
@@ -36,7 +36,7 @@ test.describe('Authentication flow', () => {
     await thenMyProfileIsShownFor(page, me.username);
     await thenICanSeeTheTab(page, 'Overview');
     await thenMyDisplayNameIs(page, me.username);
-    await thenThereIsNoScanlationLink(page);
+    await thenTheAccountMenuHasNoTeamTools(page);
 
     await whenIOpenTheTab(page, 'Bookmarks');
 
@@ -158,11 +158,6 @@ async function thenICanSeeTheTab(page: Page, name: string): Promise<void> {
 
 async function thenMyDisplayNameIs(page: Page, displayName: string): Promise<void> {
   await expect(page.getByLabel('Display name')).toHaveValue(displayName);
-}
-
-/** A plain reader has no Scanlation entry in the primary navigation. */
-async function thenThereIsNoScanlationLink(page: Page): Promise<void> {
-  await expect(page.getByRole('link', { name: 'Scanlation' })).toHaveCount(0);
 }
 
 async function thenICanLogIn(page: Page): Promise<void> {

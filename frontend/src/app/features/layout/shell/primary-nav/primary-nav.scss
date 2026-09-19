@@ -1,0 +1,135 @@
+@use 'breakpoints' as bp;
+
+// Below lg the host is out of the header's flow: its <nav> is fixed to the bottom of the screen.
+:host {
+  display: contents;
+
+  @include bp.from(lg) {
+    display: block;
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+// Phone and tablet: a tab bar. The layout reserves --tabbar-h under <main> and the footer (shell.scss).
+.primary-nav {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: var(--z-tabbar);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+
+  @include bp.from(lg) {
+    position: static;
+    padding: 0;
+    background: none;
+    border: 0;
+  }
+}
+
+// The reader takes the whole phone screen (LayoutStore.tabBarHidden); the header keeps its links from lg.
+:host(.tabbar-hidden) .primary-nav {
+  display: none;
+
+  @include bp.from(lg) {
+    display: block;
+  }
+}
+
+.nav-list {
+  display: flex;
+  list-style: none;
+  block-size: var(--tabbar-h);
+
+  @include bp.from(lg) {
+    block-size: auto;
+    gap: var(--space-1);
+  }
+
+  li {
+    flex: 1 1 0;
+    min-width: 0;
+
+    @include bp.from(lg) {
+      flex: none;
+    }
+  }
+}
+
+// Five entries at most: a signed-in reader gets Library instead of Lists in the tab bar (Lists stays on the home
+// page and in the footer); on a computer the logo is the way home.
+.nav-list:has(.nav-library) .nav-lists {
+  display: none;
+
+  @include bp.from(lg) {
+    display: block;
+  }
+}
+
+.nav-home {
+  @include bp.from(lg) {
+    display: none;
+  }
+}
+
+.nav-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  block-size: 100%;
+  padding-inline: var(--space-1);
+  color: var(--muted);
+  text-decoration: none;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  // French labels ("Bibliothèque", "Classements") fit a 64px tab at 320px in the condensed width.
+  font-stretch: var(--wdth-condensed);
+  line-height: var(--lh-snug);
+
+  app-icon {
+    font-size: var(--fs-lg);
+  }
+
+  &:hover,
+  &.active {
+    color: var(--accent);
+  }
+
+  &.active {
+    font-weight: var(--fw-bold);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: -2px;
+    border-radius: var(--radius-md);
+  }
+
+  @include bp.from(lg) {
+    flex-direction: row;
+    block-size: auto;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    font-size: var(--fs-base);
+    font-stretch: var(--wdth-text);
+
+    app-icon {
+      display: none;
+    }
+
+    &:focus-visible {
+      outline-offset: 1px;
+    }
+  }
+}
+
+.nav-label {
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

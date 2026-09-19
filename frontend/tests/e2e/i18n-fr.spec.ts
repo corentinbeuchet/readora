@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from './support/fixtures';
-import { publishChapter } from './support/helpers';
+import { publishChapter, thenNoNavigationLabelIsClipped } from './support/helpers';
 
 /**
  * US-13 on the French build (project `chromium-fr`, base URL `/fr/` or the French dev server). Paths are relative
@@ -40,6 +40,8 @@ test.describe('French interface (US-13)', () => {
 
       await thenThePageDoesNotScrollSideways(page, url);
     }
+
+    await thenNoNavigationLabelIsClipped(page, 'Principale');
   });
 });
 

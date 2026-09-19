@@ -1,46 +1,27 @@
-<div class="app-layout" [class.immersive]="layout.immersive()">
+<div class="app-layout" [class.immersive]="layout.immersive()" [class.no-tabbar]="layout.tabBarHidden() || layout.immersive()">
   <a class="skip-link" href="#main-content" i18n="@@shell.skipLink">Skip to main content</a>
 
   <header class="app-header">
+    <!-- The logo is the way home: there is no "Home" link next to it on a computer (US-14). -->
     <a routerLink="/" class="logo" aria-label="Readora home" i18n-aria-label="@@shell.homeLink">
       <span class="logo-text">Readora</span>
     </a>
 
-    <!-- Below the lg breakpoint the navigation is a disclosure (CSS decides visibility, so prerendered HTML is right). -->
-    <button #navToggle type="button" class="btn nav-toggle" aria-controls="primary-nav" [attr.aria-expanded]="navOpen()" (click)="toggleNav()">
-      <span aria-hidden="true">☰</span> <ng-container i18n="@@shell.menu">Menu</ng-container>
-    </button>
-
-    <!-- Site navigation is a list of links (not an ARIA menubar): native Tab/Enter, one navigation per activation. -->
-    <nav id="primary-nav" class="app-nav" [class.nav-open]="navOpen()" aria-label="Primary" i18n-aria-label="@@shell.nav.label">
-      <ul class="nav-list">
-        <li>
-          <a class="nav-link" routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page" [routerLinkActiveOptions]="{ exact: true }" i18n="@@shell.nav.home">Home</a>
-        </li>
-        <li>
-          <a class="nav-link" routerLink="/works" routerLinkActive="active" ariaCurrentWhenActive="page" i18n="@@shell.nav.catalog">Catalog</a>
-        </li>
-        <li>
-          <a class="nav-link" routerLink="/updates" routerLinkActive="active" ariaCurrentWhenActive="page" i18n="@@shell.nav.updates">Updates</a>
-        </li>
-        <li>
-          <a class="nav-link" routerLink="/rankings" routerLinkActive="active" ariaCurrentWhenActive="page" i18n="@@shell.nav.rankings">Rankings</a>
-        </li>
-        <li>
-          <a class="nav-link" routerLink="/lists" routerLinkActive="active" ariaCurrentWhenActive="page" i18n="@@shell.nav.lists">Lists</a>
-        </li>
-        <li *appHasPermission="'PROJECT_VIEW'">
-          <a class="nav-link" routerLink="/scanlation" routerLinkActive="active" ariaCurrentWhenActive="page" i18n="@@shell.nav.scanlation">Scanlation</a>
-        </li>
-        <li *appHasPermission="'WORK_CREATE'">
-          <a class="nav-link" routerLink="/upload" routerLinkActive="active" ariaCurrentWhenActive="page" i18n="@@shell.nav.upload">Upload Studio</a>
-        </li>
-      </ul>
-    </nav>
+    <!-- One navigation for every screen: a tab bar at the bottom below lg, links here from lg (CSS only). -->
+    <app-primary-nav [class.tabbar-hidden]="layout.tabBarHidden() || layout.immersive()" />
 
     <app-omnisearch />
 
     <div class="user-area">
+      @if (theme.preference() === 'light') {
+        <button type="button" class="btn btn-ghost btn-icon" (click)="theme.setPreference('dark')" aria-label="Switch to the dark theme" i18n-aria-label="@@shell.theme.toDark">
+          <app-icon name="moon" />
+        </button>
+      } @else {
+        <button type="button" class="btn btn-ghost btn-icon" (click)="theme.setPreference('light')" aria-label="Switch to the light theme" i18n-aria-label="@@shell.theme.toLight">
+          <app-icon name="sun" />
+        </button>
+      }
       @if (auth.restoring()) {
         <span class="muted">…</span>
       } @else if (auth.isAuthenticated()) {
@@ -55,6 +36,8 @@
         >
           @if (auth.user()?.avatarUrl; as avatar) {
             <img class="avatar" [ngSrc]="avatar" alt="" width="24" height="24" />
+          } @else {
+            <app-icon name="user" />
           }
           <span class="user-name">{{ auth.user()?.displayName }}</span>
           @if (auth.isPremium()) {
@@ -63,11 +46,18 @@
         </button>
         <div ngMenu #userMenu="ngMenu" (itemSelected)="onUserMenuSelected($event)" class="user-menu">
           <ng-template ngMenuContent>
-            <button type="button" ngMenuItem value="/library" i18n="@@shell.menu.library">My library</button>
-            <button type="button" ngMenuItem value="/history" i18n="@@shell.menu.history">History</button>
-            <button *appHasPermission="'COMMENT_MODERATE'" type="button" ngMenuItem value="/moderation" i18n="@@shell.menu.moderation">Moderation</button>
             <button type="button" ngMenuItem value="/profile" i18n="@@shell.menu.profile">Profile</button>
+            <button type="button" ngMenuItem value="/history" i18n="@@shell.menu.history">History</button>
             <button type="button" ngMenuItem value="/subscription" i18n="@@shell.menu.subscription">Subscription</button>
+            @if (hasTeamTools()) {
+              <div role="separator" class="menu-separator"></div>
+              <div role="group" class="menu-group" aria-label="Team tools" i18n-aria-label="@@shell.menu.team">
+                <button *appHasPermission="'PROJECT_VIEW'" type="button" ngMenuItem value="/scanlation" i18n="@@shell.menu.scanlation">Scanlation workspace</button>
+                <button *appHasPermission="'WORK_CREATE'" type="button" ngMenuItem value="/upload" i18n="@@shell.menu.upload">Upload Studio</button>
+                <button *appHasPermission="'COMMENT_MODERATE'" type="button" ngMenuItem value="/moderation" i18n="@@shell.menu.moderation">Moderation</button>
+              </div>
+              <div role="separator" class="menu-separator"></div>
+            }
             <button type="button" ngMenuItem value="logout" i18n="@@shell.menu.logout">Log out</button>
           </ng-template>
         </div>
@@ -82,28 +72,5 @@
     <router-outlet />
   </main>
 
-  <footer class="app-footer">
-    <p class="muted" i18n="@@shell.footer.copyright">© {{ year }} Readora — read manga, manhwa and comics.</p>
-    <label class="field theme-picker">
-      <span i18n="@@shell.theme.label">Theme</span>
-      <select #themeSelect (change)="chooseTheme(themeSelect.value)">
-        <option value="system" [selected]="theme.preference() === 'system'" i18n="@@shell.theme.system">System</option>
-        <option value="light" [selected]="theme.preference() === 'light'" i18n="@@shell.theme.light">Light</option>
-        <option value="dark" [selected]="theme.preference() === 'dark'" i18n="@@shell.theme.dark">Dark</option>
-      </select>
-    </label>
-    <nav class="language-picker" aria-label="Language" i18n-aria-label="@@shell.language.label">
-      <ul>
-        @for (language of languages(); track language.code) {
-          <li>
-            @if (language.current) {
-              <span aria-current="true" [attr.lang]="language.code">{{ language.label }}</span>
-            } @else {
-              <a [href]="language.href" [attr.lang]="language.code" [attr.hreflang]="language.code">{{ language.label }}</a>
-            }
-          </li>
-        }
-      </ul>
-    </nav>
-  </footer>
+  <app-site-footer class="app-footer" [url]="url()" />
 </div>

@@ -1,48 +1,41 @@
-import { Component, DOCUMENT, ElementRef, Injector, LOCALE_ID, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, DOCUMENT, Injector, afterNextRender, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter, firstValueFrom } from 'rxjs';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@angular/aria/menu';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { LayoutStore } from '@app/core/layout/layout-store';
-import { ThemeStore, toThemePreference } from '@app/core/theme/theme-store';
-import { SITE_LOCALES, localizedPath, siteLocale } from '@app/core/i18n/site-locales';
+import { ThemeStore } from '@app/core/theme/theme-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
+import { Icon } from '@app/shared/ui/icon/icon';
 import { Omnisearch } from './omnisearch/omnisearch';
 import { NotificationBell } from './notification-bell/notification-bell';
+import { PrimaryNav } from './primary-nav/primary-nav';
+import { SiteFooter } from './site-footer/site-footer';
 import { NgOptimizedImage } from '@angular/common';
 
 /**
- * Application shell: primary navigation (a list of router links), the header search box, user `Menu`
- * (Profile / Subscription / Logout) or Login button, `<main>` landmark and footer.
+ * Application shell: the header (logo, primary navigation, search, theme switch, account `Menu` or Log in / Sign up),
+ * the `<main>` landmark and the footer. Below the lg breakpoint the primary navigation is a tab bar at the bottom.
  */
 @Component({
   selector: 'app-shell',
-  imports: [NgOptimizedImage, RouterOutlet, RouterLink, RouterLinkActive, Menu, MenuItem, MenuTrigger, MenuContent, HasPermissionDirective, Omnisearch, NotificationBell],
+  imports: [NgOptimizedImage, RouterOutlet, RouterLink, Menu, MenuItem, MenuTrigger, MenuContent, HasPermissionDirective, Icon, Omnisearch, NotificationBell, PrimaryNav, SiteFooter],
   templateUrl: './shell.html',
-  styleUrl: './shell.scss',
-  // Escape anywhere closes the small-screen navigation (no-op when it is closed).
-  host: { '(keydown.escape)': 'closeNav({ returnFocus: true })' }
+  styleUrl: './shell.scss'
 })
 export class Shell {
   protected readonly auth = inject(AuthStore);
   protected readonly layout = inject(LayoutStore);
   protected readonly theme = inject(ThemeStore);
   private readonly router = inject(Router);
-  private readonly locale = siteLocale(inject(LOCALE_ID));
-  protected readonly year = new Date().getFullYear();
-
-  /** Small screens: whether the primary navigation disclosure is open (always shown from the lg breakpoint). */
-  protected readonly navOpen = signal(false);
-  private readonly navToggle = viewChild.required<ElementRef<HTMLButtonElement>>('navToggle');
   private readonly document = inject(DOCUMENT);
   private readonly injector = inject(Injector);
-  /** The page shown (with its query), to open the same page in another language. */
-  private readonly url = signal(this.router.url);
-  /** Language switcher: each language is its own build, so the links are full page loads, not router links. */
-  protected readonly languages = computed(() =>
-    SITE_LOCALES.map((language) => ({ ...language, current: language.code === this.locale.code, href: localizedPath(language, this.url()) }))
-  );
+
+  /** The page shown (with its query), so the footer can offer the same page in another language. */
+  protected readonly url = signal(this.router.url);
+  /** Scanlators, uploaders and moderators get a "Team tools" group in the account menu (US-14). */
+  protected readonly hasTeamTools = computed(() => this.auth.hasAnyPermission('PROJECT_VIEW', 'WORK_CREATE', 'COMMENT_MODERATE'));
   /** Path of the page shown (no query or fragment); `null` before the first navigation. */
   private currentPath: string | null = null;
 
@@ -53,7 +46,6 @@ export class Shell {
         takeUntilDestroyed()
       )
       .subscribe((event) => {
-        this.navOpen.set(false);
         this.url.set(event.urlAfterRedirects);
         const path = event.urlAfterRedirects.split(/[?#]/)[0];
         const previous = this.currentPath;
@@ -79,24 +71,6 @@ export class Shell {
       heading.setAttribute('tabindex', '-1');
     }
     (heading ?? main).focus({ preventScroll: true });
-  }
-
-  protected toggleNav(): void {
-    this.navOpen.update((open) => !open);
-  }
-
-  protected closeNav(options: { returnFocus: boolean }): void {
-    if (!this.navOpen()) {
-      return;
-    }
-    this.navOpen.set(false);
-    if (options.returnFocus) {
-      this.navToggle().nativeElement.focus();
-    }
-  }
-
-  protected chooseTheme(value: string): void {
-    this.theme.setPreference(toThemePreference(value));
   }
 
   protected async onUserMenuSelected(action: unknown): Promise<void> {

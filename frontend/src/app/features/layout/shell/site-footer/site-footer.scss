@@ -1,0 +1,92 @@
+@use 'breakpoints' as bp;
+
+.site-footer {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-6) var(--space-page) var(--space-5);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  font-size: var(--fs-sm);
+
+  @include bp.from(md) {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+    gap: var(--space-5) var(--space-7);
+  }
+}
+
+.footer-brand {
+  max-inline-size: 28rem;
+}
+
+.footer-name {
+  font-size: var(--fs-lg);
+  font-stretch: var(--wdth-display);
+  font-weight: var(--fw-black);
+  color: var(--accent);
+  margin-bottom: var(--space-1);
+}
+
+.footer-links ul,
+.language-picker ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  list-style: none;
+}
+
+.footer-links ul {
+  @include bp.from(md) {
+    flex-direction: column;
+  }
+}
+
+// WCAG 2.5.8: every link is at least 24px tall.
+.footer-links a,
+.language-picker a,
+.language-picker [aria-current] {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 1.75rem;
+}
+
+.footer-links a {
+  color: var(--text);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+}
+
+.language-picker [aria-current] {
+  font-weight: var(--fw-semibold);
+}
+
+.footer-settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+
+  @include bp.from(md) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.theme-picker {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+
+  select {
+    padding-block: 0.35rem;
+  }
+}
+
+.footer-legal {
+  @include bp.from(md) {
+    grid-column: 1 / -1;
+  }
+}

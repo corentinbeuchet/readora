@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
 import { test as base, expect } from './support/fixtures';
-import { signUp } from './support/helpers';
+import { signUp, thenTheAccountMenuHasNoTeamTools } from './support/helpers';
 
 const test = base.extend<{
   /** A second, independent browser session (its own context: cookies and storage are not shared with `page`). */
@@ -24,7 +24,7 @@ test.describe('Scanlation Collaborative Multi-Role Pipeline Suite', () => {
   test('a plain reader is forbidden from the workspace and sees no Scanlation menu entry', async ({ page }) => {
     await givenIAmSignedUpAs(page, 'reader');
 
-    await thenThereIsNoScanlationLink(page);
+    await thenTheAccountMenuHasNoTeamTools(page);
 
     await whenIVisit(page, '/scanlation/00000000-0000-0000-0000-000000000000');
 
@@ -67,10 +67,6 @@ async function thenIAmOn(page: Page, url: string | RegExp): Promise<void> {
 
 async function thenICanSeeTheHeading(page: Page, name: string): Promise<void> {
   await expect(page.getByRole('heading', { name })).toBeVisible();
-}
-
-async function thenThereIsNoScanlationLink(page: Page): Promise<void> {
-  await expect(page.getByRole('link', { name: 'Scanlation' })).toHaveCount(0);
 }
 
 async function thenMyProfileIsShownFor(page: Page, username: string): Promise<void> {

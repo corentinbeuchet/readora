@@ -1,7 +1,7 @@
 <div class="bell">
-  <button #trigger type="button" class="btn bell-trigger" [attr.aria-label]="label()" [attr.aria-expanded]="open()"
+  <button #trigger type="button" class="btn btn-ghost btn-icon bell-trigger" [attr.aria-label]="label()" [attr.aria-expanded]="open()"
           aria-controls="notification-panel" (click)="toggle()">
-    <span aria-hidden="true">🔔</span>
+    <app-icon name="bell" />
     @if (store.unread() > 0) {
       <span class="bell-count" aria-hidden="true">{{ store.unread() > 99 ? '99+' : store.unread() }}</span>
     }

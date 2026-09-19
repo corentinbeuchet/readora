@@ -4,7 +4,6 @@
 
 .bell-trigger {
   position: relative;
-  padding: 0.35rem 0.6rem;
 }
 
 .bell-count {
@@ -13,7 +12,7 @@
   right: -0.3rem;
   min-width: 1.2rem;
   padding: 0 0.3rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--danger);
   color: var(--on-danger);
   font-size: var(--fs-xs);
