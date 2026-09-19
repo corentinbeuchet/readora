@@ -1,98 +1,114 @@
 import { TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { ReaderState } from '@app/features/reader/services/reader-state';
+import { ReaderPreferencesStore } from '@app/features/reader/services/reader-preferences-store';
+import { BrowserStorage } from '@app/core/storage/browser-storage';
 import { Chapter } from '@app/core/models/readora.models';
 
-const MOCK_CHAPTER: Chapter = {
-  id: 'chap-1-uuid',
-  workId: 'work-1-uuid',
-  chapterNumber: '1',
-  title: 'Chapter 1: The Beginning',
-  status: 'PUBLISHED',
-  pages: [
-    { pageNumber: 1, storageKey: 'p1.webp', cdnUrl: 'https://cdn.readora.com/p1.webp' },
-    { pageNumber: 2, storageKey: 'p2.webp', cdnUrl: 'https://cdn.readora.com/p2.webp' },
-    { pageNumber: 3, storageKey: 'p3.webp', cdnUrl: 'https://cdn.readora.com/p3.webp' }
-  ]
-};
+const pages = (n: number) => Array.from({ length: n }, (_, i) => ({ pageNumber: i + 1, storageKey: `p${i + 1}`, cdnUrl: `c${i + 1}` }));
+const CHAPTER: Chapter = { id: 'chap-1', workId: 'work-1', chapterNumber: '1', title: 'Chapter 1', status: 'PUBLISHED', pages: pages(3) };
 
-describe('ReaderState (Signals)', () => {
-  let service: ReaderState;
+/** Storage that forgets everything: each test starts from default preferences. */
+class MemoryStorage {
+  private readonly values = new Map<string, unknown>();
+  read<T>(key: string): T | null {
+    return (this.values.get(key) as T) ?? null;
+  }
+  write(key: string, value: unknown): void {
+    this.values.set(key, value);
+  }
+}
+
+describe('ReaderState (derived reader state)', () => {
+  let state: ReaderState;
+  const chapter = signal<Chapter | null>(null);
+  const start = signal<number | null>(null);
 
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      providers: [ReaderState]
-    });
-    service = TestBed.inject(ReaderState);
+    TestBed.configureTestingModule({ providers: [ReaderState, { provide: BrowserStorage, useClass: MemoryStorage }] });
+    state = TestBed.inject(ReaderState);
+    chapter.set(null);
+    start.set(null);
+    state.connect(chapter, start);
   });
 
-  it('should initialize with default state', () => {
-    expect(service.currentChapter()).toBeNull();
-    expect(service.currentPageIndex()).toBe(0);
-    expect(service.viewMode()).toBe('VERTICAL');
-    expect(service.totalPages()).toBe(0);
-    expect(service.currentPage()).toBeNull();
+  it('is empty until a chapter is shown', () => {
+    expect(state.currentChapter()).toBeNull();
+    expect(state.currentPageIndex()).toBe(0);
+    expect(state.viewMode()).toBe('VERTICAL');
+    expect(state.totalPages()).toBe(0);
+    expect(state.currentPage()).toBeNull();
   });
 
-  it('should update computed state when chapter is set', () => {
-    service.setChapter(MOCK_CHAPTER);
+  it('opens a chapter on its first page, or on ?page (clamped), and resets for the next chapter', () => {
+    chapter.set(CHAPTER);
+    expect(state.currentPage()?.pageNumber).toBe(1);
+    expect(state.isFirstPage()).toBe(true);
+    expect(state.isLastPage()).toBe(false);
 
-    expect(service.currentChapter()).toEqual(MOCK_CHAPTER);
-    expect(service.totalPages()).toBe(3);
-    expect(service.currentPage()?.pageNumber).toBe(1);
-    expect(service.isFirstPage()).toBe(true);
-    expect(service.isLastPage()).toBe(false);
+    state.nextPage();
+    state.nextPage();
+    expect(state.currentPageIndex()).toBe(2);
+    expect(state.isLastPage()).toBe(true);
+    state.nextPage();
+    expect(state.currentPageIndex()).toBe(2);
+    state.previousPage();
+    expect(state.currentPageIndex()).toBe(1);
+
+    chapter.set({ ...CHAPTER, id: 'chap-2' });
+    expect(state.currentPageIndex()).toBe(0);
+
+    start.set(99);
+    expect(state.currentPageIndex()).toBe(2);
   });
 
-  it('should handle page navigation correctly', () => {
-    service.setChapter(MOCK_CHAPTER);
-
-    service.nextPage();
-    expect(service.currentPageIndex()).toBe(1);
-    expect(service.currentPage()?.pageNumber).toBe(2);
-    expect(service.isFirstPage()).toBe(false);
-
-    service.nextPage();
-    expect(service.currentPageIndex()).toBe(2);
-    expect(service.isLastPage()).toBe(true);
-
-    // Trying to go beyond last page should do nothing
-    service.nextPage();
-    expect(service.currentPageIndex()).toBe(2);
-
-    service.previousPage();
-    expect(service.currentPageIndex()).toBe(1);
+  it('keeps the page when the same chapter is reloaded', () => {
+    chapter.set(CHAPTER);
+    state.nextPage();
+    chapter.set({ ...CHAPTER });
+    expect(state.currentPageIndex()).toBe(1);
   });
 
-  it('should toggle view mode and clamp zoom level', () => {
-    service.setViewMode('PAGED');
-    expect(service.viewMode()).toBe('PAGED');
+  it("uses the series' saved layout only after hydration, and the reader's switch until the next chapter", () => {
+    TestBed.inject(ReaderPreferencesStore).saveLayout('work-1', { mode: 'PAGED', direction: 'RTL' });
+    chapter.set(CHAPTER);
+    expect(state.viewMode()).toBe('VERTICAL');
 
-    service.setZoom(250);
-    expect(service.zoomLevel()).toBe(200);
+    state.markHydrated();
+    expect(state.viewMode()).toBe('PAGED');
+    expect(state.direction()).toBe('RTL');
 
-    service.setZoom(30);
-    expect(service.zoomLevel()).toBe(50);
+    state.setViewMode('VERTICAL');
+    expect(state.viewMode()).toBe('VERTICAL');
   });
 
-  it('double page: cover alone, then pairs; turning moves by spread', () => {
-    const five: Chapter = {
-      ...MOCK_CHAPTER,
-      pages: [1, 2, 3, 4, 5].map((n) => ({ pageNumber: n, storageKey: `p${n}`, cdnUrl: `c${n}` }))
-    };
-    service.setChapter(five, 3); // page 4
-    service.setDoublePage(true);
-    expect(service.currentSpread().map((p) => p.pageNumber)).toEqual([4, 5]);
-    expect(service.isLastPage()).toBe(true);
+  it('clamps the zoom level', () => {
+    state.setZoom(250);
+    expect(state.zoomLevel()).toBe(200);
+    state.setZoom(30);
+    expect(state.zoomLevel()).toBe(50);
+  });
 
-    service.previousPage();
-    expect(service.currentSpread().map((p) => p.pageNumber)).toEqual([2, 3]);
-    service.previousPage();
-    expect(service.currentSpread().map((p) => p.pageNumber)).toEqual([1]);
-    expect(service.isFirstPage()).toBe(true);
-    service.nextPage();
-    expect(service.currentSpread().map((p) => p.pageNumber)).toEqual([2, 3]);
+  it('double page: cover alone, then pairs; only in paged mode on a wide screen', () => {
+    TestBed.inject(ReaderPreferencesStore).setDoublePage(true);
+    chapter.set({ ...CHAPTER, pages: pages(5) });
+    start.set(3); // page 4
+    state.setViewMode('PAGED');
+    expect(state.doublePage()).toBe(false);
 
-    service.setDoublePage(false);
-    expect(service.currentSpread().map((p) => p.pageNumber)).toEqual([2]);
+    state.setWideScreen(true);
+    expect(state.currentSpread().map((p) => p.pageNumber)).toEqual([4, 5]);
+    expect(state.isLastPage()).toBe(true);
+    state.previousPage();
+    expect(state.currentSpread().map((p) => p.pageNumber)).toEqual([2, 3]);
+    state.previousPage();
+    expect(state.currentSpread().map((p) => p.pageNumber)).toEqual([1]);
+    expect(state.isFirstPage()).toBe(true);
+    state.nextPage();
+    expect(state.currentSpread().map((p) => p.pageNumber)).toEqual([2, 3]);
+
+    state.setViewMode('VERTICAL');
+    expect(state.doublePage()).toBe(false);
+    expect(state.currentSpread().map((p) => p.pageNumber)).toEqual([2]);
   });
 });

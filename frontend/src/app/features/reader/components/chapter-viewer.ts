@@ -10,6 +10,7 @@ import {
   effect,
   inject,
   input,
+  linkedSignal,
   signal,
   untracked,
   viewChild,
@@ -18,8 +19,8 @@ import {
 import { NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Toolbar, ToolbarWidget, ToolbarWidgetGroup } from '@angular/aria/toolbar';
-import { Subject, catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { catchError, debounceTime, distinctUntilChanged, filter, map, of, scan, switchMap } from 'rxjs';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { BookmarksApi } from '@app/core/api/bookmarks-api';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { ChaptersApi } from '@app/core/api/chapters-api';
@@ -112,8 +113,11 @@ export class ChapterViewer {
   private readonly pageWrappers = viewChildren<ElementRef<HTMLElement>>('pageWrapper');
 
   protected readonly chapter = this.chaptersApi.chapterResource(this.chapterId);
-  /** Chapter whose last page the reader reached: its best comments load then, and stay (US-07). */
-  private readonly endReachedFor = signal<string | null>(null);
+  /** Chapter whose last page the reader reached: its best comments load then, and stay while it is open (US-07). */
+  private readonly endReachedFor = linkedSignal<{ id: string | null; last: boolean }, string | null>({
+    source: () => ({ id: this.state.currentChapter()?.id ?? null, last: this.state.isLastPage() }),
+    computation: (now, previous) => (now.last && now.id ? now.id : previous?.value === now.id ? now.id : null)
+  });
   protected readonly topComments = inject(CommentsApi).topResource(this.endReachedFor);
   protected readonly canSaveProgress = computed(() => this.auth.can('BOOKMARK_WRITE'));
   protected readonly syncStatus = signal<SyncStatus>('idle');
@@ -155,9 +159,7 @@ export class ChapterViewer {
   protected readonly controlsVisible = signal(true);
   protected readonly controlsHidden = computed(() => this.zen() && !this.controlsVisible());
   private hideControlsTimer: ReturnType<typeof setTimeout> | null = null;
-  /** Wide enough for two pages (updated live from a media query in the browser). */
-  private readonly wideScreen = signal(false);
-  protected readonly canShowDoublePage = computed(() => this.state.viewMode() === 'PAGED' && this.wideScreen());
+
   /** Spread in display order: in right-to-left reading the first page of a spread is on the right. */
   protected readonly displayedSpread = computed(() => {
     const spread = this.state.currentSpread();
@@ -169,73 +171,49 @@ export class ChapterViewer {
   /** A swipe also ends with a click on a turn zone: that click must not turn a second page. */
   private swiped = false;
 
-  /**
-   * Saved layouts live in the browser: they are applied only after hydration, so the prerendered HTML
-   * (default layout) and the first client render match.
-   */
-  private readonly hydrated = signal(false);
-  /** Chapter whose series layout was already applied (the reader may change it afterwards). */
-  private layoutAppliedFor: string | null = null;
-
-  private readonly progress$ = new Subject<ProgressUpdate>();
-  /**
-   * Position the reader was opened at (restored page, or page 1). It is never synced by itself:
-   * opening a chapter must not overwrite the saved bookmark. Only moves away from it are saved.
-   */
-  private progressBaseline: { chapterId: string; pageIndex: number } | null = null;
-  private userMoved = false;
-  /** 0-based page to scroll to once the vertical page list is rendered. */
-  private pendingScrollIndex: number | null = null;
+  /** Where the reader is, for the Premium bookmark (`null` without a chapter). */
+  private readonly position = computed(
+    () => {
+      const chapter = this.state.currentChapter();
+      return chapter ? { workId: chapter.workId, chapterId: chapter.id, pageNumber: this.state.currentPageIndex() + 1 } : null;
+    },
+    { equal: (a, b) => a?.chapterId === b?.chapterId && a?.pageNumber === b?.pageNumber }
+  );
 
   constructor() {
-    // Feed the shared reader state each time a chapter arrives from the API.
+    this.state.connect(
+      computed(() => (this.chapter.hasValue() ? (this.chapter.value() ?? null) : null)),
+      computed(() => pageParamToIndex(this.page()))
+    );
+
     effect(() => {
       if (this.chapter.error()) {
         untracked(() => this.seo.notFound('Chapter unavailable'));
         return;
       }
-      // `value()` throws while the resource is in error state: check `hasValue()` first.
-      const loaded = this.chapter.hasValue() ? this.chapter.value() : undefined;
+      const loaded = this.state.currentChapter();
       if (loaded) {
-        untracked(() => {
-          this.state.setChapter(loaded, pageParamToIndex(this.page()) ?? 0);
-          const start = this.state.currentPageIndex();
-          this.progressBaseline = { chapterId: loaded.id, pageIndex: start };
-          this.userMoved = false;
-          this.pendingScrollIndex = start > 0 ? start : null;
+        untracked(() =>
           this.seo.update({
             title: `${loaded.title} — Chapter ${loaded.chapterNumber}`,
             description: `Read chapter ${loaded.chapterNumber} (${loaded.pages.length} pages) online on Readora.`,
             path: `/read/${loaded.id}`,
             image: loaded.pages[0]?.cdnUrl,
             type: 'article'
-          });
-        });
-      }
-    });
-
-    effect(() => {
-      const current = this.state.currentChapter();
-      if (current && this.state.isLastPage() && untracked(this.endReachedFor) !== current.id) {
-        this.endReachedFor.set(current.id);
+          })
+        );
       }
     });
 
     afterNextRender(() => {
-      this.hydrated.set(true);
+      this.state.markHydrated();
       const media = this.document.defaultView?.matchMedia?.(DOUBLE_PAGE_MEDIA_QUERY);
       if (media) {
-        this.wideScreen.set(media.matches);
-        const onChange = (event: MediaQueryListEvent) => this.wideScreen.set(event.matches);
+        this.state.setWideScreen(media.matches);
+        const onChange = (event: MediaQueryListEvent) => this.state.setWideScreen(event.matches);
         media.addEventListener?.('change', onChange);
         this.destroyRef.onDestroy(() => media.removeEventListener?.('change', onChange));
       }
-    });
-
-    // Double page only in paged mode on a wide screen, when the reader asked for it.
-    effect(() => {
-      const enabled = this.prefs.doublePage() && this.canShowDoublePage();
-      untracked(() => this.state.setDoublePage(enabled));
     });
 
     // Auto-scroll is a vertical-mode feature.
@@ -250,20 +228,6 @@ export class ChapterViewer {
       this.layout.setImmersive(false);
     });
 
-    // Open each chapter in its series' layout: the one the reader chose, or the default for the format.
-    effect(() => {
-      const current = this.state.currentChapter();
-      if (!current || !this.hydrated() || this.layoutAppliedFor === current.id) {
-        return;
-      }
-      this.layoutAppliedFor = current.id;
-      untracked(() => {
-        const layout = this.prefs.layoutFor(current.workId, current.work?.type);
-        this.applyViewMode(layout.mode);
-        this.state.setDirection(layout.direction);
-      });
-    });
-
     // Reading history and read markers: record the visit, then the finish.
     effect(() => {
       const current = this.state.currentChapter();
@@ -273,27 +237,16 @@ export class ChapterViewer {
       }
     });
 
-    // Sync reading progress (debounced) only for users allowed to write bookmarks.
-    effect(() => {
-      const current = this.state.currentChapter();
-      const pageIndex = this.state.currentPageIndex();
-      if (!current || !untracked(() => this.canSaveProgress())) {
-        return;
-      }
-      if (!this.progressBaseline || this.progressBaseline.chapterId !== current.id) {
-        this.progressBaseline = { chapterId: current.id, pageIndex };
-        this.userMoved = false;
-        return;
-      }
-      if (!this.userMoved && pageIndex === this.progressBaseline.pageIndex) {
-        return;
-      }
-      this.userMoved = true;
-      this.progress$.next({ workId: current.workId, chapterId: current.id, pageNumber: pageIndex + 1 });
-    });
-
-    this.progress$
+    // Premium bookmark: moves are saved (debounced). The first position of each chapter is where it opened (restored
+    // page or page 1): it is never saved by itself, so opening a chapter doesn't overwrite the saved bookmark.
+    toObservable(this.position)
       .pipe(
+        scan(
+          (acc, current) => ({ previous: acc.current, current }),
+          { previous: null as ProgressUpdate | null, current: null as ProgressUpdate | null }
+        ),
+        map(({ previous, current }) => (current && previous?.chapterId === current.chapterId ? current : null)),
+        filter((update): update is ProgressUpdate => update !== null && this.canSaveProgress()),
         debounceTime(PROGRESS_SYNC_DEBOUNCE_MS),
         distinctUntilChanged((a, b) => a.workId === b.workId && a.chapterId === b.chapterId && a.pageNumber === b.pageNumber),
         switchMap((update) => {
@@ -313,19 +266,26 @@ export class ChapterViewer {
 
     // Vertical mode: the page crossing the middle of the viewport is the current page.
     // Browser-only (afterRenderEffect never runs on the server / during prerender).
+    // When a chapter opens (or vertical mode is switched on) away from page 1, scroll to that page once.
     let observer: IntersectionObserver | null = null;
-    afterRenderEffect(() => {
+    let scrolledFor: string | null = null;
+    afterRenderEffect({
+      write: () => {
       const wrappers = this.pageWrappers();
       observer?.disconnect();
       observer = null;
       if (wrappers.length === 0) {
+        scrolledFor = null;
         return;
       }
 
-      const scrollTo = this.pendingScrollIndex;
-      if (scrollTo !== null && wrappers[scrollTo]) {
-        wrappers[scrollTo].nativeElement.scrollIntoView?.({ block: 'start' });
-        this.pendingScrollIndex = null;
+      const key = `${this.state.currentChapter()?.id}`;
+      if (key !== scrolledFor) {
+        scrolledFor = key;
+        const index = untracked(this.state.currentPageIndex);
+        if (index > 0) {
+          wrappers[index]?.nativeElement.scrollIntoView?.({ block: 'start' });
+        }
       }
 
       const Observer = this.document.defaultView?.IntersectionObserver;
@@ -345,6 +305,7 @@ export class ChapterViewer {
       );
       for (const wrapper of wrappers) {
         observer.observe(wrapper.nativeElement);
+      }
       }
     });
     this.destroyRef.onDestroy(() => observer?.disconnect());
@@ -489,7 +450,7 @@ export class ChapterViewer {
    * saved layouts: the prerendered HTML uses the full images.
    */
   protected pageSrc(page: PageAsset): string {
-    return this.hydrated() && this.prefs.dataSaver() && page.liteCdnUrl ? page.liteCdnUrl : page.cdnUrl;
+    return this.state.hydrated() && this.prefs.dataSaver() && page.liteCdnUrl ? page.liteCdnUrl : page.cdnUrl;
   }
 
   protected setDataSaver(event: Event): void {
@@ -603,7 +564,7 @@ export class ChapterViewer {
 
   /** Switches view mode, keeping the current page, and remembers it for this series. */
   protected setViewMode(mode: ViewMode): void {
-    this.applyViewMode(mode);
+    this.state.setViewMode(mode);
     this.rememberLayout();
   }
 
@@ -611,17 +572,6 @@ export class ChapterViewer {
   protected setDirection(direction: ReadingDirection): void {
     this.state.setDirection(direction);
     this.rememberLayout();
-  }
-
-  /** Changes the mode without saving it (vertical mode scrolls back to the current page). */
-  private applyViewMode(mode: ViewMode): void {
-    if (mode === this.state.viewMode()) {
-      return;
-    }
-    if (mode === 'VERTICAL') {
-      this.pendingScrollIndex = this.state.currentPageIndex();
-    }
-    this.state.setViewMode(mode);
   }
 
   private rememberLayout(): void {

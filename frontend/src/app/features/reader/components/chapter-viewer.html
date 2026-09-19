@@ -109,7 +109,7 @@
           <option value="FAST" [selected]="prefs.autoScrollSpeed() === 'FAST'">Fast</option>
         </select>
       </label>
-      @if (canShowDoublePage()) {
+      @if (state.canShowDoublePage()) {
         <label class="checkbox setting">
           <input type="checkbox" [checked]="prefs.doublePage()" (change)="setDoublePage($event)" />
           Double page (two pages side by side)
