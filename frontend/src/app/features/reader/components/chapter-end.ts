@@ -1,7 +1,7 @@
 import { Component, inject, linkedSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommentsApi } from '@app/core/api/comments-api';
-import { ReaderState } from '../services/reader-state';
+import { ReaderState } from '@app/features/reader/services/reader-state';
 
 /** End of the chapter: previous / next chapter and the chapter list, then the best comments (US-07). */
 @Component({

@@ -1,6 +1,6 @@
 import { DOCUMENT, Service, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
-import { SITE_URL } from '../config/urls';
+import { SITE_URL } from '@app/core/config/urls';
 
 export interface PageMeta {
   /** Page title without the site suffix. */

@@ -1,8 +1,8 @@
 import { Service, computed, inject, signal } from '@angular/core';
 import { Observable, catchError, finalize, map, of, shareReplay, tap } from 'rxjs';
-import { ApiError } from '../api/api-client';
-import { AuthApi } from '../api/auth-api';
-import { AuthResponse, LoginRequest, Permission, RegisterRequest, UserProfile } from '../models/readora.models';
+import { ApiError } from '@app/core/api/api-client';
+import { AuthApi } from '@app/core/api/auth-api';
+import { AuthResponse, LoginRequest, Permission, RegisterRequest, UserProfile } from '@app/core/models/readora.models';
 
 /**
  * Session store. The access token lives only in memory (a signal); the refresh token is an

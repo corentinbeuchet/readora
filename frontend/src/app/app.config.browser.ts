@@ -1,6 +1,6 @@
 import { ApplicationConfig, mergeApplicationConfig } from '@angular/core';
 import { appConfig } from './app.config';
-import { provideSessionRestore } from './core/auth/session-restore';
+import { provideSessionRestore } from '@app/core/auth/session-restore';
 
 /** Browser-only providers, the counterpart of `app.config.server.ts`. */
 const browserConfig: ApplicationConfig = {

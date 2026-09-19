@@ -1,7 +1,7 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { CreateTaskRequest, ScanlationProject, SubmitTaskRequest, WorkflowTask } from '../models/readora.models';
+import { CreateTaskRequest, ScanlationProject, SubmitTaskRequest, WorkflowTask } from '@app/core/models/readora.models';
 import { ApiClient, parseEnvelope } from './api-client';
 
 /** `/api/v1/scanlation/projects` — needs `PROJECT_VIEW` / `TASK_CLAIM` / `TASK_SUBMIT` / `CHAPTER_PUBLISH`. */

@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
-import { UploadWizard } from '../services/upload-wizard';
+import { UploadWizard } from '@app/features/upload/services/upload-wizard';
 import { FieldErrors } from '@app/shared/forms/field-errors';
 import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
 

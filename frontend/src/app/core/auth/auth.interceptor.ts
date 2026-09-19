@@ -1,7 +1,7 @@
 import { HttpErrorResponse, HttpHandlerFn, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, of, switchMap, throwError } from 'rxjs';
-import { API_BASE_URL } from '../config/urls';
+import { API_BASE_URL } from '@app/core/config/urls';
 import { AuthStore } from './auth-store';
 
 /** Auth endpoints that must not trigger a refresh-and-retry on 401. */

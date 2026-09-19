@@ -1,7 +1,7 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ChapterRead, HistoryItem, WorkProgress } from '../models/readora.models';
+import { ChapterRead, HistoryItem, WorkProgress } from '@app/core/models/readora.models';
 import { ApiClient, parseEnvelope } from './api-client';
 
 /** `/api/v1/reading`: reading history and read markers (requires `LIBRARY_USE`). */

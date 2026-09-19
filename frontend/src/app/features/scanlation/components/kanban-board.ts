@@ -8,7 +8,7 @@ import { Dialog } from '@app/shared/ui/dialog';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { WorkflowTask } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
-import { STAGES, tasksByStage, withTask, withTaskStage } from '../services/scanlation-board';
+import { STAGES, tasksByStage, withTask, withTaskStage } from '@app/features/scanlation/services/scanlation-board';
 import { PageReportsPanel } from './page-reports-panel';
 import { asyncAction } from '@app/core/utils/async-action';
 import { FieldErrors } from '@app/shared/forms/field-errors';

@@ -12,7 +12,7 @@ import {
   ScanlationProject,
   Work,
   WorkSummary
-} from '../models/readora.models';
+} from '@app/core/models/readora.models';
 import { ApiClient, parseEnvelope } from './api-client';
 
 const EMPTY_PAGE: PagedResponse<WorkSummary> = { items: [], page: 0, size: 0, totalElements: 0, totalPages: 0 };

@@ -3,9 +3,9 @@ import { provideRouter, withComponentInputBinding, withInMemoryScrolling, withNa
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideClientHydration, withEventReplay, withHttpTransferCacheOptions } from '@angular/platform-browser';
 import { routes } from './app.routes';
-import { authInterceptor } from './core/auth/auth.interceptor';
-import { isTransferCacheable } from './core/api/transfer-cache';
-import { recoverFromChunkLoadFailure } from './core/routing/chunk-load-recovery';
+import { authInterceptor } from '@app/core/auth/auth.interceptor';
+import { isTransferCacheable } from '@app/core/api/transfer-cache';
+import { recoverFromChunkLoadFailure } from '@app/core/routing/chunk-load-recovery';
 
 export const appConfig: ApplicationConfig = {
   providers: [

@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
-import { AutoScrollSpeed, FitMode, ReaderBackground, ReaderPreferencesStore } from '../services/reader-preferences-store';
-import { ReaderState } from '../services/reader-state';
+import { AutoScrollSpeed, FitMode, ReaderBackground, ReaderPreferencesStore } from '@app/features/reader/services/reader-preferences-store';
+import { ReaderState } from '@app/features/reader/services/reader-state';
 
 /** Reader settings kept for next chapters: page size, background, auto-scroll speed, double page, data saver. */
 @Component({

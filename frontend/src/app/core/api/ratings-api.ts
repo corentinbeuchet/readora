@@ -2,7 +2,7 @@ import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { ResourceRef, Service, Signal, inject } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Observable, map } from 'rxjs';
-import { MyRating, RatingSummary, ReviewPayload, WorkReview } from '../models/readora.models';
+import { MyRating, RatingSummary, ReviewPayload, WorkReview } from '@app/core/models/readora.models';
 import { ApiClient, nullIfNotFound, parseEnvelope } from './api-client';
 
 const NO_RATINGS: RatingSummary = { average: 0, count: 0 };

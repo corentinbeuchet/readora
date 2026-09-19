@@ -1,7 +1,7 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { CommentReportReason, ModerationItem } from '../models/readora.models';
+import { CommentReportReason, ModerationItem } from '@app/core/models/readora.models';
 import { ApiClient, parseEnvelope } from './api-client';
 
 /** Comment reports (`COMMENT_REPORT`) and the moderation queue (`COMMENT_MODERATE`), US-11. */

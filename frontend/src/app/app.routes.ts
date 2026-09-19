@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './core/auth/auth.guard';
-import { permissionGuard } from './core/auth/permission.guard';
+import { authGuard, guestGuard } from '@app/core/auth/auth.guard';
+import { permissionGuard } from '@app/core/auth/permission.guard';
 
 /**
  * Page titles / meta are owned by `SeoService` inside each page component (so prerendered HTML
@@ -10,120 +10,120 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    loadComponent: () => import('./features/catalog/works-page').then((m) => m.WorksPage)
+    loadComponent: () => import('@app/features/catalog/works-page').then((m) => m.WorksPage)
   },
   {
     path: 'works',
-    loadComponent: () => import('./features/catalog/works-page').then((m) => m.WorksPage)
+    loadComponent: () => import('@app/features/catalog/works-page').then((m) => m.WorksPage)
   },
   {
     path: 'updates',
-    loadComponent: () => import('./features/discovery/updates-page').then((m) => m.UpdatesPage)
+    loadComponent: () => import('@app/features/discovery/updates-page').then((m) => m.UpdatesPage)
   },
   {
     path: 'rankings',
-    loadComponent: () => import('./features/discovery/rankings-page').then((m) => m.RankingsPage)
+    loadComponent: () => import('@app/features/discovery/rankings-page').then((m) => m.RankingsPage)
   },
   {
     path: 'lists',
-    loadComponent: () => import('./features/lists/lists-page').then((m) => m.ListsPage)
+    loadComponent: () => import('@app/features/lists/lists-page').then((m) => m.ListsPage)
   },
   {
     path: 'lists/:listId',
-    loadComponent: () => import('./features/lists/list-page').then((m) => m.ListPage)
+    loadComponent: () => import('@app/features/lists/list-page').then((m) => m.ListPage)
   },
   {
     path: 'u/:username',
-    loadComponent: () => import('./features/community/profile-page').then((m) => m.PublicProfilePage)
+    loadComponent: () => import('@app/features/community/profile-page').then((m) => m.PublicProfilePage)
   },
   {
     path: 'teams/:projectId',
-    loadComponent: () => import('./features/community/team-page').then((m) => m.TeamPageComponent)
+    loadComponent: () => import('@app/features/community/team-page').then((m) => m.TeamPageComponent)
   },
   {
     path: 'works/:workId',
-    loadComponent: () => import('./features/catalog/work-detail-page').then((m) => m.WorkDetailPage)
+    loadComponent: () => import('@app/features/catalog/work-detail-page').then((m) => m.WorkDetailPage)
   },
   {
     path: 'upload',
-    loadComponent: () => import('./features/upload/upload-studio-page').then((m) => m.UploadStudioPage),
+    loadComponent: () => import('@app/features/upload/upload-studio-page').then((m) => m.UploadStudioPage),
     canActivate: [permissionGuard],
     data: { permission: 'WORK_CREATE' }
   },
   { path: 'read', redirectTo: 'works', pathMatch: 'full' },
   {
     path: 'read/:chapterId',
-    loadComponent: () => import('./features/reader/reader-page').then((m) => m.ReaderPage)
+    loadComponent: () => import('@app/features/reader/reader-page').then((m) => m.ReaderPage)
   },
   {
     path: 'scanlation',
-    loadComponent: () => import('./features/scanlation/components/kanban-board').then((m) => m.KanbanBoard),
+    loadComponent: () => import('@app/features/scanlation/components/kanban-board').then((m) => m.KanbanBoard),
     canActivate: [permissionGuard],
     data: { permission: 'PROJECT_VIEW' }
   },
   {
     path: 'scanlation/:projectId',
-    loadComponent: () => import('./features/scanlation/components/kanban-board').then((m) => m.KanbanBoard),
+    loadComponent: () => import('@app/features/scanlation/components/kanban-board').then((m) => m.KanbanBoard),
     canActivate: [permissionGuard],
     data: { permission: 'PROJECT_VIEW' }
   },
 
   {
     path: 'library',
-    loadComponent: () => import('./features/library/library-page').then((m) => m.LibraryPage),
+    loadComponent: () => import('@app/features/library/library-page').then((m) => m.LibraryPage),
     canActivate: [permissionGuard],
     data: { permission: 'LIBRARY_USE' }
   },
   {
     path: 'history',
-    loadComponent: () => import('./features/library/history-page').then((m) => m.HistoryPage),
+    loadComponent: () => import('@app/features/library/history-page').then((m) => m.HistoryPage),
     canActivate: [permissionGuard],
     data: { permission: 'LIBRARY_USE' }
   },
 
   {
     path: 'moderation',
-    loadComponent: () => import('./features/moderation/moderation-page').then((m) => m.ModerationPage),
+    loadComponent: () => import('@app/features/moderation/moderation-page').then((m) => m.ModerationPage),
     canActivate: [permissionGuard],
     data: { permission: 'COMMENT_MODERATE' }
   },
 
   {
     path: 'login',
-    loadComponent: () => import('./features/auth/login-page').then((m) => m.LoginPage),
+    loadComponent: () => import('@app/features/auth/login-page').then((m) => m.LoginPage),
     canActivate: [guestGuard]
   },
   {
     path: 'register',
-    loadComponent: () => import('./features/auth/register-page').then((m) => m.RegisterPage),
+    loadComponent: () => import('@app/features/auth/register-page').then((m) => m.RegisterPage),
     canActivate: [guestGuard]
   },
   {
     path: 'profile',
-    loadComponent: () => import('./features/profile/profile-page').then((m) => m.ProfilePage),
+    loadComponent: () => import('@app/features/profile/profile-page').then((m) => m.ProfilePage),
     canActivate: [authGuard]
   },
   {
     path: 'subscription',
-    loadComponent: () => import('./features/subscription/plans-page').then((m) => m.PlansPage)
+    loadComponent: () => import('@app/features/subscription/plans-page').then((m) => m.PlansPage)
   },
   {
     path: 'subscription/success',
-    loadComponent: () => import('./features/subscription/checkout-result-page').then((m) => m.CheckoutResultPage),
+    loadComponent: () => import('@app/features/subscription/checkout-result-page').then((m) => m.CheckoutResultPage),
     canActivate: [authGuard],
     data: { outcome: 'success' }
   },
   {
     path: 'subscription/cancel',
-    loadComponent: () => import('./features/subscription/checkout-result-page').then((m) => m.CheckoutResultPage),
+    loadComponent: () => import('@app/features/subscription/checkout-result-page').then((m) => m.CheckoutResultPage),
     data: { outcome: 'cancel' }
   },
   {
     path: 'forbidden',
-    loadComponent: () => import('./features/layout/forbidden-page').then((m) => m.ForbiddenPage)
+    loadComponent: () => import('@app/features/layout/forbidden-page').then((m) => m.ForbiddenPage)
   },
   {
     path: '**',
-    loadComponent: () => import('./features/layout/not-found-page').then((m) => m.NotFoundPage)
+    loadComponent: () => import('@app/features/layout/not-found-page').then((m) => m.NotFoundPage)
   }
 ];

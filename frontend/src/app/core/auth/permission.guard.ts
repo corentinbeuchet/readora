@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivateFn, Router } from '@angular/router';
-import { Permission } from '../models/readora.models';
+import { Permission } from '@app/core/models/readora.models';
 import { AuthStore } from './auth-store';
 
 export const PERMISSION_ROUTE_DATA = 'permission';

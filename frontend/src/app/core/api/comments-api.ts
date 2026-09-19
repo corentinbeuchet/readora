@@ -1,7 +1,7 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ChapterComment, CommentUpvote, CreateCommentRequest } from '../models/readora.models';
+import { ChapterComment, CommentUpvote, CreateCommentRequest } from '@app/core/models/readora.models';
 import { ApiClient, parseEnvelope } from './api-client';
 
 /** `/api/v1/comments` — reads are public, writes need `COMMENT_WRITE` / `COMMENT_UPVOTE`. */
