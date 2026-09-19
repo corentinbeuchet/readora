@@ -1,6 +1,8 @@
+@use 'breakpoints' as bp;
+
 .review-grid {
   display: grid;
-  grid-template-columns: 1fr 140px;
+  grid-template-columns: 1fr;
   gap: 1.5rem;
   background: var(--surface);
   padding: 1.5rem;
@@ -8,8 +10,8 @@
   margin-bottom: 1.5rem;
   border: 1px solid var(--border);
 
-  @media (max-width: 500px) {
-    grid-template-columns: 1fr;
+  @include bp.from(sm) {
+    grid-template-columns: 1fr 140px;
   }
 }
 

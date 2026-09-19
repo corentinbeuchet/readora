@@ -1,11 +1,14 @@
+@use 'breakpoints' as bp;
+
 .work-detail {
   display: flex;
+  flex-direction: column;
   gap: 2rem;
   align-items: flex-start;
   margin-bottom: 2.5rem;
 
-  @media (max-width: 640px) {
-    flex-direction: column;
+  @include bp.from(md) {
+    flex-direction: row;
   }
 }
 

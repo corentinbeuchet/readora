@@ -11,12 +11,14 @@ Screen by screen expectations: `references/patterns.md`. Accessibility side (ref
 `frontend-accessibility` skill.
 
 ## Strategy
-- **Mobile-first:** base styles are the phone layout; add `@media (min-width: …)` layers. New code never adds
-  `max-width` queries. The existing ones in `works`/`work-detail`/upload steps are backlog F41.
+- **Mobile-first:** base styles are the phone layout; add `min-width` layers with the shared mixins:
+  `@use 'breakpoints' as bp;` then `@include bp.from(md) { … }` (`src/styles/_breakpoints.scss`, found through
+  `angular.json` `includePaths`). `bp.below(md)` only for the rare rule that must not apply above; never raw pixels.
 - **One breakpoint set:** `480px` (large phone), `768px` (tablet portrait), `1024px` (tablet landscape / small laptop,
-  and the reader's double page, `DOUBLE_PAGE_MEDIA_QUERY` in `reader-page.ts`), `1280px` (desktop). Custom properties
-  can't be used in media conditions; until shared SCSS breakpoint mixins exist (F41), write these values, nothing else.
-  Pick the breakpoint where the content breaks, not a device name.
+  and the reader's double page, `DOUBLE_PAGE_MEDIA_QUERY` in `reader-page.ts`), `1280px` (desktop), named
+  `sm`/`md`/`lg`/`xl` in the mixins. Pick the one where the content breaks, not a device name.
+- **Fluid tokens** (`styles.scss`): `--space-page` for page and header inline padding, `--fs-h1`/`--fs-h2` for headings
+  (global `h1`/`h2`); prefer them to fixed values.
 - **Intrinsic layout before any query:**
   - covers: `grid-template-columns: repeat(auto-fill, minmax(min(100%, 9rem), 1fr))`;
   - toolbars and chips: `flex-wrap`;

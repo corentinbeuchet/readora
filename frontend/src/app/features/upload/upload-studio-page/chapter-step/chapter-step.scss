@@ -1,11 +1,13 @@
+@use 'breakpoints' as bp;
+
 .mode-cards {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 1.25rem;
   margin-top: 0.5rem;
 
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
+  @include bp.from(md) {
+    grid-template-columns: 1fr 1fr;
   }
 }
 

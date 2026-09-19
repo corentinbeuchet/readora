@@ -1,0 +1,27 @@
+// Readora's one breakpoint set, mobile-first (see the frontend-responsive skill). Custom properties can't be used in
+// media conditions, so components `@use 'breakpoints' as bp;` (angular.json includePaths) instead of writing pixels.
+@use 'sass:map';
+
+$breakpoints: (
+  sm: 480px,
+  // large phone
+  md: 768px,
+  // tablet portrait
+  lg: 1024px,
+  // tablet landscape / small laptop; the reader's double page (DOUBLE_PAGE_MEDIA_QUERY)
+  xl: 1280px // desktop
+);
+
+/// Styles for widths from `$name` up (the normal, mobile-first way).
+@mixin from($name) {
+  @media (min-width: map.get($breakpoints, $name)) {
+    @content;
+  }
+}
+
+/// Styles below `$name` only: for the rare rule that must not apply on larger screens.
+@mixin below($name) {
+  @media (max-width: map.get($breakpoints, $name) - 0.02px) {
+    @content;
+  }
+}

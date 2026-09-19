@@ -1,10 +1,12 @@
+@use 'breakpoints' as bp;
+
 .form-layout {
   display: grid;
-  grid-template-columns: 1fr 240px;
+  grid-template-columns: 1fr;
   gap: 2rem;
 
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+  @include bp.from(md) {
+    grid-template-columns: 1fr 240px;
   }
 }
 
@@ -16,11 +18,11 @@
 
 .form-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 1rem;
 
-  @media (max-width: 500px) {
-    grid-template-columns: 1fr;
+  @include bp.from(sm) {
+    grid-template-columns: 1fr 1fr;
   }
 }
 

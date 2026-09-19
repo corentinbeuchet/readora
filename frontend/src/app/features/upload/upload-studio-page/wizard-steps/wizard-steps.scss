@@ -1,3 +1,5 @@
+@use 'breakpoints' as bp;
+
 .wizard-nav {
   list-style: none;
 
@@ -7,6 +9,7 @@
   }
 
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
   gap: 0.5rem;
   margin-bottom: 2rem;
@@ -15,8 +18,8 @@
   border-radius: 0.75rem;
   border: 1px solid var(--border);
 
-  @media (max-width: 640px) {
-    flex-direction: column;
+  @include bp.from(md) {
+    flex-direction: row;
   }
 }
 
