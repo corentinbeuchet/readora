@@ -112,7 +112,13 @@ breakpoints).
   cover or first reader page). Not for `data:` fallbacks, `blob:` previews or hidden preloads: those keep `[src]`
   with an `eslint-disable-next-line @angular-eslint/template/prefer-ngsrc -- reason` comment.
 - Styles: never `::ng-deep` (give the child its own `styleUrl`), never `[class]="…"` (overwrites static classes),
-  colours from tokens in `styles.scss` (`--accent`, `--on-accent`, `--violet`, …), never hex in components.
+  never hex/rgba or raw `font-size`/`font-weight` in components: colours, sizes and weights come from the tokens in
+  `src/styles/_tokens.scss` (`--accent`, `--danger-soft`, `--fs-sm`, `--fw-semibold`, …). Theme colours are
+  `light-dark(<light>, <dark>)` and must pass AA in both (the axe e2e runs each page in light and dark); tints are
+  `color-mix()` of their base token. Text over artwork uses `--overlay*` + `--on-overlay` (theme-less), the reader
+  page backgrounds `--reader-*` (a reader setting, not the theme). A new token goes in `_tokens.scss`.
+- Theme: `ThemeStore` (`core/theme/theme-store.ts`, System / Light / Dark, footer picker) sets `data-theme` on
+  `<html>`; an inline script in `index.html` applies the saved choice before the first paint (key `readora.theme`).
 - `@defer` heavy or below-the-fold UI (comments, kanban modal, upload studio widgets) with an `@placeholder`;
   never defer what is visible in the initial viewport (layout shift). Deferred deps must be standalone and not
   imported elsewhere in the file. Tests use `DeferBlockBehavior.Manual`.
@@ -140,7 +146,7 @@ breakpoints).
 - `getPrerenderParams` calls `inject()` before any `await`.
 - Hydration: `provideClientHydration(withEventReplay())` — incremental hydration is on by default in v22; use
   `@defer (hydrate on viewport|interaction)` for heavy prerendered sections.
-- Security: `security.allowedHosts` (or `NG_ALLOWED_HOSTS`) set for SSR; CSP via a per-request nonce (`autoCsp` cannot be combined with SSR in 22.1, see F23); keep
+- Security: `security.allowedHosts` (or `NG_ALLOWED_HOSTS`) set for SSR; CSP via a per-request nonce (`autoCsp` cannot be combined with SSR in 22.1, see F23; the theme script in `index.html` then needs its hash); keep
   Trusted Types compatible; build `SafeValue`s as close to the input as possible and never bypass sanitization on
   user content.
 - Browser side effects go behind an overridable method (model: `plans-page.ts` `protected redirectTo(url)`).
@@ -285,3 +291,6 @@ Accessibility and responsive gaps (2026-09-19 research, skills `frontend-accessi
 - F46 No mobile-viewport or target-size checks. — fixed 0a8e549 (`tests/e2e/responsive.spec.ts`: overflow at
   320/375/768/1024, phone header, 24px targets; reader swipe stays covered by the reader unit tests). It found and
   fixed c098580 (reader toolbar overflow) and 6217137 (18px reader links).
+- F47 Dark-only UI, 19 raw font sizes and 22 raw colours in components; `<button>`s in the browser font. — fixed
+  4bfcf59, 7e5987f, 50f1fcd, 27686e2, bacca4f (`_tokens.scss` type scale + semantic colours, `light-dark()` light
+  theme, System/Light/Dark picker, axe in both themes)

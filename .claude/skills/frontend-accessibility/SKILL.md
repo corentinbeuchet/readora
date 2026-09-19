@@ -50,7 +50,7 @@ mapped to our components, with keyboard maps).
   - Every drag (upload drop zone, any future kanban drag) and every swipe (paged reader) has a single-pointer or
     button alternative (2.5.7, 2.5.1).
   - Targets at least 24×24 CSS px or enough spacing (2.5.8); aim for 44px on touch.
-- **Contrast:** colours only from tokens (`styles.scss`); text 4.5:1 (3:1 for large), UI borders, focus rings and icons
+- **Contrast:** colours only from tokens (`src/styles/_tokens.scss`), checked in both the light and dark theme; text 4.5:1 (3:1 for large), UI borders, focus rings and icons
   3:1 (1.4.11); text over artwork needs a solid or scrim background.
 - **Motion:** a global `prefers-reduced-motion: reduce` rule in `styles.scss` neutralises animations and transitions;
   new motion that matters (e.g. page-turn effects) should also check it, and never animate without it.

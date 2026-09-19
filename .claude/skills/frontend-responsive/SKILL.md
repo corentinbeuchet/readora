@@ -17,7 +17,7 @@ Screen by screen expectations: `references/patterns.md`. Accessibility side (ref
 - **One breakpoint set:** `480px` (large phone), `768px` (tablet portrait), `1024px` (tablet landscape / small laptop,
   and the reader's double page, `DOUBLE_PAGE_MEDIA_QUERY` in `reader-page.ts`), `1280px` (desktop), named
   `sm`/`md`/`lg`/`xl` in the mixins. Pick the one where the content breaks, not a device name.
-- **Fluid tokens** (`styles.scss`): `--space-page` for page and header inline padding, `--fs-h1`/`--fs-h2` for headings
+- **Fluid tokens** (`src/styles/_tokens.scss`): `--space-page` for page and header inline padding, `--fs-h1`/`--fs-h2` for headings
   (global `h1`/`h2`); prefer them to fixed values.
 - **Intrinsic layout before any query:**
   - covers: `grid-template-columns: repeat(auto-fill, minmax(min(100%, 9rem), 1fr))`;
@@ -69,7 +69,8 @@ Screen by screen expectations: `references/patterns.md`. Accessibility side (ref
   no resized variants yet (F43, blocked on the backend). `priority` only on the LCP image.
 - `@defer (on viewport)` placeholders reserve the final height (no layout shift).
 - A global `prefers-reduced-motion: reduce` rule (`styles.scss`) neutralises animations and transitions;
-  `prefers-color-scheme` isn't used (one theme).
+  `prefers-color-scheme` drives the light/dark theme through `light-dark()` tokens unless the reader pinned one
+  (`data-theme` on `<html>`, set by `ThemeStore`).
 
 ## Common mistakes
 `100vh` for full-screen views; blocked zoom; hover-only actions; targets under 24px; JS breakpoints deciding the

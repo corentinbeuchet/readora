@@ -70,7 +70,9 @@ checklist to apply while coding. Deeper docs: the `angular-developer` skill refe
 
 ## Styling (ref: component-styling.md)
 - One stylesheet per component; never `::ng-deep` — give the child its own `styleUrl` or use `:host`.
-- Colours from CSS tokens (`var(--surface)`, `--accent`, …), never hex in components; check contrast (WCAG AA).
+- Colours, font sizes and weights only from the tokens in `src/styles/_tokens.scss` (`var(--surface)`, `--fs-sm`,
+  `--fw-semibold`, …), never hex/rgba or raw sizes in components; theme colours are `light-dark()` and must pass AA in
+  light and dark.
 - Shared patterns (`.tab`, `.pager`, cards) in `src/styles.scss`, not copied per component.
 
 ## Accessibility (AGENTS.md "Templates & a11y")
