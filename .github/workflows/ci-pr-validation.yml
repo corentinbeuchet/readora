@@ -47,6 +47,11 @@ jobs:
         working-directory: frontend
         run: npm run lint
 
+      # Missing texts already fail the build; this also catches stale, misplaced and generated ids.
+      - name: Check translations (ids, placeholders, per-feature files)
+        working-directory: frontend
+        run: npm run i18n:check
+
       - name: Run Vitest Unit Tests (jsdom, tests/unit)
         working-directory: frontend
         run: npm run test:ci
