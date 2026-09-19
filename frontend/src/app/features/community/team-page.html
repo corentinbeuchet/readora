@@ -11,7 +11,7 @@
       <h1>{{ t.name }}</h1>
       <p class="muted">
         Translates <a [routerLink]="['/works', t.series.id]">{{ t.series.title }}</a>
-        · {{ followers() }} {{ followers() === 1 ? 'follower' : 'followers' }}
+        · {{ followers() | i18nPlural: followersPlural }}
       </p>
       <button *appHasPermission="'LIBRARY_USE'" type="button" class="btn" [class.btn-primary]="!following()"
               [attr.aria-pressed]="following()" [disabled]="follow.busy()" (click)="toggleFollow()">
@@ -24,8 +24,8 @@
 
     <h2>Members</h2>
     <ul class="plain-list">
-      @for (member of t.members; track member.username) {
-        <li><a [routerLink]="['/u', member.username]">{{ member.username }}</a> <span class="muted">· {{ member.roles.join(', ') }}</span></li>
+      @for (member of members(); track member.username) {
+        <li><a [routerLink]="['/u', member.username]">{{ member.username }}</a> <span class="muted">· {{ member.roles }}</span></li>
       }
     </ul>
 

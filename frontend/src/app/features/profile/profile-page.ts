@@ -1,4 +1,4 @@
-import { afterNextRender, ChangeDetectionStrategy, Component, inject, model, viewChild } from '@angular/core';
+import { afterNextRender, ChangeDetectionStrategy, Component, computed, inject, model, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Tab, TabContent, TabList, TabPanel, Tabs } from '@angular/aria/tabs';
@@ -19,6 +19,7 @@ export type ProfileTab = 'overview' | 'bookmarks' | 'subscription';
 })
 export class ProfilePage {
   protected readonly auth = inject(AuthStore);
+  protected readonly permissions = computed(() => (this.auth.user()?.permissions ?? []).join(', '));
   private readonly seo = inject(SeoService);
   protected readonly selectedTab = model<ProfileTab>('overview');
   protected readonly tabList = viewChild<TabList>(TabList);

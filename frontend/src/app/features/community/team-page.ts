@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, linkedSignal } from '@angular/core';
+import { Component, computed, effect, inject, input, linkedSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { CommunityApi } from '@app/core/api/community-api';
@@ -6,15 +6,17 @@ import { HasPermissionDirective } from '@app/core/auth/has-permission.directive'
 import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
 import { LoadError } from '@app/shared/ui/load-error';
+import { I18nPluralPipe } from '@angular/common';
 
 /** A scanlation team's page (US-12): members, series, latest chapters, follow. */
 @Component({
   selector: 'app-team-page',
-  imports: [LoadError, RouterLink, HasPermissionDirective],
+  imports: [I18nPluralPipe, LoadError, RouterLink, HasPermissionDirective],
   templateUrl: './team-page.html',
   styleUrl: './community.scss'
 })
 export class TeamPageComponent {
+  protected readonly followersPlural = { '=1': '1 follower', other: '# followers' };
   private readonly api = inject(CommunityApi);
   private readonly seo = inject(SeoService);
 
@@ -24,6 +26,9 @@ export class TeamPageComponent {
   protected readonly team = this.api.teamResource(this.projectId);
   protected readonly following = linkedSignal(() => (this.team.hasValue() ? (this.team.value()?.following ?? false) : false));
   protected readonly followers = linkedSignal(() => (this.team.hasValue() ? (this.team.value()?.followers ?? 0) : 0));
+  protected readonly members = computed(() =>
+    (this.team.hasValue() ? (this.team.value()?.members ?? []) : []).map((m) => ({ username: m.username, roles: m.roles.join(', ') }))
+  );
   protected readonly follow = asyncAction();
 
   constructor() {

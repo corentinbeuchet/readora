@@ -9,6 +9,7 @@ import { asyncAction } from '@app/core/utils/async-action';
 import { FieldErrors } from '@app/shared/forms/field-errors';
 import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
 import { LoadError } from '@app/shared/ui/load-error';
+import { DecimalPipe, I18nPluralPipe } from '@angular/common';
 
 const REVIEW_MAX = 2000;
 
@@ -21,7 +22,7 @@ interface ReviewModel {
 /** Rating summary, my 1–10 rating, my review and the community's reviews of a series (US-09). */
 @Component({
   selector: 'app-work-ratings',
-  imports: [LoadError, FieldErrors, AriaInvalidDirective, FormField, HasPermissionDirective],
+  imports: [I18nPluralPipe, DecimalPipe, LoadError, FieldErrors, AriaInvalidDirective, FormField, HasPermissionDirective],
   templateUrl: './work-ratings.html',
   styleUrl: './work-ratings.scss'
 })
@@ -32,6 +33,7 @@ export class WorkRatings {
   readonly workId = input.required<string>();
 
   protected readonly scores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  protected readonly ratingsPlural = { '=1': '1 rating', other: '# ratings' };
   protected readonly summary = this.api.summaryResource(this.workId);
   protected readonly reviews = this.api.reviewsResource(this.workId);
   /** My rating and review, only for readers who can rate. */

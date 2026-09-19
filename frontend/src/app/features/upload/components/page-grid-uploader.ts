@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, model, signal } from '@angular/core';
+import { I18nPluralPipe } from '@angular/common';
 import {
   ArchiveError,
   DEFAULT_ARCHIVE_LIMITS,
@@ -34,12 +35,14 @@ function newId(): string {
  */
 @Component({
   selector: 'app-page-grid-uploader',
+  imports: [I18nPluralPipe],
   templateUrl: './page-grid-uploader.html',
   styleUrl: './page-grid-uploader.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PageGridUploader {
   readonly pages = model<PageUploadItem[]>([]);
+  protected readonly pagesPlural = { '=1': '1 page', other: '# pages' };
   protected readonly isDragging = signal(false);
   protected readonly extracting = signal(false);
   /** Problems with the last dropped/selected files, shown to the user (role="alert"). */

@@ -50,7 +50,7 @@
   @if (pages().length > 0) {
     <div class="pages-header">
       <div class="pages-count">
-        <strong>{{ pages().length }}</strong> {{ pages().length === 1 ? 'page' : 'pages' }} loaded
+        {{ pages().length | i18nPlural: pagesPlural }} loaded
       </div>
       <div class="pages-actions">
         <button type="button" class="btn btn-sm" (click)="sortNaturally()">

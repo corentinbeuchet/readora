@@ -54,7 +54,7 @@
               {{ user.subscription.currentPeriodEnd | date: 'medium' }}
             </p>
           }
-          <p class="muted">Effective permissions: {{ (user.permissions || []).join(', ') }}</p>
+          <p class="muted">Effective permissions: {{ permissions() }}</p>
           <a routerLink="/subscription" class="btn btn-primary">Manage subscription</a>
         </ng-template>
       </div>

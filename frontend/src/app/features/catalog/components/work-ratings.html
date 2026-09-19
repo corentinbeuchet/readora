@@ -7,8 +7,8 @@
   <p class="rating-summary">
     @if (summary.hasValue() && summary.value().count > 0) {
       <span class="score" aria-hidden="true">★</span>
-      <strong>{{ summary.value().average.toFixed(1) }}</strong>
-      <span class="muted">/ 10 from {{ summary.value().count }} {{ summary.value().count === 1 ? 'rating' : 'ratings' }}</span>
+      <strong>{{ summary.value().average | number: '1.1-1' }}</strong>
+      <span class="muted">/ 10 from {{ summary.value().count | i18nPlural: ratingsPlural }}</span>
     } @else {
       <span class="muted">No ratings yet.</span>
     }

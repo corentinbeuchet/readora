@@ -4,6 +4,7 @@ import { DiscoveryApi } from '@app/core/api/discovery-api';
 import { RankingPeriod } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
 import { LoadError } from '@app/shared/ui/load-error';
+import { DecimalPipe, I18nPluralPipe } from '@angular/common';
 
 const PERIODS: { key: RankingPeriod; label: string }[] = [
   { key: 'TODAY', label: 'Today' },
@@ -15,11 +16,12 @@ const PERIODS: { key: RankingPeriod; label: string }[] = [
 /** Rankings (US-08): popular by period, and top rated. */
 @Component({
   selector: 'app-rankings-page',
-  imports: [LoadError, RouterLink],
+  imports: [I18nPluralPipe, DecimalPipe, LoadError, RouterLink],
   templateUrl: './rankings-page.html',
   styleUrl: './rankings-page.scss'
 })
 export class RankingsPage {
+  protected readonly ratingsPlural = { '=1': '1 rating', other: '# ratings' };
   private readonly discovery = inject(DiscoveryApi);
   protected readonly periods = PERIODS;
 

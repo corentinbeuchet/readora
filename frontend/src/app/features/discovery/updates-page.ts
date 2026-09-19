@@ -3,21 +3,20 @@ import { RouterLink } from '@angular/router';
 import { DiscoveryApi } from '@app/core/api/discovery-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { SeoService } from '@app/core/seo/seo.service';
-import { timeAgo } from '@app/core/utils/time-ago';
 import { LoadError } from '@app/shared/ui/load-error';
 import { WorkCover } from '@app/shared/ui/work-cover';
+import { TimeAgoPipe } from '@app/shared/ui/time-ago.pipe';
 
 /** Latest updates (US-08): newest chapters, optionally only my library and followed teams. */
 @Component({
   selector: 'app-updates-page',
-  imports: [WorkCover, LoadError, RouterLink],
+  imports: [TimeAgoPipe, WorkCover, LoadError, RouterLink],
   templateUrl: './updates-page.html',
   styleUrl: './updates-page.scss'
 })
 export class UpdatesPage {
   private readonly discovery = inject(DiscoveryApi);
   protected readonly auth = inject(AuthStore);
-  protected readonly timeAgo = timeAgo;
 
   /** `?feed=mine` and `?page=` query parameters. */
   readonly feed = input<string>();

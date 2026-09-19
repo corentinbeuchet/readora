@@ -1,4 +1,4 @@
-import { Component, effect, inject, input } from '@angular/core';
+import { Component, computed, effect, inject, input } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CommunityApi } from '@app/core/api/community-api';
@@ -19,6 +19,7 @@ export class PublicProfilePage {
   readonly username = input<string>();
 
   protected readonly profile = inject(CommunityApi).profileResource(this.username);
+  protected readonly favouriteGenres = computed(() => (this.profile.hasValue() ? this.profile.value()?.favouriteGenres.join(', ') : '') || '—');
 
   constructor() {
     effect(() => {

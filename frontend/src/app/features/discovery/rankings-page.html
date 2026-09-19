@@ -33,7 +33,7 @@
           <a class="ranking-title" [routerLink]="['/works', entry.work.id]">{{ entry.work.title }}</a>
           <span class="muted">
             @if (topRatedSelected()) {
-              ★ {{ entry.score.toFixed(1) }} · {{ entry.ratings }} ratings
+              ★ {{ entry.score | number: '1.1-1' }} · {{ entry.ratings | i18nPlural: ratingsPlural }}
             } @else {
               {{ entry.work.type }}
             }

@@ -34,7 +34,7 @@
               @if (release.chapterTitle) {
                 · {{ release.chapterTitle }}
               }
-              · <time [attr.datetime]="release.publishedAt">{{ timeAgo(release.publishedAt) }}</time>
+              · <time [attr.datetime]="release.publishedAt">{{ release.publishedAt | timeAgo }}</time>
               @if (release.read) {
                 · <span class="badge">Read</span>
               }

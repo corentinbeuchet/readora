@@ -25,7 +25,7 @@
           <li [class.unread]="!item.read">
             <a [href]="item.link" (click)="follow($event, item)">
               <span class="bell-message">{{ item.message }}</span>
-              <span class="muted bell-time">{{ timeAgo(item.createdAt) }}</span>
+              <span class="muted bell-time">{{ item.createdAt | timeAgo }}</span>
               @if (!item.read) {
                 <span class="sr-only">(unread)</span>
               }
