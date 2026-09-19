@@ -302,6 +302,7 @@ export class UploadStudioPage {
       width: p.width,
       height: p.height,
       description: p.description?.trim() || undefined,
+      liteCdnUrl: p.liteCdnUrl,
     }));
     const chapter = await firstValueFrom(
       this.uploadService.directPublishChapter(work.id, {

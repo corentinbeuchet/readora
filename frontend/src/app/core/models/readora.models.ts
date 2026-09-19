@@ -36,12 +36,16 @@ export interface DirectPublishChapterPayload {
     height?: number;
     /** What the page shows, for screen-reader users (US-07). */
     description?: string;
+    /** The data-saver copy returned by the upload (US-07). */
+    liteCdnUrl?: string;
   }[];
 }
 
 export interface StorageUploadResult {
   storageKey: string;
   cdnUrl: string;
+  /** Lighter JPEG copy of an uploaded image for the data saver; absent when none was made (US-07). */
+  liteCdnUrl?: string | null;
 }
 
 export interface PageAsset {
@@ -52,6 +56,8 @@ export interface PageAsset {
   height?: number;
   /** Written by the uploader for screen readers; used as the image's alt text (US-07). */
   description?: string | null;
+  /** Lighter copy shown with "Data saver" on; absent for older pages (US-07). */
+  liteCdnUrl?: string | null;
 }
 
 export interface Chapter {

@@ -44,11 +44,12 @@ describe('ReaderPreferencesStore', () => {
     first.setBackground('WHITE');
     first.setDoublePage(true);
     first.setAutoScrollSpeed('FAST');
+    first.setDataSaver(true);
 
     const next = newSession();
     expect(next.layoutFor('op', 'MANGA')).toEqual({ mode: 'VERTICAL', direction: 'RTL' });
     expect(next.layoutFor('sl', 'MANHWA')).toEqual({ mode: 'VERTICAL', direction: 'LTR' });
-    expect([next.fit(), next.background(), next.doublePage(), next.autoScrollSpeed()]).toEqual(['HEIGHT', 'WHITE', true, 'FAST']);
+    expect([next.fit(), next.background(), next.doublePage(), next.autoScrollSpeed(), next.dataSaver()]).toEqual(['HEIGHT', 'WHITE', true, 'FAST', true]);
   });
 
   it('ignores corrupted or unknown stored values', () => {

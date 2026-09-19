@@ -75,6 +75,7 @@ export class UploadService {
             progress: 100,
             storageKey: res.storageKey,
             cdnUrl: res.cdnUrl,
+            liteCdnUrl: res.liteCdnUrl ?? undefined,
             error: undefined,
           })),
           catchError((err: unknown) =>

@@ -212,7 +212,7 @@ describe('UploadStudioPage', () => {
       const first = uploads();
       expect(first.length).toBe(2);
       expect(first[0].request.urlWithParams).toContain(encodeURIComponent('scans/work-1/c3'));
-      first[0].flush(ok({ storageKey: 'k1', cdnUrl: 'https://cdn/k1' }));
+      first[0].flush(ok({ storageKey: 'k1', cdnUrl: 'https://cdn/k1', liteCdnUrl: 'https://cdn/k1.lite.jpg' }));
       first[1].flush(fail('Storage unavailable'), { status: 503, statusText: 'Service Unavailable' });
       await submit;
       fixture.detectChanges();
@@ -236,7 +236,7 @@ describe('UploadStudioPage', () => {
         chapterNumber: '3',
         title: undefined,
         pages: [
-          { pageNumber: 1, storageKey: 'k1', cdnUrl: 'https://cdn/k1', width: undefined, height: undefined, description: undefined },
+          { pageNumber: 1, storageKey: 'k1', cdnUrl: 'https://cdn/k1', width: undefined, height: undefined, description: undefined, liteCdnUrl: 'https://cdn/k1.lite.jpg' },
           { pageNumber: 2, storageKey: 'k2', cdnUrl: 'https://cdn/k2', width: undefined, height: undefined },
         ],
       });

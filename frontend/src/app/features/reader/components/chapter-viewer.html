@@ -115,6 +115,10 @@
           Double page (two pages side by side)
         </label>
       }
+      <label class="checkbox setting">
+        <input type="checkbox" [checked]="prefs.dataSaver()" (change)="setDataSaver($event)" />
+        Data saver (lighter, lower-quality images)
+      </label>
     </section>
 
     <section id="reader-chapters" class="reader-chapters" aria-label="Chapters" [hidden]="!chaptersOpen()">
@@ -198,7 +202,7 @@
               @if (page.cdnUrl) {
                 <!-- Intrinsic size reserves the space (no layout shift); the first page is the LCP image. -->
                 <img
-                  [ngSrc]="page.cdnUrl"
+                  [ngSrc]="pageSrc(page)"
                   [width]="page.width || defaultPageWidth"
                   [height]="page.height || defaultPageHeight"
                   [priority]="first"
@@ -221,7 +225,7 @@
             @for (page of displayedSpread(); track page.pageNumber) {
               @if (page.cdnUrl) {
                 <img
-                  [ngSrc]="page.cdnUrl"
+                  [ngSrc]="pageSrc(page)"
                   [width]="page.width || defaultPageWidth"
                   [height]="page.height || defaultPageHeight"
                   priority
@@ -241,7 +245,7 @@
           <!-- The next pages download while the current one is read, so turning is instant (hidden images still load). -->
           <div class="preload" hidden>
             @for (page of upcomingPages(); track page.pageNumber) {
-              <img class="preloaded-page" [src]="page.cdnUrl" alt="" decoding="async" />
+              <img class="preloaded-page" [src]="pageSrc(page)" alt="" decoding="async" />
             }
           </div>
           <!-- Buttons sit on the side the page turns to: in right-to-left reading "Next" is on the left. -->

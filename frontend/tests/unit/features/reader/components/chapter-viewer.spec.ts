@@ -5,6 +5,7 @@ import { Router, provideRouter } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { ChapterViewer, PROGRESS_SYNC_DEBOUNCE_MS, ZEN_CONTROLS_HIDE_MS } from '@app/features/reader/components/chapter-viewer';
 import { ReaderState } from '@app/features/reader/services/reader-state';
+import { ReaderPreferencesStore } from '@app/features/reader/services/reader-preferences-store';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { LayoutStore } from '@app/core/layout/layout-store';
 import { Chapter } from '@app/core/models/readora.models';
@@ -535,6 +536,34 @@ describe('ChapterViewer (API-driven)', () => {
     expect(String(navigate.mock.calls[0][0])).toBe('/read/c-2');
   });
 
+  it('Data saver swaps in the lighter copies (kept for next chapters), falling back to full images', async () => {
+    const lite: Chapter = {
+      ...MOCK_CHAPTER,
+      pages: MOCK_CHAPTER.pages.map((p) => (p.pageNumber === 3 ? p : { ...p, liteCdnUrl: p.cdnUrl.replace('.webp', '.webp.lite.jpg') }))
+    };
+    await loadChapter(undefined, lite);
+    const sources = (): string[] =>
+      Array.from(fixture.nativeElement.querySelectorAll('.vertical-flow img.page-image') as NodeListOf<HTMLImageElement>).map((img) =>
+        img.getAttribute('src')!
+      );
+    expect(sources()).toEqual(MOCK_CHAPTER.pages.map((p) => p.cdnUrl));
+
+    const settings = openSettings();
+    const toggle = Array.from(settings.querySelectorAll('label.checkbox') as NodeListOf<HTMLLabelElement>)
+      .find((label) => label.textContent?.includes('Data saver'))!
+      .querySelector('input')!;
+    toggle.click();
+    fixture.detectChanges();
+
+    expect(sources()).toEqual([
+      'https://cdn.readora.com/p1.webp.lite.jpg',
+      'https://cdn.readora.com/p2.webp.lite.jpg',
+      'https://cdn.readora.com/p3.webp'
+    ]);
+    expect(TestBed.inject(ReaderPreferencesStore).dataSaver()).toBe(true);
+    http.expectNone(`${API}/chapters/${MOCK_CHAPTER.id}`);
+  });
+
   it('Reading with a screen reader', async () => {
     const described: Chapter = {
       ...MOCK_CHAPTER,
@@ -663,8 +692,7 @@ describe('ChapterViewer (API-driven)', () => {
   it('offers double page only on wide screens', async () => {
     vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: () => undefined, removeEventListener: () => undefined }));
     await loadChapter(undefined, chapterOf('op-1', 'one-piece', 'MANGA'));
-    openSettings();
-    expect(fixture.nativeElement.querySelector('#reader-settings input[type="checkbox"]')).toBeNull();
+    expect(openSettings().textContent).not.toContain('Double page');
   });
 
   it('Letting a webtoon scroll by itself', async () => {

@@ -483,6 +483,18 @@ export class ChapterViewer {
     }
   }
 
+  /**
+   * The lighter copy with "Data saver" on, when the page has one (older pages don't). Only after hydration, like the
+   * saved layouts: the prerendered HTML uses the full images.
+   */
+  protected pageSrc(page: PageAsset): string {
+    return this.hydrated() && this.prefs.dataSaver() && page.liteCdnUrl ? page.liteCdnUrl : page.cdnUrl;
+  }
+
+  protected setDataSaver(event: Event): void {
+    this.prefs.setDataSaver((event.target as HTMLInputElement).checked);
+  }
+
   /** Screen readers read the uploader's description when there is one (US-07). */
   protected pageAlt(page: PageAsset): string {
     return page.description ? `Page ${page.pageNumber}: ${page.description}` : `Page ${page.pageNumber}`;

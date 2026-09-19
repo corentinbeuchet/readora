@@ -20,13 +20,22 @@ export interface ReaderPreferences {
   background: ReaderBackground;
   doublePage: boolean;
   autoScrollSpeed: AutoScrollSpeed;
+  /** Lighter page images to save mobile data (US-07). */
+  dataSaver: boolean;
 }
 
 export const READER_PREFERENCES_KEY = 'readora.reader.preferences';
 /** Bounds what we keep in localStorage. */
 const MAX_REMEMBERED_SERIES = 200;
 
-const DEFAULTS: ReaderPreferences = { series: {}, fit: 'WIDTH', background: 'BLACK', doublePage: false, autoScrollSpeed: 'MEDIUM' };
+const DEFAULTS: ReaderPreferences = {
+  series: {},
+  fit: 'WIDTH',
+  background: 'BLACK',
+  doublePage: false,
+  autoScrollSpeed: 'MEDIUM',
+  dataSaver: false
+};
 
 /**
  * How a format is read by default (US-07, like Mihon / MangaDex): webtoon-style manhwa and manhua scroll vertically,
@@ -43,7 +52,7 @@ export function defaultLayout(type: WorkType | undefined): SeriesLayout {
   }
 }
 
-/** Reader settings kept in the browser: layout per series, and fit / background / double page / auto-scroll. */
+/** Reader settings kept in the browser: layout per series, and fit / background / double page / auto-scroll / data saver. */
 @Service()
 export class ReaderPreferencesStore {
   private readonly storage = inject(BrowserStorage);
@@ -53,6 +62,7 @@ export class ReaderPreferencesStore {
   readonly background = computed(() => this._prefs().background);
   readonly doublePage = computed(() => this._prefs().doublePage);
   readonly autoScrollSpeed = computed(() => this._prefs().autoScrollSpeed);
+  readonly dataSaver = computed(() => this._prefs().dataSaver);
 
   /** The layout the reader chose for this series, or the default for its format. */
   layoutFor(workId: string, type: WorkType | undefined): SeriesLayout {
@@ -88,6 +98,10 @@ export class ReaderPreferencesStore {
     this.update((prefs) => ({ ...prefs, autoScrollSpeed }));
   }
 
+  setDataSaver(dataSaver: boolean): void {
+    this.update((prefs) => ({ ...prefs, dataSaver }));
+  }
+
   private update(change: (prefs: ReaderPreferences) => ReaderPreferences): void {
     this._prefs.update(change);
     this.storage.write(READER_PREFERENCES_KEY, this._prefs());
@@ -117,6 +131,7 @@ function sanitize(stored: Partial<ReaderPreferences> | null): ReaderPreferences 
     fit: oneOf(['WIDTH', 'HEIGHT', 'ORIGINAL'] as const, stored.fit, DEFAULTS.fit),
     background: oneOf(['BLACK', 'GRAY', 'WHITE'] as const, stored.background, DEFAULTS.background),
     doublePage: stored.doublePage === true,
-    autoScrollSpeed: oneOf(['SLOW', 'MEDIUM', 'FAST'] as const, stored.autoScrollSpeed, DEFAULTS.autoScrollSpeed)
+    autoScrollSpeed: oneOf(['SLOW', 'MEDIUM', 'FAST'] as const, stored.autoScrollSpeed, DEFAULTS.autoScrollSpeed),
+    dataSaver: stored.dataSaver === true
   };
 }
