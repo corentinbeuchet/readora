@@ -91,6 +91,8 @@ Before adding UI or helpers, search `src/app/shared/` and `src/app/core/utils/`.
 A third copy of anything means it should be shared.
 
 ## Tests (ref: testing-fundamentals.md, router-testing.md, component-harnesses.md)
+- Load the matching testing skill: `frontend-unit-tests`, `frontend-component-tests` or `frontend-e2e-tests`
+  (Given/When/Then convention and anti-flakiness rules).
 - Drive the real DOM (click, type, read text/ARIA); never call component methods or read component signals.
 - Real routes + `RouterTestingHarness`/`router.url`; don't mock `navigateByUrl`.
 - Shared helpers from `tests/unit/test-utils.ts` and `core/auth/auth-fixtures.ts` (`settle`, envelopes, `signIn`);

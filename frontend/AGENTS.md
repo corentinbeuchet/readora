@@ -145,12 +145,32 @@
   (a new allowed cross-feature import goes in `CROSS_FEATURE_ALLOWED`, with a reason).
 
 ## Tests (Vitest in `tests/unit`, mirroring `src/app`; Playwright in `tests/e2e`)
+Checklists per test type: skills `frontend-unit-tests` (services, stores, pure functions, guards, interceptors),
+`frontend-component-tests` (components, routed pages, directives), `frontend-e2e-tests` (Playwright).
+- **Given / When / Then** (team convention, chosen after Fowler, SWE at Google ch. 12, Kent C. Dodds, xUnit Test
+  Patterns): every test has `// Given`, `// When`, `// Then` sections. `given…` helpers build the precondition,
+  return what the test uses, and take the values the test asserts on as arguments (no hidden "mystery guest" data).
+  `when…` helpers only for multi-step actions shared by 2+ tests. **No `then…` helpers: assertions stay in the test.**
+  No logic in tests; `beforeEach` only for TestBed setup/cleanup. E2E: Playwright fixtures are the Given.
+  Models: `core/auth/auth-store.spec.ts`, `features/catalog/work-detail-page.spec.ts` (library block),
+  `features/discovery/updates-page.spec.ts`, `tests/e2e/reader-viewer.spec.ts`. Other specs follow when next edited.
+- **No flaky tests:**
+  - No real waits. Time is faked: fake timers, and `FIXED_NOW` / `freezeDate()` for anything relative to "now".
+  - `vitest-base.config.ts` auto-restores spies, stubbed globals and env stubs; fake timers need `useRealTimers()`
+    in `afterEach`. Retry is 0.
+  - Nothing mutable is shared between tests. E2E data is created per test (fixtures, `uniqueSuffix()` inside the
+    test). CI fails on a test that only passes on retry (`failOnFlakyTests`).
+  - A new or changed spec passes `npm run test:shuffle` (unit, random order) / `npm run e2e:stress` (e2e, 5 repeats;
+    stack started with `READORA_AUTH_RATE_LIMIT=200`).
+  - A flaky test is fixed, or skipped with a backlog id here, the same day. Never retried away, never given a longer timeout.
 - Shared helpers, never local copies: `tests/unit/test-utils.ts` (`API`, `ok(data)`/`fail(msg)` envelopes,
-  `provideHttpTesting()`, `settle(fixtureOrHarness)`, `ANY_URL` routes, `MemoryStorage`) and
-  `tests/unit/core/auth/auth-fixtures.ts` (`signIn`, `mockUser`). `http.verify()` in `afterEach`.
+  `provideHttpTesting()`, `settle(fixtureOrHarness)`, `resourcesStable()`, `ANY_URL` routes, `MemoryStorage`,
+  `FIXED_NOW`, `freezeDate()`) and `tests/unit/core/auth/auth-fixtures.ts` (`signIn`, `mockUser`, `mockSession`).
+  `http.verify()` in `afterEach`; `http.match` in `afterEach` only for requests a child with its own spec owns.
 - Real router: `provideRouter(ANY_URL)` or real routes + `RouterTestingHarness`, assert `router.url`; never mock
   `navigate`/`navigateByUrl`. Guards are covered through the real table (`tests/unit/app.guarded-routes.spec.ts`).
-- E2E: role/label locators; create the data a test needs (`tests/e2e/support/helpers.ts`: `publishChapter`, `signUp`).
+- E2E: role/label locators, web-first assertions, no `waitForTimeout`; every call awaited (`no-floating-promises`);
+  create the data a test needs (`tests/e2e/support/fixtures.ts` `publishedChapter`, `helpers.ts` `signUp`).
 - Drive the real DOM and assert request bodies; don't poke component internals.
 - `vi.useFakeTimers()` for debounce/timeouts — no real `setTimeout` waits (`settle()` uses one: under fake timers use
   `vi.advanceTimersByTimeAsync(0)`). `tests/**` is linted by `npm run lint` (CI too); `.only` is a lint error.
@@ -202,3 +222,5 @@ skill) — fixed:
 - F34 CI without lint; weak lint rules; mocked Router and duplicated test setup; e2e skipping on missing data. — fixed 7fecf89, b4bb4a0, d0c0687, 6272d20
 - F35 Every anonymous page load called `/auth/refresh` and spent the per-IP rate limit (reload -> 429 -> logged out). — fixed 28f9de5
 - F36 Layering (core <- shared <- features, no `../`) held by convention only. — fixed by the lint rules (`git log --grep ng-best-practices/26`)
+- F37 Flaky-test risks: real clock in fixtures, a leaked `document` spy, no auto-restore, a catch-all HTTP flush,
+  colliding e2e suffixes, CI retries hiding flakes. — fixed (`git log --grep ng-best-practices/27`)
