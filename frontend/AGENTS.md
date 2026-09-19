@@ -15,8 +15,8 @@
 - `[class.x]` / `[style.x]` bindings, never `ngClass` / `ngStyle`. No `CommonModule`, no `FormsModule`/`ngModel`.
 - `templateUrl` + `styleUrl` (relative paths), one stylesheet per component (never a shared `feature.scss`). No
   inline `styles:` blocks; an inline `template` only for tiny shared pieces (~15 lines, e.g. `shared/ui/load-error.ts`).
-- One responsibility per component: past ~250 lines of TS or template, split presentational children into
-  `components/` and logic into `services/` (model: `features/reader/`, `features/upload/`).
+- One responsibility per component: past ~250 lines of TS or template, split presentational children into their
+  own folders under the component and logic into services beside it (model: `features/reader/reader-page/`).
 - Order members: injected deps, inputs/models/outputs, queries, then state and methods. Name handlers for what they do
   (`saveProfile()`, not `handleClick()`).
 
@@ -37,9 +37,9 @@
 - **Never use `effect` to copy or sync state** (resource -> signal, prefs -> state, input -> form): derive it with
   `computed`/`linkedSignal`. Effects are for non-signal side effects (SEO/head, DOM APIs, recording a visit).
 - After a write, update the resource itself (`resource.set/update(...)`), not a second signal holding a copy
-  (model: `scanlation-board-page.ts` `project.update(withTask(...))`).
+  (model: `scanlation-board-page/scanlation-board-page.ts` `project.update(withTask(...))`).
 - Inside `effect`, wrap writes/reads you don't want tracked in `untracked(...)`. Check `resource.hasValue()` before `value()`.
-- Seeding a form from loaded data must not overwrite in-progress edits: only while pristine (model: `profile-form.ts`).
+- Seeding a form from loaded data must not overwrite in-progress edits: only while pristine (model: `profile-page/profile-form/profile-form.ts`).
 
 ## Data access
 - One API service per backend resource in `core/api/*-api.ts`, all built on `ApiClient` (envelope unwrap + `ApiError`).
@@ -134,8 +134,16 @@
 ## Naming & layout
 - `core/` = app-wide singletons (api, auth, seo). A feature-only service lives in its feature.
 - File suffixes: `*-store.ts`, `*-api.ts`, `*.guard.ts`, `*.interceptor.ts`, `*.directive.ts`, `*-page.ts` for routed pages.
-- A feature with more than one component uses `components/` and `services/` subfolders; routed `*Page` classes sit
-  at the feature root, children in `components/` (the header's omnisearch and bell live in `layout/components/`).
+- Folders by feature, then **one folder per component** (angular.dev style guide; the CLI's default): a component
+  with a template or styles lives in `<name>/<name>.{ts,html,scss}`; single-file units (services, stores, pipes,
+  directives, utils, inline-template components such as `forbidden-page.ts`) stay files.
+- **No type folders** (`components/`, `services/`, `directives/`: the style guide says to avoid them). A routed page's
+  folder sits at the feature root; each child component is a subfolder of the component that uses it
+  (`upload-studio-page/pages-step/page-grid-uploader/`); services and utils sit beside the component tree that uses
+  them (`reader-page/reader-state.ts`). Used by several components: move it to their nearest common parent; by several
+  features: `shared/`. Example: `features/catalog/{works-page/, work-detail-page/{work-ratings/, add-to-list/}}`.
+- `tests/unit` mirrors `src/app` path for path (`tests/unit/features/catalog/work-detail-page/work-detail-page.spec.ts`);
+  only cross-cutting specs (`app.guarded-routes`, `core/api/resource-parsers`) have no single source file.
 - Class names: `XPage` for routed pages, no `Component` suffix; model interfaces don't reuse a page name
   (`TeamProfile` model vs `TeamPage` component). Unique selectors.
 - One import alias, `@app/...` (no `@core`/`@shared`/`@features`: one spelling per file); no `../` paths
@@ -155,7 +163,7 @@ Checklists per test type: skills `frontend-unit-tests` (services, stores, pure f
   checks one fact; one `when…` is one action; methods are function declarations after the tests (hoisted); shared
   ones move to the helper files; no logic in test bodies; comments only for a non-obvious "why".
   E2E: fixtures create the data, methods take `page`. Models: `core/auth/auth-store.spec.ts`,
-  `features/catalog/work-detail-page.spec.ts` (library block), `features/discovery/updates-page.spec.ts`,
+  `features/catalog/work-detail-page/work-detail-page.spec.ts` (library block), `features/discovery/updates-page/updates-page.spec.ts`,
   `tests/e2e/reader-viewer.spec.ts`. Every spec follows it.
 - **No flaky tests:**
   - No real waits. Time is faked: fake timers, and `FIXED_NOW` / `freezeDate()` for anything relative to "now".
@@ -227,3 +235,5 @@ skill) — fixed:
 - F36 Layering (core <- shared <- features, no `../`) held by convention only. — fixed by the lint rules (`git log --grep ng-best-practices/26`)
 - F37 Flaky-test risks: real clock in fixtures, a leaked `document` spy, no auto-restore, a catch-all HTTP flush,
   colliding e2e suffixes, CI retries hiding flakes. — fixed (`git log --grep ng-best-practices/27`)
+- F38 `components/` + `services/` type folders with up to 24 flat files each (the style guide says to avoid them).
+  — fixed: folder per component, children nested under their user (`git log --grep ng-best-practices/30`)

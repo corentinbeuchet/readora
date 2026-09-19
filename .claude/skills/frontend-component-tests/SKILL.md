@@ -6,8 +6,8 @@ description: How to write and review Readora frontend component tests (Vitest + 
 # Frontend component tests (components, routed pages, directives)
 
 Source of truth: `frontend/AGENTS.md` "Tests". Model specs:
-`frontend/tests/unit/features/catalog/work-detail-page.spec.ts` ("library and read markers" block) and
-`frontend/tests/unit/features/discovery/updates-page.spec.ts` (routed page). Services and pure functions use the
+`frontend/tests/unit/features/catalog/work-detail-page/work-detail-page.spec.ts` ("library and read markers" block)
+and `frontend/tests/unit/features/discovery/updates-page/updates-page.spec.ts` (routed page). Services and pure functions use the
 `frontend-unit-tests` skill.
 
 ## Test like a user
@@ -43,7 +43,7 @@ Source of truth: `frontend/AGENTS.md` "Tests". Model specs:
 - Where a guarded URL lands is covered by `tests/unit/app.guarded-routes.spec.ts` (real route table).
 
 ## Given / When / Then (team convention, all test types)
-Model: `features/catalog/work-detail-page.spec.ts`.
+Model: `features/catalog/work-detail-page/work-detail-page.spec.ts`.
 ```ts
 it('adds the series to the library, then removes it', async () => {
   await givenIAmOnTheWorkPage({ inLibrary: false, finished: [], next: 'c-1' });

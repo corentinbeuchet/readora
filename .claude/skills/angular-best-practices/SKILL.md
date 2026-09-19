@@ -17,8 +17,10 @@ checklist to apply while coding. Deeper docs: the `angular-developer` skill refe
 ## Components (ref: components.md, inputs.md, outputs.md, host-elements.md)
 - Standalone and OnPush are defaults: never write `standalone: true` or `changeDetection`.
 - `input()`/`input.required()`/`model()`/`output()`/`viewChild()`; host bindings in `host: {}`; `inject()` in fields.
-- One responsibility per component. Past ~250 lines of TS or template, split: presentational children in
-  `components/`, logic in `services/` (component-provided when page-scoped).
+- One responsibility per component. Past ~250 lines of TS or template, split: each presentational child in its own
+  folder under the component, logic in services beside it (component-provided when page-scoped).
+- Layout: one folder per multi-file component (`name/name.{ts,html,scss}`), children nested under the component that
+  uses them, shared ones at the nearest common parent; never `components/` or `services/` folders.
 - Template-read members `protected readonly`; public only for the component's API. Tests must not need more.
 
 ## Templates (ref: components.md, pipes.md)
@@ -38,7 +40,7 @@ checklist to apply while coding. Deeper docs: the `angular-developer` skill refe
 - Local change after a write: `resource.value.set/update(...)`, not a second signal holding a copy.
 - Page-scoped state: `@Service({ autoProvided: false })` + `providers: [X]` on the routed component (model:
   `ReaderPage` + `ReaderState`). Only app-wide state is root-provided. Stores expose `asReadonly()`/`computed`.
-- Seeding a form from loaded data must not overwrite user edits (only while pristine; model `profile-form.ts`).
+- Seeding a form from loaded data must not overwrite user edits (only while pristine; model `profile-page/profile-form/profile-form.ts`).
 - `afterRenderEffect` with phases (`write` for DOM writes).
 
 ## Data access (ref: http-client.md, resource.md)

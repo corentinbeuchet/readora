@@ -14,7 +14,7 @@ file:line + rule (cite reference) + fix, prioritized, plus "already good". Then 
 - Copy-pasted blocks (field errors, load/error/retry, covers, dialogs, time/number formatting, `(event.target as …)`).
 - Forms not on Signal Forms; `FormsModule`/`ngModel`.
 - a11y: nested interactive content, focus return, Escape, headings/landmarks, list structure, `NgOptimizedImage`.
-- Naming: `*Component` suffix, filename ≠ class, routed components not `*-page`, sub-components outside `components/`.
+- Naming: `*Component` suffix, filename ≠ class, routed components not `*-page`, multi-file components without their own folder, `components/`/`services/` type folders, a child not nested under its only user.
 
 ## 2. State, data, DI, RxJS
 - Effects that copy/sync state; signals duplicating resource values; imperative fetches in effects.
