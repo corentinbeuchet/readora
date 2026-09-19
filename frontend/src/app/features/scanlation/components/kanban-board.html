@@ -41,7 +41,7 @@
               <article class="task-card" [class.task-mine]="row.mine">
                 <div class="task-card-header">
                   <strong>Chapter {{ task.chapterNumber }}</strong>
-                  <span class="status-pill" [class]="task.status.toLowerCase()">{{ task.status }}</span>
+                  <span class="status-pill" [class.status-in-progress]="task.status === 'IN_PROGRESS'" [class.status-completed]="task.status === 'COMPLETED'">{{ task.status }}</span>
                 </div>
                 <p class="task-meta">Pages: {{ task.pageCount }}</p>
                 @if (task.assigneeId) {

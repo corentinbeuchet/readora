@@ -1,0 +1,11 @@
+.add-to-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+
+  .field {
+    margin: 0;
+  }
+}

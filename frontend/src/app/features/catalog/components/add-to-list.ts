@@ -9,7 +9,8 @@ import { asyncAction } from '@app/core/utils/async-action';
 @Component({
   selector: 'app-add-to-list',
   imports: [RouterLink],
-  templateUrl: './add-to-list.html'
+  templateUrl: './add-to-list.html',
+  styleUrl: './add-to-list.scss'
 })
 export class AddToList {
   private readonly api = inject(ListsApi);

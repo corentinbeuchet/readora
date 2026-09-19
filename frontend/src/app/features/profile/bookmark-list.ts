@@ -9,6 +9,7 @@ import { LoadError } from '@app/shared/ui/load-error';
   selector: 'app-bookmark-list',
   imports: [LoadError, RouterLink, DatePipe],
   templateUrl: './bookmark-list.html',
+  styleUrl: './bookmark-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BookmarkList {

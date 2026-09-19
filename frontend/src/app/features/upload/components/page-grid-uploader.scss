@@ -109,7 +109,7 @@
 .thumbnail-wrapper {
   position: relative;
   aspect-ratio: 5 / 7;
-  background: #111;
+  background: var(--bg);
   overflow: hidden;
 
   .page-thumbnail {
@@ -123,7 +123,7 @@
     top: 0.35rem;
     left: 0.35rem;
     background: rgba(0, 0, 0, 0.75);
-    color: #fff;
+    color: var(--text);
     padding: 0.15rem 0.4rem;
     font-size: 0.75rem;
     font-weight: 600;
@@ -152,7 +152,7 @@
     }
 
     background: rgba(255, 255, 255, 0.2);
-    color: #fff;
+    color: var(--text);
     border: none;
     border-radius: 0.25rem;
     width: 1.6rem;
@@ -174,7 +174,7 @@
     }
 
     &.btn-delete:hover:not(:disabled) {
-      background: #ef4444;
+      background: var(--danger);
     }
   }
 }

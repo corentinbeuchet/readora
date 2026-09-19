@@ -55,7 +55,7 @@
 
     .step-number {
       background: var(--accent);
-      color: #fff;
+      color: var(--on-accent);
     }
   }
 
@@ -63,8 +63,8 @@
     color: var(--text);
 
     .step-number {
-      background: #10b981;
-      color: #fff;
+      background: var(--success);
+      color: var(--on-success);
     }
   }
 

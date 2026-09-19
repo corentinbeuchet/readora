@@ -17,6 +17,11 @@
   --danger: #f87171;
   --success: #4ade80;
   --violet: #a78bfa;
+  /* Text on filled accent / danger / success backgrounds (contrast AA). */
+  --on-accent: #082f49;
+  --on-danger: #1f0707;
+  --on-success: #052e16;
+  --star: #facc15;
   --radius: 10px;
 }
 
@@ -100,7 +105,7 @@ a {
 .btn-primary {
   background: var(--accent-strong);
   border-color: var(--accent-strong);
-  color: #082f49;
+  color: var(--on-accent);
 
   &:hover:not(:disabled) {
     background: var(--accent);
