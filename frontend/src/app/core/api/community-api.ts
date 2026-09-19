@@ -1,8 +1,8 @@
 import { HttpClient, httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { PublicProfile, TeamPage } from '../models/readora.models';
-import { ApiClient, parseEnvelope } from './api-client';
+import { Observable, catchError } from 'rxjs';
+import { PublicProfile, TeamPage } from '@app/core/models/readora.models';
+import { ApiClient, parseEnvelope, toApiError } from './api-client';
 
 /** Public profiles, team pages, team follows and the library export (US-12). */
 @Service()
@@ -38,8 +38,8 @@ export class CommunityApi {
     return this.api.delete(`/teams/${projectId}/follow`);
   }
 
-  /** The export is a file, not an API envelope. */
+  /** The export is a file, not an API envelope; failures still surface as `ApiError`. */
   exportLibrary(format: 'csv' | 'json'): Observable<Blob> {
-    return this.http.get(this.api.url('/library/export'), { params: { format }, responseType: 'blob' });
+    return this.http.get(this.api.url('/library/export'), { params: { format }, responseType: 'blob' }).pipe(catchError(toApiError));
   }
 }
