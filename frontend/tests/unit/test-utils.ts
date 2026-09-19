@@ -3,6 +3,7 @@ import { Routes } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ApiResponse } from '@app/core/models/readora.models';
+import { BrowserStorage } from '@app/core/storage/browser-storage';
 import { environment } from '../../src/environments/environment';
 
 /** API root the app calls in tests (the `API_BASE_URL` default). */
@@ -14,6 +15,20 @@ export class BlankPage {}
 
 /** Every URL resolves (to `BlankPage`), so specs can assert `router.url` after a real navigation. */
 export const ANY_URL: Routes = [{ path: '**', component: BlankPage }];
+
+/** In-memory `BrowserStorage` (jsdom's localStorage isn't reliable under Node 26): inspect `values` in assertions. */
+export class MemoryStorage implements Pick<BrowserStorage, 'available' | 'read' | 'write'> {
+  readonly available = true;
+  readonly values = new Map<string, unknown>();
+
+  read<T>(key: string): T | null {
+    return (this.values.get(key) as T | undefined) ?? null;
+  }
+
+  write(key: string, value: unknown): void {
+    this.values.set(key, value);
+  }
+}
 
 /** `HttpClient` backed by `HttpTestingController`. */
 export function provideHttpTesting(): (Provider | EnvironmentProviders)[] {

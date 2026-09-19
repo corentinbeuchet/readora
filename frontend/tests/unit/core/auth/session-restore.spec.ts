@@ -1,10 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { PLATFORM_ID } from '@angular/core';
 import { HttpTestingController } from '@angular/common/http/testing';
-import { AuthStore } from '@app/core/auth/auth-store';
+import { AuthStore, SESSION_HINT_KEY } from '@app/core/auth/auth-store';
 import { SESSION_RESTORE_TIMEOUT_MS, restoreSessionOnBrowser } from '@app/core/auth/session-restore';
 import { mockAuthResponse } from './auth-fixtures';
-import { API, provideHttpTesting } from '../../test-utils';
+import { BrowserStorage } from '@app/core/storage/browser-storage';
+import { API, MemoryStorage, provideHttpTesting } from '../../test-utils';
 
 const REFRESH = `${API}/auth/refresh`;
 
@@ -12,9 +13,12 @@ describe('restoreSessionOnBrowser (app initializer)', () => {
   let http: HttpTestingController;
   let store: AuthStore;
 
-  function setup(platform: 'browser' | 'server'): void {
+  /** `signedInBefore`: this browser signed in earlier, so it may hold a refresh cookie. */
+  function setup(platform: 'browser' | 'server', signedInBefore = true): void {
+    const storage = new MemoryStorage();
+    if (signedInBefore) storage.write(SESSION_HINT_KEY, true);
     TestBed.configureTestingModule({
-      providers: [...provideHttpTesting(), { provide: PLATFORM_ID, useValue: platform }]
+      providers: [...provideHttpTesting(), { provide: PLATFORM_ID, useValue: platform }, { provide: BrowserStorage, useValue: storage }]
     });
     http = TestBed.inject(HttpTestingController);
     store = TestBed.inject(AuthStore);
@@ -40,6 +44,14 @@ describe('restoreSessionOnBrowser (app initializer)', () => {
     http.expectOne(REFRESH).flush(mockAuthResponse({ accessToken: 'jwt-restored' }));
     await done;
     expect(store.accessToken()).toBe('jwt-restored');
+    expect(store.restoring()).toBe(false);
+  });
+
+  it('skips the refresh call for a browser that never signed in (keeps the auth rate limit for real reloads)', async () => {
+    setup('browser', false);
+    await run();
+    http.expectNone(REFRESH);
+    expect(store.isAuthenticated()).toBe(false);
     expect(store.restoring()).toBe(false);
   });
 

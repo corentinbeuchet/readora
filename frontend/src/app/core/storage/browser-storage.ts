@@ -7,6 +7,8 @@ import { DOCUMENT, Service, inject } from '@angular/core';
 @Service()
 export class BrowserStorage {
   private readonly storage = resolveStorage(inject(DOCUMENT));
+  /** `false` on the server or when the browser blocks storage (then every read is `null`). */
+  readonly available = this.storage !== null;
 
   read<T>(key: string): T | null {
     try {

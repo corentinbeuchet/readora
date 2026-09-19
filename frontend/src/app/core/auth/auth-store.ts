@@ -3,15 +3,24 @@ import { Observable, catchError, finalize, map, of, shareReplay, tap } from 'rxj
 import { ApiError } from '@app/core/api/api-client';
 import { AuthApi } from '@app/core/api/auth-api';
 import { AuthResponse, LoginRequest, Permission, RegisterRequest, UserProfile } from '@app/core/models/readora.models';
+import { BrowserStorage } from '@app/core/storage/browser-storage';
+
+/**
+ * Non-secret marker that this browser signed in (so it holds a refresh cookie). Without it, bootstrap skips
+ * `POST /auth/refresh`: anonymous page loads would otherwise spend the per-IP auth rate limit that a real reload
+ * needs (visitors behind one NAT share it).
+ */
+export const SESSION_HINT_KEY = 'readora.has-session';
 
 /**
  * Session store. The access token lives only in memory (a signal); the refresh token is an
  * HttpOnly cookie managed by the browser, so a page reload restores the session through
- * `restoreSession()` -> `POST /auth/refresh`.
+ * `restoreSession()` -> `POST /auth/refresh` (only when `SESSION_HINT_KEY` says there is a session to restore).
  */
 @Service()
 export class AuthStore {
   private readonly authApi = inject(AuthApi);
+  private readonly storage = inject(BrowserStorage);
 
   private readonly _user = signal<UserProfile | null>(null);
   private readonly _accessToken = signal<string | null>(null);
@@ -70,6 +79,10 @@ export class AuthStore {
 
   /** Called once at bootstrap: silently tries to restore the session from the refresh cookie. */
   restoreSession(): Observable<AuthResponse | null> {
+    // Storage blocked: we can't know, so try the cookie like before.
+    if (this.storage.available && !this.storage.read<boolean>(SESSION_HINT_KEY)) {
+      return of(null);
+    }
     this._restoring.set(true);
     return this.refresh().pipe(
       catchError(() => of(null)),
@@ -92,10 +105,12 @@ export class AuthStore {
   clearSession(): void {
     this._accessToken.set(null);
     this._user.set(null);
+    this.storage.write(SESSION_HINT_KEY, false);
   }
 
   private applySession(response: AuthResponse): void {
     this._accessToken.set(response.accessToken);
     this._user.set(response.user);
+    this.storage.write(SESSION_HINT_KEY, true);
   }
 }
