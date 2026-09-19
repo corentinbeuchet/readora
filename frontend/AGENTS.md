@@ -13,7 +13,10 @@
 - `input()` / `input.required()` / `model()` / `output()`; never `@Input`/`@Output` decorators. Mark them `readonly`.
 - Host bindings/listeners in the `host: {}` metadata object, never `@HostBinding` / `@HostListener`.
 - `[class.x]` / `[style.x]` bindings, never `ngClass` / `ngStyle`. No `CommonModule`, no `FormsModule`/`ngModel`.
-- `templateUrl` + `styleUrl` (relative paths). No inline `styles:` blocks.
+- `templateUrl` + `styleUrl` (relative paths), one stylesheet per component (never a shared `feature.scss`). No
+  inline `styles:` blocks; an inline `template` only for tiny shared pieces (~15 lines, e.g. `shared/ui/load-error.ts`).
+- One responsibility per component: past ~250 lines of TS or template, split presentational children into
+  `components/` and logic into `services/` (model: `features/reader/`, `features/upload/`).
 - Order members: injected deps, inputs/models/outputs, queries, then state and methods. Name handlers for what they do
   (`saveProfile()`, not `handleClick()`).
 
@@ -24,14 +27,19 @@
   readonly user = this._user.asReadonly();
   readonly isAuthenticated = computed(() => this._accessToken() !== null && this._user() !== null);
   ```
-- Name stores `*Store` in `*-store.ts`. Only app-wide state is `providedIn: 'root'`; page-scoped state is provided on the
-  route/component so it resets on navigation (model: `KanbanBoard` `providers: [ScanlationState]`).
+- Name stores `*Store` in `*-store.ts`. Only app-wide state is root-provided. Page-scoped state is
+  `@Service({ autoProvided: false })` + `providers: [X]` on the routed component, so it resets per visit
+  (model: `ReaderPage` `providers: [ReaderState, ReadingTracker, AutoScroller]`).
 - New singleton services use the Angular 22 `@Service()` decorator (root-provided, `inject()`-only) instead of
   `@Injectable({ providedIn: 'root' })` (enforced by `@angular-eslint/prefer-service-decorator`).
 - Derived read-only state → `computed()`; derived but locally overridable state → `linkedSignal()`. Never `mutate`,
   only `set` / `update`. Keep transformations pure.
+- **Never use `effect` to copy or sync state** (resource -> signal, prefs -> state, input -> form): derive it with
+  `computed`/`linkedSignal`. Effects are for non-signal side effects (SEO/head, DOM APIs, recording a visit).
+- After a write, update the resource itself (`resource.set/update(...)`), not a second signal holding a copy
+  (model: `scanlation-board-page.ts` `project.update(withTask(...))`).
 - Inside `effect`, wrap writes/reads you don't want tracked in `untracked(...)`. Check `resource.hasValue()` before `value()`.
-- Effects that seed form models must not overwrite in-progress user edits.
+- Seeding a form from loaded data must not overwrite in-progress edits: only while pristine (model: `profile-form.ts`).
 
 ## Data access
 - One API service per backend resource in `core/api/*-api.ts`, all built on `ApiClient` (envelope unwrap + `ApiError`).
@@ -41,10 +49,16 @@
   protected readonly work = this.catalogApi.workResource(this.workId);   // read by the template
   ```
   Resource `parse` uses `parseEnvelope<T>` (`core/api/api-client.ts`): `success: false` becomes an error, never `[]`.
-  In error state `value()` throws: read list resources through `hasValue()`.
-- Writes: `await firstValueFrom(this.api.x(...))` — never `new Promise(res => obs.subscribe(...))`.
-- User-facing error text via `apiErrorMessage(err)` (`core/api/api-client.ts`, re-exported by `features/auth/auth-form.utils.ts`).
-  No `console.error` as handling.
+  In error state `value()` throws: read list resources through `hasValue()`. Fetch only what is shown: tabs and
+  panels pass an `enabled` signal (model: `rankings-page.ts`), a page needing one entry uses the per-id endpoint.
+  "Mine or 404" reads use `rxResource` + `nullIfNotFound()` (model: `LibraryApi.entryResource`).
+  No Observable duplicate of a read that has a resource.
+- URLs come from `API_BASE_URL` / `SITE_URL` (`core/config/urls.ts`), never `environment` in app code.
+- Writes: `await firstValueFrom(this.api.x(...))` — never `new Promise(res => obs.subscribe(...))`. Busy/error state
+  via `asyncAction()` (`core/utils/async-action.ts`: `busy()`, `error()`, `run(fn, { fallback })`), not hand-rolled
+  `saving`/`error` signals.
+- User-facing error text via `apiErrorMessage(err)` (`core/api/api-client.ts`). No `console.error` as handling.
+  Direct `HttpClient` calls (blobs) still `catchError(toApiError)`.
 - Multi-step flows (upload/publish) must be retry-safe: reuse already-created entities, mark failed items, surface errors.
 - `HttpClient` uses the fetch backend by default in v22: don't add `withFetch()` (deprecated). Upload progress needs
   `provideHttpClient(withXhr())` + `reportUploadProgress: true` (`reportProgress` is deprecated).
@@ -58,15 +72,26 @@
 
 ## Templates & a11y
 - Built-in control flow only: `@if (x(); as y)`, `@for (i of items(); track i.id)`, `@switch`.
-- Standard async block: loading (`role="status"`) / error + retry (`role="alert"`) / empty / content (model: `works-page.html`).
-- Forms: Signal Forms (`@angular/forms/signals`) + `visibleErrors(field)`, with
-  `[attr.aria-invalid]="errors(f.x).length > 0"` and `aria-describedby`. Ids must be unique — never a static id inside `@for`.
+- Standard async block: loading (`role="status"`) / error + retry / empty / content (model: `works-page.html`); the
+  error state is `<app-load-error [error]="r.error()" notFound="…" (retry)="r.reload()">` (a 404 is not a network error).
+- No method calls in `@for` rows and no repeated per-row work: build a view-model with `computed` (model:
+  `work-detail-page.ts` `chapterRows`). Formatting via pipes (`DatePipe`, `DecimalPipe`, `I18nPluralPipe`, `timeAgo`),
+  not `toFixed`/plural ternaries/`.join` in templates. Use `$index`/`$first` directly, template literals in bindings.
+- Forms: Signal Forms (`@angular/forms/signals`), validators in the schema (no `required`/`maxlength` attributes on
+  `[formField]`, NG8022); per field `[appAriaInvalid]="f.x"` + `aria-describedby` and
+  `<app-field-errors id="…-error" [field]="f.x" />` (`shared/forms/`). Ids must be unique — never a static id inside `@for`.
+- Shared UI (`src/app/shared/`) before writing a copy: `app-load-error`, `app-work-cover` (ngSrc + fallback),
+  `app-dialog` (focus trap, Escape, labelledBy), `timeAgo` pipe, `app-field-errors`, `appAriaInvalid`; shared styles
+  `.tab`, `.pager`, `.wizard-*`, `.dialog-actions` in `styles.scss`. A third copy of anything means it should be shared.
 - Every `<label>` has a control; custom radios/toggles need `role`, `aria-checked/pressed`, and keyboard handlers;
   dialogs need focus trap, Escape, initial focus and focus return (`appFocusTrap`, `core/a11y/focus-trap.directive.ts`); hover-only controls must also show on `:focus-visible`.
 - Use global styles `.field`, `.form-error`, `.sr-only` — no Bootstrap-style classes, no per-component `.visually-hidden`.
 - Every page must pass AXE checks and WCAG 2.2 AA (focus management, contrast, ARIA).
 - Images: `NgOptimizedImage` (`ngSrc`, `width`/`height` or `fill`, `priority` on the LCP image such as the first
-  cover or first reader page). Not for inline base64 images.
+  cover or first reader page). Not for `data:` fallbacks, `blob:` previews or hidden preloads: those keep `[src]`
+  with an `eslint-disable-next-line @angular-eslint/template/prefer-ngsrc -- reason` comment.
+- Styles: never `::ng-deep` (give the child its own `styleUrl`), never `[class]="…"` (overwrites static classes),
+  colours from tokens in `styles.scss` (`--accent`, `--on-accent`, `--violet`, …), never hex in components.
 - `@defer` heavy or below-the-fold UI (comments, kanban modal, upload studio widgets) with an `@placeholder`;
   never defer what is visible in the initial viewport (layout shift). Deferred deps must be standalone and not
   imported elsewhere in the file. Tests use `DeferBlockBehavior.Manual`.
@@ -74,8 +99,13 @@
 ## Routing & auth
 - Every route uses `loadComponent`. Permissions in route data: `canActivate: [permissionGuard], data: { permission: 'PROJECT_VIEW' }`.
 - UI gating via `*appHasPermission="'CHAPTER_PUBLISH'"`, not ad-hoc `@if (auth.can(...))`.
-- New private routes must be added to `app.routes.server.ts` as `RenderMode.Client`.
+- Every route has a server route (unit-tested): public with params -> `Prerender` + `fallback: PrerenderFallback.Client`,
+  private/live -> `RenderMode.Client`.
+- Route and query params arrive as inputs (`withComponentInputBinding`); no `ActivatedRoute.snapshot`.
+- Keep `withNavigationErrorHandler(recoverFromChunkLoadFailure)`: after a deploy, a failed lazy chunk reloads once.
 - Access token lives in memory only (signal); refresh token is an HttpOnly cookie. Never use `localStorage` for tokens.
+  Only the non-secret `readora.has-session` hint is stored: bootstrap skips `POST /auth/refresh` without it, so
+  anonymous page loads don't spend the backend's per-IP auth rate limit (10/min).
 - Validate redirect targets: `returnUrl` must start with `/` and not `//` (model: `login-page.ts`); external redirects
   (Stripe) must check the host. Never send the user's identity in request bodies.
 
@@ -104,14 +134,22 @@
 ## Naming & layout
 - `core/` = app-wide singletons (api, auth, seo). A feature-only service lives in its feature.
 - File suffixes: `*-store.ts`, `*-api.ts`, `*.guard.ts`, `*.interceptor.ts`, `*.directive.ts`, `*-page.ts` for routed pages.
-- A feature with more than one component uses `components/` and `services/` subfolders.
+- A feature with more than one component uses `components/` and `services/` subfolders; routed `*Page` classes sit
+  at the feature root, children in `components/` (the header's omnisearch and bell live in `layout/components/`).
+- Class names: `XPage` for routed pages, no `Component` suffix; model interfaces don't reuse a page name
+  (`TeamProfile` model vs `TeamPage` component). Unique selectors.
 - Imports use the `@app/...` alias, not relative `../` paths across folders.
 
 ## Tests (Vitest in `tests/unit`, mirroring `src/app`; Playwright in `tests/e2e`)
-- Use shared fixtures (`tests/unit/core/auth/auth-fixtures.ts`: `signIn`, `mockUser`) and `settle(fixture)` from
-  `tests/unit/test-utils.ts` for `httpResource` components. `http.verify()` in `afterEach`.
+- Shared helpers, never local copies: `tests/unit/test-utils.ts` (`API`, `ok(data)`/`fail(msg)` envelopes,
+  `provideHttpTesting()`, `settle(fixtureOrHarness)`, `ANY_URL` routes, `MemoryStorage`) and
+  `tests/unit/core/auth/auth-fixtures.ts` (`signIn`, `mockUser`). `http.verify()` in `afterEach`.
+- Real router: `provideRouter(ANY_URL)` or real routes + `RouterTestingHarness`, assert `router.url`; never mock
+  `navigate`/`navigateByUrl`. Guards are covered through the real table (`tests/unit/app.guarded-routes.spec.ts`).
+- E2E: role/label locators; create the data a test needs (`tests/e2e/support/helpers.ts`: `publishChapter`, `signUp`).
 - Drive the real DOM and assert request bodies; don't poke component internals.
-- `vi.useFakeTimers()` for debounce/timeouts — no real `setTimeout` waits. `tests/**` is linted by `npm run lint`.
+- `vi.useFakeTimers()` for debounce/timeouts — no real `setTimeout` waits (`settle()` uses one: under fake timers use
+  `vi.advanceTimersByTimeAsync(0)`). `tests/**` is linted by `npm run lint` (CI too); `.only` is a lint error.
 - A user-story scenario tagged `@ui` (`.readora/context/user-stories/*.feature`) is verified here: one `it(...)` whose
   name is the exact scenario title, driving the real DOM.
 - Cover failure and retry paths, not only the happy path. No placeholder e2e tests; no `test.skip` on missing data.
@@ -145,3 +183,17 @@ Improvements from best-practice research (2026-09), not bugs:
 - F22 Migrate the 14 `@Injectable` root services to `@Service()` (check angular-eslint for a `prefer-service-decorator` rule). — fixed 12aa7fd
 - F23 `autoCsp` + `security.allowedHosts` for SSR. — blocked: Angular 22.1 build fails with "Cannot set both SSR and auto-CSP"; allowedHosts only applies to an SSR server (outputMode is static)
 - F24 Axe accessibility assertions in Playwright e2e (`@axe-core/playwright`).
+
+Angular best-practice review (2026-09-19, refs `ng-best-practices/<n>`, checklist in the `angular-best-practices`
+skill) — fixed:
+- F25 App-wide `ReaderState`/`ScanlationState` leaked state between pages. — fixed f7eb303, 6b41731
+- F26 Effects copying resources into signals (list page, ratings, kanban, reader). — fixed 1c0821d, 717c289, 6b41731, 9f4f3fc
+- F27 No recovery from failed lazy chunks after a deploy; prerender fallback implicit; transfer cache unfiltered. — fixed adff67c, 7549b0b, 7b903fc
+- F28 Notifications: counts of the previous user, overlapping polls, no focus return. — fixed 6fd8127
+- F29 Oversized reader (650 lines) and upload studio (FormsModule). — fixed 9f4f3fc, 5da9fe7, a4b1e7d, 349df0b
+- F30 Copy-pasted busy/error, field errors, load-error, covers, dialogs, relative time. — fixed 1b6484b, 23f0756, 974300c, 1e648c7, 5411b3d, 88f8edc, 5a5b30f
+- F31 Method calls in `@for`, `::ng-deep`, `[class]` overwrites, hex colours, explicit OnPush, comment-tree a11y. — fixed cb5f4f4, f66f599, b868d51, 9a3c86c
+- F32 Over-fetching (both rankings, all bookmarks/library for one work), unused Observable reads, env URLs outside DI. — fixed e0d31f5, febf287, 6836eff
+- F33 Naming/layout: `TeamPageComponent`, duplicate `app-profile-page` selector, shared feature stylesheets, relative imports. — fixed daeae36, e61eedb, 3cd1cbd, f72bf39, d2dd35a
+- F34 CI without lint; weak lint rules; mocked Router and duplicated test setup; e2e skipping on missing data. — fixed 7fecf89, b4bb4a0, d0c0687, 6272d20
+- F35 Every anonymous page load called `/auth/refresh` and spent the per-IP rate limit (reload -> 429 -> logged out). — fixed 28f9de5

@@ -37,7 +37,7 @@ checklist to apply while coding. Deeper docs: the `angular-developer` skill refe
   (SEO/head, DOM APIs, analytics, recording a visit).
 - Local change after a write: `resource.value.set/update(...)`, not a second signal holding a copy.
 - Page-scoped state: `@Service({ autoProvided: false })` + `providers: [X]` on the routed component (model:
-  `KanbanBoard` + `ScanlationState`). Only app-wide state is root-provided. Stores expose `asReadonly()`/`computed`.
+  `ReaderPage` + `ReaderState`). Only app-wide state is root-provided. Stores expose `asReadonly()`/`computed`.
 - Seeding a form from loaded data must not overwrite user edits (only while pristine; model `profile-form.ts`).
 - `afterRenderEffect` with phases (`write` for DOM writes).
 
@@ -77,9 +77,14 @@ checklist to apply while coding. Deeper docs: the `angular-developer` skill refe
 - Prefer `@angular/aria` (Menu, Tabs, Toolbar, Combobox, Listbox) over hand-rolled widgets.
 
 ## Reuse, don't copy
-Before adding UI or helpers, search `src/app/shared/` and `src/app/core/utils/`. Busy/error handling, field errors,
-load-error + retry, cover images, dialogs, relative time and similar blocks have one shared implementation (listed in
-`frontend/AGENTS.md`); a third copy of anything means it should be shared.
+Before adding UI or helpers, search `src/app/shared/` and `src/app/core/utils/`. One implementation each:
+- busy/error of a write: `asyncAction()` (`core/utils/async-action.ts`);
+- form field errors: `<app-field-errors [field]>` + `[appAriaInvalid]` (`shared/forms/`);
+- resource error + Retry + 404 text: `<app-load-error>`; covers: `<app-work-cover>`; modal: `<app-dialog>`;
+  relative time: `timeAgo` pipe (`shared/ui/`);
+- 404 as "none": `nullIfNotFound()`; URLs: `API_BASE_URL`/`SITE_URL`;
+- tests: `API`, `ok`/`fail`, `provideHttpTesting`, `settle`, `ANY_URL`, `MemoryStorage` (`tests/unit/test-utils.ts`).
+A third copy of anything means it should be shared.
 
 ## Tests (ref: testing-fundamentals.md, router-testing.md, component-harnesses.md)
 - Drive the real DOM (click, type, read text/ARIA); never call component methods or read component signals.
