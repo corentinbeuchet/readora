@@ -21,6 +21,17 @@
   (`saveProfile()`, not `handleClick()`).
 
 ## State
+- **No store library** (decided 2026-09 after comparing NgRx SignalStore 22): state lives in signal services plus
+  resources. SignalStore's main gains are already covered here: loading, error and value come from `httpResource`;
+  one store shape comes from the convention below; page scope comes from `@Service({ autoProvided: false })`. Its
+  resource support is experimental or third-party, and the largest stores (`ReaderState`: `linkedSignal`,
+  `UploadWizard`: Signal Forms) would only be reshaped. Revisit when one of these appears:
+  - the same loading/pagination/filter logic in 3+ stores (`signalStoreFeature`);
+  - entity collections shared across features (`withEntities`);
+  - features reacting to one event without importing each other (events plugin);
+  - a real need for DevTools.
+
+  Then pilot it on one feature before any migration.
 - Signal stores: private writable signal, public readonly view, derived via `computed` (model: `core/auth/auth-store.ts`):
   ```ts
   private readonly _user = signal<UserProfile | null>(null);

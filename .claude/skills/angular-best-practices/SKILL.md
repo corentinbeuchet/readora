@@ -34,6 +34,7 @@ checklist to apply while coding. Deeper docs: the `angular-developer` skill refe
 - Images: `NgOptimizedImage` (`ngSrc`, sizes, `priority` on the LCP image), including avatars and covers.
 
 ## State and reactivity (ref: signals-overview.md, linked-signal.md, effects.md, resource.md)
+- No store library (NgRx SignalStore was assessed and declined; revisit triggers in `frontend/AGENTS.md` "State").
 - Derived → `computed`. Derived but locally overridable → `linkedSignal`. **Never use `effect` to copy or sync
   state** (resource → signal, prefs → state, input → form). Effects are for non-signal side effects only
   (SEO/head, DOM APIs, analytics, recording a visit).
