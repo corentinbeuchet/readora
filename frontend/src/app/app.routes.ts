@@ -17,6 +17,14 @@ export const routes: Routes = [
     loadComponent: () => import('./features/catalog/works-page').then((m) => m.WorksPage)
   },
   {
+    path: 'updates',
+    loadComponent: () => import('./features/discovery/updates-page').then((m) => m.UpdatesPage)
+  },
+  {
+    path: 'rankings',
+    loadComponent: () => import('./features/discovery/rankings-page').then((m) => m.RankingsPage)
+  },
+  {
     path: 'works/:workId',
     loadComponent: () => import('./features/catalog/work-detail-page').then((m) => m.WorkDetailPage)
   },

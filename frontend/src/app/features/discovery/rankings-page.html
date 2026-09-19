@@ -1,0 +1,48 @@
+<section class="page">
+  <h1>Rankings</h1>
+
+  <nav class="ranking-tabs" aria-label="Ranking">
+    <a routerLink="/rankings" class="tab" [class.active]="!topRatedSelected()" [attr.aria-current]="!topRatedSelected() ? 'page' : null">Popular</a>
+    <a routerLink="/rankings" [queryParams]="{ list: 'top-rated' }" class="tab" [class.active]="topRatedSelected()"
+       [attr.aria-current]="topRatedSelected() ? 'page' : null">Top rated</a>
+  </nav>
+
+  @if (!topRatedSelected()) {
+    <nav class="period-tabs" aria-label="Period">
+      @for (option of periods; track option.key) {
+        <a routerLink="/rankings" [queryParams]="{ period: option.key }" class="tab tab-sm"
+           [class.active]="selectedPeriod() === option.key" [attr.aria-current]="selectedPeriod() === option.key ? 'page' : null">{{ option.label }}</a>
+      }
+    </nav>
+  } @else {
+    <p class="muted">Series with at least 5 ratings, best average first.</p>
+  }
+
+  @let current = ranking();
+  @if (current.isLoading()) {
+    <p class="muted" role="status">Loading the ranking…</p>
+  } @else if (current.error()) {
+    <p class="form-error" role="alert">
+      Could not load the ranking.
+      <button type="button" class="btn btn-link" (click)="current.reload()">Retry</button>
+    </p>
+  } @else if (current.hasValue() && current.value().length === 0) {
+    <p class="muted">Not enough activity yet for this ranking.</p>
+  } @else if (current.hasValue()) {
+    <ol class="ranking-list">
+      @for (entry of current.value(); track entry.work.id) {
+        <li class="card ranking-entry">
+          <span class="rank" aria-hidden="true">#{{ entry.rank }}</span>
+          <a class="ranking-title" [routerLink]="['/works', entry.work.id]">{{ entry.work.title }}</a>
+          <span class="muted">
+            @if (topRatedSelected()) {
+              ★ {{ entry.score.toFixed(1) }} · {{ entry.ratings }} ratings
+            } @else {
+              {{ entry.work.type }}
+            }
+          </span>
+        </li>
+      }
+    </ol>
+  }
+</section>

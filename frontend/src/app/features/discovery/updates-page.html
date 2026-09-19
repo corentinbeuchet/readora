@@ -1,0 +1,64 @@
+<section class="page">
+  <h1>Latest updates</h1>
+
+  @if (canFilter()) {
+    <nav class="feed-tabs" aria-label="Which updates">
+      <a routerLink="/updates" class="tab" [class.active]="!mine()" [attr.aria-current]="!mine() ? 'page' : null">All</a>
+      <a routerLink="/updates" [queryParams]="{ feed: 'mine' }" class="tab" [class.active]="mine()" [attr.aria-current]="mine() ? 'page' : null">My library</a>
+    </nav>
+  }
+
+  @if (releases.isLoading()) {
+    <p class="muted" role="status">Loading the latest chapters…</p>
+  } @else if (releases.error()) {
+    <p class="form-error" role="alert">
+      Could not load the latest chapters.
+      <button type="button" class="btn btn-link" (click)="releases.reload()">Retry</button>
+    </p>
+  } @else if (releases.hasValue() && releases.value().length === 0) {
+    <p class="muted">
+      @if (mine()) {
+        Nothing new in your library yet. Add series to your library to follow them here.
+      } @else {
+        No chapters have been published yet.
+      }
+    </p>
+  } @else if (releases.hasValue()) {
+    <ul class="release-list">
+      @for (release of releases.value(); track release.chapterId) {
+        <li class="card release" [class.release-read]="release.read">
+          <a [routerLink]="['/works', release.work.id]" class="release-cover-link" [attr.aria-label]="release.work.title">
+            @if (release.work.coverImageUrl) {
+              <img class="release-cover" [ngSrc]="release.work.coverImageUrl" alt="" width="48" height="67" (error)="handleCoverError($event, fallbackCover)" />
+            } @else {
+              <img class="release-cover" [src]="fallbackCover" alt="" width="48" height="67" />
+            }
+          </a>
+          <div class="release-body">
+            <h2 class="release-title"><a [routerLink]="['/works', release.work.id]">{{ release.work.title }}</a></h2>
+            <p class="muted">
+              Chapter {{ release.chapterNumber }}
+              @if (release.chapterTitle) {
+                · {{ release.chapterTitle }}
+              }
+              · <time [attr.datetime]="release.publishedAt">{{ timeAgo(release.publishedAt) }}</time>
+              @if (release.read) {
+                · <span class="badge">Read</span>
+              }
+            </p>
+          </div>
+          <a class="btn btn-primary btn-sm" [routerLink]="['/read', release.chapterId]"
+             [attr.aria-label]="'Read now: ' + release.work.title + ', chapter ' + release.chapterNumber">Read now</a>
+        </li>
+      }
+    </ul>
+    <nav class="pager" aria-label="Updates pages">
+      @if (pageIndex() > 0) {
+        <a class="btn" routerLink="/updates" [queryParams]="{ page: pageIndex() - 1 || null }" queryParamsHandling="merge">&larr; Newer</a>
+      }
+      @if (releases.value().length >= 30) {
+        <a class="btn" routerLink="/updates" [queryParams]="{ page: pageIndex() + 1 }" queryParamsHandling="merge">Older &rarr;</a>
+      }
+    </nav>
+  }
+</section>

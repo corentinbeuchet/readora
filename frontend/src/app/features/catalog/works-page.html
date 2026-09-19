@@ -38,9 +38,11 @@
           }
         </select>
       </label>
+      <button type="button" class="btn surprise" (click)="surpriseMe()">🎲 Surprise me</button>
       @if (hasFilters()) {
         <button type="button" class="btn btn-link clear-filters" (click)="clearFilters()">Clear all filters</button>
       }
+      <p class="muted surprise-message" role="status">{{ surpriseMessage() }}</p>
     </div>
 
     @if (genres.hasValue() && genres.value().length > 0) {

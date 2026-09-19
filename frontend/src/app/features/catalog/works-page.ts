@@ -1,7 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { apiErrorMessage } from '@app/core/api/api-client';
 import { CatalogApi } from '@app/core/api/catalog-api';
+import { DiscoveryApi } from '@app/core/api/discovery-api';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { CatalogQuery, Demographic, WorkStatus, WorkType } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
@@ -42,6 +45,7 @@ function oneOf<T extends string>(allowed: readonly T[], value: string | undefine
 })
 export class WorksPage {
   private readonly catalogApi = inject(CatalogApi);
+  private readonly discoveryApi = inject(DiscoveryApi);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly seo = inject(SeoService);
@@ -77,6 +81,7 @@ export class WorksPage {
     const query = this.query();
     return !!(query.text || query.genres?.length || query.excludedGenres?.length || query.type || query.status || query.demographic);
   });
+  protected readonly surpriseMessage = signal<string | null>(null);
   protected readonly hasPrevious = computed(() => this.query().page > 0);
   protected readonly hasNext = computed(() => this.query().page + 1 < (this.works.hasValue() ? this.works.value().totalPages : 0));
 
@@ -112,6 +117,22 @@ export class WorksPage {
   protected setFacet(name: 'type' | 'status' | 'demographic', event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.applyFilters({ [name]: value || null });
+  }
+
+  /** Opens a random series matching the current filters (US-08). */
+  protected async surpriseMe(): Promise<void> {
+    this.surpriseMessage.set(null);
+    const { genres, excludedGenres, type, status, demographic } = this.query();
+    try {
+      const work = await firstValueFrom(this.discoveryApi.random({ genres, excludedGenres, type, status, demographic }));
+      if (work) {
+        void this.router.navigate(['/works', work.id]);
+      } else {
+        this.surpriseMessage.set('No series match these filters.');
+      }
+    } catch (error) {
+      this.surpriseMessage.set(apiErrorMessage(error));
+    }
   }
 
   protected clearFilters(): void {

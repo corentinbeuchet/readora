@@ -156,4 +156,22 @@ describe('WorksPage (US-04 catalog filters)', () => {
     await nextWorksRequest();
     expect(el().textContent).toContain('Solo Leveling');
   });
+
+  it('"Surprise me" opens a random series matching the filters, or says none match', async () => {
+    await open('/works?genre=Romance');
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
+
+    el().querySelector<HTMLButtonElement>('button.surprise')!.click();
+    const req = http.expectOne((r) => r.url === `${API}/works/random`);
+    expect(req.request.params.getAll('genre')).toEqual(['Romance']);
+    expect(req.request.params.has('page')).toBe(false);
+    req.flush({ success: true, data: SOLO, error: null });
+    await settle();
+    expect(navigate).toHaveBeenCalledWith(['/works', 'w-1']);
+
+    el().querySelector<HTMLButtonElement>('button.surprise')!.click();
+    http.expectOne((r) => r.url === `${API}/works/random`).flush({ success: false, data: null, error: 'none' }, { status: 404, statusText: 'Not Found' });
+    await settle();
+    expect(el().querySelector('.surprise-message')!.textContent).toContain('No series match these filters.');
+  });
 });
