@@ -1,19 +1,16 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { firstValueFrom } from 'rxjs';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { environment } from '../../../../src/environments/environment';
 import { mockAuthResponse, mockUser } from './auth-fixtures';
-
-const API = environment.apiUrl;
+import { API, fail, ok, provideHttpTesting } from '../../test-utils';
 
 describe('AuthStore', () => {
   let store: AuthStore;
   let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({ providers: [...provideHttpTesting()] });
     store = TestBed.inject(AuthStore);
     http = TestBed.inject(HttpTestingController);
   });
@@ -55,7 +52,7 @@ describe('AuthStore', () => {
     expect(store.accessToken()).toBe('jwt-2');
 
     const failed = firstValueFrom(store.refresh());
-    http.expectOne(`${API}/auth/refresh`).flush({ success: false, data: null, error: 'expired' }, { status: 401, statusText: 'Unauthorized' });
+    http.expectOne(`${API}/auth/refresh`).flush(fail('expired'), { status: 401, statusText: 'Unauthorized' });
     expect(await failed).toBeNull();
     expect(store.isAuthenticated()).toBe(false);
   });
@@ -90,7 +87,7 @@ describe('AuthStore', () => {
     const logout = firstValueFrom(store.logout());
     const req = http.expectOne(`${API}/auth/logout`);
     expect(req.request.withCredentials).toBe(true);
-    req.flush({ success: true, data: 'Logged out', error: null });
+    req.flush(ok('Logged out'));
     await logout;
     expect(store.isAuthenticated()).toBe(false);
     expect(store.user()).toBeNull();

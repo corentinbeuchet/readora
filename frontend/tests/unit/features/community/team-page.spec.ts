@@ -1,15 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { TeamPage } from '@app/features/community/team-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { TeamProfile } from '@app/core/models/readora.models';
-import { environment } from '../../../../src/environments/environment';
 import { mockUser, signIn } from '../../core/auth/auth-fixtures';
-import { settle } from '../../test-utils';
+import { API, ok, provideHttpTesting, settle } from '../../test-utils';
 
-const API = environment.apiUrl;
 const TEAM: TeamProfile = {
   id: 't-1',
   name: 'Shadow Scans',
@@ -27,14 +24,14 @@ describe('TeamPage (US-12)', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [TeamPage],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideRouter([]), ...provideHttpTesting()]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: ['LIBRARY_USE'] }));
     fixture = TestBed.createComponent(TeamPage);
     fixture.componentRef.setInput('projectId', 't-1');
     await settle(fixture);
-    http.expectOne(`${API}/teams/t-1`).flush({ success: true, data: TEAM, error: null });
+    http.expectOne(`${API}/teams/t-1`).flush(ok(TEAM));
     await settle(fixture);
   });
 
@@ -53,7 +50,7 @@ describe('TeamPage (US-12)', () => {
   it('follows and unfollows the team', async () => {
     const button = (): HTMLButtonElement => fixture.nativeElement.querySelector('.profile-header button');
     button().click();
-    http.expectOne(`${API}/teams/t-1/follow`).flush({ success: true, data: { following: true }, error: null });
+    http.expectOne(`${API}/teams/t-1/follow`).flush(ok({ following: true }));
     await settle(fixture);
     expect(button().textContent!.trim()).toBe('Following');
     expect(button().getAttribute('aria-pressed')).toBe('true');
@@ -62,7 +59,7 @@ describe('TeamPage (US-12)', () => {
     button().click();
     const req = http.expectOne(`${API}/teams/t-1/follow`);
     expect(req.request.method).toBe('DELETE');
-    req.flush({ success: true, data: { following: false }, error: null });
+    req.flush(ok({ following: false }));
     await settle(fixture);
     expect(button().textContent!.trim()).toBe('Follow');
   });

@@ -1,13 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { PLATFORM_ID } from '@angular/core';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { SESSION_RESTORE_TIMEOUT_MS, restoreSessionOnBrowser } from '@app/core/auth/session-restore';
-import { environment } from '../../../../src/environments/environment';
 import { mockAuthResponse } from './auth-fixtures';
+import { API, provideHttpTesting } from '../../test-utils';
 
-const REFRESH = `${environment.apiUrl}/auth/refresh`;
+const REFRESH = `${API}/auth/refresh`;
 
 describe('restoreSessionOnBrowser (app initializer)', () => {
   let http: HttpTestingController;
@@ -15,7 +14,7 @@ describe('restoreSessionOnBrowser (app initializer)', () => {
 
   function setup(platform: 'browser' | 'server'): void {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: PLATFORM_ID, useValue: platform }]
+      providers: [...provideHttpTesting(), { provide: PLATFORM_ID, useValue: platform }]
     });
     http = TestBed.inject(HttpTestingController);
     store = TestBed.inject(AuthStore);

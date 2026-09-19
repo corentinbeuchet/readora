@@ -1,15 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { WorkDetailPage } from '@app/features/catalog/work-detail-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { Work } from '@app/core/models/readora.models';
-import { environment } from '../../../../src/environments/environment';
 import { mockUser, signIn } from '../../core/auth/auth-fixtures';
-import { settle } from '../../test-utils';
+import { API, fail, ok, provideHttpTesting, settle } from '../../test-utils';
 
-const API = environment.apiUrl;
 const WORK: Work = {
   id: 'w-1',
   title: 'Solo Leveling',
@@ -27,16 +24,16 @@ describe('WorkDetailPage', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [WorkDetailPage],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideRouter([]), ...provideHttpTesting()]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
   });
 
   afterEach(() => {
     // The ratings section (its own spec) loads with the page.
-    http.match((r) => r.url.endsWith('/lists/mine')).forEach((r) => r.flush({ success: true, data: [], error: null }));
+    http.match((r) => r.url.endsWith('/lists/mine')).forEach((r) => r.flush(ok([])));
     http.match((r) => /\/works\/[^/]+\/(ratings|reviews|rating\/mine)$/.test(r.url)).forEach((r) =>
-      r.flush({ success: true, data: r.request.url.endsWith('ratings') ? { average: 0, count: 0 } : [], error: null })
+      r.flush(ok(r.request.url.endsWith('ratings') ? { average: 0, count: 0 } : []))
     );
     http.verify();
   });
@@ -47,14 +44,10 @@ describe('WorkDetailPage', () => {
     fixture.componentRef.setInput('workId', WORK.id);
     await settle(fixture);
 
-    http.expectOne(`${API}/works/${WORK.id}`).flush({ success: true, data: WORK, error: null });
-    http.expectOne(`${API}/works/${WORK.id}/chapters`).flush({ success: true, data: [], error: null });
+    http.expectOne(`${API}/works/${WORK.id}`).flush(ok(WORK));
+    http.expectOne(`${API}/works/${WORK.id}/chapters`).flush(ok([]));
     // Only this series' bookmark is fetched, not the whole list.
-    http.expectOne(`${API}/bookmarks/${WORK.id}`).flush({
-      success: true,
-      data: { workId: WORK.id, lastReadChapterId: 'chap-7', lastReadPageIndex: 5, status: 'READING', updatedAt: '' },
-      error: null
-    });
+    http.expectOne(`${API}/bookmarks/${WORK.id}`).flush(ok({ workId: WORK.id, lastReadChapterId: 'chap-7', lastReadPageIndex: 5, status: 'READING', updatedAt: '' }));
     await settle(fixture);
 
     const link: HTMLAnchorElement = fixture.nativeElement.querySelector('.work-actions a');
@@ -67,8 +60,8 @@ describe('WorkDetailPage', () => {
     fixture.componentRef.setInput('workId', WORK.id);
     await settle(fixture);
 
-    http.expectOne(`${API}/works/${WORK.id}`).flush({ success: true, data: WORK, error: null });
-    http.expectOne(`${API}/works/${WORK.id}/chapters`).flush({ success: false, data: null, error: 'Chapters unavailable' });
+    http.expectOne(`${API}/works/${WORK.id}`).flush(ok(WORK));
+    http.expectOne(`${API}/works/${WORK.id}/chapters`).flush(fail('Chapters unavailable'));
     await settle(fixture);
 
     const alert: HTMLElement = fixture.nativeElement.querySelector('.chapters [role="alert"]');
@@ -91,20 +84,16 @@ describe('WorkDetailPage', () => {
       fixture = TestBed.createComponent(WorkDetailPage);
       fixture.componentRef.setInput('workId', WORK.id);
       await settle(fixture);
-      http.expectOne(`${API}/works/${WORK.id}`).flush({ success: true, data: WORK, error: null });
-      http.expectOne(`${API}/works/${WORK.id}/chapters`).flush({ success: true, data: CHAPTERS, error: null });
+      http.expectOne(`${API}/works/${WORK.id}`).flush(ok(WORK));
+      http.expectOne(`${API}/works/${WORK.id}/chapters`).flush(ok(CHAPTERS));
       // Only this series' library entry is fetched; 404 = not in my library.
       const entry = http.expectOne(`${API}/library/${WORK.id}`);
       if (inLibrary) {
-        entry.flush({ success: true, data: { workId: WORK.id, status: 'READING', addedAt: '', updatedAt: '', newChapterNotifications: true }, error: null });
+        entry.flush(ok({ workId: WORK.id, status: 'READING', addedAt: '', updatedAt: '', newChapterNotifications: true }));
       } else {
-        entry.flush({ success: false, data: null, error: 'Not found' }, { status: 404, statusText: 'Not Found' });
+        entry.flush(fail('Not found'), { status: 404, statusText: 'Not Found' });
       }
-      http.expectOne(`${API}/reading/works/${WORK.id}`).flush({
-        success: true,
-        data: { workId: WORK.id, finishedChapterIds: ['c-1'], nextChapterId: 'c-2' },
-        error: null
-      });
+      http.expectOne(`${API}/reading/works/${WORK.id}`).flush(ok({ workId: WORK.id, finishedChapterIds: ['c-1'], nextChapterId: 'c-2' }));
       await settle(fixture);
     }
 
@@ -133,7 +122,7 @@ describe('WorkDetailPage', () => {
       markButtons()[0].click();
       const req = http.expectOne(`${API}/reading/chapters/c-3/read-up-to`);
       expect(req.request.method).toBe('POST');
-      req.flush({ success: true, data: { workId: WORK.id, finishedChapterIds: ['c-1', 'c-2'], nextChapterId: 'c-3' }, error: null });
+      req.flush(ok({ workId: WORK.id, finishedChapterIds: ['c-1', 'c-2'], nextChapterId: 'c-3' }));
       await settle(fixture);
 
       const links: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.chapter-link'));
@@ -152,7 +141,7 @@ describe('WorkDetailPage', () => {
       const save = http.expectOne(`${API}/library/${WORK.id}`);
       expect(save.request.method).toBe('PUT');
       expect(save.request.body).toEqual({});
-      save.flush({ success: true, data: { workId: WORK.id, status: 'READING', addedAt: '', updatedAt: '' }, error: null });
+      save.flush(ok({ workId: WORK.id, status: 'READING', addedAt: '', updatedAt: '' }));
       await settle(fixture);
       expect(fixture.nativeElement.querySelector('.library-status select').value).toBe('READING');
 

@@ -1,12 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { PublicProfilePage } from '@app/features/community/public-profile-page';
-import { environment } from '../../../../src/environments/environment';
-import { settle } from '../../test-utils';
-
-const API = environment.apiUrl;
+import { API, fail, ok, provideHttpTesting, settle } from '../../test-utils';
 
 describe('PublicProfilePage (US-12)', () => {
   let fixture: ComponentFixture<PublicProfilePage>;
@@ -15,7 +11,7 @@ describe('PublicProfilePage (US-12)', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [PublicProfilePage],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideRouter([]), ...provideHttpTesting()]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(PublicProfilePage);
@@ -26,15 +22,11 @@ describe('PublicProfilePage (US-12)', () => {
   afterEach(() => http.verify());
 
   it('shows chapters read, favourite genres and completed series', async () => {
-    http.expectOne(`${API}/users/kenji/profile`).flush({
-      success: true,
-      data: {
+    http.expectOne(`${API}/users/kenji/profile`).flush(ok({
         username: 'kenji', displayName: 'Kenji', bio: '', joinedAt: '2026-01-01T00:00:00Z', chaptersRead: 120,
         favouriteGenres: ['Action', 'Fantasy', 'Romance'],
         completedSeries: [{ id: 'w-2', title: 'Horimiya', type: 'MANGA', status: 'COMPLETED', coverImageUrl: '', genres: [] }]
-      },
-      error: null
-    });
+      }));
     await settle(fixture);
 
     const text: string = fixture.nativeElement.textContent;
@@ -44,7 +36,7 @@ describe('PublicProfilePage (US-12)', () => {
   });
 
   it('says when the reader does not exist', async () => {
-    http.expectOne(`${API}/users/kenji/profile`).flush({ success: false, data: null, error: 'not found' }, { status: 404, statusText: 'Not Found' });
+    http.expectOne(`${API}/users/kenji/profile`).flush(fail('not found'), { status: 404, statusText: 'Not Found' });
     await settle(fixture);
     expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('This reader could not be found.');
   });

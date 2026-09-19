@@ -1,15 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { ListPage } from '@app/features/lists/list-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { ReadingList } from '@app/core/models/readora.models';
-import { environment } from '../../../../src/environments/environment';
 import { mockUser, signIn } from '../../core/auth/auth-fixtures';
-import { settle } from '../../test-utils';
+import { API, ok, provideHttpTesting, settle } from '../../test-utils';
 
-const API = environment.apiUrl;
 const LIST: ReadingList = {
   id: 'l-1',
   title: 'Peak Webtoons',
@@ -32,7 +29,7 @@ describe('ListPage (US-05)', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ListPage],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideRouter([]), ...provideHttpTesting()]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
   });
@@ -44,7 +41,7 @@ describe('ListPage (US-05)', () => {
     fixture = TestBed.createComponent(ListPage);
     fixture.componentRef.setInput('listId', 'l-1');
     await settle(fixture);
-    http.expectOne(`${API}/lists/l-1`).flush({ success: true, data: list, error: null });
+    http.expectOne(`${API}/lists/l-1`).flush(ok(list));
     await settle(fixture);
   }
 
@@ -79,7 +76,7 @@ describe('ListPage (US-05)', () => {
       published: true,
       items: [{ workId: 'w-2', note: 'Unbeatable worldbuilding' }]
     });
-    req.flush({ success: true, data: { ...LIST, published: true, items: [LIST.items[1]] }, error: null });
+    req.flush(ok({ ...LIST, published: true, items: [LIST.items[1]] }));
     await settle(fixture);
     expect(fixture.nativeElement.textContent).toContain('Saved. Your list is public.');
   });
@@ -93,11 +90,7 @@ describe('ListPage (US-05)', () => {
     fixture.componentRef.setInput('listId', 'l-2');
     await settle(fixture);
     expect(fixture.nativeElement.textContent).not.toContain('Peak Webtoons');
-    http.expectOne(`${API}/lists/l-2`).flush({
-      success: true,
-      data: { ...LIST, id: 'l-2', title: 'Comfort reads', ownerId: 'aoi-id', ownerUsername: 'aoi', published: true },
-      error: null
-    });
+    http.expectOne(`${API}/lists/l-2`).flush(ok({ ...LIST, id: 'l-2', title: 'Comfort reads', ownerId: 'aoi-id', ownerUsername: 'aoi', published: true }));
     await settle(fixture);
 
     expect(fixture.nativeElement.querySelector('form')).toBeNull();
@@ -112,7 +105,7 @@ describe('ListPage (US-05)', () => {
     const upvote = (): HTMLButtonElement | undefined =>
       Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find((b) => b.textContent?.includes('Upvote'));
     upvote()!.click();
-    http.expectOne(`${API}/lists/l-1/upvote`).flush({ success: true, data: { upvotes: 3 }, error: null });
+    http.expectOne(`${API}/lists/l-1/upvote`).flush(ok({ upvotes: 3 }));
     await settle(fixture);
     expect(upvote()!.textContent).toContain('(3)');
   });

@@ -1,12 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
 import { Omnisearch, SUGGEST_DEBOUNCE_MS } from '@app/features/layout/components/omnisearch';
 import { WorkSummary } from '@app/core/models/readora.models';
-import { environment } from '../../../../../src/environments/environment';
-
-const API = environment.apiUrl;
+import { ANY_URL, API, fail, ok, provideHttpTesting } from '../../../test-utils';
 
 const OMNI: WorkSummary = {
   id: 'w-2',
@@ -28,11 +25,10 @@ describe('Omnisearch (US-04 instant search)', () => {
     vi.useFakeTimers();
     await TestBed.configureTestingModule({
       imports: [Omnisearch],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideRouter(ANY_URL), ...provideHttpTesting()]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     router = TestBed.inject(Router);
-    vi.spyOn(router, 'navigate').mockResolvedValue(true);
     fixture = TestBed.createComponent(Omnisearch);
     fixture.detectChanges();
   });
@@ -57,7 +53,7 @@ describe('Omnisearch (US-04 instant search)', () => {
     const request = http.expectOne((r) => r.url === `${API}/works`);
     expect(request.request.params.get('q')).toBe(text);
     expect(request.request.params.get('size')).toBe('5');
-    request.flush({ success: true, data: { items, page: 0, size: 5, totalElements: items.length, totalPages: 1 }, error: null });
+    request.flush(ok({ items, page: 0, size: 5, totalElements: items.length, totalPages: 1 }));
     fixture.detectChanges();
   }
 
@@ -101,7 +97,8 @@ describe('Omnisearch (US-04 instant search)', () => {
     expect(input().getAttribute('aria-activedescendant')).toBe(options()[0].id);
 
     press('Enter');
-    expect(router.navigate).toHaveBeenCalledWith(['/works', 'w-2']);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(router.url).toBe('/works/w-2');
     expect(input().value).toBe('');
   });
 
@@ -110,8 +107,9 @@ describe('Omnisearch (US-04 instant search)', () => {
     answer([OMNI], 'omni');
 
     press('Enter');
+    await vi.advanceTimersByTimeAsync(0);
 
-    expect(router.navigate).toHaveBeenCalledWith(['/works'], { queryParams: { q: 'omni' } });
+    expect(router.url).toBe('/works?q=omni');
   });
 
   it('Escape closes the suggestions, a second Escape clears the text', async () => {
@@ -132,7 +130,7 @@ describe('Omnisearch (US-04 instant search)', () => {
     expect(fixture.nativeElement.textContent).toContain('No series match “zzz”.');
 
     await type('zzzz');
-    http.expectOne((r) => r.url === `${API}/works`).flush({ success: false, data: null, error: 'down' });
+    http.expectOne((r) => r.url === `${API}/works`).flush(fail('down'));
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Search is unavailable right now.');
 

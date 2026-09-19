@@ -2,12 +2,12 @@ import { HttpTestingController } from '@angular/common/http/testing';
 import { firstValueFrom } from 'rxjs';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { ApiResponse, AuthResponse, UserProfile } from '@app/core/models/readora.models';
-import { environment } from '../../../../src/environments/environment';
+import { API } from '../../test-utils';
 
 /** Establishes a full session (token + user) in the store by replaying a fake login. */
 export async function signIn(store: AuthStore, http: HttpTestingController, user: UserProfile = mockUser()): Promise<void> {
   const login = firstValueFrom(store.login({ email: user.email, password: 'Sup3rSecret!' }));
-  http.expectOne(`${environment.apiUrl}/auth/login`).flush(mockAuthResponse({ user }));
+  http.expectOne(`${API}/auth/login`).flush(mockAuthResponse({ user }));
   await login;
 }
 

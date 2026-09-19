@@ -1,14 +1,13 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { authGuard, guestGuard } from '@app/core/auth/auth.guard';
 import { permissionGuard, requirePermission } from '@app/core/auth/permission.guard';
 import { Permission } from '@app/core/models/readora.models';
-import { environment } from '../../../../src/environments/environment';
 import { mockAuthResponse, mockUser } from './auth-fixtures';
+import { API, provideHttpTesting } from '../../test-utils';
 
 function routeWith(data: Record<string, unknown>): ActivatedRouteSnapshot {
   return { data } as unknown as ActivatedRouteSnapshot;
@@ -22,15 +21,17 @@ describe('authGuard / permissionGuard', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({ providers: [provideRouter([]), ...provideHttpTesting()] });
     store = TestBed.inject(AuthStore);
     router = TestBed.inject(Router);
     http = TestBed.inject(HttpTestingController);
   });
 
+  afterEach(() => http.verify());
+
   async function loginWith(permissions: Permission[]): Promise<void> {
     const login = firstValueFrom(store.login({ email: 'a@b.io', password: 'Sup3rSecret!' }));
-    http.expectOne(`${environment.apiUrl}/auth/login`).flush(mockAuthResponse({ user: mockUser({ permissions }) }));
+    http.expectOne(`${API}/auth/login`).flush(mockAuthResponse({ user: mockUser({ permissions }) }));
     await login;
   }
 

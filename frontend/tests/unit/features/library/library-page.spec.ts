@@ -1,15 +1,13 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { LibraryPage } from '@app/features/library/library-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { LibraryItem } from '@app/core/models/readora.models';
-import { environment } from '../../../../src/environments/environment';
 import { mockUser, signIn } from '../../core/auth/auth-fixtures';
+import { API, fail, ok, provideHttpTesting, settle } from '../../test-utils';
 
-const API = environment.apiUrl;
 const READER = mockUser({ permissions: ['COMMENT_WRITE', 'LIBRARY_USE'] });
 
 const SOLO: LibraryItem = {
@@ -28,7 +26,7 @@ describe('LibraryPage (US-05 My library)', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      providers: [provideRouter([{ path: 'library', component: LibraryPage }], withComponentInputBinding()), provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideRouter([{ path: 'library', component: LibraryPage }], withComponentInputBinding()), ...provideHttpTesting()]
     });
     http = TestBed.inject(HttpTestingController);
     await signIn(TestBed.inject(AuthStore), http, READER);
@@ -39,22 +37,13 @@ describe('LibraryPage (US-05 My library)', () => {
 
   const el = (): HTMLElement => harness.routeNativeElement as HTMLElement;
 
-  async function settle(): Promise<void> {
-    for (let i = 0; i < 3; i++) {
-      await Promise.resolve();
-      harness.detectChanges();
-    }
-    await new Promise<void>((resolve) => setTimeout(resolve, 0));
-    harness.detectChanges();
-  }
-
   async function open(url: string, items: LibraryItem[], expectedStatus: string | null = null): Promise<void> {
     await harness.navigateByUrl(url);
-    await settle();
+    await settle(harness);
     const request = http.expectOne((r) => r.url === `${API}/library`);
     expect(request.request.params.get('status')).toBe(expectedStatus);
-    request.flush({ success: true, data: items, error: null });
-    await settle();
+    request.flush(ok(items));
+    await settle(harness);
   }
 
   it('lists my series with their status and a "2 new" badge', async () => {
@@ -83,18 +72,18 @@ describe('LibraryPage (US-05 My library)', () => {
     const save = http.expectOne(`${API}/library/w-1`);
     expect(save.request.method).toBe('PUT');
     expect(save.request.body).toEqual({ status: 'COMPLETED' });
-    save.flush({ success: true, data: { workId: 'w-1', status: 'COMPLETED', addedAt: '', updatedAt: '' }, error: null });
-    await settle();
-    http.expectOne((r) => r.url === `${API}/library`).flush({ success: true, data: [{ ...SOLO, status: 'COMPLETED' }], error: null });
-    await settle();
+    save.flush(ok({ workId: 'w-1', status: 'COMPLETED', addedAt: '', updatedAt: '' }));
+    await settle(harness);
+    http.expectOne((r) => r.url === `${API}/library`).flush(ok([{ ...SOLO, status: 'COMPLETED' }]));
+    await settle(harness);
 
     el().querySelector<HTMLButtonElement>('.library-actions button')!.click();
     const remove = http.expectOne(`${API}/library/w-1`);
     expect(remove.request.method).toBe('DELETE');
     remove.flush(null, { status: 204, statusText: 'No Content' });
-    await settle();
-    http.expectOne((r) => r.url === `${API}/library`).flush({ success: true, data: [], error: null });
-    await settle();
+    await settle(harness);
+    http.expectOne((r) => r.url === `${API}/library`).flush(ok([]));
+    await settle(harness);
 
     expect(el().textContent).toContain('Your library is empty.');
   });
@@ -103,8 +92,8 @@ describe('LibraryPage (US-05 My library)', () => {
     await open('/library', [SOLO]);
 
     el().querySelector<HTMLButtonElement>('.library-actions button')!.click();
-    http.expectOne(`${API}/library/w-1`).flush({ success: false, data: null, error: 'Series not found' }, { status: 404, statusText: 'Not Found' });
-    await settle();
+    http.expectOne(`${API}/library/w-1`).flush(fail('Series not found'), { status: 404, statusText: 'Not Found' });
+    await settle(harness);
 
     expect(el().querySelector('[role="alert"]')?.textContent).toContain('Series not found');
     expect(el().querySelectorAll('.library-item')).toHaveLength(1);
@@ -112,14 +101,14 @@ describe('LibraryPage (US-05 My library)', () => {
 
   it('shows an error with a retry when the library cannot be loaded', async () => {
     await harness.navigateByUrl('/library');
-    await settle();
-    http.expectOne((r) => r.url === `${API}/library`).flush({ success: false, data: null, error: 'down' });
-    await settle();
+    await settle(harness);
+    http.expectOne((r) => r.url === `${API}/library`).flush(fail('down'));
+    await settle(harness);
 
     el().querySelector<HTMLButtonElement>('[role="alert"] button')!.click();
-    await settle();
-    http.expectOne((r) => r.url === `${API}/library`).flush({ success: true, data: [SOLO], error: null });
-    await settle();
+    await settle(harness);
+    http.expectOne((r) => r.url === `${API}/library`).flush(ok([SOLO]));
+    await settle(harness);
     expect(el().querySelectorAll('.library-item')).toHaveLength(1);
   });
 
@@ -133,10 +122,10 @@ describe('LibraryPage (US-05 My library)', () => {
     const req = http.expectOne(`${API}/library/w-1/notifications`);
     expect(req.request.method).toBe('PUT');
     expect(req.request.body).toEqual({ enabled: false });
-    req.flush({ success: true, data: { enabled: false }, error: null });
-    await settle();
-    http.expectOne((r) => r.url === `${API}/library`).flush({ success: true, data: [{ ...SOLO, newChapterNotifications: false }], error: null });
-    await settle();
+    req.flush(ok({ enabled: false }));
+    await settle(harness);
+    http.expectOne((r) => r.url === `${API}/library`).flush(ok([{ ...SOLO, newChapterNotifications: false }]));
+    await settle(harness);
 
     expect(el().querySelector<HTMLInputElement>('.notify-toggle input')!.checked).toBe(false);
   });
@@ -150,7 +139,7 @@ describe('LibraryPage (US-05 My library)', () => {
     const req = http.expectOne((r) => r.url === `${API}/library/export`);
     expect(req.request.params.get('format')).toBe('csv');
     req.flush(new Blob(['title,status,last_chapter_read\n']));
-    await settle();
+    await settle(harness);
 
     expect(saved).toHaveBeenCalledWith(expect.any(Blob), 'readora-library.csv');
   });

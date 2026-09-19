@@ -1,11 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
 import { PlansPage } from '@app/features/subscription/plans-page';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { environment } from '../../../../src/environments/environment';
 import { mockUser, signIn } from '../../core/auth/auth-fixtures';
+import { API, fail, ok, provideHttpTesting } from '../../test-utils';
 
 describe('PlansPage', () => {
   let fixture: ComponentFixture<PlansPage>;
@@ -16,7 +15,7 @@ describe('PlansPage', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [PlansPage],
-      providers: [provideRouter([{ path: 'login', component: PlansPage }]), provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideRouter([{ path: 'login', component: PlansPage }]), ...provideHttpTesting()]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     store = TestBed.inject(AuthStore);
@@ -36,7 +35,7 @@ describe('PlansPage', () => {
     subscribeBtn().click();
     await fixture.whenStable();
     expect(navigate).toHaveBeenCalledWith(['/login'], { queryParams: { returnUrl: '/subscription' } });
-    http.expectNone(`${environment.apiUrl}/subscriptions/checkout`);
+    http.expectNone(`${API}/subscriptions/checkout`);
   });
 
   it('starts a PREMIUM checkout and redirects to the Stripe URL for a free reader', async () => {
@@ -48,10 +47,10 @@ describe('PlansPage', () => {
     fixture.detectChanges();
     expect(subscribeBtn().disabled).toBe(true);
 
-    const req = http.expectOne(`${environment.apiUrl}/subscriptions/checkout`);
+    const req = http.expectOne(`${API}/subscriptions/checkout`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ plan: 'PREMIUM' });
-    req.flush({ success: true, data: { sessionId: 'cs_1', url: 'https://checkout.stripe.com/c/pay/cs_1' }, error: null });
+    req.flush(ok({ sessionId: 'cs_1', url: 'https://checkout.stripe.com/c/pay/cs_1' }));
     await fixture.whenStable();
 
     expect(redirectSpy).toHaveBeenCalledWith('https://checkout.stripe.com/c/pay/cs_1');
@@ -63,7 +62,7 @@ describe('PlansPage', () => {
       await signIn(store, http);
       fixture.detectChanges();
       subscribeBtn().click();
-      http.expectOne(`${environment.apiUrl}/subscriptions/checkout`).flush({ success: true, data: { sessionId: 'cs_1', url }, error: null });
+      http.expectOne(`${API}/subscriptions/checkout`).flush(ok({ sessionId: 'cs_1', url }));
       await fixture.whenStable();
       fixture.detectChanges();
 
@@ -77,8 +76,8 @@ describe('PlansPage', () => {
     await signIn(store, http);
     fixture.detectChanges();
     subscribeBtn().click();
-    http.expectOne(`${environment.apiUrl}/subscriptions/checkout`).flush(
-      { success: false, data: null, error: 'Stripe is not configured on this server' },
+    http.expectOne(`${API}/subscriptions/checkout`).flush(
+      fail('Stripe is not configured on this server'),
       { status: 502, statusText: 'Bad Gateway' }
     );
     await fixture.whenStable();

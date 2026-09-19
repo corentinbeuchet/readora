@@ -1,13 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { PageReportsPanel } from '@app/features/scanlation/components/page-reports-panel';
 import { PageReport } from '@app/core/models/readora.models';
-import { environment } from '../../../../../src/environments/environment';
-import { settle } from '../../../test-utils';
+import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 
-const API = environment.apiUrl;
 const LIST_URL = `${API}/scanlation/projects/proj-1/page-reports`;
 const REPORT: PageReport = {
   id: 'r-1',
@@ -27,7 +24,7 @@ describe('PageReportsPanel (US-06 team side)', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [PageReportsPanel],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideRouter([]), ...provideHttpTesting()]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(PageReportsPanel);
@@ -38,7 +35,7 @@ describe('PageReportsPanel (US-06 team side)', () => {
   afterEach(() => http.verify());
 
   it('lists open reports with a link to the page and marks one fixed', async () => {
-    http.expectOne(LIST_URL).flush({ success: true, data: [REPORT], error: null });
+    http.expectOne(LIST_URL).flush(ok([REPORT]));
     await settle(fixture);
 
     const item: HTMLElement = fixture.nativeElement.querySelector('.report-item');
@@ -49,20 +46,20 @@ describe('PageReportsPanel (US-06 team side)', () => {
     item.querySelector<HTMLButtonElement>('button')!.click();
     const resolve = http.expectOne(`${API}/page-reports/r-1/resolve`);
     expect(resolve.request.method).toBe('POST');
-    resolve.flush({ success: true, data: { ...REPORT, status: 'RESOLVED' }, error: null });
+    resolve.flush(ok({ ...REPORT, status: 'RESOLVED' }));
     await settle(fixture);
-    http.expectOne(LIST_URL).flush({ success: true, data: [], error: null });
+    http.expectOne(LIST_URL).flush(ok([]));
     await settle(fixture);
 
     expect(fixture.nativeElement.textContent).toContain('No broken pages reported.');
   });
 
   it('explains a failed "Mark fixed" and keeps the report', async () => {
-    http.expectOne(LIST_URL).flush({ success: true, data: [REPORT], error: null });
+    http.expectOne(LIST_URL).flush(ok([REPORT]));
     await settle(fixture);
 
     fixture.nativeElement.querySelector('.report-item button').click();
-    http.expectOne(`${API}/page-reports/r-1/resolve`).flush({ success: false, data: null, error: 'Only the chapter\'s team can mark this report as fixed' }, { status: 403, statusText: 'Forbidden' });
+    http.expectOne(`${API}/page-reports/r-1/resolve`).flush(fail('Only the chapter\'s team can mark this report as fixed'), { status: 403, statusText: 'Forbidden' });
     await settle(fixture);
 
     expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain("Only the chapter's team");

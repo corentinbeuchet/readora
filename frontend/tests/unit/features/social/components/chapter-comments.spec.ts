@@ -1,15 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { ChapterComments, insertInThread } from '@app/features/social/components/chapter-comments';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { ChapterComment } from '@app/core/models/readora.models';
-import { environment } from '../../../../../src/environments/environment';
 import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
-import { settle } from '../../../test-utils';
+import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 
-const API = environment.apiUrl;
 const CHAPTER_ID = 'chap-1';
 
 const COMMENTS: ChapterComment[] = [
@@ -25,7 +22,7 @@ describe('ChapterComments', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ChapterComments],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideRouter([]), ...provideHttpTesting()]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     store = TestBed.inject(AuthStore);
@@ -37,7 +34,7 @@ describe('ChapterComments', () => {
 
   async function render(): Promise<void> {
     await settle(fixture);
-    http.expectOne(`${API}/comments/chapter/${CHAPTER_ID}`).flush({ success: true, data: COMMENTS, error: null });
+    http.expectOne(`${API}/comments/chapter/${CHAPTER_ID}`).flush(ok(COMMENTS));
     await settle(fixture);
   }
 
@@ -65,13 +62,13 @@ describe('ChapterComments', () => {
 
     expect(q('form.compose')).not.toBeNull();
     all('.btn-upvote')[0].click();
-    http.expectOne(`${API}/comments/c1/upvote`).flush({ success: true, data: { commentId: 'c1', upvotes: 4, counted: true }, error: null });
+    http.expectOne(`${API}/comments/c1/upvote`).flush(ok({ commentId: 'c1', upvotes: 4, counted: true }));
     await settle(fixture);
     expect(all('.btn-upvote')[0].textContent).toContain('4');
 
     // A second click is not counted again by the server; the UI keeps the server's total.
     all('.btn-upvote')[0].click();
-    http.expectOne(`${API}/comments/c1/upvote`).flush({ success: true, data: { commentId: 'c1', upvotes: 4, counted: false }, error: null });
+    http.expectOne(`${API}/comments/c1/upvote`).flush(ok({ commentId: 'c1', upvotes: 4, counted: false }));
     await settle(fixture);
     expect(all('.btn-upvote')[0].textContent).toContain('4');
 
@@ -91,11 +88,7 @@ describe('ChapterComments', () => {
     expect(post.request.body).toEqual({ content: 'Loved the art!', isSpoiler: false, parentId: null, pageReference: null });
     // No authorId in the body: the backend takes it from the JWT.
     expect(post.request.body).not.toHaveProperty('authorId');
-    post.flush({
-      success: true,
-      error: null,
-      data: { id: 'c3', chapterId: CHAPTER_ID, authorId: 'user-1', authorUsername: 'reader', content: 'Loved the art!', depth: 1, isSpoiler: false, upvotes: 0, createdAt: '2026-09-13T00:02:00Z' }
-    });
+    post.flush(ok({ id: 'c3', chapterId: CHAPTER_ID, authorId: 'user-1', authorUsername: 'reader', content: 'Loved the art!', depth: 1, isSpoiler: false, upvotes: 0, createdAt: '2026-09-13T00:02:00Z' }));
     await settle(fixture);
 
     expect(fixture.nativeElement.textContent).toContain('Community Discussion (3)');
@@ -119,7 +112,7 @@ describe('ChapterComments', () => {
 
     const post = http.expectOne(`${API}/comments/chapter/${CHAPTER_ID}`);
     expect(post.request.body).toMatchObject({ content: 'Agreed!', parentId: 'c1', pageReference: null });
-    post.flush({ success: true, error: null, data: { ...COMMENTS[1], id: 'c4', content: 'Agreed!', isSpoiler: false } });
+    post.flush(ok({ ...COMMENTS[1], id: 'c4', content: 'Agreed!', isSpoiler: false }));
     await settle(fixture);
     expect(q('.reply-banner')).toBeNull();
   });
@@ -148,7 +141,7 @@ describe('ChapterComments', () => {
     await signIn(store, http);
     await settle(fixture);
     const later: ChapterComment = { ...COMMENTS[0], id: 'c3', authorUsername: 'carol', content: 'Later top-level', createdAt: '2026-09-13T00:05:00Z' };
-    http.expectOne(`${API}/comments/chapter/${CHAPTER_ID}`).flush({ success: true, data: [...COMMENTS, later], error: null });
+    http.expectOne(`${API}/comments/chapter/${CHAPTER_ID}`).flush(ok([...COMMENTS, later]));
     await settle(fixture);
 
     all('.btn-reply')[0].click();
@@ -159,11 +152,7 @@ describe('ChapterComments', () => {
     fixture.detectChanges();
     await submitCompose();
 
-    http.expectOne(`${API}/comments/chapter/${CHAPTER_ID}`).flush({
-      success: true,
-      error: null,
-      data: { ...COMMENTS[1], id: 'c4', authorUsername: 'reader', content: 'Reply to alice', isSpoiler: false }
-    });
+    http.expectOne(`${API}/comments/chapter/${CHAPTER_ID}`).flush(ok({ ...COMMENTS[1], id: 'c4', authorUsername: 'reader', content: 'Reply to alice', isSpoiler: false }));
     await settle(fixture);
 
     const authors = all('.comment-author').map((a) => a.textContent?.trim());
@@ -205,7 +194,7 @@ describe('ChapterComments', () => {
     fixture.nativeElement.querySelector('[role="dialog"] form').dispatchEvent(new Event('submit', { cancelable: true }));
     const req = http.expectOne(`${API}/comments/c1/reports`);
     expect(req.request.body).toEqual({ reason: 'HARASSMENT' });
-    req.flush({ success: true, data: { reportId: 'r-1' }, error: null });
+    req.flush(ok({ reportId: 'r-1' }));
     await settle(fixture);
 
     expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
@@ -222,7 +211,7 @@ describe('ChapterComments', () => {
     fixture.nativeElement.querySelector('form.compose').dispatchEvent(new Event('submit', { cancelable: true }));
     await settle(fixture);
     http.expectOne(`${API}/comments/chapter/${CHAPTER_ID}`).flush(
-      { success: false, data: null, error: 'Please wait 7 seconds before commenting again' },
+      fail('Please wait 7 seconds before commenting again'),
       { status: 429, statusText: 'Too Many Requests' }
     );
     await settle(fixture);

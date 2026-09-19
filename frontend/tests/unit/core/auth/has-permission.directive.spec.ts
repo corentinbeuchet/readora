@@ -1,13 +1,12 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { firstValueFrom } from 'rxjs';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { Permission } from '@app/core/models/readora.models';
-import { environment } from '../../../../src/environments/environment';
 import { mockAuthResponse, mockUser } from './auth-fixtures';
+import { API, provideHttpTesting } from '../../test-utils';
 
 @Component({
   imports: [HasPermissionDirective],
@@ -29,16 +28,18 @@ describe('HasPermissionDirective', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [HostComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting()]
+      providers: [...provideHttpTesting()]
     }).compileComponents();
     store = TestBed.inject(AuthStore);
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(HostComponent);
   });
 
+  afterEach(() => http.verify());
+
   async function loginWith(permissions: Permission[]): Promise<void> {
     const login = firstValueFrom(store.login({ email: 'a@b.io', password: 'Sup3rSecret!' }));
-    http.expectOne(`${environment.apiUrl}/auth/login`).flush(mockAuthResponse({ user: mockUser({ permissions }) }));
+    http.expectOne(`${API}/auth/login`).flush(mockAuthResponse({ user: mockUser({ permissions }) }));
     await login;
   }
 

@@ -1,15 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { ScanlationBoardPage } from '@app/features/scanlation/scanlation-board-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { ScanlationProject } from '@app/core/models/readora.models';
-import { environment } from '../../../../src/environments/environment';
 import { mockUser, signIn } from '../../core/auth/auth-fixtures';
-import { settle } from '../../test-utils';
+import { API, fail, ok, provideHttpTesting, settle } from '../../test-utils';
 
-const API = environment.apiUrl;
 const PROJECT_ID = 'proj-1';
 
 const PROJECT: ScanlationProject = {
@@ -32,7 +29,7 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ScanlationBoardPage],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideRouter([]), ...provideHttpTesting()]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     store = TestBed.inject(AuthStore);
@@ -44,9 +41,9 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
 
   async function render(): Promise<void> {
     await settle(fixture);
-    http.expectOne(`${API}/scanlation/projects/${PROJECT_ID}`).flush({ success: true, data: PROJECT, error: null });
+    http.expectOne(`${API}/scanlation/projects/${PROJECT_ID}`).flush(ok(PROJECT));
     await settle(fixture);
-    http.match(`${API}/scanlation/projects/${PROJECT_ID}/page-reports`).forEach((r) => r.flush({ success: true, data: [], error: null }));
+    http.match(`${API}/scanlation/projects/${PROJECT_ID}/page-reports`).forEach((r) => r.flush(ok([])));
     await settle(fixture);
   }
 
@@ -98,7 +95,7 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
     expect(req.request.method).toBe('POST');
     // Identity is taken from the JWT: no userId in the body.
     expect(req.request.body).toEqual({});
-    req.flush({ success: true, error: null, data: { ...PROJECT.tasks[0], status: 'IN_PROGRESS', assigneeId: 'user-1' } });
+    req.flush(ok({ ...PROJECT.tasks[0], status: 'IN_PROGRESS', assigneeId: 'user-1' }));
     await settle(fixture);
 
     expect(column('RAW_UPLOADED')[0].textContent).toContain('Assigned: ');
@@ -128,7 +125,7 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
 
     const req = http.expectOne(`${API}/scanlation/projects/${PROJECT_ID}/tasks/t-mine/submit`);
     expect(req.request.body).toEqual({ assetUrl: 'https://cdn.readora.com/packages/ch11.zip', pageCount: 20 });
-    req.flush({ success: true, error: null, data: { ...PROJECT.tasks[1], stage: 'TRANSLATING', status: 'PENDING', assigneeId: undefined, assetPackageUrl: 'https://cdn.readora.com/packages/ch11.zip' } });
+    req.flush(ok({ ...PROJECT.tasks[1], stage: 'TRANSLATING', status: 'PENDING', assigneeId: undefined, assetPackageUrl: 'https://cdn.readora.com/packages/ch11.zip' }));
     await settle(fixture);
 
     expect(q('[role="dialog"]')).toBeNull();
@@ -142,7 +139,7 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
 
     all('.btn-publish')[0].click();
     http.expectOne(`${API}/scanlation/projects/${PROJECT_ID}/tasks/t-qc/publish`).flush(
-      { success: false, data: null, error: 'User is not a member of this project' },
+      fail('User is not a member of this project'),
       { status: 400, statusText: 'Bad Request' }
     );
     await settle(fixture);
@@ -150,7 +147,7 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
     expect(column('QC_REVIEW').length).toBe(1);
 
     all('.btn-publish')[0].click();
-    http.expectOne(`${API}/scanlation/projects/${PROJECT_ID}/tasks/t-qc/publish`).flush({ success: true, data: 'Chapter published successfully', error: null });
+    http.expectOne(`${API}/scanlation/projects/${PROJECT_ID}/tasks/t-qc/publish`).flush(ok('Chapter published successfully'));
     await settle(fixture);
     expect(column('PUBLISHED').length).toBe(1);
     expect(column('QC_REVIEW').length).toBe(0);
@@ -176,7 +173,7 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
     expect(fixture.nativeElement.textContent).not.toContain('FlameScans Solo Leveling');
     expect(all('.task-card').length).toBe(0);
 
-    http.expectOne(`${API}/scanlation/projects/proj-2`).flush({ success: false, data: null, error: 'not found' }, { status: 404, statusText: 'Not Found' });
+    http.expectOne(`${API}/scanlation/projects/proj-2`).flush(fail('not found'), { status: 404, statusText: 'Not Found' });
     await settle(fixture);
     expect(fixture.nativeElement.textContent).not.toContain('FlameScans Solo Leveling');
     expect(fixture.nativeElement.textContent).not.toContain('FlameScans Solo Leveling');

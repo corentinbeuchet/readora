@@ -1,6 +1,5 @@
 import { ComponentFixture, DeferBlockBehavior, DeferBlockState, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { PROGRESS_SYNC_DEBOUNCE_MS, ReaderPage, ZEN_CONTROLS_HIDE_MS } from '@app/features/reader/reader-page';
@@ -9,11 +8,8 @@ import { ReaderPreferencesStore } from '@app/features/reader/services/reader-pre
 import { AuthStore } from '@app/core/auth/auth-store';
 import { LayoutStore } from '@app/core/layout/layout-store';
 import { Chapter } from '@app/core/models/readora.models';
-import { environment } from '../../../../src/environments/environment';
 import { mockUser, signIn } from '../../core/auth/auth-fixtures';
-import { settle } from '../../test-utils';
-
-const API = environment.apiUrl;
+import { ANY_URL, API, fail, ok, provideHttpTesting, settle } from '../../test-utils';
 
 const MOCK_CHAPTER: Chapter = {
   id: 'chap-10-uuid',
@@ -70,7 +66,7 @@ describe('ReaderPage (API-driven)', () => {
     vi.stubGlobal('IntersectionObserver', FakeIntersectionObserver);
     await TestBed.configureTestingModule({
       imports: [ReaderPage],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideRouter(ANY_URL), ...provideHttpTesting()],
       deferBlockBehavior: DeferBlockBehavior.Manual
     }).compileComponents();
 
@@ -86,7 +82,7 @@ describe('ReaderPage (API-driven)', () => {
     vi.restoreAllMocks();
     // Reaching the last page loads the chapter's top comments (own test below).
     // Opening another chapter cancels the previous chapter's request.
-    http.match((r) => r.url.endsWith('/top')).filter((r) => !r.cancelled).forEach((r) => r.flush({ success: true, data: [], error: null }));
+    http.match((r) => r.url.endsWith('/top')).filter((r) => !r.cancelled).forEach((r) => r.flush(ok([])));
     http.verify();
   });
 
@@ -103,10 +99,10 @@ describe('ReaderPage (API-driven)', () => {
 
     const req = http.expectOne((r) => r.url === `${API}/chapters/${chapter.id}`);
     expect(req.request.method).toBe('GET');
-    req.flush({ success: true, data: chapter, error: null });
+    req.flush(ok(chapter));
     await settle(fixture);
 
-    http.match(`${API}/comments/chapter/${chapter.id}`).forEach((r) => r.flush({ success: true, data: [], error: null }));
+    http.match(`${API}/comments/chapter/${chapter.id}`).forEach((r) => r.flush(ok([])));
     await settle(fixture);
   }
 
@@ -249,7 +245,7 @@ describe('ReaderPage (API-driven)', () => {
   it('shows an error state (no crash) when the chapter cannot be loaded', async () => {
     fixture.componentRef.setInput('chapterId', 'unknown');
     await settle(fixture);
-    http.expectOne((r) => r.url === `${API}/chapters/unknown`).flush({ success: false, data: null, error: 'not found' }, { status: 404, statusText: 'Not Found' });
+    http.expectOne((r) => r.url === `${API}/chapters/unknown`).flush(fail('not found'), { status: 404, statusText: 'Not Found' });
     await settle(fixture);
 
     expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Chapter unavailable');
@@ -291,7 +287,7 @@ describe('ReaderPage (API-driven)', () => {
     const progress = http.expectOne(PROGRESS_URL);
     expect(progress.request.method).toBe('PUT');
     expect(progress.request.body).toEqual({ chapterId: MOCK_CHAPTER.id, pageIndex: 2 });
-    progress.flush({ success: true, data: { workId: MOCK_CHAPTER.workId, lastReadChapterId: MOCK_CHAPTER.id, lastReadPageIndex: 2, status: 'READING', updatedAt: '' }, error: null });
+    progress.flush(ok({ workId: MOCK_CHAPTER.workId, lastReadChapterId: MOCK_CHAPTER.id, lastReadPageIndex: 2, status: 'READING', updatedAt: '' }));
     await elapse(0);
     expect(syncHint()).toContain('Progress saved');
   });
@@ -304,7 +300,7 @@ describe('ReaderPage (API-driven)', () => {
 
     click('button.btn-next');
     await elapse(PROGRESS_SYNC_DEBOUNCE_MS);
-    http.expectOne(PROGRESS_URL).flush({ success: false, data: null, error: 'CHAPTER_NOT_PUBLISHED' }, { status: 400, statusText: 'Bad Request' });
+    http.expectOne(PROGRESS_URL).flush(fail('CHAPTER_NOT_PUBLISHED'), { status: 400, statusText: 'Bad Request' });
     await elapse(0);
     expect(syncHint()).toContain('Could not save progress');
 
@@ -318,7 +314,7 @@ describe('ReaderPage (API-driven)', () => {
     await elapse(PROGRESS_SYNC_DEBOUNCE_MS);
     const retry = http.expectOne(PROGRESS_URL);
     expect(retry.request.body).toEqual({ chapterId: MOCK_CHAPTER.id, pageIndex: 2 });
-    retry.flush({ success: true, data: { workId: MOCK_CHAPTER.workId, lastReadChapterId: MOCK_CHAPTER.id, lastReadPageIndex: 2, status: 'READING', updatedAt: '' }, error: null });
+    retry.flush(ok({ workId: MOCK_CHAPTER.workId, lastReadChapterId: MOCK_CHAPTER.id, lastReadPageIndex: 2, status: 'READING', updatedAt: '' }));
     await elapse(0);
     expect(syncHint()).toContain('Progress saved');
   });
@@ -361,7 +357,7 @@ describe('ReaderPage (API-driven)', () => {
     await settle(fixture);
 
     expect(fixture.nativeElement.querySelector('app-chapter-comments')).not.toBeNull();
-    http.expectOne(commentsUrl).flush({ success: true, data: [], error: null });
+    http.expectOne(commentsUrl).flush(ok([]));
     await settle(fixture);
   });
 
@@ -508,7 +504,7 @@ describe('ReaderPage (API-driven)', () => {
     await signIn(store, http, mockUser({ permissions: ['LIBRARY_USE'] }));
     const five: Chapter = { ...MOCK_CHAPTER, id: 'c-5', chapterNumber: '5' };
     await loadChapter(undefined, five);
-    http.match(`${API}/reading/chapters/c-5`).forEach((r) => r.flush({ success: true, data: null, error: null }));
+    http.match(`${API}/reading/chapters/c-5`).forEach((r) => r.flush(ok(null)));
     expect((fixture.nativeElement.querySelector('#reader-chapters') as HTMLElement).hidden).toBe(true);
     http.expectNone(`${API}/works/${MOCK_CHAPTER.workId}/chapters`);
 
@@ -516,16 +512,8 @@ describe('ReaderPage (API-driven)', () => {
     toggle.click();
     await settle(fixture);
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
-    http.expectOne(`${API}/works/${MOCK_CHAPTER.workId}/chapters`).flush({
-      success: true,
-      data: [1, 2, 3, 4, 5].map((n) => ({ id: `c-${n}`, workId: MOCK_CHAPTER.workId, chapterNumber: `${n}`, title: `Chapter ${n}`, status: 'PUBLISHED', pageCount: 3 })),
-      error: null
-    });
-    http.expectOne(`${API}/reading/works/${MOCK_CHAPTER.workId}`).flush({
-      success: true,
-      data: { workId: MOCK_CHAPTER.workId, finishedChapterIds: ['c-1', 'c-2', 'c-3', 'c-4'], nextChapterId: 'c-5' },
-      error: null
-    });
+    http.expectOne(`${API}/works/${MOCK_CHAPTER.workId}/chapters`).flush(ok([1, 2, 3, 4, 5].map((n) => ({ id: `c-${n}`, workId: MOCK_CHAPTER.workId, chapterNumber: `${n}`, title: `Chapter ${n}`, status: 'PUBLISHED', pageCount: 3 }))));
+    http.expectOne(`${API}/reading/works/${MOCK_CHAPTER.workId}`).flush(ok({ workId: MOCK_CHAPTER.workId, finishedChapterIds: ['c-1', 'c-2', 'c-3', 'c-4'], nextChapterId: 'c-5' }));
     await settle(fixture);
 
     const links: HTMLAnchorElement[] = Array.from(fixture.nativeElement.querySelectorAll('.reader-chapter-list a'));
@@ -540,13 +528,13 @@ describe('ReaderPage (API-driven)', () => {
     expect(document.activeElement).toBe(toggle);
 
     // Choosing chapter 2 closes the list and navigates inside the reader.
-    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     toggle.click();
     fixture.detectChanges();
     (fixture.nativeElement.querySelectorAll('.reader-chapter-list a')[1] as HTMLAnchorElement).click();
     fixture.detectChanges();
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
-    expect(String(navigate.mock.calls[0][0])).toBe('/read/c-2');
+    await settle(fixture);
+    expect(TestBed.inject(Router).url).toBe('/read/c-2');
   });
 
   it('Data saver swaps in the lighter copies (kept for next chapters), falling back to full images', async () => {
@@ -607,14 +595,10 @@ describe('ReaderPage (API-driven)', () => {
     click('button.btn-next');
     await settle(fixture);
     const req = http.expectOne(`${API}/comments/chapter/${MOCK_CHAPTER.id}/top?limit=3`);
-    req.flush({
-      success: true,
-      data: [
+    req.flush(ok([
         { id: 'k1', chapterId: MOCK_CHAPTER.id, authorId: 'u1', authorUsername: 'aoi', content: 'That ending!', depth: 1, isSpoiler: false, upvotes: 12, createdAt: '' },
         { id: 'k2', chapterId: MOCK_CHAPTER.id, authorId: 'u2', authorUsername: 'kenji', content: 'Art is gorgeous', depth: 1, isSpoiler: false, upvotes: 4, createdAt: '' }
-      ],
-      error: null
-    });
+      ]));
     await settle(fixture);
 
     const items: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.top-comments li'));
@@ -826,7 +810,7 @@ describe('ReaderPage (API-driven)', () => {
     fixture.nativeElement.querySelector('[role="dialog"] form').dispatchEvent(new Event('submit', { cancelable: true }));
     const req = http.expectOne(`${API}/chapters/${MOCK_CHAPTER.id}/pages/2/reports`);
     expect(req.request.body).toEqual({ reason: 'MISSING_PAGE' });
-    req.flush({ success: true, data: { id: 'r-1' }, error: null });
+    req.flush(ok({ id: 'r-1' }));
     await settle(fixture);
 
     expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
@@ -843,7 +827,7 @@ describe('ReaderPage (API-driven)', () => {
     await settle(fixture);
 
     fixture.nativeElement.querySelector('[role="dialog"] form').dispatchEvent(new Event('submit', { cancelable: true }));
-    http.expectOne(`${API}/chapters/${MOCK_CHAPTER.id}/pages/1/reports`).flush({ success: false, data: null, error: 'Chapter 10 has no page 1' }, { status: 400, statusText: 'Bad Request' });
+    http.expectOne(`${API}/chapters/${MOCK_CHAPTER.id}/pages/1/reports`).flush(fail('Chapter 10 has no page 1'), { status: 400, statusText: 'Bad Request' });
     await settle(fixture);
 
     expect(fixture.nativeElement.querySelector('[role="dialog"] [role="alert"]').textContent).toContain('has no page 1');
@@ -861,7 +845,7 @@ describe('ReaderPage (API-driven)', () => {
     const opened = http.expectOne(`${API}/reading/chapters/${MOCK_CHAPTER.id}`);
     expect(opened.request.method).toBe('PUT');
     expect(opened.request.body).toEqual({ finished: false });
-    opened.flush({ success: false, data: null, error: 'down' });
+    opened.flush(fail('down'));
 
     await switchMode('Paged');
     click('button.btn-next');
@@ -872,7 +856,7 @@ describe('ReaderPage (API-driven)', () => {
 
     const finished = http.expectOne(`${API}/reading/chapters/${MOCK_CHAPTER.id}`);
     expect(finished.request.body).toEqual({ finished: true });
-    finished.flush({ success: true, data: null, error: null });
+    finished.flush(ok(null));
 
     click('button.btn-prev');
     click('button.btn-next');

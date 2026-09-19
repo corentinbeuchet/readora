@@ -1,11 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { ProfilePage } from '@app/features/profile/profile-page';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { environment } from '../../../../src/environments/environment';
 import { mockUser } from '../../core/auth/auth-fixtures';
+import { API, ok, provideHttpTesting } from '../../test-utils';
 
 describe('ProfilePage (Angular Aria Tabs + Signal Forms)', () => {
   let fixture: ComponentFixture<ProfilePage>;
@@ -15,7 +14,7 @@ describe('ProfilePage (Angular Aria Tabs + Signal Forms)', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ProfilePage],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideRouter([]), ...provideHttpTesting()]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     store = TestBed.inject(AuthStore);
@@ -50,7 +49,7 @@ describe('ProfilePage (Angular Aria Tabs + Signal Forms)', () => {
 
     expect(all('[ngTab]')[1].getAttribute('aria-selected')).toBe('true');
     expect(fixture.nativeElement.textContent).toContain('Bookmarks are a Premium feature');
-    http.expectNone(`${environment.apiUrl}/bookmarks`);
+    http.expectNone(`${API}/bookmarks`);
   });
 
   it('saving the form calls PUT /profile and updates the AuthStore', async () => {
@@ -62,10 +61,10 @@ describe('ProfilePage (Angular Aria Tabs + Signal Forms)', () => {
     one<HTMLFormElement>('form').dispatchEvent(new Event('submit', { cancelable: true }));
     await fixture.whenStable();
 
-    const req = http.expectOne(`${environment.apiUrl}/profile`);
+    const req = http.expectOne(`${API}/profile`);
     expect(req.request.method).toBe('PUT');
     expect(req.request.body).toMatchObject({ displayName: 'Jane R.', bio: 'I read a lot', avatarUrl: null });
-    req.flush({ success: true, data: mockUser({ displayName: 'Jane R.', username: 'jane' }), error: null });
+    req.flush(ok(mockUser({ displayName: 'Jane R.', username: 'jane' })));
     await fixture.whenStable();
     fixture.detectChanges();
 
@@ -90,11 +89,7 @@ describe('ProfilePage (Angular Aria Tabs + Signal Forms)', () => {
 
     one<HTMLFormElement>('form').dispatchEvent(new Event('submit', { cancelable: true }));
     await fixture.whenStable();
-    http.expectOne(`${environment.apiUrl}/profile`).flush({
-      success: true,
-      data: mockUser({ displayName: 'Typing a new name', bio: 'Normalised bio', username: 'jane' }),
-      error: null
-    });
+    http.expectOne(`${API}/profile`).flush(ok(mockUser({ displayName: 'Typing a new name', bio: 'Normalised bio', username: 'jane' })));
     await fixture.whenStable();
     fixture.detectChanges();
 

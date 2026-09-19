@@ -1,11 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
 import { LoginPage } from '@app/features/auth/login-page';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { environment } from '../../../../src/environments/environment';
 import { mockAuthResponse } from '../../core/auth/auth-fixtures';
+import { API, fail, provideHttpTesting } from '../../test-utils';
 
 describe('LoginPage (Signal Forms)', () => {
   let fixture: ComponentFixture<LoginPage>;
@@ -15,7 +14,7 @@ describe('LoginPage (Signal Forms)', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [LoginPage],
-      providers: [provideRouter([{ path: '**', component: LoginPage }]), provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideRouter([{ path: '**', component: LoginPage }]), ...provideHttpTesting()]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     router = TestBed.inject(Router);
@@ -51,7 +50,7 @@ describe('LoginPage (Signal Forms)', () => {
     expect(new Set(ids).size).toBe(ids.length);
     expect(el('#login-email-error').textContent).toContain('Email is required');
     expect(el('#login-email').getAttribute('aria-describedby')).toBe('login-email-error');
-    http.expectNone(`${environment.apiUrl}/auth/login`);
+    http.expectNone(`${API}/auth/login`);
 
     type('#login-email', 'not-an-email');
     expect(fixture.nativeElement.textContent).toContain('Enter a valid email address');
@@ -61,20 +60,18 @@ describe('LoginPage (Signal Forms)', () => {
   it('submits valid credentials through AuthStore and redirects to returnUrl', async () => {
     const store = TestBed.inject(AuthStore);
     const loginSpy = vi.spyOn(store, 'login');
-    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
-
     type('#login-email', 'reader@readora.test');
     type('#login-password', 'Sup3rSecret!');
     const pending = submitForm();
 
-    const req = http.expectOne(`${environment.apiUrl}/auth/login`);
+    const req = http.expectOne(`${API}/auth/login`);
     expect(req.request.body).toEqual({ email: 'reader@readora.test', password: 'Sup3rSecret!' });
     req.flush(mockAuthResponse());
     await pending;
 
     expect(loginSpy).toHaveBeenCalledWith({ email: 'reader@readora.test', password: 'Sup3rSecret!' });
     expect(store.isAuthenticated()).toBe(true);
-    expect(navigateSpy).toHaveBeenCalledWith('/');
+    expect(router.url).toBe('/');
   });
 
   it.each([
@@ -83,15 +80,13 @@ describe('LoginPage (Signal Forms)', () => {
     ['https://evil.example', '/']
   ])('after login follows returnUrl %s only when it is a same-site path', async (returnUrl, expected) => {
     fixture.componentRef.setInput('returnUrl', returnUrl);
-    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
-
     type('#login-email', 'reader@readora.test');
     type('#login-password', 'Sup3rSecret!');
     const pending = submitForm();
-    http.expectOne(`${environment.apiUrl}/auth/login`).flush(mockAuthResponse());
+    http.expectOne(`${API}/auth/login`).flush(mockAuthResponse());
     await pending;
 
-    expect(navigateSpy).toHaveBeenCalledWith(expected);
+    expect(router.url).toBe(expected);
   });
 
   it('shows the API error message when credentials are rejected', async () => {
@@ -99,8 +94,8 @@ describe('LoginPage (Signal Forms)', () => {
     type('#login-password', 'wrong-password');
     const pending = submitForm();
 
-    http.expectOne(`${environment.apiUrl}/auth/login`).flush(
-      { success: false, data: null, error: 'Invalid email or password' },
+    http.expectOne(`${API}/auth/login`).flush(
+      fail('Invalid email or password'),
       { status: 401, statusText: 'Unauthorized' }
     );
     await pending;

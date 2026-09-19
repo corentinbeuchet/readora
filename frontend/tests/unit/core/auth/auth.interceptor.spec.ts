@@ -5,10 +5,8 @@ import { firstValueFrom } from 'rxjs';
 import { authInterceptor } from '@app/core/auth/auth.interceptor';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { API_BASE_URL } from '@app/core/config/urls';
-import { environment } from '../../../../src/environments/environment';
 import { mockAuthResponse } from './auth-fixtures';
-
-const API = environment.apiUrl;
+import { API, fail, ok } from '../../test-utils';
 
 describe('authInterceptor', () => {
   let http: HttpClient;
@@ -46,19 +44,19 @@ describe('authInterceptor', () => {
     const profile = backend.expectOne(`${API}/profile`);
     expect(profile.request.headers.get('Authorization')).toBe('Bearer jwt-1');
     expect(profile.request.withCredentials).toBe(false);
-    profile.flush({ success: true, data: {}, error: null });
+    profile.flush(ok({}));
 
     http.get(`${API}/auth/me`).subscribe();
     const me = backend.expectOne(`${API}/auth/me`);
     expect(me.request.withCredentials).toBe(true);
-    me.flush({ success: true, data: {}, error: null });
+    me.flush(ok({}));
   });
 
   it('on 401 refreshes once and retries with the new token', async () => {
     await loginAs('jwt-old');
 
     const result = firstValueFrom(http.get(`${API}/bookmarks`));
-    backend.expectOne(`${API}/bookmarks`).flush({ success: false, data: null, error: 'expired' }, { status: 401, statusText: 'Unauthorized' });
+    backend.expectOne(`${API}/bookmarks`).flush(fail('expired'), { status: 401, statusText: 'Unauthorized' });
 
     const refresh = backend.expectOne(`${API}/auth/refresh`);
     expect(refresh.request.withCredentials).toBe(true);
@@ -66,9 +64,9 @@ describe('authInterceptor', () => {
 
     const retried = backend.expectOne(`${API}/bookmarks`);
     expect(retried.request.headers.get('Authorization')).toBe('Bearer jwt-new');
-    retried.flush({ success: true, data: [], error: null });
+    retried.flush(ok([]));
 
-    expect(await result).toEqual({ success: true, data: [], error: null });
+    expect(await result).toEqual(ok([]));
     expect(store.accessToken()).toBe('jwt-new');
   });
 

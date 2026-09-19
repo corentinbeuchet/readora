@@ -5,9 +5,7 @@ import { Router, provideRouter, withComponentInputBinding } from '@angular/route
 import { RouterTestingHarness } from '@angular/router/testing';
 import { WorksPage } from '@app/features/catalog/works-page';
 import { PagedResponse, WorkSummary } from '@app/core/models/readora.models';
-import { environment } from '../../../../src/environments/environment';
-
-const API = environment.apiUrl;
+import { API, fail, ok, settle } from '../../test-utils';
 
 const SOLO: WorkSummary = {
   id: 'w-1',
@@ -46,34 +44,25 @@ describe('WorksPage (US-04 catalog filters)', () => {
   const chip = (genre: string): HTMLButtonElement =>
     Array.from(el().querySelectorAll<HTMLButtonElement>('.chip')).find((b) => b.textContent?.includes(genre))!;
 
-  async function settle(): Promise<void> {
-    for (let i = 0; i < 3; i++) {
-      await Promise.resolve();
-      harness.detectChanges();
-    }
-    await new Promise<void>((resolve) => setTimeout(resolve, 0));
-    harness.detectChanges();
-  }
-
   function worksRequest(): TestRequest {
     return http.expectOne((r) => r.url === `${API}/works`);
   }
 
   async function open(url: string, items: WorkSummary[] = [SOLO]): Promise<TestRequest> {
     await harness.navigateByUrl(url);
-    await settle();
-    http.expectOne(`${API}/works/genres`).flush({ success: true, data: ['Action', 'Fantasy', 'Romance'], error: null });
+    await settle(harness);
+    http.expectOne(`${API}/works/genres`).flush(ok(['Action', 'Fantasy', 'Romance']));
     const request = worksRequest();
-    request.flush({ success: true, data: page(items), error: null });
-    await settle();
+    request.flush(ok(page(items)));
+    await settle(harness);
     return request;
   }
 
   async function nextWorksRequest(items: WorkSummary[] = [SOLO]): Promise<TestRequest> {
-    await settle();
+    await settle(harness);
     const request = worksRequest();
-    request.flush({ success: true, data: page(items), error: null });
-    await settle();
+    request.flush(ok(page(items)));
+    await settle(harness);
     return request;
   }
 
@@ -146,10 +135,10 @@ describe('WorksPage (US-04 catalog filters)', () => {
 
   it('shows an error with a retry when the search fails', async () => {
     await harness.navigateByUrl('/works');
-    await settle();
-    http.expectOne(`${API}/works/genres`).flush({ success: true, data: [], error: null });
-    worksRequest().flush({ success: false, data: null, error: 'down' });
-    await settle();
+    await settle(harness);
+    http.expectOne(`${API}/works/genres`).flush(ok([]));
+    worksRequest().flush(fail('down'));
+    await settle(harness);
 
     expect(el().querySelector('[role="alert"]')?.textContent).toContain('Could not load the catalog.');
     el().querySelector<HTMLButtonElement>('[role="alert"] button')!.click();
@@ -165,13 +154,13 @@ describe('WorksPage (US-04 catalog filters)', () => {
     const req = http.expectOne((r) => r.url === `${API}/works/random`);
     expect(req.request.params.getAll('genre')).toEqual(['Romance']);
     expect(req.request.params.has('page')).toBe(false);
-    req.flush({ success: true, data: SOLO, error: null });
-    await settle();
+    req.flush(ok(SOLO));
+    await settle(harness);
     expect(navigate).toHaveBeenCalledWith(['/works', 'w-1']);
 
     el().querySelector<HTMLButtonElement>('button.surprise')!.click();
-    http.expectOne((r) => r.url === `${API}/works/random`).flush({ success: false, data: null, error: 'none' }, { status: 404, statusText: 'Not Found' });
-    await settle();
+    http.expectOne((r) => r.url === `${API}/works/random`).flush(fail('none'), { status: 404, statusText: 'Not Found' });
+    await settle(harness);
     expect(el().querySelector('.surprise-message')!.textContent).toContain('No series match these filters.');
   });
 });

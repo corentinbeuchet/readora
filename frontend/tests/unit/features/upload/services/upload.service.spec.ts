@@ -1,13 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { firstValueFrom } from 'rxjs';
 import { UploadService } from '@app/features/upload/services/upload.service';
 import { ArchiveError, ArchiveLimits, PageUploadItem, naturalCompare, sortFilesNaturally, extractArchiveImages } from '@app/features/upload/services/file-utils';
-import { environment } from '../../../../../src/environments/environment';
 import JSZip from 'jszip';
-
-const API = environment.apiUrl;
+import { API, fail, ok, provideHttpTesting } from '../../../test-utils';
 
 describe('UploadService and file-utils', () => {
   let service: UploadService;
@@ -15,7 +12,7 @@ describe('UploadService and file-utils', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [...provideHttpTesting()],
     });
     service = TestBed.inject(UploadService);
     http = TestBed.inject(HttpTestingController);
@@ -57,14 +54,10 @@ describe('UploadService and file-utils', () => {
 
       const req = http.expectOne(`${API}/storage/upload?folder=covers`);
       expect(req.request.method).toBe('POST');
-      req.flush({
-        success: true,
-        data: {
+      req.flush(ok({
           storageKey: 'covers/uuid-cover.jpg',
           cdnUrl: 'https://cdn.readora.com/covers/uuid-cover.jpg',
-        },
-        error: null,
-      });
+        }));
 
       const res = await upload$;
       expect(res.storageKey).toBe('covers/uuid-cover.jpg');
@@ -88,16 +81,8 @@ describe('UploadService and file-utils', () => {
       const reqs = http.match((r) => r.url.includes('/storage/upload'));
       expect(reqs.length).toBe(2);
 
-      reqs[0].flush({
-        success: true,
-        data: { storageKey: 'scans/c1/p1.png', cdnUrl: 'https://cdn.readora.com/scans/c1/p1.png' },
-        error: null,
-      });
-      reqs[1].flush({
-        success: true,
-        data: { storageKey: 'scans/c1/p2.png', cdnUrl: 'https://cdn.readora.com/scans/c1/p2.png' },
-        error: null,
-      });
+      reqs[0].flush(ok({ storageKey: 'scans/c1/p1.png', cdnUrl: 'https://cdn.readora.com/scans/c1/p1.png' }));
+      reqs[1].flush(ok({ storageKey: 'scans/c1/p2.png', cdnUrl: 'https://cdn.readora.com/scans/c1/p2.png' }));
 
       const results = await batch$;
       expect(results.length).toBe(2);
@@ -117,8 +102,8 @@ describe('UploadService and file-utils', () => {
       const batch$ = firstValueFrom(service.uploadPagesBatch(items, 'scans/c1', 2, (_c, _t, item) => settled.push(item)));
 
       const reqs = http.match((r) => r.url.includes('/storage/upload'));
-      reqs[0].flush({ success: true, data: { storageKey: 'k1', cdnUrl: 'https://cdn/k1' }, error: null });
-      reqs[1].flush({ success: false, data: null, error: 'File too large' }, { status: 413, statusText: 'Payload Too Large' });
+      reqs[0].flush(ok({ storageKey: 'k1', cdnUrl: 'https://cdn/k1' }));
+      reqs[1].flush(fail('File too large'), { status: 413, statusText: 'Payload Too Large' });
 
       const results = await batch$;
       expect(results.map((r) => r.status)).toEqual(['done', 'error']);
@@ -136,7 +121,7 @@ describe('UploadService and file-utils', () => {
       ];
       const batch$ = firstValueFrom(service.uploadPagesBatch(items, 'scans/c1'));
 
-      http.expectOne((r) => r.url.includes('/storage/upload')).flush({ success: true, data: { storageKey: 'k2', cdnUrl: 'https://cdn/k2' }, error: null });
+      http.expectOne((r) => r.url.includes('/storage/upload')).flush(ok({ storageKey: 'k2', cdnUrl: 'https://cdn/k2' }));
 
       const results = await batch$;
       expect(results.map((r) => [r.status, r.storageKey, r.error])).toEqual([

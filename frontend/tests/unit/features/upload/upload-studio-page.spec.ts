@@ -1,15 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { UploadStudioPage, parseChapterNumber } from '@app/features/upload/upload-studio-page';
-import { environment } from '../../../../src/environments/environment';
+import { API, fail, ok, provideHttpTesting } from '../../test-utils';
 
-const API = environment.apiUrl;
 const WORK = { id: 'work-1', title: 'Blue Lock', synopsis: '', type: 'MANGA', status: 'ONGOING', coverImageUrl: '', genres: ['Action'] };
 const CHAPTER = { id: 'chap-1', workId: 'work-1', chapterNumber: '3', title: '', status: 'PUBLISHED', pages: [] };
-const ok = (data: unknown) => ({ success: true, data, error: null });
-const fail = (error: string) => ({ success: false, data: null, error });
 
 /** Image double: page dimensions "decode" right away as 800 × 1200. */
 class FakeImage {
@@ -44,7 +40,7 @@ describe('UploadStudioPage', () => {
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation((url: string) => void revoked.push(url));
     await TestBed.configureTestingModule({
       imports: [UploadStudioPage],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
+      providers: [...provideHttpTesting(), provideRouter([])]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(UploadStudioPage);

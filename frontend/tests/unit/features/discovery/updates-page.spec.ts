@@ -1,15 +1,12 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { UpdatesPage } from '@app/features/discovery/updates-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { Release } from '@app/core/models/readora.models';
-import { environment } from '../../../../src/environments/environment';
 import { mockUser, signIn } from '../../core/auth/auth-fixtures';
-
-const API = environment.apiUrl;
+import { API, fail, ok, provideHttpTesting, settle } from '../../test-utils';
 
 function release(id: string, title: string, number: string, minutesAgo: number, read = false): Release {
   return {
@@ -28,7 +25,7 @@ describe('UpdatesPage (US-08)', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      providers: [provideRouter([{ path: 'updates', component: UpdatesPage }], withComponentInputBinding()), provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideRouter([{ path: 'updates', component: UpdatesPage }], withComponentInputBinding()), ...provideHttpTesting()]
     });
     http = TestBed.inject(HttpTestingController);
   });
@@ -37,23 +34,14 @@ describe('UpdatesPage (US-08)', () => {
 
   const el = (): HTMLElement => harness.routeNativeElement as HTMLElement;
 
-  async function settle(): Promise<void> {
-    for (let i = 0; i < 3; i++) {
-      await Promise.resolve();
-      harness.detectChanges();
-    }
-    await new Promise<void>((resolve) => setTimeout(resolve, 0));
-    harness.detectChanges();
-  }
-
   async function open(url: string, releases: Release[], mine: boolean): Promise<void> {
     harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(url);
-    await settle();
+    await settle(harness);
     const req = http.expectOne((r) => r.url === `${API}/updates`);
     expect(req.request.params.get('mine')).toBe(String(mine));
-    req.flush({ success: true, data: releases, error: null });
-    await settle();
+    req.flush(ok(releases));
+    await settle(harness);
   }
 
   it('lists the newest chapters with their age and a Read now link; guests get no "My library" tab', async () => {
@@ -80,13 +68,13 @@ describe('UpdatesPage (US-08)', () => {
   it('offers a retry when the feed fails', async () => {
     harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/updates');
-    await settle();
-    http.expectOne((r) => r.url === `${API}/updates`).flush({ success: false, data: null, error: 'down' });
-    await settle();
+    await settle(harness);
+    http.expectOne((r) => r.url === `${API}/updates`).flush(fail('down'));
+    await settle(harness);
     el().querySelector<HTMLButtonElement>('[role="alert"] button')!.click();
-    await settle();
-    http.expectOne((r) => r.url === `${API}/updates`).flush({ success: true, data: [], error: null });
-    await settle();
+    await settle(harness);
+    http.expectOne((r) => r.url === `${API}/updates`).flush(ok([]));
+    await settle(harness);
     expect(el().textContent).toContain('No chapters have been published yet.');
   });
 });
