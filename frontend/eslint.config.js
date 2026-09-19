@@ -3,6 +3,52 @@ const eslint = require("@eslint/js");
 const { defineConfig, globalIgnores } = require("eslint/config");
 const tseslint = require("typescript-eslint");
 const angular = require("angular-eslint");
+const { readdirSync } = require("node:fs");
+
+/** Legacy Angular APIs replaced by Signal Forms, control flow and class/style bindings. */
+const RESTRICTED_PATHS = [
+  {
+    name: "@angular/forms",
+    importNames: ["FormsModule", "ReactiveFormsModule", "NgModel", "FormControl", "FormGroup", "FormBuilder"],
+    message: "Use Signal Forms (@angular/forms/signals).",
+  },
+  {
+    name: "@angular/common",
+    importNames: ["CommonModule", "NgClass", "NgStyle", "NgIf", "NgFor", "NgSwitch"],
+    message: "Use control flow and [class.x] / [style.x] bindings.",
+  },
+];
+
+/** `../` imports inside src/app (only `environments/`, outside the alias, may be reached that way). */
+const NO_PARENT_IMPORTS = {
+  regex: "^\\.\\./(?!(\\.\\./)*environments/environment$)",
+  message: "Use the @app/... alias instead of ../ paths.",
+};
+
+/**
+ * no-restricted-imports options. ESLint replaces (doesn't merge) a rule's options per matching config block,
+ * so every block repeats RESTRICTED_PATHS.
+ */
+function restrictImports(...patterns) {
+  return ["error", { paths: RESTRICTED_PATHS, ...(patterns.length ? { patterns } : {}) }];
+}
+
+/**
+ * Layers: core <- shared <- features. A feature imports only itself; the reader embeds the comments of the
+ * `social` feature (the one cross-feature import).
+ */
+const CROSS_FEATURE_ALLOWED = { reader: ["social/components/chapter-comments$"] };
+const featureBlocks = readdirSync(`${__dirname}/src/app/features`, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map(({ name }) => ({
+    files: [`src/app/features/${name}/**/*.ts`],
+    rules: {
+      "no-restricted-imports": restrictImports(NO_PARENT_IMPORTS, {
+        regex: `^@app/features/(?!${[`${name}/`, ...(CROSS_FEATURE_ALLOWED[name] ?? [])].join("|")})`,
+        message: "A feature imports only its own files (shared UI goes to src/app/shared, app-wide code to src/app/core).",
+      }),
+    },
+  }));
 
 module.exports = defineConfig([
   globalIgnores(["dist/**", ".angular/**", "playwright-report/**", "test-results/**", "node_modules/**"]),
@@ -49,23 +95,7 @@ module.exports = defineConfig([
       "@angular-eslint/prefer-host-metadata-property": "error",
       "@angular-eslint/no-uncalled-signals": "error",
       "@angular-eslint/no-implicit-take-until-destroyed": "error",
-      "no-restricted-imports": [
-        "error",
-        {
-          paths: [
-            {
-              name: "@angular/forms",
-              importNames: ["FormsModule", "ReactiveFormsModule", "NgModel", "FormControl", "FormGroup", "FormBuilder"],
-              message: "Use Signal Forms (@angular/forms/signals).",
-            },
-            {
-              name: "@angular/common",
-              importNames: ["CommonModule", "NgClass", "NgStyle", "NgIf", "NgFor", "NgSwitch"],
-              message: "Use control flow and [class.x] / [style.x] bindings.",
-            },
-          ],
-        },
-      ],
+      "no-restricted-imports": restrictImports(),
       "@angular-eslint/use-lifecycle-interface": "error",
       "@angular-eslint/no-input-rename": "error",
       "@angular-eslint/no-output-native": "error",
@@ -109,6 +139,29 @@ module.exports = defineConfig([
       "@angular-eslint/template/valid-aria": "error",
     },
   },
+  {
+    files: ["src/app/**/*.ts"],
+    rules: { "no-restricted-imports": restrictImports(NO_PARENT_IMPORTS) },
+  },
+  {
+    files: ["src/app/core/**/*.ts"],
+    rules: {
+      "no-restricted-imports": restrictImports(NO_PARENT_IMPORTS, {
+        regex: "^@app/(shared|features)/",
+        message: "core is app-wide infrastructure: it must not depend on shared UI or features.",
+      }),
+    },
+  },
+  {
+    files: ["src/app/shared/**/*.ts"],
+    rules: {
+      "no-restricted-imports": restrictImports(NO_PARENT_IMPORTS, {
+        regex: "^@app/features/",
+        message: "shared UI is feature-agnostic: it must not import features.",
+      }),
+    },
+  },
+  ...featureBlocks,
   {
     files: ["tests/**/*.ts"],
     rules: {

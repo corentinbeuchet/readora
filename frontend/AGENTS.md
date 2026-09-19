@@ -138,7 +138,11 @@
   at the feature root, children in `components/` (the header's omnisearch and bell live in `layout/components/`).
 - Class names: `XPage` for routed pages, no `Component` suffix; model interfaces don't reuse a page name
   (`TeamProfile` model vs `TeamPage` component). Unique selectors.
-- Imports use the `@app/...` alias, not relative `../` paths across folders.
+- One import alias, `@app/...` (no `@core`/`@shared`/`@features`: one spelling per file); no `../` paths
+  (only `environments/`, outside the alias). Layers `core` <- `shared` <- `features`: core imports neither shared
+  nor features, shared imports no feature, a feature imports only its own files, except the reader embedding
+  `social`'s `ChapterComments`. All of this is enforced by `no-restricted-imports` in `eslint.config.js`
+  (a new allowed cross-feature import goes in `CROSS_FEATURE_ALLOWED`, with a reason).
 
 ## Tests (Vitest in `tests/unit`, mirroring `src/app`; Playwright in `tests/e2e`)
 - Shared helpers, never local copies: `tests/unit/test-utils.ts` (`API`, `ok(data)`/`fail(msg)` envelopes,
@@ -197,3 +201,4 @@ skill) — fixed:
 - F33 Naming/layout: `TeamPageComponent`, duplicate `app-profile-page` selector, shared feature stylesheets, relative imports. — fixed daeae36, e61eedb, 3cd1cbd, f72bf39, d2dd35a
 - F34 CI without lint; weak lint rules; mocked Router and duplicated test setup; e2e skipping on missing data. — fixed 7fecf89, b4bb4a0, d0c0687, 6272d20
 - F35 Every anonymous page load called `/auth/refresh` and spent the per-IP rate limit (reload -> 429 -> logged out). — fixed 28f9de5
+- F36 Layering (core <- shared <- features, no `../`) held by convention only. — fixed by the lint rules (`git log --grep ng-best-practices/26`)

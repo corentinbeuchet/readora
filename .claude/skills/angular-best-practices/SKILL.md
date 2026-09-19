@@ -76,6 +76,10 @@ checklist to apply while coding. Deeper docs: the `angular-developer` skill refe
   trigger; dialogs trap focus. Required markers `aria-hidden`. Nested content (comment threads) uses list structure.
 - Prefer `@angular/aria` (Menu, Tabs, Toolbar, Combobox, Listbox) over hand-rolled widgets.
 
+## Imports and layers
+- `@app/...` only, no `../`. core <- shared <- features; a feature imports only itself (reader -> social
+  `ChapterComments` is the one exception). Lint enforces it: put code in the right layer rather than adding exceptions.
+
 ## Reuse, don't copy
 Before adding UI or helpers, search `src/app/shared/` and `src/app/core/utils/`. One implementation each:
 - busy/error of a write: `asyncAction()` (`core/utils/async-action.ts`);
