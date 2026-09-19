@@ -109,9 +109,50 @@ describe('Shell primary navigation', () => {
     thenTheNavigationIsOpen(false);
   });
 
+  it('after moving to another page, focus goes to its heading', async () => {
+    givenIAmOnTheSite();
+    await givenIHaveOpened('/');
+
+    await whenINavigateTo('/works');
+
+    thenTheFocusIsOnThePageHeading();
+  });
+
+  it('changing only the query string keeps the focus where it is', async () => {
+    givenIAmOnTheSite();
+    await givenIHaveOpened('/works');
+    givenTheFocusIsOnTheNavigationLink('Catalog');
+
+    await whenINavigateTo('/works?genre=Action');
+
+    thenTheFocusIsOnTheNavigationLink('Catalog');
+  });
+
+  it('the first page load does not move the focus', async () => {
+    givenIAmOnTheSite();
+
+    await whenINavigateTo('/works');
+
+    thenTheFocusIsNotOnThePageHeading();
+  });
+
   function givenIAmOnTheSite(): void {
     fixture = TestBed.createComponent(Shell);
     fixture.detectChanges();
+  }
+
+  async function givenIHaveOpened(url: string): Promise<void> {
+    await whenINavigateTo(url);
+  }
+
+  function givenTheFocusIsOnTheNavigationLink(label: string): void {
+    link(label).focus();
+  }
+
+  async function whenINavigateTo(url: string): Promise<void> {
+    await router.navigateByUrl(url);
+    fixture.detectChanges();
+    await fixture.whenStable();
   }
 
   async function whenIClickTheNavigationLink(label: string): Promise<void> {
@@ -148,6 +189,18 @@ describe('Shell primary navigation', () => {
 
   function thenTheMenuButtonHasFocus(): void {
     expect(document.activeElement).toBe(menuButton());
+  }
+
+  function thenTheFocusIsOnThePageHeading(): void {
+    expect(document.activeElement).toBe(fixture.nativeElement.querySelector('main h1'));
+  }
+
+  function thenTheFocusIsNotOnThePageHeading(): void {
+    expect(document.activeElement).not.toBe(fixture.nativeElement.querySelector('main h1'));
+  }
+
+  function thenTheFocusIsOnTheNavigationLink(label: string): void {
+    expect(document.activeElement).toBe(link(label));
   }
 
   function thenThereIsNoMenubar(): void {

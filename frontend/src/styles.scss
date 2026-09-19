@@ -56,6 +56,11 @@ a {
 
 h1 {
   font-size: var(--fs-h1);
+
+  /* Focused by the shell after a navigation (not a control: no focus ring). */
+  &[tabindex='-1']:focus {
+    outline: none;
+  }
 }
 
 h2 {

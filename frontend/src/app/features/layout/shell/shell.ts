@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { Component, DOCUMENT, ElementRef, Injector, afterNextRender, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
@@ -31,6 +31,10 @@ export class Shell {
   /** Small screens: whether the primary navigation disclosure is open (always shown from the lg breakpoint). */
   protected readonly navOpen = signal(false);
   private readonly navToggle = viewChild.required<ElementRef<HTMLButtonElement>>('navToggle');
+  private readonly document = inject(DOCUMENT);
+  private readonly injector = inject(Injector);
+  /** Path of the page shown (no query or fragment); `null` before the first navigation. */
+  private currentPath: string | null = null;
 
   constructor() {
     this.router.events
@@ -38,7 +42,32 @@ export class Shell {
         filter((event) => event instanceof NavigationEnd),
         takeUntilDestroyed()
       )
-      .subscribe(() => this.navOpen.set(false));
+      .subscribe((event) => {
+        this.navOpen.set(false);
+        const path = event.urlAfterRedirects.split(/[?#]/)[0];
+        const previous = this.currentPath;
+        this.currentPath = path;
+        // A new page (not the first load, not a filter or tab that only changes the query) takes the focus, so
+        // keyboard and screen reader users start on it instead of on the link they used (WCAG 2.4.3).
+        if (previous !== null && previous !== path) {
+          afterNextRender(() => this.focusPage(), { injector: this.injector });
+        }
+      });
+  }
+
+  /** Focuses the page's `h1` (read aloud by screen readers), or `<main>` while the page is still loading. */
+  private focusPage(): void {
+    // Looked up at focus time: after SSR the client may rebuild <main> (it hosts the router outlet), so a view query
+    // could still point at the server-rendered element.
+    const main = this.document.getElementById('main-content');
+    if (!main) {
+      return;
+    }
+    const heading = main.querySelector<HTMLElement>('h1');
+    if (heading && !heading.hasAttribute('tabindex')) {
+      heading.setAttribute('tabindex', '-1');
+    }
+    (heading ?? main).focus({ preventScroll: true });
   }
 
   protected toggleNav(): void {
