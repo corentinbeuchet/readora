@@ -8,7 +8,7 @@ import { clearTranslations, loadTranslations } from '@angular/localize';
 import { PlansPage } from '@app/features/subscription/plans-page/plans-page';
 import { LoginPage } from '@app/features/auth/login-page/login-page';
 import { Shell } from '@app/features/layout/shell/shell';
-import french from '../../../src/locale/messages.fr.json';
+import { FRENCH } from './french-translations';
 import { API, fail, provideHttpTesting } from '../test-utils';
 
 @Component({ template: '<h1>Series</h1>' })
@@ -56,7 +56,7 @@ describe('US-13 Reading Readora in my language', () => {
 
   function givenIUseTheFrenchSite(): void {
     registerLocaleData(localeFr);
-    loadTranslations(french.translations);
+    loadTranslations(FRENCH);
     configure('fr');
   }
 

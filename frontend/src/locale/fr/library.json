@@ -1,0 +1,32 @@
+{
+  "locale": "fr",
+  "translations": {
+    "library.history.heading": "Historique de lecture",
+    "library.history.loading": "Chargement de votre historique…",
+    "library.history.loadError": "Impossible de charger votre historique de lecture.",
+    "library.history.empty": "Vous n'avez encore rien lu.",
+    "library.history.browse": "Parcourir le catalogue",
+    "library.history.chapter": "Chapitre {$INTERPOLATION}",
+    "library.history.finished": "(terminé)",
+    "library.history.continue": "Continuer",
+    "library.history.continue.label": "Continuer {$title}, chapitre {$chapter}",
+    "library.history.seoTitle": "Historique de lecture",
+    "library.page.heading": "Ma bibliothèque",
+    "library.page.exportCsv": "Télécharger en CSV",
+    "library.page.exportJson": "Télécharger en JSON",
+    "library.page.tabs.label": "Filtrer par statut de lecture",
+    "library.page.tabs.all": "Tout",
+    "library.page.loading": "Chargement de votre bibliothèque…",
+    "library.page.loadError": "Impossible de charger votre bibliothèque.",
+    "library.page.emptyStatus": "Rien n'est encore marqué « {$INTERPOLATION} ».",
+    "library.page.empty": "Votre bibliothèque est vide. Ouvrez une série et choisissez « Ajouter à la bibliothèque ».",
+    "library.page.browse": "Parcourir le catalogue",
+    "library.page.newChapters": "{VAR_PLURAL, plural, =1 {1 nouveau{START_TAG_SPAN} chapitre{CLOSE_TAG_SPAN}} other {{INTERPOLATION} nouveaux{START_TAG_SPAN} chapitres{CLOSE_TAG_SPAN}}}",
+    "library.page.statusLabel": "Statut de lecture de {$INTERPOLATION}",
+    "library.page.notify": "Alertes de nouveaux chapitres{$START_TAG_SPAN} pour {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "library.page.remove": " Retirer{$START_TAG_SPAN} {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "library.page.seoTitle": "Ma bibliothèque",
+    "library.page.exportError": "Impossible d'exporter votre bibliothèque. Veuillez réessayer.",
+    "library.page.updateError": "Impossible de mettre à jour « {$title} ». Veuillez réessayer."
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "locale": "fr",
+  "translations": {
+    "seo.defaultDescription": "Lisez des mangas, manhwas, manhuas et comics publiés par des équipes de scantrad. Lecture gratuite, commentaires et marque-pages Premium.",
+    "seo.notFound.title": "Page introuvable",
+    "seo.notFound.description": "La page demandée est introuvable.",
+    "time.justNow": "à l'instant",
+    "form.required": "Ce champ est obligatoire",
+    "form.email": "Saisissez une adresse e-mail valide",
+    "form.minLength": "Au moins {$min} caractères",
+    "form.maxLength": "Au plus {$max} caractères",
+    "form.pattern": "Format invalide",
+    "form.invalid": "Valeur invalide",
+    "loadError.retry": "Réessayer"
+  }
+}

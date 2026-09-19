@@ -1,0 +1,16 @@
+{
+  "locale": "en",
+  "translations": {
+    "moderation.page.title": "Moderation",
+    "moderation.page.intro": "Reported comments, oldest first. Hiding removes the comment for everyone and closes its reports.",
+    "moderation.page.loading": "Loading reports…",
+    "moderation.page.loadError": "Could not load the reports.",
+    "moderation.page.empty": "No open reports. 🎉",
+    "moderation.page.reportedMeta": "reported {$INTERPOLATION} · comment by {$START_TAG_STRONG}{$INTERPOLATION_1}{$CLOSE_TAG_STRONG}",
+    "moderation.page.markedSpoiler": "marked spoiler",
+    "moderation.page.seeInContext": "See in context",
+    "moderation.page.hide": "Hide comment{$START_TAG_SPAN} by {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "moderation.page.dismiss": "Dismiss report{$START_TAG_SPAN} on the comment by {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "moderation.page.seoTitle": "Moderation"
+  }
+}

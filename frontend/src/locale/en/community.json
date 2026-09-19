@@ -1,0 +1,29 @@
+{
+  "locale": "en",
+  "translations": {
+    "community.profile.loading": "Loading the profile…",
+    "community.profile.notFound": "This reader could not be found.",
+    "community.profile.loadError": "Could not load the profile.",
+    "community.profile.browse": "Browse the catalog",
+    "community.profile.since": "@{$INTERPOLATION} · reading on Readora since {$INTERPOLATION_1}",
+    "community.profile.chaptersRead": "Chapters read",
+    "community.profile.favouriteGenres": "Favourite genres",
+    "community.profile.completed": "Completed series",
+    "community.profile.completedNone": "None yet.",
+    "community.profile.seoDescription": "{$name} on Readora.",
+    "community.team.loading": "Loading the team…",
+    "community.team.notFound": "This team could not be found.",
+    "community.team.loadError": "Could not load the team.",
+    "community.team.browse": "Browse the catalog",
+    "community.team.translates": "Translates {$START_LINK}{$INTERPOLATION}{$CLOSE_LINK}",
+    "community.team.followers": "{VAR_PLURAL, plural, =1 {1 follower} other {{INTERPOLATION} followers}}",
+    "community.team.following": "Following",
+    "community.team.follow": "Follow",
+    "community.team.members": "Members",
+    "community.team.latest": "Latest chapters",
+    "community.team.latestNone": "No chapters published yet.",
+    "community.team.chapter": "Chapter {$INTERPOLATION}",
+    "community.team.seoTitle": "{$name} — scanlation team",
+    "community.team.seoDescription": "{$name} translates {$series}."
+  }
+}

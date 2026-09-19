@@ -1,0 +1,16 @@
+{
+  "locale": "fr",
+  "translations": {
+    "moderation.page.title": "Modération",
+    "moderation.page.intro": "Commentaires signalés, les plus anciens d'abord. Masquer retire le commentaire pour tout le monde et clôt ses signalements.",
+    "moderation.page.loading": "Chargement des signalements…",
+    "moderation.page.loadError": "Impossible de charger les signalements.",
+    "moderation.page.empty": "Aucun signalement en attente. 🎉",
+    "moderation.page.reportedMeta": "signalé {$INTERPOLATION} · commentaire de {$START_TAG_STRONG}{$INTERPOLATION_1}{$CLOSE_TAG_STRONG}",
+    "moderation.page.markedSpoiler": "marqué spoiler",
+    "moderation.page.seeInContext": "Voir dans son contexte",
+    "moderation.page.hide": "Masquer le commentaire{$START_TAG_SPAN} de {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "moderation.page.dismiss": "Rejeter le signalement{$START_TAG_SPAN} du commentaire de {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "moderation.page.seoTitle": "Modération"
+  }
+}

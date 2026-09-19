@@ -1,0 +1,32 @@
+{
+  "locale": "en",
+  "translations": {
+    "library.history.heading": "Reading history",
+    "library.history.loading": "Loading your history…",
+    "library.history.loadError": "Could not load your reading history.",
+    "library.history.empty": "You haven't read anything yet.",
+    "library.history.browse": "Browse the catalog",
+    "library.history.chapter": "Chapter {$INTERPOLATION}",
+    "library.history.finished": "(finished)",
+    "library.history.continue": "Continue",
+    "library.history.continue.label": "Continue {$title}, chapter {$chapter}",
+    "library.history.seoTitle": "Reading history",
+    "library.page.heading": "My library",
+    "library.page.exportCsv": "Download CSV",
+    "library.page.exportJson": "Download JSON",
+    "library.page.tabs.label": "Filter by reading status",
+    "library.page.tabs.all": "All",
+    "library.page.loading": "Loading your library…",
+    "library.page.loadError": "Could not load your library.",
+    "library.page.emptyStatus": "Nothing marked “{$INTERPOLATION}” yet.",
+    "library.page.empty": "Your library is empty. Open a series and choose “Add to library”.",
+    "library.page.browse": "Browse the catalog",
+    "library.page.newChapters": "{VAR_PLURAL, plural, other {{INTERPOLATION} new{START_TAG_SPAN} chapters{CLOSE_TAG_SPAN}}}",
+    "library.page.statusLabel": "Reading status of {$INTERPOLATION}",
+    "library.page.notify": "New chapter alerts{$START_TAG_SPAN} for {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "library.page.remove": " Remove{$START_TAG_SPAN} {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "library.page.seoTitle": "My library",
+    "library.page.exportError": "Could not export your library. Please try again.",
+    "library.page.updateError": "Could not update “{$title}”. Please try again."
+  }
+}

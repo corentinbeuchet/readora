@@ -1,0 +1,16 @@
+{
+  "locale": "en",
+  "translations": {
+    "seo.defaultDescription": "Read manga, manhwa, manhua and comics published by scanlation teams. Free reading, comments, and Premium bookmarks.",
+    "seo.notFound.title": "Page not found",
+    "seo.notFound.description": "The requested page could not be found.",
+    "time.justNow": "just now",
+    "form.required": "This field is required",
+    "form.email": "Enter a valid email address",
+    "form.minLength": "Must be at least {$min} characters",
+    "form.maxLength": "Must be at most {$max} characters",
+    "form.pattern": "Invalid format",
+    "form.invalid": "Invalid value",
+    "loadError.retry": "Retry"
+  }
+}

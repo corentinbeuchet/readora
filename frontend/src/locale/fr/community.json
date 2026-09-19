@@ -1,0 +1,29 @@
+{
+  "locale": "fr",
+  "translations": {
+    "community.profile.loading": "Chargement du profil…",
+    "community.profile.notFound": "Ce lecteur est introuvable.",
+    "community.profile.loadError": "Impossible de charger le profil.",
+    "community.profile.browse": "Parcourir le catalogue",
+    "community.profile.since": "@{$INTERPOLATION} · lit sur Readora depuis {$INTERPOLATION_1}",
+    "community.profile.chaptersRead": "Chapitres lus",
+    "community.profile.favouriteGenres": "Genres préférés",
+    "community.profile.completed": "Séries terminées",
+    "community.profile.completedNone": "Aucune pour l'instant.",
+    "community.profile.seoDescription": "{$name} sur Readora.",
+    "community.team.loading": "Chargement de l'équipe…",
+    "community.team.notFound": "Cette équipe est introuvable.",
+    "community.team.loadError": "Impossible de charger l'équipe.",
+    "community.team.browse": "Parcourir le catalogue",
+    "community.team.translates": "Traduit {$START_LINK}{$INTERPOLATION}{$CLOSE_LINK}",
+    "community.team.followers": "{VAR_PLURAL, plural, =1 {1 abonné} other {{INTERPOLATION} abonnés}}",
+    "community.team.following": "Abonné",
+    "community.team.follow": "Suivre",
+    "community.team.members": "Membres",
+    "community.team.latest": "Derniers chapitres",
+    "community.team.latestNone": "Aucun chapitre publié pour l'instant.",
+    "community.team.chapter": "Chapitre {$INTERPOLATION}",
+    "community.team.seoTitle": "{$name} — équipe de scantrad",
+    "community.team.seoDescription": "{$name} traduit {$series}."
+  }
+}

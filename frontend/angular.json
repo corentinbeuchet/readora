@@ -158,7 +158,25 @@
         },
         "locales": {
           "fr": {
-            "translation": "src/locale/messages.fr.json",
+            "translation": [
+              "src/locale/fr/auth.json",
+              "src/locale/fr/catalog.json",
+              "src/locale/fr/common.json",
+              "src/locale/fr/community.json",
+              "src/locale/fr/discovery.json",
+              "src/locale/fr/errors.json",
+              "src/locale/fr/labels.json",
+              "src/locale/fr/layout.json",
+              "src/locale/fr/library.json",
+              "src/locale/fr/lists.json",
+              "src/locale/fr/moderation.json",
+              "src/locale/fr/profile.json",
+              "src/locale/fr/reader.json",
+              "src/locale/fr/scanlation.json",
+              "src/locale/fr/social.json",
+              "src/locale/fr/subscription.json",
+              "src/locale/fr/upload.json"
+            ],
             "subPath": "fr"
           }
         }
