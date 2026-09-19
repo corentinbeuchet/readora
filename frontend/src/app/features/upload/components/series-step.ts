@@ -1,13 +1,14 @@
 import { Component, computed, inject } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
-import { AnyField, visibleErrors } from '@app/features/auth/auth-form.utils';
 import { GENRE_PRESETS, UploadWizard } from '../services/upload-wizard';
 import { CoverPicker } from './cover-picker';
+import { FieldErrors } from '@app/shared/forms/field-errors';
+import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
 
 /** Step 1: the series' details and cover. */
 @Component({
   selector: 'app-series-step',
-  imports: [FormField, CoverPicker],
+  imports: [FieldErrors, AriaInvalidDirective, FormField, CoverPicker],
   templateUrl: './series-step.html',
   styleUrl: './series-step.scss'
 })
@@ -21,10 +22,6 @@ export class SeriesStep {
     const custom = this.wizard.draft().genres.filter((g) => !GENRE_PRESETS.includes(g));
     return [...GENRE_PRESETS, ...custom].map((name) => ({ name, selected: selected.has(name) }));
   });
-
-  protected errors(field: AnyField): string[] {
-    return visibleErrors(field);
-  }
 
   protected addGenre(input: HTMLInputElement): void {
     if (this.wizard.addGenre(input.value)) {

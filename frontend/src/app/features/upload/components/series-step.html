@@ -7,12 +7,8 @@
       <div class="field">
         <label for="manga-title">Series Title <span class="required" aria-hidden="true">*</span></label>
         <input id="manga-title" type="text" placeholder="e.g. Solo Leveling, Berserk"
-               [formField]="form.title" [attr.aria-invalid]="errors(form.title).length > 0" aria-describedby="manga-title-error" />
-        <div id="manga-title-error" class="field-errors">
-          @for (msg of errors(form.title); track $index) {
-            <span class="field-error">{{ msg }}</span>
-          }
-        </div>
+               [formField]="form.title" [appAriaInvalid]="form.title" aria-describedby="manga-title-error" />
+        <app-field-errors id="manga-title-error" [field]="form.title" />
       </div>
 
       <div class="form-row">
@@ -40,12 +36,8 @@
         <div class="field">
           <label for="manga-author">Author</label>
           <input id="manga-author" type="text" placeholder="e.g. Chugong"
-                 [formField]="form.author" [attr.aria-invalid]="errors(form.author).length > 0" aria-describedby="manga-author-error" />
-          <div id="manga-author-error" class="field-errors">
-            @for (msg of errors(form.author); track $index) {
-              <span class="field-error">{{ msg }}</span>
-            }
-          </div>
+                 [formField]="form.author" [appAriaInvalid]="form.author" aria-describedby="manga-author-error" />
+          <app-field-errors id="manga-author-error" [field]="form.author" />
         </div>
 
         <div class="field">

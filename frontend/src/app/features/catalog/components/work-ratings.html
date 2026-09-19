@@ -48,12 +48,8 @@
         <div class="field">
           <label for="review-verdict">Verdict</label>
           <textarea id="review-verdict" rows="3" [formField]="reviewForm.verdict"
-                    [attr.aria-invalid]="errors(reviewForm.verdict).length > 0" aria-describedby="review-verdict-error"></textarea>
-          <div id="review-verdict-error" class="field-errors">
-            @for (msg of errors(reviewForm.verdict); track $index) {
-              <span class="field-error">{{ msg }}</span>
-            }
-          </div>
+                    [appAriaInvalid]="reviewForm.verdict" aria-describedby="review-verdict-error"></textarea>
+          <app-field-errors id="review-verdict-error" [field]="reviewForm.verdict" />
         </div>
         <div class="form-actions">
           <button type="button" class="btn" (click)="reviewOpen.set(false)">Cancel</button>

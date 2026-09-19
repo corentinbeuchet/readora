@@ -14,14 +14,10 @@
         type="email"
         autocomplete="email"
         [formField]="loginForm.email"
-        [attr.aria-invalid]="errors(loginForm.email).length > 0"
+        [appAriaInvalid]="loginForm.email"
         aria-describedby="login-email-error"
       />
-      <div id="login-email-error" class="field-errors">
-        @for (msg of errors(loginForm.email); track $index) {
-          <span class="field-error">{{ msg }}</span>
-        }
-      </div>
+      <app-field-errors id="login-email-error" [field]="loginForm.email" />
     </div>
 
     <div class="field">
@@ -31,14 +27,10 @@
         type="password"
         autocomplete="current-password"
         [formField]="loginForm.password"
-        [attr.aria-invalid]="errors(loginForm.password).length > 0"
+        [appAriaInvalid]="loginForm.password"
         aria-describedby="login-password-error"
       />
-      <div id="login-password-error" class="field-errors">
-        @for (msg of errors(loginForm.password); track $index) {
-          <span class="field-error">{{ msg }}</span>
-        }
-      </div>
+      <app-field-errors id="login-password-error" [field]="loginForm.password" />
     </div>
 
     <button type="submit" class="btn btn-primary" [disabled]="signingIn.busy()">

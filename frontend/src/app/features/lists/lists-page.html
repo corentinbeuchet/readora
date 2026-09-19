@@ -8,12 +8,8 @@
       <div class="field">
         <label for="new-list-title">Title</label>
         <input id="new-list-title" type="text" [formField]="newListForm.title"
-               [attr.aria-invalid]="errors(newListForm.title).length > 0" aria-describedby="new-list-title-error" />
-        <div id="new-list-title-error" class="field-errors">
-          @for (msg of errors(newListForm.title); track $index) {
-            <span class="field-error">{{ msg }}</span>
-          }
-        </div>
+               [appAriaInvalid]="newListForm.title" aria-describedby="new-list-title-error" />
+        <app-field-errors id="new-list-title-error" [field]="newListForm.title" />
       </div>
       <div class="field">
         <label for="new-list-description">Description</label>

@@ -5,7 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { SubscriptionsApi } from '@app/core/api/subscriptions-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { SeoService } from '@app/core/seo/seo.service';
-import { apiErrorMessage } from '@app/features/auth/auth-form.utils';
+import { apiErrorMessage } from '@app/core/api/api-client';
 
 export const PREMIUM_FEATURES = [
   'Bookmarks & reading progress synced across devices',

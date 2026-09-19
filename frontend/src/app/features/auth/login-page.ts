@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { FieldTree, FormField, email, form, required, submit } from '@angular/forms/signals';
+import { FormField, email, form, required, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { SeoService } from '@app/core/seo/seo.service';
-import { visibleErrors } from './auth-form.utils';
 import { asyncAction } from '@app/core/utils/async-action';
+import { FieldErrors } from '@app/shared/forms/field-errors';
+import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
 
 interface LoginModel {
   email: string;
@@ -14,7 +15,7 @@ interface LoginModel {
 
 @Component({
   selector: 'app-login-page',
-  imports: [RouterLink, FormField],
+  imports: [FieldErrors, AriaInvalidDirective, RouterLink, FormField],
   templateUrl: './login-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -35,10 +36,6 @@ export class LoginPage {
 
   constructor() {
     this.seo.private_('Log in');
-  }
-
-  protected errors(field: FieldTree<string>): string[] {
-    return visibleErrors(field);
   }
 
   protected async onSubmit(event: Event): Promise<void> {

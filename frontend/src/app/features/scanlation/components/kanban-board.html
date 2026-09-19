@@ -89,23 +89,15 @@
             <div class="field">
               <label for="submit-asset-url">Asset package URL</label>
               <input id="submit-asset-url" type="url" [formField]="submitForm.assetUrl"
-                     [attr.aria-invalid]="errors(submitForm.assetUrl).length > 0" aria-describedby="submit-asset-url-error" />
-              <div id="submit-asset-url-error" class="field-errors">
-                @for (msg of errors(submitForm.assetUrl); track $index) {
-                  <span class="field-error">{{ msg }}</span>
-                }
-              </div>
+                     [appAriaInvalid]="submitForm.assetUrl" aria-describedby="submit-asset-url-error" />
+              <app-field-errors id="submit-asset-url-error" [field]="submitForm.assetUrl" />
             </div>
 
             <div class="field">
               <label for="submit-page-count">Page count</label>
               <input id="submit-page-count" type="number" [formField]="submitForm.pageCount"
-                     [attr.aria-invalid]="errors(submitForm.pageCount).length > 0" aria-describedby="submit-page-count-error" />
-              <div id="submit-page-count-error" class="field-errors">
-                @for (msg of errors(submitForm.pageCount); track $index) {
-                  <span class="field-error">{{ msg }}</span>
-                }
-              </div>
+                     [appAriaInvalid]="submitForm.pageCount" aria-describedby="submit-page-count-error" />
+              <app-field-errors id="submit-page-count-error" [field]="submitForm.pageCount" />
             </div>
 
             <div class="dialog-actions">

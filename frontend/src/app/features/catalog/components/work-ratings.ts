@@ -5,8 +5,9 @@ import { RatingsApi } from '@app/core/api/ratings-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { WorkReview } from '@app/core/models/readora.models';
-import { AnyField, visibleErrors } from '@app/features/auth/auth-form.utils';
 import { asyncAction } from '@app/core/utils/async-action';
+import { FieldErrors } from '@app/shared/forms/field-errors';
+import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
 
 const REVIEW_MAX = 2000;
 
@@ -19,7 +20,7 @@ interface ReviewModel {
 /** Rating summary, my 1–10 rating, my review and the community's reviews of a series (US-09). */
 @Component({
   selector: 'app-work-ratings',
-  imports: [FormField, HasPermissionDirective],
+  imports: [FieldErrors, AriaInvalidDirective, FormField, HasPermissionDirective],
   templateUrl: './work-ratings.html',
   styleUrl: './work-ratings.scss'
 })
@@ -68,10 +69,6 @@ export class WorkRatings {
         this.reviewForm().reset({ liked: mine?.liked ?? '', disliked: mine?.disliked ?? '', verdict: mine?.verdict ?? '' });
       });
     });
-  }
-
-  protected errors(field: AnyField): string[] {
-    return visibleErrors(field);
   }
 
   protected async rate(score: number): Promise<void> {

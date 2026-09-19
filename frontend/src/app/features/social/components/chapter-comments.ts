@@ -6,10 +6,11 @@ import { CommentsApi } from '@app/core/api/comments-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { ChapterComment } from '@app/core/models/readora.models';
-import { AnyField, visibleErrors } from '@app/features/auth/auth-form.utils';
 import { CommentTree } from './comment-tree';
 import { ReportCommentDialog } from './report-comment-dialog';
 import { asyncAction } from '@app/core/utils/async-action';
+import { FieldErrors } from '@app/shared/forms/field-errors';
+import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
 
 export const COMMENT_MAX_LENGTH = 2000;
 
@@ -43,7 +44,7 @@ interface CommentModel {
  */
 @Component({
   selector: 'app-chapter-comments',
-  imports: [RouterLink, FormField, HasPermissionDirective, CommentTree, ReportCommentDialog],
+  imports: [FieldErrors, AriaInvalidDirective, RouterLink, FormField, HasPermissionDirective, CommentTree, ReportCommentDialog],
   templateUrl: './chapter-comments.html',
   styleUrl: './chapter-comments.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -88,10 +89,6 @@ export class ChapterComments {
     maxLength(path.content, COMMENT_MAX_LENGTH, { message: `Comments are limited to ${COMMENT_MAX_LENGTH} characters` });
     min(path.pageReference, 1, { message: 'Page must be 1 or more' });
   });
-
-  protected errors(field: AnyField): string[] {
-    return visibleErrors(field);
-  }
 
   protected startReport(comment: ChapterComment): void {
     this.reportConfirmation.set(null);

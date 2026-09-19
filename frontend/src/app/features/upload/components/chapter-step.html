@@ -5,23 +5,15 @@
   <div class="field">
     <label for="chapter-number">Chapter Number <span class="required" aria-hidden="true">*</span></label>
     <input id="chapter-number" type="text" placeholder="e.g. 1, 1.5, 10"
-           [formField]="form.chapterNumber" [attr.aria-invalid]="errors(form.chapterNumber).length > 0" aria-describedby="chapter-number-error" />
-    <div id="chapter-number-error" class="field-errors">
-      @for (msg of errors(form.chapterNumber); track $index) {
-        <span class="field-error">{{ msg }}</span>
-      }
-    </div>
+           [formField]="form.chapterNumber" [appAriaInvalid]="form.chapterNumber" aria-describedby="chapter-number-error" />
+    <app-field-errors id="chapter-number-error" [field]="form.chapterNumber" />
   </div>
 
   <div class="field">
     <label for="chapter-title">Chapter Title (Optional)</label>
     <input id="chapter-title" type="text" placeholder="e.g. Prologue, The Beginning"
-           [formField]="form.chapterTitle" [attr.aria-invalid]="errors(form.chapterTitle).length > 0" aria-describedby="chapter-title-error" />
-    <div id="chapter-title-error" class="field-errors">
-      @for (msg of errors(form.chapterTitle); track $index) {
-        <span class="field-error">{{ msg }}</span>
-      }
-    </div>
+           [formField]="form.chapterTitle" [appAriaInvalid]="form.chapterTitle" aria-describedby="chapter-title-error" />
+    <app-field-errors id="chapter-title-error" [field]="form.chapterTitle" />
   </div>
 
   <!-- Native radios: arrow keys, Space and checked state come from the browser. -->

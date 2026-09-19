@@ -8,10 +8,11 @@ import { FocusTrapDirective } from '@app/core/a11y/focus-trap.directive';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { WorkflowTask } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
-import { AnyField, visibleErrors } from '@app/features/auth/auth-form.utils';
 import { STAGES, tasksByStage, withTask, withTaskStage } from '../services/scanlation-board';
 import { PageReportsPanel } from './page-reports-panel';
 import { asyncAction } from '@app/core/utils/async-action';
+import { FieldErrors } from '@app/shared/forms/field-errors';
+import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
 
 interface SubmitModel {
   assetUrl: string;
@@ -20,7 +21,7 @@ interface SubmitModel {
 
 @Component({
   selector: 'app-kanban-board',
-  imports: [RouterLink, FormField, HasPermissionDirective, FocusTrapDirective, PageReportsPanel],
+  imports: [FieldErrors, AriaInvalidDirective, RouterLink, FormField, HasPermissionDirective, FocusTrapDirective, PageReportsPanel],
   templateUrl: './kanban-board.html',
   styleUrl: './kanban-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -70,10 +71,6 @@ export class KanbanBoard {
 
   constructor() {
     this.seo.private_('Scanlation workspace');
-  }
-
-  protected errors(field: AnyField): string[] {
-    return visibleErrors(field);
   }
 
   protected async claim(task: WorkflowTask): Promise<void> {

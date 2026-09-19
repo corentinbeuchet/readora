@@ -6,13 +6,14 @@ import { ListsApi } from '@app/core/api/lists-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { SeoService } from '@app/core/seo/seo.service';
-import { AnyField, visibleErrors } from '@app/features/auth/auth-form.utils';
 import { asyncAction } from '@app/core/utils/async-action';
+import { FieldErrors } from '@app/shared/forms/field-errors';
+import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
 
 /** Community lists (US-05): the most upvoted public lists, my lists, and a new-list form. */
 @Component({
   selector: 'app-lists-page',
-  imports: [RouterLink, FormField, HasPermissionDirective],
+  imports: [FieldErrors, AriaInvalidDirective, RouterLink, FormField, HasPermissionDirective],
   templateUrl: './lists-page.html',
   styleUrl: './lists.scss'
 })
@@ -34,10 +35,6 @@ export class ListsPage {
 
   constructor() {
     inject(SeoService).update({ title: 'Lists — curated by readers', description: 'Reading lists shared by the Readora community.', path: '/lists' });
-  }
-
-  protected errors(field: AnyField): string[] {
-    return visibleErrors(field);
   }
 
   /** Creates an empty private list, then opens it for editing. */

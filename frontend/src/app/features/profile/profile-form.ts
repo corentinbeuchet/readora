@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, output, signal, untracked } from '@angular/core';
-import { FieldTree, FormField, form, maxLength, pattern, required, submit } from '@angular/forms/signals';
+import { FormField, form, maxLength, pattern, required, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import { ProfileApi } from '@app/core/api/profile-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { UserProfile } from '@app/core/models/readora.models';
-import { apiErrorMessage, visibleErrors } from '@app/features/auth/auth-form.utils';
+import { apiErrorMessage } from '@app/core/api/api-client';
+import { FieldErrors } from '@app/shared/forms/field-errors';
+import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
 
 interface ProfileModel {
   displayName: string;
@@ -14,7 +16,7 @@ interface ProfileModel {
 
 @Component({
   selector: 'app-profile-form',
-  imports: [FormField],
+  imports: [FieldErrors, AriaInvalidDirective, FormField],
   templateUrl: './profile-form.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -52,10 +54,6 @@ export class ProfileForm {
         this.profileForm().reset({ displayName: p.displayName, bio: p.bio ?? '', avatarUrl: p.avatarUrl ?? '' });
       });
     });
-  }
-
-  protected errors(field: FieldTree<string>): string[] {
-    return visibleErrors(field);
   }
 
   protected async onSubmit(event: Event): Promise<void> {

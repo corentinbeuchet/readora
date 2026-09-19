@@ -1,18 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { FieldTree, FormField, email, form, maxLength, minLength, pattern, required, submit, validate } from '@angular/forms/signals';
+import { FormField, email, form, maxLength, minLength, pattern, required, submit, validate } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
-import {
-  PASSWORD_MAX_LENGTH,
-  PASSWORD_MIN_LENGTH,
-  USERNAME_MAX_LENGTH,
-  USERNAME_MIN_LENGTH,
-  USERNAME_PATTERN,
-  visibleErrors
-} from './auth-form.utils';
+import { FieldErrors } from '@app/shared/forms/field-errors';
+import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH, USERNAME_PATTERN } from './auth-form.utils';
 
 interface RegisterModel {
   email: string;
@@ -23,7 +18,7 @@ interface RegisterModel {
 
 @Component({
   selector: 'app-register-page',
-  imports: [RouterLink, FormField],
+  imports: [FieldErrors, AriaInvalidDirective, RouterLink, FormField],
   templateUrl: './register-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -56,10 +51,6 @@ export class RegisterPage {
 
   constructor() {
     this.seo.private_('Create an account');
-  }
-
-  protected errors(field: FieldTree<string>): string[] {
-    return visibleErrors(field);
   }
 
   protected async onSubmit(event: Event): Promise<void> {
