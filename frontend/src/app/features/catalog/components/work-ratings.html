@@ -2,7 +2,12 @@
   <h2 id="ratings-heading">Ratings &amp; reviews</h2>
 
   <p class="rating-summary">
-    @if (summary.hasValue() && summary.value().count > 0) {
+    @if (summary.error()) {
+      <span class="form-error" role="alert">
+        Could not load the ratings.
+        <button type="button" class="btn btn-link" (click)="summary.reload()">Retry</button>
+      </span>
+    } @else if (summary.hasValue() && summary.value().count > 0) {
       <span class="score" aria-hidden="true">★</span>
       <strong>{{ summary.value().average.toFixed(1) }}</strong>
       <span class="muted">/ 10 from {{ summary.value().count }} {{ summary.value().count === 1 ? 'rating' : 'ratings' }}</span>
@@ -29,7 +34,7 @@
     </fieldset>
 
     @if (!reviewOpen()) {
-      <button type="button" class="btn" (click)="reviewOpen.set(true)">{{ reviewModel().verdict ? 'Edit my review' : 'Write a review' }}</button>
+      <button type="button" class="btn" (click)="reviewOpen.set(true)">{{ hasReview() ? 'Edit my review' : 'Write a review' }}</button>
     } @else {
       <form class="card form review-form" (submit)="sendReview($event)" novalidate>
         <div class="field">
@@ -58,7 +63,12 @@
     }
   </ng-container>
 
-  @if (reviews.hasValue() && reviews.value().length > 0) {
+  @if (reviews.error()) {
+    <p class="form-error" role="alert">
+      Could not load the reviews.
+      <button type="button" class="btn btn-link" (click)="reviews.reload()">Retry</button>
+    </p>
+  } @else if (reviews.hasValue() && reviews.value().length > 0) {
     <ul class="review-list">
       @for (review of reviews.value(); track review.id) {
         <li class="card review">
@@ -71,7 +81,7 @@
           }
           <p><span class="review-label">Verdict:</span> {{ review.verdict }}</p>
           <p class="review-footer muted">
-            {{ helpfulVotes(review) }} found this helpful
+            {{ review.helpfulVotes }} found this helpful
             @if (review.authorId !== myUserId()) {
               <button *appHasPermission="'RATE_WORK'" type="button" class="btn btn-link" [disabled]="saving()" (click)="markHelpful(review)">
                 Helpful<span class="sr-only">: review by {{ review.authorUsername }}</span>

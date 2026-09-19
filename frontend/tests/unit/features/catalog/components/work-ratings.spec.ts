@@ -114,6 +114,41 @@ describe('WorkRatings (US-09)', () => {
     expect(fixture.nativeElement.querySelector('form.review-form')).toBeNull();
   });
 
+  it('keeps what I am typing in my review when I change my rating', async () => {
+    await open(true, 7);
+    Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find((b) => b.textContent?.includes('review'))!.click();
+    await settle(fixture);
+    const verdict: HTMLTextAreaElement = fixture.nativeElement.querySelector('#review-verdict');
+    verdict.value = 'Half-written thoughts';
+    verdict.dispatchEvent(new Event('input'));
+    await settle(fixture);
+
+    (fixture.nativeElement.querySelector('input[type="radio"][value="9"]') as HTMLInputElement).click();
+    http.expectOne(`${API}/works/w-1/rating`).flush({ success: true, data: { id: 'mine', workId: 'w-1', score: 9 }, error: null });
+    await settle(fixture);
+    http.match(`${API}/works/w-1/ratings`).forEach((r) => r.flush({ success: true, data: { average: 9, count: 1 }, error: null }));
+    await settle(fixture);
+
+    expect((fixture.nativeElement.querySelector('#review-verdict') as HTMLTextAreaElement).value).toBe('Half-written thoughts');
+    expect((fixture.nativeElement.querySelector('input[type="radio"][value="9"]') as HTMLInputElement).checked).toBe(true);
+  });
+
+  it('offers a retry when the ratings cannot be loaded', async () => {
+    fixture = TestBed.createComponent(WorkRatings);
+    fixture.componentRef.setInput('workId', 'w-1');
+    await settle(fixture);
+    http.expectOne(`${API}/works/w-1/ratings`).flush({ success: false, data: null, error: 'down' }, { status: 503, statusText: 'Unavailable' });
+    http.expectOne(`${API}/works/w-1/reviews`).flush({ success: true, data: [], error: null });
+    await settle(fixture);
+    const alert: HTMLElement = fixture.nativeElement.querySelector('[role="alert"]');
+    expect(alert.textContent).toContain('Could not load the ratings.');
+    alert.querySelector('button')!.click();
+    await settle(fixture);
+    http.expectOne(`${API}/works/w-1/ratings`).flush({ success: true, data: { average: 8, count: 2 }, error: null });
+    await settle(fixture);
+    expect(fixture.nativeElement.querySelector('[role="alert"]')).toBeNull();
+  });
+
   it("votes someone else's review helpful", async () => {
     await open(true, 9);
     const helpful: HTMLButtonElement = fixture.nativeElement.querySelector('.review-footer button');

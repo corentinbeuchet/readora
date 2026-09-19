@@ -1,5 +1,6 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
-import { Service, Signal, inject } from '@angular/core';
+import { ResourceRef, Service, Signal, inject } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { Observable, catchError, map, of, throwError } from 'rxjs';
 import { MyRating, RatingSummary, ReviewPayload, WorkReview } from '../models/readora.models';
 import { ApiClient, ApiError, parseEnvelope } from './api-client';
@@ -28,6 +29,17 @@ export class RatingsApi {
     return this.api.get<MyRating>(`/works/${workId}/rating/mine`).pipe(
       catchError((error: unknown) => (error instanceof ApiError && error.isNotFound ? of(null) : throwError(() => error)))
     );
+  }
+
+  /** My rating of the series (`null` when not rated yet); idle while `enabled` is false. */
+  mineResource(workId: Signal<string | undefined>, enabled: Signal<boolean>): ResourceRef<MyRating | null | undefined> {
+    return rxResource({
+      params: () => {
+        const id = workId();
+        return id && enabled() ? id : undefined;
+      },
+      stream: ({ params }) => this.mine(params)
+    });
   }
 
   summaryResource(workId: Signal<string | undefined>): HttpResourceRef<RatingSummary> {

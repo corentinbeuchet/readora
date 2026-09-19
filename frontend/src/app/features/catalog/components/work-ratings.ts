@@ -32,13 +32,19 @@ export class WorkRatings {
   protected readonly scores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   protected readonly summary = this.api.summaryResource(this.workId);
   protected readonly reviews = this.api.reviewsResource(this.workId);
-  protected readonly myScore = signal<number | null>(null);
+  /** My rating and review, only for readers who can rate. */
+  private readonly mine = this.api.mineResource(
+    this.workId,
+    computed(() => this.auth.can('RATE_WORK'))
+  );
+  protected readonly myScore = computed(() => (this.mine.hasValue() ? (this.mine.value()?.score ?? null) : null));
+  protected readonly hasReview = computed(() => (this.mine.hasValue() ? !!this.mine.value()?.verdict : false));
   protected readonly saving = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly reviewOpen = signal(false);
-  /** Helpful counts updated locally after a vote. */
-  private readonly votes = signal<Record<string, number>>({});
   protected readonly myUserId = computed(() => this.auth.user()?.id ?? null);
+  /** Series whose review the form was last filled from. */
+  private seededFor: string | null = null;
 
   protected readonly reviewModel = signal<ReviewModel>({ liked: '', disliked: '', verdict: '' });
   protected readonly reviewForm = form(this.reviewModel, (path) => {
@@ -49,21 +55,17 @@ export class WorkRatings {
   });
 
   constructor() {
-    // My existing rating and review, for readers who can rate.
+    // Fill the review form from my saved review. Like profile-form: a reload of the same series (after rating)
+    // never overwrites what I'm typing; only a pristine form, or another series, is re-filled.
     effect(() => {
+      const mine = this.mine.hasValue() ? this.mine.value() : undefined;
       const workId = this.workId();
-      if (!this.auth.can('RATE_WORK')) {
-        return;
-      }
       untracked(() => {
-        firstValueFrom(this.api.mine(workId))
-          .then((mine) => {
-            this.myScore.set(mine?.score ?? null);
-            if (mine?.verdict) {
-              this.reviewModel.set({ liked: mine.liked ?? '', disliked: mine.disliked ?? '', verdict: mine.verdict });
-            }
-          })
-          .catch(() => this.myScore.set(null));
+        if (mine === undefined || (workId === this.seededFor && this.reviewForm().dirty())) {
+          return;
+        }
+        this.seededFor = workId;
+        this.reviewForm().reset({ liked: mine?.liked ?? '', disliked: mine?.disliked ?? '', verdict: mine?.verdict ?? '' });
       });
     });
   }
@@ -72,14 +74,10 @@ export class WorkRatings {
     return visibleErrors(field);
   }
 
-  protected helpfulVotes(review: WorkReview): number {
-    return this.votes()[review.id] ?? review.helpfulVotes;
-  }
-
   protected async rate(score: number): Promise<void> {
     await this.run(async () => {
       const saved = await firstValueFrom(this.api.rate(this.workId(), score));
-      this.myScore.set(saved.score);
+      this.mine.set(saved);
       this.summary.reload();
     });
   }
@@ -94,7 +92,8 @@ export class WorkRatings {
     await submit(this.reviewForm, async (f) => {
       const { liked, disliked, verdict } = f().value();
       await this.run(async () => {
-        await firstValueFrom(this.api.review(this.workId(), { score, liked: liked || undefined, disliked: disliked || undefined, verdict }));
+        const saved = await firstValueFrom(this.api.review(this.workId(), { score, liked: liked || undefined, disliked: disliked || undefined, verdict }));
+        this.mine.set(saved);
         this.reviewOpen.set(false);
         this.reviews.reload();
       });
@@ -103,8 +102,8 @@ export class WorkRatings {
 
   protected async markHelpful(review: WorkReview): Promise<void> {
     await this.run(async () => {
-      const count = await firstValueFrom(this.api.markHelpful(review.id));
-      this.votes.update((all) => ({ ...all, [review.id]: count }));
+      const helpfulVotes = await firstValueFrom(this.api.markHelpful(review.id));
+      this.reviews.update((all) => all.map((r) => (r.id === review.id ? { ...r, helpfulVotes } : r)));
     });
   }
 
