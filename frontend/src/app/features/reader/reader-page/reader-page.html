@@ -3,11 +3,12 @@
   @if (chapter.isLoading()) {
     <p class="muted viewer-status" role="status" i18n="@@reader.page.loading">Loading chapter…</p>
   } @else if (chapter.error()) {
-    <div class="card viewer-status" role="alert">
+    <div class="card viewer-status">
       <h1 i18n="@@reader.page.unavailable">Chapter unavailable</h1>
-      <p class="muted" i18n="@@reader.page.unavailableHint">This chapter could not be loaded. It may have been unpublished or the link is wrong.</p>
-      <button type="button" class="btn" (click)="chapter.reload()" i18n="@@reader.page.retry">Retry</button>
-      <a routerLink="/works" class="btn btn-primary" i18n="@@reader.page.browseCatalog">Browse the catalog</a>
+      <app-load-error [error]="chapter.error()" notFound="This chapter doesn't exist. It may have been removed, or the link is wrong." i18n-notFound="@@reader.page.notFound" (retry)="chapter.reload()">
+        <ng-container i18n="@@reader.page.loadError">This chapter could not be loaded.</ng-container>
+        <a actions routerLink="/works" class="btn btn-link" i18n="@@reader.page.browseCatalog">Browse the catalog</a>
+      </app-load-error>
     </div>
   } @else {
     <!-- Controls stay focusable while hidden in zen mode: focusing one shows them again. -->

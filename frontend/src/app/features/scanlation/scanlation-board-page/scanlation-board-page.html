@@ -2,11 +2,12 @@
   @if (project.isLoading()) {
     <p class="muted" role="status" i18n="@@scanlation.board.loading">Loading project…</p>
   } @else if (project.error()) {
-    <div class="card" role="alert">
+    <div class="card">
       <h1 i18n="@@scanlation.board.unavailable.title">Project unavailable</h1>
-      <p class="muted" i18n="@@scanlation.board.unavailable.text">You may not be a member of this project, or it does not exist.</p>
-      <button type="button" class="btn" (click)="reload()" i18n="@@scanlation.board.retry">Retry</button>
-      <a routerLink="/" class="btn btn-primary" i18n="@@scanlation.board.backHome">Back to home</a>
+      <app-load-error [error]="project.error()" notFound="This project doesn't exist." i18n-notFound="@@scanlation.board.notFound" (retry)="reload()">
+        <ng-container i18n="@@scanlation.board.loadError">This project could not be loaded. Only its members can open it.</ng-container>
+        <a actions routerLink="/" class="btn btn-link" i18n="@@scanlation.board.backHome">Back to home</a>
+      </app-load-error>
     </div>
   } @else {
     <header class="kanban-header">

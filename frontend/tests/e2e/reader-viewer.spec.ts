@@ -20,7 +20,8 @@ test.describe('Reader Experience & Viewer Suite', () => {
   test('unknown chapter renders an error state instead of crashing', async ({ page }) => {
     await whenIVisit(page, '/read/00000000-0000-0000-0000-000000000000');
 
-    await thenISeeTheAlert(page, 'Chapter unavailable');
+    await thenICanSeeTheHeading(page, 'Chapter unavailable');
+    await thenISeeTheAlert(page, "This chapter doesn't exist.");
     await thenICanBrowseTheCatalog(page);
   });
 

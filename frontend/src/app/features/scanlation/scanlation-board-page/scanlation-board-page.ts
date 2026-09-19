@@ -13,6 +13,7 @@ import { PageReportsPanel } from './page-reports-panel/page-reports-panel';
 import { asyncAction } from '@app/core/utils/async-action';
 import { FieldErrors } from '@app/shared/forms/field-errors';
 import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
+import { LoadError } from '@app/shared/ui/load-error';
 
 interface SubmitModel {
   assetUrl: string;
@@ -21,7 +22,7 @@ interface SubmitModel {
 
 @Component({
   selector: 'app-scanlation-board-page',
-  imports: [FieldErrors, AriaInvalidDirective, RouterLink, FormField, HasPermissionDirective, Dialog, PageReportsPanel],
+  imports: [FieldErrors, AriaInvalidDirective, RouterLink, FormField, HasPermissionDirective, Dialog, PageReportsPanel, LoadError],
   templateUrl: './scanlation-board-page.html',
   styleUrl: './scanlation-board-page.scss'
 })

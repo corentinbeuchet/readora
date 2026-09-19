@@ -49,6 +49,28 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
     thenTheBoardHasTasks(3);
   });
 
+  it('says a missing project does not exist, with nothing to retry', async () => {
+    await givenIAmSignedInWith(['PROJECT_VIEW']);
+
+    await whenTheProjectFailsToLoad({ status: 404 });
+
+    thenISeeTheError("This project doesn't exist.");
+    thenICanRetry(false);
+  });
+
+  it('offers Retry when the project cannot be reached, and Retry loads the board', async () => {
+    await givenIAmSignedInWith(['PROJECT_VIEW']);
+
+    await whenTheProjectFailsToLoad({ status: 0 });
+
+    thenISeeTheError('This project could not be loaded.');
+    thenICanRetry(true);
+
+    await whenIRetryAndTheProjectLoads(PROJECT);
+
+    thenTheBoardHasTasks(3);
+  });
+
   it('a reader-like member with PROJECT_VIEW only sees no Claim / Submit / Publish buttons', async () => {
     await givenIAmSignedInWith(['PROJECT_VIEW']);
     await givenIOpenTheBoard(PROJECT);
@@ -220,6 +242,22 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
     await settle(fixture);
   }
 
+  async function whenTheProjectFailsToLoad(failure: { status: 0 | 404 }): Promise<void> {
+    await settle(fixture);
+    const request = http.expectOne(`${API}/scanlation/projects/${PROJECT_ID}`);
+    if (failure.status === 404) {
+      request.flush(fail('Project not found'), { status: 404, statusText: 'Not Found' });
+    } else {
+      request.error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
+    }
+    await settle(fixture);
+  }
+
+  async function whenIRetryAndTheProjectLoads(project: ScanlationProject): Promise<void> {
+    retryButton()!.click();
+    await givenIOpenTheBoard(project);
+  }
+
   async function whenIClaim(task: WorkflowTask, answer: { assignedTo: string }): Promise<void> {
     taskButton(task, '.btn-claim').click();
     lastRequest = http.expectOne(`${TASKS_URL}/${task.id}/claim`);
@@ -336,6 +374,10 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
     expect(page().querySelector('[role="alert"]')?.textContent).toContain(text);
   }
 
+  function thenICanRetry(possible: boolean): void {
+    expect(retryButton() !== undefined).toBe(possible);
+  }
+
   function thenICanSee(text: string): void {
     expect(page().textContent).toContain(text);
   }
@@ -355,6 +397,10 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
 
   function page(): HTMLElement {
     return fixture.nativeElement as HTMLElement;
+  }
+
+  function retryButton(): HTMLButtonElement | undefined {
+    return Array.from(page().querySelectorAll<HTMLButtonElement>('[role="alert"] button')).find((b) => b.textContent?.trim() === 'Retry');
   }
 
   /** Task cards shown in one column of the board. */

@@ -216,11 +216,24 @@ describe('ReaderPage (API-driven)', () => {
     thenIAmOnPage(1);
   });
 
-  it('shows an error state (no crash) when the chapter cannot be loaded', async () => {
+  it('says a missing chapter does not exist, with nothing to retry', async () => {
     await whenIOpenAMissingChapter('unknown');
 
-    thenTheAlertSays('Chapter unavailable');
+    thenThePageHeadingIs('Chapter unavailable');
+    thenTheAlertSays("This chapter doesn't exist.");
+    thenICanRetry(false);
     thenNoPageImageIsShown();
+  });
+
+  it('offers Retry when the chapter cannot be reached, and Retry loads it', async () => {
+    await whenTheChapterCannotBeReached(MOCK_CHAPTER);
+
+    thenTheAlertSays('This chapter could not be loaded.');
+    thenICanRetry(true);
+
+    await whenIRetryAndTheChapterLoads(MOCK_CHAPTER);
+
+    thenIAmOnPage(1);
   });
 
   it('shows the Premium upsell and never syncs progress for a free reader', async () => {
@@ -846,6 +859,18 @@ describe('ReaderPage (API-driven)', () => {
     await settle(fixture);
   }
 
+  async function whenTheChapterCannotBeReached(opened: Chapter): Promise<void> {
+    fixture.componentRef.setInput('chapterId', opened.id);
+    await settle(fixture);
+    http.expectOne((r) => r.url === `${API}/chapters/${opened.id}`).error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
+    await settle(fixture);
+  }
+
+  async function whenIRetryAndTheChapterLoads(opened: Chapter): Promise<void> {
+    retryButton()!.click();
+    await openChapter(opened);
+  }
+
   async function whenISwitchTo(mode: 'Vertical' | 'Paged'): Promise<void> {
     await switchMode(mode);
   }
@@ -1171,6 +1196,14 @@ describe('ReaderPage (API-driven)', () => {
     expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain(text);
   }
 
+  function thenThePageHeadingIs(text: string): void {
+    expect(fixture.nativeElement.querySelector('h1').textContent.trim()).toBe(text);
+  }
+
+  function thenICanRetry(possible: boolean): void {
+    expect(retryButton() !== undefined).toBe(possible);
+  }
+
   function thenNoPageImageIsShown(): void {
     expect(fixture.nativeElement.querySelectorAll('img.page-image')).toHaveLength(0);
   }
@@ -1410,6 +1443,10 @@ describe('ReaderPage (API-driven)', () => {
     await settle(fixture);
     http.match(`${API}/comments/chapter/${opened.id}`).forEach((r) => r.flush(ok([])));
     await settle(fixture);
+  }
+
+  function retryButton(): HTMLButtonElement | undefined {
+    return Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('[role="alert"] button')).find((b) => b.textContent?.trim() === 'Retry');
   }
 
   async function switchMode(label: 'Vertical' | 'Paged'): Promise<void> {

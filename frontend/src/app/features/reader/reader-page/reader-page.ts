@@ -5,6 +5,7 @@ import { HasPermissionDirective } from '@app/core/auth/has-permission.directive'
 import { LayoutStore } from '@app/core/layout/layout-store';
 import { SeoService } from '@app/core/seo/seo.service';
 import { ChapterComments } from '@app/features/social/chapter-comments/chapter-comments';
+import { LoadError } from '@app/shared/ui/load-error';
 import { ChapterEnd } from './chapter-end/chapter-end';
 import { PageProgress } from './page-progress/page-progress';
 import { PagedFlow } from './paged-flow/paged-flow';
@@ -48,7 +49,8 @@ function pageParamToIndex(raw: string | number | null | undefined): number | nul
     PagedFlow,
     ChapterEnd,
     ChapterComments,
-    ReportPageDialog
+    ReportPageDialog,
+    LoadError
   ],
   templateUrl: './reader-page.html',
   styleUrl: './reader-page.scss',
