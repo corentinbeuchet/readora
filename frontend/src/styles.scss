@@ -453,3 +453,18 @@ fieldset.field {
   gap: 1rem;
   margin-top: 1.5rem;
 }
+
+/*
+ * Users who ask their system for reduced motion (vestibular disorders, WCAG 2.3.3) get no animations or transitions:
+ * state changes still happen, just instantly. The loading spinner stops; its role="status" text still says "Loading".
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
