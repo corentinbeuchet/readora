@@ -2,8 +2,8 @@ import { Component, ElementRef, inject, input, output, viewChild } from '@angula
 import { RouterLink } from '@angular/router';
 import { Toolbar, ToolbarWidget, ToolbarWidgetGroup } from '@angular/aria/toolbar';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
-import { AutoScroller } from '@app/features/reader/services/auto-scroller';
-import { ReaderState } from '@app/features/reader/services/reader-state';
+import { AutoScroller } from '@app/features/reader/reader-page/auto-scroller';
+import { ReaderState } from '@app/features/reader/reader-page/reader-state';
 
 /** Reader header: series and chapter, page position (announced to screen readers), and the reader controls. */
 @Component({

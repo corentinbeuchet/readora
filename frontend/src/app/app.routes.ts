@@ -53,7 +53,7 @@ export const routes: Routes = [
   { path: 'read', redirectTo: 'works', pathMatch: 'full' },
   {
     path: 'read/:chapterId',
-    loadComponent: () => import('@app/features/reader/reader-page').then((m) => m.ReaderPage)
+    loadComponent: () => import('@app/features/reader/reader-page/reader-page').then((m) => m.ReaderPage)
   },
   {
     path: 'scanlation',

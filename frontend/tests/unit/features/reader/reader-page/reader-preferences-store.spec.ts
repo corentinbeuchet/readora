@@ -9,7 +9,7 @@ import {
   ReaderPreferencesStore,
   SeriesLayout,
   defaultLayout
-} from '@app/features/reader/services/reader-preferences-store';
+} from '@app/features/reader/reader-page/reader-preferences-store';
 import { MemoryStorage } from '../../../test-utils';
 
 interface Settings {

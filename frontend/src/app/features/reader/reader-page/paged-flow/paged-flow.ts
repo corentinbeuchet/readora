@@ -1,8 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { FALLBACK_PAGE_IMAGE, onImageError } from '@app/core/utils/image-utils';
-import { ReaderPreferencesStore } from '@app/features/reader/services/reader-preferences-store';
-import { ReaderState } from '@app/features/reader/services/reader-state';
+import { ReaderPreferencesStore } from '@app/features/reader/reader-page/reader-preferences-store';
+import { ReaderState } from '@app/features/reader/reader-page/reader-state';
 
 /** Minimum horizontal travel (px) for a touch swipe to turn the page. */
 const SWIPE_THRESHOLD_PX = 50;

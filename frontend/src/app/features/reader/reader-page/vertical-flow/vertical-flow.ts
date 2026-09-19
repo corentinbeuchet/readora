@@ -1,8 +1,8 @@
 import { Component, DOCUMENT, DestroyRef, ElementRef, afterRenderEffect, inject, untracked, viewChildren } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { FALLBACK_PAGE_IMAGE, onImageError } from '@app/core/utils/image-utils';
-import { ReaderPreferencesStore } from '@app/features/reader/services/reader-preferences-store';
-import { ReaderState } from '@app/features/reader/services/reader-state';
+import { ReaderPreferencesStore } from '@app/features/reader/reader-page/reader-preferences-store';
+import { ReaderState } from '@app/features/reader/reader-page/reader-state';
 
 /**
  * Vertical (webtoon) mode: every page one below the other. The page crossing the middle of the viewport is the

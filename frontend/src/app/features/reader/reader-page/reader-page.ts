@@ -4,21 +4,21 @@ import { ChaptersApi } from '@app/core/api/chapters-api';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { LayoutStore } from '@app/core/layout/layout-store';
 import { SeoService } from '@app/core/seo/seo.service';
-import { ChapterComments } from '@app/features/social/components/chapter-comments';
-import { ChapterEnd } from './components/chapter-end';
-import { PageProgress } from './components/page-progress';
-import { PagedFlow } from './components/paged-flow';
-import { ReaderChapterList } from './components/reader-chapter-list';
-import { ReaderSettingsPanel } from './components/reader-settings-panel';
-import { ReaderToolbar } from './components/reader-toolbar';
-import { ReportPageDialog } from './components/report-page-dialog';
-import { VerticalFlow } from './components/vertical-flow';
-import { AutoScroller } from './services/auto-scroller';
-import { ReaderPreferencesStore } from './services/reader-preferences-store';
-import { ReaderState } from './services/reader-state';
-import { ReadingTracker } from './services/reading-tracker';
+import { ChapterComments } from '@app/features/social/chapter-comments/chapter-comments';
+import { ChapterEnd } from './chapter-end/chapter-end';
+import { PageProgress } from './page-progress/page-progress';
+import { PagedFlow } from './paged-flow/paged-flow';
+import { ReaderChapterList } from './reader-chapter-list/reader-chapter-list';
+import { ReaderSettingsPanel } from './reader-settings-panel/reader-settings-panel';
+import { ReaderToolbar } from './reader-toolbar/reader-toolbar';
+import { ReportPageDialog } from './report-page-dialog/report-page-dialog';
+import { VerticalFlow } from './vertical-flow/vertical-flow';
+import { AutoScroller } from './auto-scroller';
+import { ReaderPreferencesStore } from './reader-preferences-store';
+import { ReaderState } from './reader-state';
+import { ReadingTracker } from './reading-tracker';
 
-export { PROGRESS_SYNC_DEBOUNCE_MS } from './services/reading-tracker';
+export { PROGRESS_SYNC_DEBOUNCE_MS } from './reading-tracker';
 
 /** Screens at least this wide can show two pages side by side. */
 export const DOUBLE_PAGE_MEDIA_QUERY = '(min-width: 1024px)';

@@ -2,7 +2,7 @@ import { Route } from '@angular/router';
 import { routes } from '@app/app.routes';
 import { serverRoutes } from '@app/app.routes.server';
 import { PrerenderFallback, RenderMode } from '@angular/ssr';
-import { ReaderPage } from '@app/features/reader/reader-page';
+import { ReaderPage } from '@app/features/reader/reader-page/reader-page';
 import { ScanlationBoardPage } from '@app/features/scanlation/scanlation-board-page';
 
 describe('app routes', () => {

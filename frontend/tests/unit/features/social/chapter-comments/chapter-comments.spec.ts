@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { ChapterComments, insertInThread } from '@app/features/social/components/chapter-comments';
+import { ChapterComments, insertInThread } from '@app/features/social/chapter-comments/chapter-comments';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { ChapterComment, UserProfile } from '@app/core/models/readora.models';
 import { mockUser, signIn } from '../../../core/auth/auth-fixtures';

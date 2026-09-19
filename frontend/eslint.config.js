@@ -37,7 +37,7 @@ function restrictImports(...patterns) {
  * Layers: core <- shared <- features. A feature imports only itself; the reader embeds the comments of the
  * `social` feature (the one cross-feature import).
  */
-const CROSS_FEATURE_ALLOWED = { reader: ["social/components/chapter-comments$"] };
+const CROSS_FEATURE_ALLOWED = { reader: ["social/chapter-comments/chapter-comments$"] };
 const featureBlocks = readdirSync(`${__dirname}/src/app/features`, { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map(({ name }) => ({

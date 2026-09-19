@@ -1,13 +1,13 @@
 import { ComponentFixture, DeferBlockBehavior, DeferBlockState, TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
-import { PROGRESS_SYNC_DEBOUNCE_MS, ReaderPage, ZEN_CONTROLS_HIDE_MS } from '@app/features/reader/reader-page';
-import { ReaderState } from '@app/features/reader/services/reader-state';
-import { ReaderPreferencesStore } from '@app/features/reader/services/reader-preferences-store';
+import { PROGRESS_SYNC_DEBOUNCE_MS, ReaderPage, ZEN_CONTROLS_HIDE_MS } from '@app/features/reader/reader-page/reader-page';
+import { ReaderState } from '@app/features/reader/reader-page/reader-state';
+import { ReaderPreferencesStore } from '@app/features/reader/reader-page/reader-preferences-store';
 import { LayoutStore } from '@app/core/layout/layout-store';
 import { Chapter, ChapterComment, Permission } from '@app/core/models/readora.models';
-import { givenIAmSignedInWith } from '../../core/auth/auth-fixtures';
-import { ANY_URL, API, fail, ok, provideHttpTesting, settle } from '../../test-utils';
+import { givenIAmSignedInWith } from '../../../core/auth/auth-fixtures';
+import { ANY_URL, API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 
 const MOCK_CHAPTER: Chapter = {
   id: 'chap-10-uuid',

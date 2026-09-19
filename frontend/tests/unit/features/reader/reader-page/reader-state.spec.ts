@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ReaderState } from '@app/features/reader/services/reader-state';
-import { ReaderPreferencesStore, ReadingDirection, SeriesLayout, ViewMode } from '@app/features/reader/services/reader-preferences-store';
+import { ReaderState } from '@app/features/reader/reader-page/reader-state';
+import { ReaderPreferencesStore, ReadingDirection, SeriesLayout, ViewMode } from '@app/features/reader/reader-page/reader-preferences-store';
 import { BrowserStorage } from '@app/core/storage/browser-storage';
 import { Chapter } from '@app/core/models/readora.models';
 import { MemoryStorage } from '../../../test-utils';
