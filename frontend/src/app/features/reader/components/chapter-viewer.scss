@@ -197,6 +197,41 @@
   margin-bottom: 0.5rem;
 }
 
+.top-comments {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 0 2rem;
+
+  h2 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+.top-comment {
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+
+  p {
+    margin-top: 0.25rem;
+    white-space: pre-line;
+  }
+}
+
+.top-comment-author {
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
 // Background around the pages (the reader's choice); the controls keep the site colours.
 .viewer-body {
   background: var(--reader-bg, #000);

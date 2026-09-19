@@ -21,6 +21,17 @@ export class CommentsApi {
     return this.api.post<CommentUpvote>(`/comments/${commentId}/upvote`);
   }
 
+  /** The best comments shown at the end of a chapter: top-level, no spoilers, most upvoted first (US-07). */
+  topResource(chapterId: Signal<string | null | undefined>, limit = 3): HttpResourceRef<ChapterComment[]> {
+    return httpResource<ChapterComment[]>(
+      () => {
+        const id = chapterId();
+        return id ? { url: this.api.url(`/comments/chapter/${id}/top`), params: { limit } } : undefined;
+      },
+      { parse: (raw) => parseEnvelope<ChapterComment[]>(raw) ?? [], defaultValue: [] }
+    );
+  }
+
   forChapterResource(chapterId: Signal<string | null | undefined>): HttpResourceRef<ChapterComment[]> {
     return httpResource<ChapterComment[]>(
       () => {

@@ -21,6 +21,7 @@ import { Subject, catchError, debounceTime, distinctUntilChanged, map, of, switc
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BookmarksApi } from '@app/core/api/bookmarks-api';
 import { ChaptersApi } from '@app/core/api/chapters-api';
+import { CommentsApi } from '@app/core/api/comments-api';
 import { ReadingApi } from '@app/core/api/reading-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
@@ -107,6 +108,9 @@ export class ChapterViewer {
   private readonly pageWrappers = viewChildren<ElementRef<HTMLElement>>('pageWrapper');
 
   protected readonly chapter = this.chaptersApi.chapterResource(this.chapterId);
+  /** Chapter whose last page the reader reached: its best comments load then, and stay (US-07). */
+  private readonly endReachedFor = signal<string | null>(null);
+  protected readonly topComments = inject(CommentsApi).topResource(this.endReachedFor);
   protected readonly canSaveProgress = computed(() => this.auth.can('BOOKMARK_WRITE'));
   protected readonly syncStatus = signal<SyncStatus>('idle');
   /** Free history / read markers (US-07); separate from the Premium exact-page bookmark. */
@@ -194,6 +198,13 @@ export class ChapterViewer {
             type: 'article'
           });
         });
+      }
+    });
+
+    effect(() => {
+      const current = this.state.currentChapter();
+      if (current && this.state.isLastPage() && untracked(this.endReachedFor) !== current.id) {
+        this.endReachedFor.set(current.id);
       }
     });
 

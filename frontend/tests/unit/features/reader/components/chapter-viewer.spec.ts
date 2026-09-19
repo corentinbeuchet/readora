@@ -83,6 +83,8 @@ describe('ChapterViewer (API-driven)', () => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+    // Reaching the last page loads the chapter's top comments (own test below).
+    http.match((r) => r.url.endsWith('/top')).forEach((r) => r.flush({ success: true, data: [], error: null }));
     http.verify();
   });
 
@@ -486,6 +488,37 @@ describe('ChapterViewer (API-driven)', () => {
     await loadChapter(undefined, latest);
     await switchMode('Vertical');
     expect(fixture.nativeElement.querySelector('.chapter-end').textContent).toContain("You're up to date");
+  });
+
+  it('Seeing the best comments at the end of a chapter', async () => {
+    await loadChapter();
+    await switchMode('Paged');
+    http.expectNone((r) => r.url.endsWith('/top'));
+
+    click('button.btn-next');
+    click('button.btn-next');
+    await settle(fixture);
+    const req = http.expectOne(`${API}/comments/chapter/${MOCK_CHAPTER.id}/top?limit=3`);
+    req.flush({
+      success: true,
+      data: [
+        { id: 'k1', chapterId: MOCK_CHAPTER.id, authorId: 'u1', authorUsername: 'aoi', content: 'That ending!', depth: 1, isSpoiler: false, upvotes: 12, createdAt: '' },
+        { id: 'k2', chapterId: MOCK_CHAPTER.id, authorId: 'u2', authorUsername: 'kenji', content: 'Art is gorgeous', depth: 1, isSpoiler: false, upvotes: 4, createdAt: '' }
+      ],
+      error: null
+    });
+    await settle(fixture);
+
+    const items: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.top-comments li'));
+    expect(items.map((li) => li.querySelector('p')!.textContent)).toEqual(['That ending!', 'Art is gorgeous']);
+    expect(items[0].querySelector('a')!.getAttribute('href')).toBe('/u/aoi');
+
+    // Going back a page keeps them; nothing is fetched again.
+    click('button.btn-prev');
+    click('button.btn-next');
+    await settle(fixture);
+    http.expectNone((r) => r.url.endsWith('/top'));
+    expect(fixture.nativeElement.querySelectorAll('.top-comments li')).toHaveLength(2);
   });
 
   function openSettings(): HTMLElement {

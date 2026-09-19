@@ -248,6 +248,21 @@
         </nav>
       }
 
+      @if (topComments.hasValue() && topComments.value().length > 0) {
+        <section class="top-comments" aria-labelledby="top-comments-heading">
+          <h2 id="top-comments-heading">Top comments</h2>
+          <ul>
+            @for (top of topComments.value(); track top.id) {
+              <li class="top-comment">
+                <a class="top-comment-author" [routerLink]="['/u', top.authorUsername]">{{ top.authorUsername }}</a>
+                <span class="muted">▲ {{ top.upvotes }}<span class="sr-only"> upvotes</span></span>
+                <p>{{ top.content }}</p>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
       <!-- Below the pages: load the comments code and data only when the reader gets there. -->
       @defer (on viewport; when !!comment()) {
         <app-chapter-comments [chapterId]="current.id" [highlightId]="comment()" />
