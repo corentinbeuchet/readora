@@ -658,6 +658,16 @@ describe('ReaderPage (API-driven)', () => {
     thenToolbarButtonIsPressed('Auto-scroll', false);
   });
 
+  it('zooms with toolbar buttons whose name is their visible text', async () => {
+    await givenIAmReading(MOCK_CHAPTER);
+
+    whenIPressTheToolbarButton('Zoom in');
+
+    thenThePagesAreScaledTo(1.1);
+    thenToolbarButtonIsNamedByItsText('Zoom in');
+    thenToolbarButtonIsNamedByItsText('Zoom out');
+  });
+
   it('Reading in zen mode', async () => {
     await givenIAmReading(MOCK_CHAPTER);
     givenTimeIsFrozen();
@@ -1215,6 +1225,15 @@ describe('ReaderPage (API-driven)', () => {
 
   function thenToolbarButtonIsExpanded(label: string, expanded: boolean): void {
     expect(toolbarButton(label).getAttribute('aria-expanded')).toBe(String(expanded));
+  }
+
+  function thenThePagesAreScaledTo(scale: number): void {
+    expect(fixture.nativeElement.querySelector('.viewer-body').style.transform).toBe(`scale(${scale})`);
+  }
+
+  /** WCAG 2.5.3 Label in Name: a different `aria-label` stops voice control from matching what is on screen. */
+  function thenToolbarButtonIsNamedByItsText(label: string): void {
+    expect(toolbarButton(label).hasAttribute('aria-label')).toBe(false);
   }
 
   function thenThereIsNoToolbarButton(label: string): void {
