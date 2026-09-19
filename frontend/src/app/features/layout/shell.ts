@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@angular/aria/menu';
 import { AuthStore } from '@app/core/auth/auth-store';
@@ -15,8 +15,7 @@ import { NotificationBell } from './notification-bell';
   selector: 'app-shell',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, Menu, MenuItem, MenuTrigger, MenuContent, HasPermissionDirective, Omnisearch, NotificationBell],
   templateUrl: './shell.html',
-  styleUrl: './shell.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './shell.scss'
 })
 export class Shell {
   protected readonly auth = inject(AuthStore);

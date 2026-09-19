@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { BookmarksApi } from '@app/core/api/bookmarks-api';
@@ -9,8 +9,7 @@ import { LoadError } from '@app/shared/ui/load-error';
   selector: 'app-bookmark-list',
   imports: [LoadError, RouterLink, DatePipe],
   templateUrl: './bookmark-list.html',
-  styleUrl: './bookmark-list.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './bookmark-list.scss'
 })
 export class BookmarkList {
   private readonly bookmarksApi = inject(BookmarksApi);

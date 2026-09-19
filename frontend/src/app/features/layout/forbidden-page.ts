@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { SeoService } from '@app/core/seo/seo.service';
@@ -18,8 +18,7 @@ import { SeoService } from '@app/core/seo/seo.service';
         }
       </div>
     </section>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class ForbiddenPage {
   protected readonly auth = inject(AuthStore);

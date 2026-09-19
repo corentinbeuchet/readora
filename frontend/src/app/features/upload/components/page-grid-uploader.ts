@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, model, signal } from '@angular/core';
+import { Component, DestroyRef, inject, model, signal } from '@angular/core';
 import { I18nPluralPipe } from '@angular/common';
 import {
   ArchiveError,
@@ -37,8 +37,7 @@ function newId(): string {
   selector: 'app-page-grid-uploader',
   imports: [I18nPluralPipe],
   templateUrl: './page-grid-uploader.html',
-  styleUrl: './page-grid-uploader.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './page-grid-uploader.scss'
 })
 export class PageGridUploader {
   readonly pages = model<PageUploadItem[]>([]);

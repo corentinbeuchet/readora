@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { Component, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { FormField, form, maxLength, pattern, required, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import { ProfileApi } from '@app/core/api/profile-api';
@@ -17,8 +17,7 @@ interface ProfileModel {
 @Component({
   selector: 'app-profile-form',
   imports: [FieldErrors, AriaInvalidDirective, FormField],
-  templateUrl: './profile-form.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './profile-form.html'
 })
 export class ProfileForm {
   private readonly profileApi = inject(ProfileApi);

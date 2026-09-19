@@ -1,8 +1,8 @@
 # Frontend conventions (Angular 22, standalone, zoneless, signals, SSR)
 
 ## Components
-- Standalone and OnPush are the Angular 22 defaults: don't write `standalone: true` and don't add `changeDetection`
-  (existing explicit `OnPush` is harmless, leave it). Zoneless: no zone.js, no `provideZoneChangeDetection`,
+- Standalone and OnPush are the Angular 22 defaults: never write `standalone: true` or `changeDetection` (angular.dev
+  best practices for v22; the explicit ones were removed). Zoneless: no zone.js, no `provideZoneChangeDetection`,
   no `NgZone.onStable` — use `afterNextRender()` / `afterEveryRender()`.
 - Dependencies via `inject()` in fields: `private readonly api = inject(CatalogApi);` (never constructor injection).
 - Template visibility (user rule, version-gated):

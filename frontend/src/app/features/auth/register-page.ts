@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormField, email, form, maxLength, minLength, pattern, required, submit, validate } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
@@ -19,8 +19,7 @@ interface RegisterModel {
 @Component({
   selector: 'app-register-page',
   imports: [FieldErrors, AriaInvalidDirective, RouterLink, FormField],
-  templateUrl: './register-page.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './register-page.html'
 })
 export class RegisterPage {
   private readonly auth = inject(AuthStore);

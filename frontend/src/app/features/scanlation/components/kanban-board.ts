@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormField, form, min, pattern, required, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
@@ -23,8 +23,7 @@ interface SubmitModel {
   selector: 'app-kanban-board',
   imports: [FieldErrors, AriaInvalidDirective, RouterLink, FormField, HasPermissionDirective, Dialog, PageReportsPanel],
   templateUrl: './kanban-board.html',
-  styleUrl: './kanban-board.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './kanban-board.scss'
 })
 export class KanbanBoard {
   protected readonly auth = inject(AuthStore);

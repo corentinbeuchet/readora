@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { CatalogApi } from '@app/core/api/catalog-api';
@@ -40,8 +40,7 @@ function oneOf<T extends string>(allowed: readonly T[], value: string | undefine
   selector: 'app-works-page',
   imports: [WorkCover, LoadError, RouterLink, HasPermissionDirective],
   templateUrl: './works-page.html',
-  styleUrl: './works-page.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './works-page.scss'
 })
 export class WorksPage {
   private readonly catalogApi = inject(CatalogApi);

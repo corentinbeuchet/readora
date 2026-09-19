@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import { Component, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AuthStore } from '@app/core/auth/auth-store';
@@ -14,8 +14,7 @@ export type CheckoutOutcome = 'success' | 'cancel';
 @Component({
   selector: 'app-checkout-result-page',
   imports: [RouterLink],
-  templateUrl: './checkout-result-page.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './checkout-result-page.html'
 })
 export class CheckoutResultPage {
   private readonly auth = inject(AuthStore);

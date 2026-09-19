@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SeoService } from '@app/core/seo/seo.service';
 
@@ -13,8 +13,7 @@ import { SeoService } from '@app/core/seo/seo.service';
         <a routerLink="/" class="btn btn-primary">Back to home</a>
       </div>
     </section>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class NotFoundPage {
   constructor() {

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 
 /**
  * Cover image picker (drop zone or file dialog) with its preview. Presentational: the parent owns
@@ -7,8 +7,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 @Component({
   selector: 'app-cover-picker',
   templateUrl: './cover-picker.html',
-  styleUrl: './cover-picker.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './cover-picker.scss'
 })
 export class CoverPicker {
   readonly previewUrl = input<string>('');

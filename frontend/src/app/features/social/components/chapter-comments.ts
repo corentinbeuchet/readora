@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DOCUMENT, afterRenderEffect, computed, inject, input, signal } from '@angular/core';
+import { Component, DOCUMENT, afterRenderEffect, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormField, form, maxLength, min, required, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
@@ -47,8 +47,7 @@ interface CommentModel {
   selector: 'app-chapter-comments',
   imports: [LoadError, FieldErrors, AriaInvalidDirective, RouterLink, FormField, HasPermissionDirective, CommentTree, ReportCommentDialog],
   templateUrl: './chapter-comments.html',
-  styleUrl: './chapter-comments.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './chapter-comments.scss'
 })
 export class ChapterComments {
   private readonly commentsApi = inject(CommentsApi);

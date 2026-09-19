@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DOCUMENT, computed, inject, signal } from '@angular/core';
+import { Component, DOCUMENT, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -32,8 +32,7 @@ export function isTrustedCheckoutUrl(url: string): boolean {
   selector: 'app-plans-page',
   imports: [RouterLink, DatePipe],
   templateUrl: './plans-page.html',
-  styleUrl: './plans-page.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './plans-page.scss'
 })
 export class PlansPage {
   private readonly subscriptionsApi = inject(SubscriptionsApi);

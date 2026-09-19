@@ -1,4 +1,4 @@
-import { afterNextRender, ChangeDetectionStrategy, Component, computed, inject, model, viewChild } from '@angular/core';
+import { afterNextRender, Component, computed, inject, model, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Tab, TabContent, TabList, TabPanel, Tabs } from '@angular/aria/tabs';
@@ -14,8 +14,7 @@ export type ProfileTab = 'overview' | 'bookmarks' | 'subscription';
   selector: 'app-profile-page',
   imports: [RouterLink, DatePipe, Tabs, TabList, Tab, TabPanel, TabContent, ProfileForm, BookmarkList],
   templateUrl: './profile-page.html',
-  styleUrl: './profile-page.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './profile-page.scss'
 })
 export class ProfilePage {
   protected readonly auth = inject(AuthStore);

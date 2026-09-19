@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, linkedSignal, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CatalogApi } from '@app/core/api/catalog-api';
@@ -20,8 +20,7 @@ import { WorkCover } from '@app/shared/ui/work-cover';
   selector: 'app-work-detail-page',
   imports: [WorkCover, LoadError, RouterLink, DatePipe, HasPermissionDirective, WorkRatings, AddToList],
   templateUrl: './work-detail-page.html',
-  styleUrl: './work-detail-page.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './work-detail-page.scss'
 })
 export class WorkDetailPage {
   private readonly catalogApi = inject(CatalogApi);

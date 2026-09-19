@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormField, email, form, required, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
@@ -16,8 +16,7 @@ interface LoginModel {
 @Component({
   selector: 'app-login-page',
   imports: [FieldErrors, AriaInvalidDirective, RouterLink, FormField],
-  templateUrl: './login-page.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './login-page.html'
 })
 export class LoginPage {
   private readonly auth = inject(AuthStore);

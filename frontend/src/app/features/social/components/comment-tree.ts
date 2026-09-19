@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, computed, input, output, signal } from '@angular/core';
+import { Component, computed, input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ChapterComment } from '@app/core/models/readora.models';
@@ -7,8 +7,7 @@ import { ChapterComment } from '@app/core/models/readora.models';
   selector: 'app-comment-tree',
   imports: [DatePipe, RouterLink],
   templateUrl: './comment-tree.html',
-  styleUrl: './comment-tree.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './comment-tree.scss'
 })
 export class CommentTree {
   readonly comments = input<ChapterComment[]>([]);
