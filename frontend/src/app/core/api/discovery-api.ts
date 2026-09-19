@@ -1,8 +1,8 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal, inject } from '@angular/core';
-import { Observable, catchError, of, throwError } from 'rxjs';
+import { Observable } from 'rxjs';
 import { CatalogQuery, RankedWork, RankingPeriod, Release, WorkSummary } from '../models/readora.models';
-import { ApiClient, ApiError, parseEnvelope } from './api-client';
+import { ApiClient, nullIfNotFound, parseEnvelope } from './api-client';
 import { catalogParams } from './catalog-api';
 
 /** Latest updates, rankings and random picks (US-08). All public; "mine" needs a signed-in reader. */
@@ -17,15 +17,17 @@ export class DiscoveryApi {
     );
   }
 
-  popularResource(period: Signal<RankingPeriod>): HttpResourceRef<RankedWork[]> {
+  /** Popular series for a period; idle while `enabled` is false (another ranking is shown). */
+  popularResource(period: Signal<RankingPeriod>, enabled: Signal<boolean>): HttpResourceRef<RankedWork[]> {
     return httpResource<RankedWork[]>(
-      () => ({ url: this.api.url('/rankings/popular'), params: { period: period() } }),
+      () => (enabled() ? { url: this.api.url('/rankings/popular'), params: { period: period() } } : undefined),
       { parse: (raw) => parseEnvelope<RankedWork[]>(raw) ?? [], defaultValue: [] }
     );
   }
 
-  topRatedResource(): HttpResourceRef<RankedWork[]> {
-    return httpResource<RankedWork[]>(() => this.api.url('/rankings/top-rated'), {
+  /** Best rated series; idle while `enabled` is false (another ranking is shown). */
+  topRatedResource(enabled: Signal<boolean>): HttpResourceRef<RankedWork[]> {
+    return httpResource<RankedWork[]>(() => (enabled() ? this.api.url('/rankings/top-rated') : undefined), {
       parse: (raw) => parseEnvelope<RankedWork[]>(raw) ?? [],
       defaultValue: []
     });
@@ -36,8 +38,6 @@ export class DiscoveryApi {
     const params = catalogParams({ ...query, page: 0, size: 1 });
     delete params['page'];
     delete params['size'];
-    return this.api.get<WorkSummary>('/works/random', { params }).pipe(
-      catchError((error: unknown) => (error instanceof ApiError && error.isNotFound ? of(null) : throwError(() => error)))
-    );
+    return this.api.get<WorkSummary>('/works/random', { params }).pipe(nullIfNotFound());
   }
 }

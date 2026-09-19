@@ -1,9 +1,9 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { ResourceRef, Service, Signal, inject } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { Observable, catchError, map, of, throwError } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { MyRating, RatingSummary, ReviewPayload, WorkReview } from '../models/readora.models';
-import { ApiClient, ApiError, parseEnvelope } from './api-client';
+import { ApiClient, nullIfNotFound, parseEnvelope } from './api-client';
 
 const NO_RATINGS: RatingSummary = { average: 0, count: 0 };
 
@@ -26,9 +26,7 @@ export class RatingsApi {
 
   /** My rating of the series, or `null` if I haven't rated it (404). */
   mine(workId: string): Observable<MyRating | null> {
-    return this.api.get<MyRating>(`/works/${workId}/rating/mine`).pipe(
-      catchError((error: unknown) => (error instanceof ApiError && error.isNotFound ? of(null) : throwError(() => error)))
-    );
+    return this.api.get<MyRating>(`/works/${workId}/rating/mine`).pipe(nullIfNotFound());
   }
 
   /** My rating of the series (`null` when not rated yet); idle while `enabled` is false. */

@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
-import { Observable, catchError, map, throwError } from 'rxjs';
+import { Observable, OperatorFunction, catchError, map, of, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/readora.models';
 
@@ -106,6 +106,11 @@ export function apiErrorMessage(error: unknown, fallback = 'Something went wrong
 /** A 404 from a write (`ApiError`) or from an `httpResource` read (`HttpErrorResponse`). */
 export function isNotFoundError(error: unknown): boolean {
   return (error instanceof ApiError && error.isNotFound) || (error instanceof HttpErrorResponse && error.status === 404);
+}
+
+/** Turns a 404 `ApiError` into `null` ("I have none"), rethrowing every other error. */
+export function nullIfNotFound<T>(): OperatorFunction<T, T | null> {
+  return catchError((error: unknown) => (error instanceof ApiError && error.isNotFound ? of(null) : throwError(() => error)));
 }
 
 /**

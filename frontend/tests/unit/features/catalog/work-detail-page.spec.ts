@@ -49,9 +49,10 @@ describe('WorkDetailPage', () => {
 
     http.expectOne(`${API}/works/${WORK.id}`).flush({ success: true, data: WORK, error: null });
     http.expectOne(`${API}/works/${WORK.id}/chapters`).flush({ success: true, data: [], error: null });
-    http.expectOne(`${API}/bookmarks`).flush({
+    // Only this series' bookmark is fetched, not the whole list.
+    http.expectOne(`${API}/bookmarks/${WORK.id}`).flush({
       success: true,
-      data: [{ workId: WORK.id, lastReadChapterId: 'chap-7', lastReadPageIndex: 5, status: 'READING', updatedAt: '' }],
+      data: { workId: WORK.id, lastReadChapterId: 'chap-7', lastReadPageIndex: 5, status: 'READING', updatedAt: '' },
       error: null
     });
     await settle(fixture);
@@ -92,11 +93,13 @@ describe('WorkDetailPage', () => {
       await settle(fixture);
       http.expectOne(`${API}/works/${WORK.id}`).flush({ success: true, data: WORK, error: null });
       http.expectOne(`${API}/works/${WORK.id}/chapters`).flush({ success: true, data: CHAPTERS, error: null });
-      http.expectOne((r) => r.url === `${API}/library`).flush({
-        success: true,
-        data: inLibrary ? [{ work: WORK, status: 'READING', addedAt: '', updatedAt: '', newChapters: 0 }] : [],
-        error: null
-      });
+      // Only this series' library entry is fetched; 404 = not in my library.
+      const entry = http.expectOne(`${API}/library/${WORK.id}`);
+      if (inLibrary) {
+        entry.flush({ success: true, data: { workId: WORK.id, status: 'READING', addedAt: '', updatedAt: '', newChapterNotifications: true }, error: null });
+      } else {
+        entry.flush({ success: false, data: null, error: 'Not found' }, { status: 404, statusText: 'Not Found' });
+      }
       http.expectOne(`${API}/reading/works/${WORK.id}`).flush({
         success: true,
         data: { workId: WORK.id, finishedChapterIds: ['c-1'], nextChapterId: 'c-2' },

@@ -31,8 +31,9 @@ export class RankingsPage {
 
   protected readonly topRatedSelected = computed(() => this.list() === 'top-rated');
   protected readonly selectedPeriod = computed<RankingPeriod>(() => PERIODS.find((p) => p.key === this.period())?.key ?? 'WEEK');
-  protected readonly popular = this.discovery.popularResource(this.selectedPeriod);
-  protected readonly topRated = this.discovery.topRatedResource();
+  /** Only the visible ranking is fetched. */
+  private readonly popular = this.discovery.popularResource(this.selectedPeriod, computed(() => !this.topRatedSelected()));
+  private readonly topRated = this.discovery.topRatedResource(this.topRatedSelected);
   protected readonly ranking = computed(() => (this.topRatedSelected() ? this.topRated : this.popular));
 
   constructor() {

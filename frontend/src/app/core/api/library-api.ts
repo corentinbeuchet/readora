@@ -1,8 +1,9 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
-import { Service, Signal, inject } from '@angular/core';
+import { ResourceRef, Service, Signal, inject } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { Observable } from 'rxjs';
 import { LibraryEntry, LibraryItem, ReadingStatus } from '../models/readora.models';
-import { ApiClient, parseEnvelope } from './api-client';
+import { ApiClient, nullIfNotFound, parseEnvelope } from './api-client';
 
 /** `/api/v1/library`: the reader's own library (requires `LIBRARY_USE`). */
 @Service()
@@ -21,6 +22,14 @@ export class LibraryApi {
 
   remove(workId: string): Observable<void> {
     return this.api.delete(`/library/${workId}`);
+  }
+
+  /** My library entry for one series (`null` when it is not in my library); idle while `enabled` is false. */
+  entryResource(workId: Signal<string>, enabled: Signal<boolean>): ResourceRef<LibraryEntry | null | undefined> {
+    return rxResource({
+      params: () => (enabled() ? workId() : undefined),
+      stream: ({ params }) => this.api.get<LibraryEntry>(`/library/${params}`).pipe(nullIfNotFound())
+    });
   }
 
   /** The library, optionally one status only; idle while `enabled` is false. */

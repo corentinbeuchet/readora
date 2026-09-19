@@ -38,17 +38,17 @@ describe('RankingsPage (US-08)', () => {
     harness.detectChanges();
   }
 
-  function answerBoth(popular: RankedWork[], period: string, top: RankedWork[] = []): void {
+  function answerPopular(popular: RankedWork[], period: string): void {
     const req = http.expectOne((r) => r.url === `${API}/rankings/popular`);
     expect(req.request.params.get('period')).toBe(period);
     req.flush({ success: true, data: popular, error: null });
-    http.expectOne(`${API}/rankings/top-rated`).flush({ success: true, data: top, error: null });
   }
 
   it('shows this week\'s popular series by default and switches period from the URL', async () => {
     await harness.navigateByUrl('/rankings');
     await settle();
-    answerBoth([ranked(1, 'Horimiya', 18), ranked(2, 'One Piece', 5)], 'WEEK');
+    // Only the visible ranking is fetched (http.verify() fails on a top-rated request).
+    answerPopular([ranked(1, 'Horimiya', 18), ranked(2, 'One Piece', 5)], 'WEEK');
     await settle();
 
     expect(el().querySelector('.ranking-entry')!.textContent).toContain('#1');
@@ -65,7 +65,7 @@ describe('RankingsPage (US-08)', () => {
   it('shows top rated with averages and rating counts', async () => {
     await harness.navigateByUrl('/rankings?list=top-rated');
     await settle();
-    answerBoth([], 'WEEK', [ranked(1, 'One Piece', 9.1, 40)]);
+    http.expectOne(`${API}/rankings/top-rated`).flush({ success: true, data: [ranked(1, 'One Piece', 9.1, 40)], error: null });
     await settle();
 
     expect(el().querySelector('.ranking-entry')!.textContent).toContain('★ 9.1 · 40 ratings');

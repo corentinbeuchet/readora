@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, linkedSignal, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, linkedSignal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CatalogApi } from '@app/core/api/catalog-api';
@@ -38,8 +38,8 @@ export class WorkDetailPage {
 
   /** Bookmark of the current user for this work (only fetched with BOOKMARK_READ). */
   private readonly canReadBookmark = computed(() => this.auth.can('BOOKMARK_READ'));
-  protected readonly bookmarks = this.bookmarksApi.listResource(this.canReadBookmark);
-  protected readonly bookmark = computed(() => (this.bookmarks.hasValue() ? this.bookmarks.value() : []).find((b) => b.workId === this.workId()) ?? null);
+  private readonly bookmarkEntry = this.bookmarksApi.forWorkResource(this.workId, this.canReadBookmark);
+  protected readonly bookmark = computed(() => (this.bookmarkEntry.hasValue() ? this.bookmarkEntry.value() : null) ?? null);
 
   protected readonly firstChapterId = computed(() => (this.chapters.hasValue() ? this.chapters.value()[0]?.id : null) ?? null);
 
@@ -47,17 +47,12 @@ export class WorkDetailPage {
   protected readonly statuses = Object.keys(READING_STATUS_LABELS) as ReadingStatus[];
   protected readonly statusLabels = READING_STATUS_LABELS;
   private readonly canUseLibrary = computed(() => this.auth.can('LIBRARY_USE'));
-  private readonly libraryItems = this.libraryApi.listResource(signal(undefined), this.canUseLibrary);
+  private readonly libraryEntry = this.libraryApi.entryResource(this.workId, this.canUseLibrary);
+  private readonly entry = computed(() => (this.libraryEntry.hasValue() ? this.libraryEntry.value() : null));
   /** This series' status in my library (`null` = not in it); updated locally after each change. */
-  protected readonly libraryStatus = linkedSignal<ReadingStatus | null>(() => {
-    const items = this.libraryItems.hasValue() ? this.libraryItems.value() : [];
-    return items.find((item) => item.work.id === this.workId())?.status ?? null;
-  });
+  protected readonly libraryStatus = linkedSignal<ReadingStatus | null>(() => this.entry()?.status ?? null);
   /** New-chapter notifications for this series (US-10); updated locally after a change. */
-  protected readonly libraryNotify = linkedSignal<boolean>(() => {
-    const items = this.libraryItems.hasValue() ? this.libraryItems.value() : [];
-    return items.find((item) => item.work.id === this.workId())?.newChapterNotifications ?? true;
-  });
+  protected readonly libraryNotify = linkedSignal<boolean>(() => this.entry()?.newChapterNotifications ?? true);
   /** Library, notification and read-marker changes: one busy/error state. */
   protected readonly library = asyncAction('Could not update your library. Please try again.');
 

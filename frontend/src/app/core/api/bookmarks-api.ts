@@ -1,8 +1,9 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
-import { Service, Signal, inject } from '@angular/core';
+import { ResourceRef, Service, Signal, inject } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { Observable } from 'rxjs';
 import { Bookmark, UpdateProgressRequest } from '../models/readora.models';
-import { ApiClient, parseEnvelope } from './api-client';
+import { ApiClient, nullIfNotFound, parseEnvelope } from './api-client';
 
 /** `/api/v1/bookmarks` (requires `BOOKMARK_READ` / `BOOKMARK_WRITE`). */
 @Service()
@@ -18,6 +19,14 @@ export class BookmarksApi {
     return httpResource<Bookmark[]>(() => (enabled() ? this.api.url('/bookmarks') : undefined), {
       parse: (raw) => parseEnvelope<Bookmark[]>(raw) ?? [],
       defaultValue: []
+    });
+  }
+
+  /** My bookmark of one series (`null` when I have none); idle while `enabled` is false. */
+  forWorkResource(workId: Signal<string>, enabled: Signal<boolean>): ResourceRef<Bookmark | null | undefined> {
+    return rxResource({
+      params: () => (enabled() ? workId() : undefined),
+      stream: ({ params }) => this.api.get<Bookmark>(`/bookmarks/${params}`).pipe(nullIfNotFound())
     });
   }
 }
