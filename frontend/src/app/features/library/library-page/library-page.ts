@@ -8,7 +8,7 @@ import { LibraryItem, READING_STATUS_LABELS, ReadingStatus } from '@app/core/mod
 import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
 import { LoadError } from '@app/shared/ui/load-error';
-import { WorkCover } from '@app/shared/ui/work-cover';
+import { WorkCover } from '@app/shared/ui/work-cover/work-cover';
 
 const STATUSES = Object.keys(READING_STATUS_LABELS) as ReadingStatus[];
 

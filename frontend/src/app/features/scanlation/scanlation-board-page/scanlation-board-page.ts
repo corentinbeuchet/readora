@@ -4,7 +4,7 @@ import { FormField, form, min, pattern, required, submit } from '@angular/forms/
 import { firstValueFrom } from 'rxjs';
 import { ScanlationApi } from '@app/core/api/scanlation-api';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { Dialog } from '@app/shared/ui/dialog';
+import { Dialog } from '@app/shared/ui/dialog/dialog';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { WorkflowTask } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';

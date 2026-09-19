@@ -8,7 +8,7 @@ import { CatalogQuery, Demographic, WorkStatus, WorkType } from '@app/core/model
 import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
 import { LoadError } from '@app/shared/ui/load-error';
-import { WorkCover } from '@app/shared/ui/work-cover';
+import { WorkCover } from '@app/shared/ui/work-cover/work-cover';
 
 const PAGE_SIZE = 24;
 

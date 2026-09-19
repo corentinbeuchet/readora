@@ -1,6 +1,6 @@
 import { Component, inject, input, output, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Dialog } from '@app/shared/ui/dialog';
+import { Dialog } from '@app/shared/ui/dialog/dialog';
 import { ModerationApi } from '@app/core/api/moderation-api';
 import { COMMENT_REPORT_REASON_LABELS, ChapterComment, CommentReportReason } from '@app/core/models/readora.models';
 import { asyncAction } from '@app/core/utils/async-action';

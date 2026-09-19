@@ -4,7 +4,7 @@ import { DiscoveryApi } from '@app/core/api/discovery-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { SeoService } from '@app/core/seo/seo.service';
 import { LoadError } from '@app/shared/ui/load-error';
-import { WorkCover } from '@app/shared/ui/work-cover';
+import { WorkCover } from '@app/shared/ui/work-cover/work-cover';
 import { TimeAgoPipe } from '@app/shared/ui/time-ago.pipe';
 
 /** Latest updates (US-08): newest chapters, optionally only my library and followed teams. */

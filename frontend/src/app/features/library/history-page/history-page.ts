@@ -5,7 +5,7 @@ import { ReadingApi } from '@app/core/api/reading-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { SeoService } from '@app/core/seo/seo.service';
 import { LoadError } from '@app/shared/ui/load-error';
-import { WorkCover } from '@app/shared/ui/work-cover';
+import { WorkCover } from '@app/shared/ui/work-cover/work-cover';
 
 /** Reading history (US-07): the series I read most recently, each with a "Continue" button. */
 @Component({

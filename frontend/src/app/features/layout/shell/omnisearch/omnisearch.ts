@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { Observable, catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { WorkSummary } from '@app/core/models/readora.models';
-import { WorkCover } from '@app/shared/ui/work-cover';
+import { WorkCover } from '@app/shared/ui/work-cover/work-cover';
 
 export const SUGGEST_DEBOUNCE_MS = 250;
 const MIN_QUERY_LENGTH = 2;

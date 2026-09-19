@@ -14,7 +14,7 @@ import { AddToList } from './add-to-list/add-to-list';
 import { READING_STATUS_LABELS, ReadingStatus } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
 import { LoadError } from '@app/shared/ui/load-error';
-import { WorkCover } from '@app/shared/ui/work-cover';
+import { WorkCover } from '@app/shared/ui/work-cover/work-cover';
 
 @Component({
   selector: 'app-work-detail-page',
