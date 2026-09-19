@@ -2,7 +2,7 @@ import { Service, computed, inject, signal } from '@angular/core';
 import { Observable, catchError, finalize, map, of, shareReplay, tap } from 'rxjs';
 import { ApiError } from '@app/core/api/api-client';
 import { AuthApi } from '@app/core/api/auth-api';
-import { AuthResponse, LoginRequest, Permission, RegisterRequest, UserProfile } from '@app/core/models/identity';
+import { AuthResponse, LoginRequest, Permission, RegisterRequest, UserProfile, hasActivePremium } from '@app/core/models/identity';
 import { BrowserStorage } from '@app/core/storage/browser-storage';
 
 /**
@@ -33,7 +33,7 @@ export class AuthStore {
   readonly isAuthenticated = computed(() => this._accessToken() !== null && this._user() !== null);
   readonly permissions = computed<ReadonlySet<Permission>>(() => new Set(this._user()?.permissions ?? []));
   readonly subscription = computed(() => this._user()?.subscription ?? null);
-  readonly isPremium = computed(() => this.subscription()?.active === true && this.subscription()?.plan === 'PREMIUM');
+  readonly isPremium = computed(() => hasActivePremium(this.subscription()));
 
   can(permission: Permission): boolean {
     return this.permissions().has(permission);

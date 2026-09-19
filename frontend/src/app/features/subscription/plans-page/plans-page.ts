@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { SubscriptionsApi } from '@app/core/api/subscriptions-api';
 import { AuthStore } from '@app/core/auth/auth-store';
+import { canCancelSubscription } from '@app/core/models/identity';
 import { SeoService } from '@app/core/seo/seo.service';
 import { apiErrorMessage } from '@app/core/api/api-client';
 
@@ -47,10 +48,7 @@ export class PlansPage {
   protected readonly error = signal<string | null>(null);
   protected readonly subscription = this.auth.subscription;
   protected readonly isPremium = this.auth.isPremium;
-  protected readonly canCancel = computed(() => {
-    const sub = this.subscription();
-    return !!sub && sub.plan !== 'FREE' && sub.status !== 'CANCELED' && !sub.cancelAtPeriodEnd;
-  });
+  protected readonly canCancel = computed(() => canCancelSubscription(this.subscription()));
 
   constructor() {
     this.seo.update({
