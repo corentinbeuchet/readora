@@ -59,6 +59,8 @@
   never `?:`. **Request** types say what callers send: `?:` for "left out", `T | null` for "sent as null", not both.
   In code `null` = known empty (API value, 404 via `nullIfNotFound()`), `undefined` = not loaded yet / not given
   (resources, optional params); `T | null | undefined` only where both really arrive. Test mocks spell out the nulls.
+  Write `T | null` directly: no `Nullable<T>`/`Maybe<T>` alias or wrapper class (the name is ambiguous next to TS's
+  `NonNullable`, which also removes `undefined`, and it hides the union in hovers).
 - Reads: `httpResource` factories on the API service, fed by signals; return `undefined` URL to keep the resource idle:
   ```ts
   readonly workId = input.required<string>();            // route param via withComponentInputBinding
