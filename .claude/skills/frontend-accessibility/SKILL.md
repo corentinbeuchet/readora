@@ -37,8 +37,8 @@ mapped to our components, with keyboard maps).
   - Dialogs: focus moves in, is trapped, returns to the trigger on close.
   - Popovers (notification bell): Escape closes and returns focus.
   - Never destroy the focused element with an `@if` swap without moving focus somewhere sensible.
-  - After a route change, focus the page's `h1` or `main` and have a unique `title` per route. Not done yet: backlog
-    F44.
+  - After a route change the shell focuses the page's `h1` (or `<main>` while loading) when the path changes
+    (`features/layout/shell/shell.ts`); every route sets a unique title through `SeoService`.
 - **Status messages (4.1.3):**
   - The `role="status"` (polite) / `role="alert"` (errors only) container must exist before its text changes: keep
     it rendered and change only the text. Wrapping the region itself in `@if` makes screen readers miss the message.
@@ -52,8 +52,8 @@ mapped to our components, with keyboard maps).
   - Targets at least 24×24 CSS px or enough spacing (2.5.8); aim for 44px on touch.
 - **Contrast:** colours only from tokens (`styles.scss`); text 4.5:1 (3:1 for large), UI borders, focus rings and icons
   3:1 (1.4.11); text over artwork needs a solid or scrim background.
-- **Motion:** animations and smooth scrolling only under `@media (prefers-reduced-motion: no-preference)`. Not done
-  yet: backlog F45.
+- **Motion:** a global `prefers-reduced-motion: reduce` rule in `styles.scss` neutralises animations and transitions;
+  new motion that matters (e.g. page-turn effects) should also check it, and never animate without it.
 - **Reflow and zoom:** usable at 320 CSS px and at 200%/400% zoom without horizontal scrolling (the page image itself
   is exempt). Never `user-scalable=no`. See the `frontend-responsive` skill.
 - **Hover/focus content (1.4.13):** tooltips and popovers are dismissible with Escape, hoverable and persistent.
@@ -78,9 +78,10 @@ their keyboard support; `@if`/`[innerHTML]` swaps that drop focus to `<body>`; h
 - `npm run lint`: the angular-eslint template accessibility rules are errors (`eslint.config.js`).
 - Unit and component tests: query by role and label and assert ARIA state and focus (`document.activeElement`); see
   the `frontend-component-tests` skill.
-- E2E: role/label locators; keyboard-only paths for dialogs, menus and the reader. axe checks via
-  `@axe-core/playwright` with WCAG 2.x A/AA tags are not set up yet: backlog F24. Scan again after opening dialogs,
-  popovers and tabs, since hidden states aren't scanned.
+- E2E: role/label locators; keyboard-only paths for dialogs, menus and the reader. axe runs in
+  `tests/e2e/accessibility.spec.ts` through the `axe` fixture (WCAG 2.0/2.1/2.2 A and AA): add every new page, and
+  scan again after opening dialogs, popovers and tabs, since hidden states aren't scanned. Target sizes and reflow are
+  checked in `tests/e2e/responsive.spec.ts`.
 - Automation finds about 57% of issues (Deque). Name quality, focus order, alt text, 2.5.7, 3.3.7 and 3.3.8 need a
   manual pass; do a screen reader smoke test (NVDA + Firefox/Chrome, VoiceOver + Safari) on changed flows.
 

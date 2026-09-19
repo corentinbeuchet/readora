@@ -231,7 +231,8 @@ Improvements from best-practice research (2026-09), not bugs:
 - F21 `@defer` the comments section and the kanban modal. — fixed 385f63d
 - F22 Migrate the 14 `@Injectable` root services to `@Service()` (check angular-eslint for a `prefer-service-decorator` rule). — fixed 12aa7fd
 - F23 `autoCsp` + `security.allowedHosts` for SSR. — blocked: Angular 22.1 build fails with "Cannot set both SSR and auto-CSP"; allowedHosts only applies to an SSR server (outputMode is static)
-- F24 Axe accessibility assertions in Playwright e2e (`@axe-core/playwright`).
+- F24 Axe accessibility assertions in Playwright e2e (`@axe-core/playwright`). — fixed 0a8e549
+  (`tests/e2e/accessibility.spec.ts`, `axe` fixture; it found and fixed 08c7ca0, the login live region)
 
 Angular best-practice review (2026-09-19, refs `ng-best-practices/<n>`, checklist in the `angular-best-practices`
 skill) — fixed:
@@ -253,17 +254,21 @@ skill) — fixed:
   — fixed: folder per component, children nested under their user (`git log --grep ng-best-practices/30`)
 
 Accessibility and responsive gaps (2026-09-19 research, skills `frontend-accessibility` / `frontend-responsive`):
-- F39 Header has no small-screen layout: one non-wrapping row (`features/layout/shell/shell.html`/`.scss`). Fix: menu
-  button + nav disclosure (or bottom bar) below 768px, search collapses to an icon.
-- F40 `100vh` for full-height views (shell, reader page, paged/vertical flows, scanlation board, `70vh`/`90vh` popover
-  and dialog caps): hidden behind mobile browser bars. Fix: `dvh`/`svh` with a `vh` fallback.
-- F41 No shared breakpoints or fluid tokens: 6 ad-hoc `max-width` queries (500/600/640/768) and no spacing/type
-  tokens in `styles.scss`. Fix: SCSS breakpoint mixins (480/768/1024/1280, mobile-first) and `clamp()` tokens.
-- F42 No input-modality or notch handling: no `hover`/`pointer` media features, `touch-action`, `viewport-fit=cover`
-  with `env(safe-area-inset-*)`.
-- F43 Covers have no `sizes` (`shared/ui/work-cover/`): phones download desktop-sized images.
-- F44 No focus move or announcement after route navigation (focus the page `h1`/`main` after `NavigationEnd`,
-  browser only).
-- F45 No `prefers-reduced-motion` handling (spinner in `styles.scss`, reader transitions).
-- F46 No mobile-viewport checks: e2e overflow at 320px (`scrollWidth <= innerWidth`), header, reader swipe; target
-  sizes (≥ 24px, WCAG 2.5.8) unverified. Pairs with F24 (axe).
+- F39 Header has no small-screen layout (one non-wrapping row, 689px wide at 375px). — fixed 31a6f5a (menu button +
+  nav disclosure below 1024px, search on its own row)
+- F40 `100vh` for full-height views and `vh` caps: hidden behind mobile browser bars. — fixed 57d4841 (`dvh` after a `vh`
+  fallback)
+- F41 No shared breakpoints or fluid tokens (6 ad-hoc `max-width` queries). — fixed e30bc4f (`src/styles/_breakpoints.scss`
+  `bp.from()`, `--space-page`, `--fs-h1/h2`)
+- F42 No input-modality or notch handling. — fixed c83abab (`viewport-fit=cover` + safe-area padding, `touch-action`,
+  44px controls under `pointer: coarse`, hover-only upload actions visible under `hover: none`)
+- F43 Covers have no `sizes`: blocked, not a frontend fix. NgOptimizedImage only builds a `srcset` with an image loader,
+  and storage (MinIO/S3/CloudFront) serves only the original file, so `sizes` alone changes nothing. Needs the backend
+  to store resized cover/page variants (as it already does for page "lite" copies), then an `IMAGE_LOADER` mapping a
+  width to its variant, then `sizes` on `app-work-cover` and reader pages.
+- F44 No focus move after route navigation. — fixed da60ba9 (the page `h1`, or `<main>` while loading, gets focus when
+  the path changes; query-only changes keep focus)
+- F45 No `prefers-reduced-motion` handling. — fixed 3cc637f (global rule in `styles.scss`)
+- F46 No mobile-viewport or target-size checks. — fixed 0a8e549 (`tests/e2e/responsive.spec.ts`: overflow at
+  320/375/768/1024, phone header, 24px targets; reader swipe stays covered by the reader unit tests). It found and
+  fixed c098580 (reader toolbar overflow) and 6217137 (18px reader links).

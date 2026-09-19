@@ -16,11 +16,11 @@ Phone < 768px · tablet 768–1023px (portrait) · tablet landscape / laptop 102
 - Cover grid: `repeat(auto-fill, minmax(min(100%, 9rem), 1fr))`, which gives 2 columns on phones and grows without
   queries.
 - Filters (type/status/audience, genre chips): stacked full-width selects on phones, a row from 768px; chips wrap.
-- Covers get `sizes` (F43). Only the first cover is `priority`.
+- Covers: `sizes` waits for resized variants and an image loader (F43, blocked). Only the first cover is `priority`.
 
 ## Work detail (`features/catalog/work-detail-page/`)
 - Phone: cover above the title and actions, actions full width; chapter list full width.
-- From 768px: cover beside the info (today's `max-width: 640px` query inverted to mobile-first when touched, F41).
+- From 768px (`bp.from(md)`): cover beside the info.
 - Ratings (`@defer`) keeps its placeholder height.
 
 ## Reader (`features/reader/reader-page/`)
@@ -32,9 +32,9 @@ Phone < 768px · tablet 768–1023px (portrait) · tablet landscape / laptop 102
 - Swipe (`paged-flow.ts`, horizontal travel threshold, mirrored in RTL) plus visible prev/next buttons plus keyboard;
   tap zones are shortcuts.
 - Zoom +/- buttons (50–200%) plus native pinch; never block pinch.
-- Toolbar: wraps on phones; zen mode hides chrome, and focus brings it back.
+- Toolbar: title above the controls on phones (side by side from `md`), button groups wrap; zen mode hides chrome.
 - Settings and chapter list panels: full width sheets on phones, side panels from 1024px.
-- Reader pages use `sizes="100vw"` (`50vw` per page in spreads).
+- Reader pages: `sizes="100vw"` (`50vw` per page in spreads) once an image loader exists (F43).
 
 ## Dialogs (`shared/ui/dialog/`)
 - Phone (below 480px): full-screen sheet, `inline-size: 100%`, `block-size: 100dvh`, sticky title and actions,

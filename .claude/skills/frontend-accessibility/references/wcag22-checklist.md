@@ -19,7 +19,7 @@ so keep targeting 2.2 AA.
 | 2.1.4 Character key shortcuts | A | Reader single-key shortcuts ignored in inputs and dialogs |
 | 2.4.1 Bypass blocks | A | Skip link `#main-content` in `shell.html` |
 | 2.4.2 Page titled | A | Unique title per route (`SeoService.update` / `private_`) |
-| 2.4.3 Focus order | A | DOM order = visual order; dialogs focus inside; focus after navigation (F44) |
+| 2.4.3 Focus order | A | DOM order = visual order; dialogs focus inside; after navigation the shell focuses the page `h1` |
 | 2.4.6 Headings and labels | AA | Descriptive headings and labels |
 | 2.4.7 Focus visible | AA | `:focus-visible` rings everywhere, never removed without replacement |
 | ★ 2.4.11 Focus not obscured (minimum) | AA | Sticky header / reader toolbar / notification popover never fully cover the focused element (`scroll-margin`) |

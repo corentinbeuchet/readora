@@ -37,13 +37,15 @@ Screen by screen expectations: `references/patterns.md`. Accessibility side (ref
 - Full-height views use `min-height: 100dvh` (with `100vh` first as a fallback) or `svh` for sticky layouts, never
   bare `100vh`, which is hidden behind mobile browser bars. Pattern used across the app: `min-height: 100vh;` then
   `min-height: 100dvh;` (the build keeps both).
-- Fixed or sticky bars at the screen edge pad with `env(safe-area-inset-*)`, which only works once `viewport-fit=cover`
-  is in the meta tag (F42). Add both together, never one alone.
+- `viewport-fit=cover` is set in `index.html`; `body` pads inline with `env(safe-area-inset-left/right)` and the footer
+  with `env(safe-area-inset-bottom)`. New fixed or sticky bars at a screen edge pad with `env(safe-area-inset-*)` too.
 - Forms and search at the bottom of the screen: the virtual keyboard doesn't change viewport units;
   `interactive-widget=resizes-content` in the viewport meta, or `visualViewport` in code, when a sticky footer must
   stay above it.
 
 ## Input: touch, mouse, keyboard
+- Global touch rules already in `styles.scss`: `touch-action: manipulation` on controls, 44px `.btn`/`.tab` under
+  `pointer: coarse`.
 - Hover effects only under `@media (hover: hover) and (pointer: fine)`. Anything revealed on hover (card actions) must
   also be visible on touch and on `:focus-visible`.
 - `@media (pointer: coarse)` enlarges hit areas: targets at least 24×24px (WCAG 2.5.8), aim for 44px on touch. Grow
@@ -63,10 +65,11 @@ Screen by screen expectations: `references/patterns.md`. Accessibility side (ref
   components need JS breakpoints.
 - **Images:** `NgOptimizedImage` with a `sizes` attribute matching the layout (covers:
   `sizes="(min-width: 1024px) 180px, 30vw"`; reader pages `100vw`, or `50vw` for spreads), so phones don't download
-  desktop images. `priority` only on the LCP image. `app-work-cover` doesn't pass `sizes` yet (F43).
+  desktop images, **once** an image loader exists: without one NgOptimizedImage builds no `srcset`, and our storage has
+  no resized variants yet (F43, blocked on the backend). `priority` only on the LCP image.
 - `@defer (on viewport)` placeholders reserve the final height (no layout shift).
-- `@media (prefers-reduced-motion: no-preference)` wraps animations (F45); `prefers-color-scheme` isn't used (one
-  theme).
+- A global `prefers-reduced-motion: reduce` rule (`styles.scss`) neutralises animations and transitions;
+  `prefers-color-scheme` isn't used (one theme).
 
 ## Common mistakes
 `100vh` for full-screen views; blocked zoom; hover-only actions; targets under 24px; JS breakpoints deciding the
@@ -81,7 +84,8 @@ titles overflowing at 320px (`min-width: auto` on flex/grid children); testing o
 - Assert no horizontal overflow: `document.documentElement.scrollWidth <= window.innerWidth`.
 - Also check 200% and 400% browser zoom, landscape phone, and `emulateMedia({ reducedMotion: 'reduce' })`.
 - Emulation misses the collapsing URL bar, `dvh` changes, the virtual keyboard, safe areas and iOS Safari quirks:
-  check on a real phone before a release. Mobile-viewport e2e checks are backlog F46.
+  check on a real phone before a release. `tests/e2e/responsive.spec.ts` checks overflow at 320/375/768/1024, the phone
+  header and 24px targets: add new pages there.
 
 ## Sources
 web.dev/learn/design (media features, interaction, screen configurations); web.dev/blog/viewport-units;
