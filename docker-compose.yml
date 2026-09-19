@@ -84,7 +84,7 @@ services:
       CLOUDFRONT_DOMAIN: ${CLOUDFRONT_DOMAIN:-http://localhost:9000/readora-media-dev}
 
       FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:4200}
-      READORA_CORS_ALLOWED_ORIGINS: ${READORA_CORS_ALLOWED_ORIGINS:-http://localhost:4200}
+      READORA_CORS_ALLOWED_ORIGINS: ${READORA_CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://localhost:4201}
       READORA_COOKIE_SECURE: "false"
       # Login/register/refresh per IP per minute (production default 10, kept here so rate-limit bugs show up
       # locally). `npm run e2e:stress` repeats every sign-up: start the stack with READORA_AUTH_RATE_LIMIT=200.
