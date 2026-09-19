@@ -54,7 +54,7 @@ export interface WorkProgress {
 
 export interface Bookmark {
   workId: string;
-  lastReadChapterId?: string | null;
+  lastReadChapterId: string | null;
   /** 1-based page number of the last page read (see `UpdateProgressRequest.pageIndex`). */
   lastReadPageIndex: number;
   status: BookmarkStatus;

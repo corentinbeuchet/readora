@@ -8,7 +8,7 @@ export interface ReadingList {
   ownerUsername: string;
   ownerId: string;
   upvotes: number;
-  items: { work: WorkSummary; note?: string | null }[];
+  items: { work: WorkSummary; note: string | null }[];
   updatedAt: string;
 }
 

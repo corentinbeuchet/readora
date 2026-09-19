@@ -108,7 +108,7 @@ export class ReaderPage {
             title: `${loaded.title} — Chapter ${loaded.chapterNumber}`,
             description: `Read chapter ${loaded.chapterNumber} (${loaded.pages.length} pages) online on Readora.`,
             path: `/read/${loaded.id}`,
-            image: loaded.pages[0]?.cdnUrl,
+            image: loaded.pages[0]?.cdnUrl ?? undefined,
             type: 'article'
           })
         );

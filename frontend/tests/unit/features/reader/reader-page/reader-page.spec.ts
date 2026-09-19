@@ -17,10 +17,14 @@ const MOCK_CHAPTER: Chapter = {
   chapterNumber: '10',
   title: 'Chapter 10',
   status: 'PUBLISHED',
+  scanlationProjectId: null,
+  work: null,
+  previousChapterId: null,
+  nextChapterId: null,
   pages: [
-    { pageNumber: 1, storageKey: 'p1.webp', cdnUrl: 'https://cdn.readora.com/p1.webp' },
-    { pageNumber: 2, storageKey: 'p2.webp', cdnUrl: 'https://cdn.readora.com/p2.webp' },
-    { pageNumber: 3, storageKey: 'p3.webp', cdnUrl: 'https://cdn.readora.com/p3.webp' }
+    { pageNumber: 1, storageKey: 'p1.webp', cdnUrl: 'https://cdn.readora.com/p1.webp', width: 0, height: 0, description: null, liteCdnUrl: null },
+    { pageNumber: 2, storageKey: 'p2.webp', cdnUrl: 'https://cdn.readora.com/p2.webp', width: 0, height: 0, description: null, liteCdnUrl: null },
+    { pageNumber: 3, storageKey: 'p3.webp', cdnUrl: 'https://cdn.readora.com/p3.webp', width: 0, height: 0, description: null, liteCdnUrl: null }
   ]
 };
 
@@ -51,7 +55,7 @@ function soloLeveling(chapterNumber: number, links: { previous: string; next: st
 function withPages(base: Chapter, count: number): Chapter {
   return {
     ...base,
-    pages: Array.from({ length: count }, (_, i) => ({ pageNumber: i + 1, storageKey: `p${i + 1}`, cdnUrl: `https://cdn.readora.com/p${i + 1}.webp` }))
+    pages: Array.from({ length: count }, (_, i) => ({ pageNumber: i + 1, storageKey: `p${i + 1}`, cdnUrl: `https://cdn.readora.com/p${i + 1}.webp`, width: 0, height: 0, description: null, liteCdnUrl: null }))
   };
 }
 
@@ -63,7 +67,7 @@ function withPageSizes(base: Chapter, sizes: [number, number][]): Chapter {
 function withLiteCopies(base: Chapter, pageNumbers: number[]): Chapter {
   return {
     ...base,
-    pages: base.pages.map((p) => (pageNumbers.includes(p.pageNumber) ? { ...p, liteCdnUrl: p.cdnUrl.replace('.webp', '.webp.lite.jpg') } : p))
+    pages: base.pages.map((p) => (pageNumbers.includes(p.pageNumber) ? { ...p, liteCdnUrl: p.cdnUrl?.replace('.webp', '.webp.lite.jpg') ?? null } : p))
   };
 }
 
@@ -72,7 +76,7 @@ function withDescription(base: Chapter, pageNumber: number, description: string)
 }
 
 function topComment(id: string, author: string, content: string, upvotes: number): ChapterComment {
-  return { id, chapterId: MOCK_CHAPTER.id, authorId: `u-${author}`, authorUsername: author, content, depth: 1, isSpoiler: false, upvotes, createdAt: '' };
+  return { id, chapterId: MOCK_CHAPTER.id, authorId: `u-${author}`, authorUsername: author, content, pageReference: null, parentId: null, depth: 1, isSpoiler: false, upvotes, createdAt: '' };
 }
 
 /** Minimal IntersectionObserver double: lets a test report which page crosses the viewport middle. */

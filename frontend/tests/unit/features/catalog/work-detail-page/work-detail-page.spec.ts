@@ -14,6 +14,8 @@ const WORK: Work = {
   synopsis: 'Hunters',
   type: 'MANHWA',
   status: 'ONGOING',
+  author: null,
+  demographic: null,
   coverImageUrl: 'https://cdn.readora.com/covers/w-1.webp',
   genres: ['Action']
 };

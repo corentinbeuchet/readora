@@ -3,11 +3,11 @@ import { TaskStatus, WorkflowStage, WorkflowTask, canClaim, canPublish, canSubmi
 describe('scanlation task rules', () => {
   let task: WorkflowTask;
 
-  it.each<[WorkflowStage, TaskStatus, string | undefined, boolean]>([
-    ['RAW_UPLOADED', 'PENDING', undefined, true],
+  it.each<[WorkflowStage, TaskStatus, string | null, boolean]>([
+    ['RAW_UPLOADED', 'PENDING', null, true],
     ['CLEANING', 'IN_PROGRESS', 'alice', false],
-    ['TRANSLATING', 'COMPLETED', undefined, false],
-    ['PUBLISHED', 'PENDING', undefined, false]
+    ['TRANSLATING', 'COMPLETED', null, false],
+    ['PUBLISHED', 'PENDING', null, false]
   ])('a %s task that is %s and held by %s can be claimed: %s', (stage, status, assigneeId, claimable) => {
     givenATask({ stage, status, assigneeId });
 
@@ -37,13 +37,13 @@ describe('scanlation task rules', () => {
   });
 
   it('an unassigned task belongs to nobody, even a signed-out user', () => {
-    givenATask({ assigneeId: undefined });
+    givenATask({ assigneeId: null });
 
     thenItIsAssignedTo(null, false);
   });
 
   function givenATask(overrides: Partial<WorkflowTask>): void {
-    task = { id: 't1', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', pageCount: 20, updatedAt: '2026-09-13T00:00:00Z', ...overrides };
+    task = { id: 't1', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, assetPackageUrl: null, pageCount: 20, updatedAt: '2026-09-13T00:00:00Z', ...overrides };
   }
 
   function thenICanClaimIt(expected: boolean): void {

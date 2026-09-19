@@ -9,8 +9,8 @@ export interface WorkflowTask {
   chapterNumber: string;
   stage: WorkflowStage;
   status: TaskStatus;
-  assigneeId?: string;
-  assetPackageUrl?: string;
+  assigneeId: string | null;
+  assetPackageUrl: string | null;
   pageCount: number;
   updatedAt: string;
 }

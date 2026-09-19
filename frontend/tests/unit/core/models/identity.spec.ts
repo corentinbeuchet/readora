@@ -33,7 +33,7 @@ describe('subscription rules', () => {
   });
 
   function givenMySubscription(overrides: Partial<Subscription>): void {
-    subscription = { plan: 'PREMIUM', status: 'ACTIVE', active: true, cancelAtPeriodEnd: false, planPermissions: [], ...overrides };
+    subscription = { plan: 'PREMIUM', status: 'ACTIVE', active: true, currentPeriodEnd: null, cancelAtPeriodEnd: false, planPermissions: [], ...overrides };
   }
 
   function givenIHaveNoSubscription(): void {

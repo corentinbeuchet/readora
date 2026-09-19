@@ -9,9 +9,9 @@ import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 const PROJECT_ID = 'proj-1';
 const TASKS_URL = `${API}/scanlation/projects/${PROJECT_ID}/tasks`;
 
-const RAW_TASK: WorkflowTask = { id: 't-raw', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', pageCount: 22, updatedAt: '2026-09-13T00:00:00Z' };
-const MY_TASK: WorkflowTask = { id: 't-mine', chapterNumber: '11', stage: 'CLEANING', status: 'IN_PROGRESS', assigneeId: 'user-1', pageCount: 20, updatedAt: '2026-09-13T00:00:00Z' };
-const QC_TASK: WorkflowTask = { id: 't-qc', chapterNumber: '9', stage: 'QC_REVIEW', status: 'PENDING', pageCount: 18, updatedAt: '2026-09-13T00:00:00Z' };
+const RAW_TASK: WorkflowTask = { id: 't-raw', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, assetPackageUrl: null, pageCount: 22, updatedAt: '2026-09-13T00:00:00Z' };
+const MY_TASK: WorkflowTask = { id: 't-mine', chapterNumber: '11', stage: 'CLEANING', status: 'IN_PROGRESS', assigneeId: 'user-1', assetPackageUrl: null, pageCount: 20, updatedAt: '2026-09-13T00:00:00Z' };
+const QC_TASK: WorkflowTask = { id: 't-qc', chapterNumber: '9', stage: 'QC_REVIEW', status: 'PENDING', assigneeId: null, assetPackageUrl: null, pageCount: 18, updatedAt: '2026-09-13T00:00:00Z' };
 
 const PROJECT: ScanlationProject = {
   id: PROJECT_ID,

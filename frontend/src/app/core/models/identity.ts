@@ -29,9 +29,9 @@ export interface Subscription {
   plan: SubscriptionPlan;
   status: SubscriptionStatus;
   active: boolean;
-  currentPeriodEnd?: string | null;
+  currentPeriodEnd: string | null;
   /** Renewal stopped: access continues until `currentPeriodEnd`, then the plan ends. */
-  cancelAtPeriodEnd?: boolean;
+  cancelAtPeriodEnd: boolean;
   planPermissions: Permission[];
 }
 
@@ -41,7 +41,7 @@ export interface UserProfile {
   username: string;
   displayName: string;
   bio: string;
-  avatarUrl?: string | null;
+  avatarUrl: string | null;
   roles: Role[];
   permissions: Permission[];
   subscription: Subscription;

@@ -8,9 +8,9 @@ export interface MyRating {
   id: string;
   workId: string;
   score: number;
-  liked?: string | null;
-  disliked?: string | null;
-  verdict?: string | null;
+  liked: string | null;
+  disliked: string | null;
+  verdict: string | null;
 }
 
 export interface ReviewPayload {
@@ -25,8 +25,8 @@ export interface WorkReview {
   authorId: string;
   authorUsername: string;
   score: number;
-  liked?: string | null;
-  disliked?: string | null;
+  liked: string | null;
+  disliked: string | null;
   verdict: string;
   helpfulVotes: number;
   updatedAt: string;

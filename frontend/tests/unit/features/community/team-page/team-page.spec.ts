@@ -10,9 +10,9 @@ import { API, ok, provideHttpTesting, settle } from '../../../test-utils';
 const TEAM: TeamProfile = {
   id: 't-1',
   name: 'Shadow Scans',
-  series: { id: 'w-1', title: 'Solo Leveling', type: 'MANHWA', status: 'ONGOING', coverImageUrl: '', genres: [] },
+  series: { id: 'w-1', title: 'Solo Leveling', type: 'MANHWA', status: 'ONGOING', author: null, demographic: null, coverImageUrl: '', genres: [] },
   members: [{ username: 'leader', roles: ['LEADER'] }, { username: 'translator', roles: ['TRANSLATOR'] }],
-  latestChapters: [{ id: 'c-5', workId: 'w-1', chapterNumber: '5', title: 'Arise', status: 'PUBLISHED', pageCount: 20 }],
+  latestChapters: [{ id: 'c-5', workId: 'w-1', chapterNumber: '5', title: 'Arise', status: 'PUBLISHED', pageCount: 20, publishedAt: null }],
   followers: 3,
   following: false
 };

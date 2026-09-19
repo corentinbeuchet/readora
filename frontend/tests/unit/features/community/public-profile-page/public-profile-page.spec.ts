@@ -53,7 +53,7 @@ describe('PublicProfilePage (US-12)', () => {
         joinedAt: '2026-01-01T00:00:00Z',
         chaptersRead: stats.chaptersRead,
         favouriteGenres: stats.favouriteGenres,
-        completedSeries: stats.completedSeries.map((s) => ({ ...s, type: 'MANGA', status: 'COMPLETED', coverImageUrl: '', genres: [] }))
+        completedSeries: stats.completedSeries.map((s) => ({ ...s, type: 'MANGA', status: 'COMPLETED', author: null, demographic: null, coverImageUrl: '', genres: [] }))
       })
     );
     await settle(fixture);

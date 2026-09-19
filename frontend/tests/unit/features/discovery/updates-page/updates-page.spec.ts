@@ -10,7 +10,7 @@ import { API, FIXED_NOW, fail, freezeDate, ok, provideHttpTesting, settle } from
 
 function release(id: string, title: string, number: string, minutesAgo: number, read = false): Release {
   return {
-    work: { id: `w-${title}`, title, type: 'MANGA', status: 'ONGOING', coverImageUrl: '', genres: [] },
+    work: { id: `w-${title}`, title, type: 'MANGA', status: 'ONGOING', author: null, demographic: null, coverImageUrl: '', genres: [] },
     chapterId: id,
     chapterNumber: number,
     chapterTitle: '',

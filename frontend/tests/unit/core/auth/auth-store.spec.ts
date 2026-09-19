@@ -70,7 +70,7 @@ describe('AuthStore', () => {
       mockSession({
         user: mockUser({
           permissions: ['COMMENT_WRITE', 'COMMENT_UPVOTE', 'BOOKMARK_READ', 'BOOKMARK_WRITE'],
-          subscription: { plan: 'PREMIUM', status: 'ACTIVE', active: true, currentPeriodEnd: '2027-01-01T00:00:00Z', planPermissions: ['BOOKMARK_READ', 'BOOKMARK_WRITE'] }
+          subscription: { plan: 'PREMIUM', status: 'ACTIVE', active: true, currentPeriodEnd: '2027-01-01T00:00:00Z', cancelAtPeriodEnd: false, planPermissions: ['BOOKMARK_READ', 'BOOKMARK_WRITE'] }
         })
       })
     );

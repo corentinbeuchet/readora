@@ -4,8 +4,8 @@ export interface ChapterComment {
   authorId: string;
   authorUsername: string;
   content: string;
-  pageReference?: number;
-  parentId?: string;
+  pageReference: number | null;
+  parentId: string | null;
   depth: number;
   isSpoiler: boolean;
   upvotes: number;

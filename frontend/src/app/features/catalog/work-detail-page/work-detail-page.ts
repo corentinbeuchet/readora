@@ -94,7 +94,7 @@ export class WorkDetailPage {
           title: `${w.title} (${w.type})`,
           description: w.synopsis?.slice(0, 160) || `Read ${w.title} on Readora.`,
           path: `/works/${w.id}`,
-          image: w.coverImageUrl,
+          image: w.coverImageUrl ?? undefined,
           type: 'article'
         });
       }

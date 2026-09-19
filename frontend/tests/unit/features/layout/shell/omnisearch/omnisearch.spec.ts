@@ -11,6 +11,7 @@ const OMNI: WorkSummary = {
   type: 'MANHWA',
   status: 'ONGOING',
   author: 'Sing Shong',
+  demographic: null,
   coverImageUrl: '',
   genres: ['Action']
 };

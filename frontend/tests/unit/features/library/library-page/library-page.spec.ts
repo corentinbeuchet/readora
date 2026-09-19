@@ -11,7 +11,7 @@ import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 const READER = mockUser({ permissions: ['COMMENT_WRITE', 'LIBRARY_USE'] });
 
 const SOLO: LibraryItem = {
-  work: { id: 'w-1', title: 'Solo Leveling', type: 'MANHWA', status: 'COMPLETED', coverImageUrl: '', genres: [] },
+  work: { id: 'w-1', title: 'Solo Leveling', type: 'MANHWA', status: 'COMPLETED', author: null, demographic: null, coverImageUrl: '', genres: [] },
   status: 'READING',
   addedAt: '2026-09-01T00:00:00Z',
   updatedAt: '2026-09-02T00:00:00Z',

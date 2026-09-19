@@ -6,8 +6,8 @@ import { BrowserStorage } from '@app/core/storage/browser-storage';
 import { Chapter } from '@app/core/models/chapter';
 import { MemoryStorage } from '../../../test-utils';
 
-const pages = (n: number) => Array.from({ length: n }, (_, i) => ({ pageNumber: i + 1, storageKey: `p${i + 1}`, cdnUrl: `c${i + 1}` }));
-const CHAPTER: Chapter = { id: 'chap-1', workId: 'work-1', chapterNumber: '1', title: 'Chapter 1', status: 'PUBLISHED', pages: pages(3) };
+const pages = (n: number) => Array.from({ length: n }, (_, i) => ({ pageNumber: i + 1, storageKey: `p${i + 1}`, cdnUrl: `c${i + 1}`, width: 0, height: 0, description: null, liteCdnUrl: null }));
+const CHAPTER: Chapter = { id: 'chap-1', workId: 'work-1', chapterNumber: '1', title: 'Chapter 1', status: 'PUBLISHED', scanlationProjectId: null, work: null, previousChapterId: null, nextChapterId: null, pages: pages(3) };
 
 describe('ReaderState (derived reader state)', () => {
   let state: ReaderState;

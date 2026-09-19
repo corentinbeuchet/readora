@@ -11,7 +11,7 @@ const READER = mockUser({ permissions: ['LIBRARY_USE'] });
 
 function item(id: string, title: string, chapterId: string, chapterNumber: string, readAt: string): HistoryItem {
   return {
-    work: { id, title, type: 'MANGA', status: 'ONGOING', coverImageUrl: '', genres: [] },
+    work: { id, title, type: 'MANGA', status: 'ONGOING', author: null, demographic: null, coverImageUrl: '', genres: [] },
     lastRead: { chapterId, workId: id, chapterNumber, readAt, finished: false }
   };
 }

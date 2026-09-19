@@ -4,7 +4,7 @@ import { ChapterSummary } from '@app/core/models/chapter';
 export interface PublicProfile {
   username: string;
   displayName: string;
-  avatarUrl?: string | null;
+  avatarUrl: string | null;
   bio: string;
   joinedAt: string;
   chaptersRead: number;

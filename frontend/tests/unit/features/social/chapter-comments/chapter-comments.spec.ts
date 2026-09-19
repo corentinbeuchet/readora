@@ -12,8 +12,8 @@ const CHAPTER_ID = 'chap-1';
 const COMMENTS_URL = `${API}/comments/chapter/${CHAPTER_ID}`;
 
 const COMMENTS: ChapterComment[] = [
-  { id: 'c1', chapterId: CHAPTER_ID, authorId: 'u1', authorUsername: 'alice', content: 'Great chapter', depth: 1, isSpoiler: false, upvotes: 3, createdAt: '2026-09-13T00:00:00Z' },
-  { id: 'c2', chapterId: CHAPTER_ID, authorId: 'u2', authorUsername: 'bob', content: 'He dies', parentId: 'c1', depth: 2, isSpoiler: true, upvotes: 0, createdAt: '2026-09-13T00:01:00Z' }
+  { id: 'c1', chapterId: CHAPTER_ID, authorId: 'u1', authorUsername: 'alice', content: 'Great chapter', pageReference: null, parentId: null, depth: 1, isSpoiler: false, upvotes: 3, createdAt: '2026-09-13T00:00:00Z' },
+  { id: 'c2', chapterId: CHAPTER_ID, authorId: 'u2', authorUsername: 'bob', content: 'He dies', pageReference: null, parentId: 'c1', depth: 2, isSpoiler: true, upvotes: 0, createdAt: '2026-09-13T00:01:00Z' }
 ];
 const LATER_TOP_LEVEL: ChapterComment = { ...COMMENTS[0], id: 'c3', authorUsername: 'carol', content: 'Later top-level', createdAt: '2026-09-13T00:05:00Z' };
 
@@ -349,7 +349,7 @@ describe('ChapterComments', () => {
     expect(page().querySelector('[role="alert"]')!.textContent).toContain(text);
   }
 
-  function node(id: string, depth: number, parentId?: string): ChapterComment {
+  function node(id: string, depth: number, parentId: string | null = null): ChapterComment {
     return { ...COMMENTS[0], id, depth, parentId };
   }
 

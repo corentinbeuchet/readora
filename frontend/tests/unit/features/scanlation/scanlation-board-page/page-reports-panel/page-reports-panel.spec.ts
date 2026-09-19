@@ -14,7 +14,8 @@ const REPORT: PageReport = {
   pageNumber: 7,
   reason: 'IMAGE_CORRUPTED',
   status: 'OPEN',
-  createdAt: '2026-09-10T10:00:00Z'
+  createdAt: '2026-09-10T10:00:00Z',
+  resolvedAt: null
 };
 
 describe('PageReportsPanel (US-06 team side)', () => {

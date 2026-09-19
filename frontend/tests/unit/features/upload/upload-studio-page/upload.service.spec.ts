@@ -97,18 +97,18 @@ describe('UploadService and file-utils', () => {
     let results: PageUploadItem[];
 
     it('uploadCover sends multipart form to /storage/upload?folder=covers', async () => {
-      await whenIUploadTheCover('cover.jpg', { storageKey: 'covers/uuid-cover.jpg', cdnUrl: 'https://cdn.readora.com/covers/uuid-cover.jpg' });
+      await whenIUploadTheCover('cover.jpg', { storageKey: 'covers/uuid-cover.jpg', cdnUrl: 'https://cdn.readora.com/covers/uuid-cover.jpg', liteCdnUrl: null });
 
       thenTheRequestWasAPost();
-      thenTheCoverIsStoredAs({ storageKey: 'covers/uuid-cover.jpg', cdnUrl: 'https://cdn.readora.com/covers/uuid-cover.jpg' });
+      thenTheCoverIsStoredAs({ storageKey: 'covers/uuid-cover.jpg', cdnUrl: 'https://cdn.readora.com/covers/uuid-cover.jpg', liteCdnUrl: null });
     });
 
     it('uploadPagesBatch uploads all pages with progress notifications', async () => {
       givenThePages(pendingPage(1, '01.png'), pendingPage(2, '02.png'));
 
       await whenIUploadThePages({ folder: 'scans/c1', concurrency: 2 }, [
-        { storageKey: 'scans/c1/p1.png', cdnUrl: 'https://cdn.readora.com/scans/c1/p1.png' },
-        { storageKey: 'scans/c1/p2.png', cdnUrl: 'https://cdn.readora.com/scans/c1/p2.png' }
+        { storageKey: 'scans/c1/p1.png', cdnUrl: 'https://cdn.readora.com/scans/c1/p1.png', liteCdnUrl: null },
+        { storageKey: 'scans/c1/p2.png', cdnUrl: 'https://cdn.readora.com/scans/c1/p2.png', liteCdnUrl: null }
       ]);
 
       thenUploadsRanAtOnce(2);
@@ -123,7 +123,7 @@ describe('UploadService and file-utils', () => {
       givenThePages(pendingPage(1, '01.png'), pendingPage(2, '02.png'));
 
       await whenIUploadThePages({ folder: 'scans/c1', concurrency: 2 }, [
-        { storageKey: 'k1', cdnUrl: 'https://cdn/k1' },
+        { storageKey: 'k1', cdnUrl: 'https://cdn/k1', liteCdnUrl: null },
         { rejectedWith: 'File too large' }
       ]);
 
@@ -140,7 +140,7 @@ describe('UploadService and file-utils', () => {
         { ...pendingPage(2, '02.png'), status: 'error', error: 'boom' }
       );
 
-      await whenIRetryTheUpload('scans/c1', { storageKey: 'k2', cdnUrl: 'https://cdn/k2' });
+      await whenIRetryTheUpload('scans/c1', { storageKey: 'k2', cdnUrl: 'https://cdn/k2', liteCdnUrl: null });
 
       thenTheResultsAre([
         ['done', 'k1', undefined],

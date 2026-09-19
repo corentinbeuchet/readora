@@ -10,9 +10,9 @@ export interface Work {
   synopsis: string;
   type: WorkType;
   status: WorkStatus;
-  author?: string | null;
-  demographic?: Demographic | null;
-  coverImageUrl: string;
+  author: string | null;
+  demographic: Demographic | null;
+  coverImageUrl: string | null;
   genres: string[];
 }
 
@@ -32,9 +32,9 @@ export interface WorkSummary {
   title: string;
   type: Work['type'];
   status: Work['status'];
-  author?: string | null;
-  demographic?: Demographic | null;
-  coverImageUrl: string;
+  author: string | null;
+  demographic: Demographic | null;
+  coverImageUrl: string | null;
   genres: string[];
 }
 

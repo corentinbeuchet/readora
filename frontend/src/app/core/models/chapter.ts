@@ -20,19 +20,19 @@ export interface StorageUploadResult {
   storageKey: string;
   cdnUrl: string;
   /** Lighter JPEG copy of an uploaded image for the data saver; absent when none was made (US-07). */
-  liteCdnUrl?: string | null;
+  liteCdnUrl: string | null;
 }
 
 export interface PageAsset {
   pageNumber: number;
   storageKey: string;
-  cdnUrl: string;
-  width?: number;
-  height?: number;
+  cdnUrl: string | null;
+  width: number;
+  height: number;
   /** Written by the uploader for screen readers; used as the image's alt text (US-07). */
-  description?: string | null;
+  description: string | null;
   /** Lighter copy shown with "Data saver" on; absent for older pages (US-07). */
-  liteCdnUrl?: string | null;
+  liteCdnUrl: string | null;
 }
 
 export interface Chapter {
@@ -42,13 +42,12 @@ export interface Chapter {
   title: string;
   status: 'DRAFT' | 'PENDING_REVIEW' | 'PUBLISHED' | 'ARCHIVED';
   pages: PageAsset[];
-  scanlationProjectId?: string;
-  publishedAt?: string;
+  scanlationProjectId: string | null;
   /** Reader view only (`GET /chapters/{id}`): the series, for its title and default reading mode. */
-  work?: { id: string; title: string; type: WorkType } | null;
+  work: { id: string; title: string; type: WorkType } | null;
   /** Reader view only: published neighbours, `null` at either end. */
-  previousChapterId?: string | null;
-  nextChapterId?: string | null;
+  previousChapterId: string | null;
+  nextChapterId: string | null;
 }
 
 export interface ChapterSummary {
@@ -58,5 +57,5 @@ export interface ChapterSummary {
   title: string;
   status: Chapter['status'];
   pageCount: number;
-  publishedAt?: string | null;
+  publishedAt: string | null;
 }

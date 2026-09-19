@@ -16,5 +16,5 @@ export interface PageReport {
   reason: PageReportReason;
   status: 'OPEN' | 'RESOLVED';
   createdAt: string;
-  resolvedAt?: string | null;
+  resolvedAt: string | null;
 }

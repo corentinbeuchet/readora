@@ -16,8 +16,8 @@ const LIST: ReadingList = {
   ownerId: 'kenji-id',
   upvotes: 0,
   items: [
-    { work: { id: 'w-1', title: 'Solo Leveling', type: 'MANHWA', status: 'COMPLETED', coverImageUrl: '', genres: [] }, note: 'Masterpiece dungeon art' },
-    { work: { id: 'w-2', title: 'Omniscient Reader', type: 'MANHWA', status: 'ONGOING', coverImageUrl: '', genres: [] }, note: null }
+    { work: { id: 'w-1', title: 'Solo Leveling', type: 'MANHWA', status: 'COMPLETED', author: null, demographic: null, coverImageUrl: '', genres: [] }, note: 'Masterpiece dungeon art' },
+    { work: { id: 'w-2', title: 'Omniscient Reader', type: 'MANHWA', status: 'ONGOING', author: null, demographic: null, coverImageUrl: '', genres: [] }, note: null }
   ],
   updatedAt: '2026-09-10T10:00:00Z'
 };
