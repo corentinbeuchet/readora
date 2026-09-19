@@ -50,6 +50,7 @@ describe('PageGridUploader', () => {
   let host: Host;
   let created: string[];
   let revoked: string[];
+  let pagesBefore: PageUploadItem[];
 
   beforeEach(async () => {
     created = [];
@@ -71,115 +72,247 @@ describe('PageGridUploader', () => {
     fixture.detectChanges();
   });
 
-  async function add(files: File[]): Promise<void> {
-    choose(fixture, files);
-    await settleDecodes(fixture);
-  }
-
-  const images = (n: number): File[] => Array.from({ length: n }, (_, i) => new File([`p${i}`], `p${i + 1}.png`, { type: 'image/png' }));
-  const deleteButtons = (): HTMLButtonElement[] => Array.from(fixture.nativeElement.querySelectorAll('button[aria-label="Delete page"]'));
-
   it('decodes dimensions with bounded concurrency, reusing one preview URL per page', async () => {
-    await add(images(10));
+    await whenIAddImages(10);
 
-    const pages = host.pages();
-    expect(pages.length).toBe(10);
-    expect(pages.map((p) => p.pageNumber)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-    expect(pages.every((p) => p.width === 800 && p.height === 1200)).toBe(true);
-    expect(FakeImage.maxInFlight).toBeGreaterThan(1);
-    expect(FakeImage.maxInFlight).toBeLessThanOrEqual(IMAGE_DECODE_CONCURRENCY);
-    // No extra object URL just to read dimensions.
-    expect(created.length).toBe(10);
-    expect(FakeImage.srcs).toEqual(pages.map((p) => p.previewUrl));
-    expect(revoked).toEqual([]);
+    thenIHavePages(10);
+    thenThePagesAreNumbered([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    thenEveryPageMeasures(800, 1200);
+    thenSeveralImagesWereDecodedAtOnce();
+    thenNoMoreImagesWereDecodedAtOnceThan(IMAGE_DECODE_CONCURRENCY);
+    thenObjectUrlsWereCreated(10);
+    thenTheDecodedImagesAreThePreviews();
+    thenNoPreviewUrlWasRevoked();
   });
 
   it('revokes the preview URL of a removed page and renumbers without mutating', async () => {
-    await add(images(3));
-    const before = host.pages();
-    const third: PageUploadItem = before[2];
+    await givenIAddedImages(3);
 
-    deleteButtons()[1].click();
-    fixture.detectChanges();
+    whenIDeletePage(2);
 
-    expect(revoked).toEqual([before[1].previewUrl]);
-    expect(host.pages().map((p) => [p.file.name, p.pageNumber])).toEqual([['p1.png', 1], ['p3.png', 2]]);
-    expect(third.pageNumber).toBe(3);
+    thenOnlyThePreviewOfOriginalPageWasRevoked(2);
+    thenThePagesAre([['p1.png', 1], ['p3.png', 2]]);
+    thenOriginalPageStillHasNumber(3, 3);
   });
 
   it('keeps an optional description per page for screen readers (US-07)', async () => {
-    await add(images(2));
-    const before = host.pages();
-    const field: HTMLTextAreaElement = fixture.nativeElement.querySelectorAll('.page-description textarea')[1];
-    expect(fixture.nativeElement.querySelectorAll('.page-description')[1].textContent).toContain('Description of page 2');
+    await givenIAddedImages(2);
 
-    field.value = 'A storm over the city';
-    field.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
+    thenTheDescriptionFieldOfPageReads(2, 'Description of page 2');
 
-    expect(host.pages().map((p) => p.description)).toEqual([undefined, 'A storm over the city']);
-    expect(before[1].description).toBeUndefined();
+    whenIDescribePage(2, 'A storm over the city');
+
+    thenTheDescriptionsAre([undefined, 'A storm over the city']);
+    thenOriginalPageHasNoDescription(2);
   });
 
   it('revokes every preview URL on "Clear All"', async () => {
-    await add(images(3));
-    const urls = host.pages().map((p) => p.previewUrl);
+    await givenIAddedImages(3);
 
-    const clear = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find((b) => b.textContent?.includes('Clear All'))!;
-    clear.click();
-    fixture.detectChanges();
+    whenIClearAll();
 
-    expect(host.pages()).toEqual([]);
-    expect(revoked).toEqual(urls);
+    thenThereAreNoPages();
+    thenEveryOriginalPreviewWasRevoked();
   });
 
   it('revokes previews that finish decoding after the component is destroyed', async () => {
-    choose(fixture, images(2));
+    givenIChoseImages(2);
+
+    await whenTheUploaderIsDestroyedBeforeTheDecodesFinish();
+
+    thenEveryCreatedPreviewUrlWasRevoked();
+  });
+
+  async function givenIAddedImages(count: number): Promise<void> {
+    await whenIAddImages(count);
+    pagesBefore = host.pages();
+  }
+
+  function givenIChoseImages(count: number): void {
+    choose(fixture, images(count));
+  }
+
+  async function whenIAddImages(count: number): Promise<void> {
+    choose(fixture, images(count));
+    await settleDecodes(fixture);
+  }
+
+  function whenIDeletePage(pageNumber: number): void {
+    deleteButtons()[pageNumber - 1].click();
+    fixture.detectChanges();
+  }
+
+  function whenIDescribePage(pageNumber: number, description: string): void {
+    const field = descriptions()[pageNumber - 1].querySelector('textarea')!;
+    field.value = description;
+    field.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+  }
+
+  function whenIClearAll(): void {
+    Array.from(page().querySelectorAll('button')).find((b) => b.textContent?.includes('Clear All'))!.click();
+    fixture.detectChanges();
+  }
+
+  async function whenTheUploaderIsDestroyedBeforeTheDecodesFinish(): Promise<void> {
     fixture.destroy();
     await settleDecodes(fixture);
+  }
 
+  function thenIHavePages(count: number): void {
+    expect(host.pages().length).toBe(count);
+  }
+
+  function thenThePagesAreNumbered(pageNumbers: number[]): void {
+    expect(host.pages().map((p) => p.pageNumber)).toEqual(pageNumbers);
+  }
+
+  function thenEveryPageMeasures(width: number, height: number): void {
+    expect(host.pages().every((p) => p.width === width && p.height === height)).toBe(true);
+  }
+
+  function thenSeveralImagesWereDecodedAtOnce(): void {
+    expect(FakeImage.maxInFlight).toBeGreaterThan(1);
+  }
+
+  function thenNoMoreImagesWereDecodedAtOnceThan(limit: number): void {
+    expect(FakeImage.maxInFlight).toBeLessThanOrEqual(limit);
+  }
+
+  /** One per page: no extra object URL just to read dimensions. */
+  function thenObjectUrlsWereCreated(count: number): void {
+    expect(created.length).toBe(count);
+  }
+
+  function thenTheDecodedImagesAreThePreviews(): void {
+    expect(FakeImage.srcs).toEqual(host.pages().map((p) => p.previewUrl));
+  }
+
+  function thenNoPreviewUrlWasRevoked(): void {
+    expect(revoked).toEqual([]);
+  }
+
+  function thenOnlyThePreviewOfOriginalPageWasRevoked(pageNumber: number): void {
+    expect(revoked).toEqual([pagesBefore[pageNumber - 1].previewUrl]);
+  }
+
+  function thenThePagesAre(pages: [string, number][]): void {
+    expect(host.pages().map((p) => [p.file.name, p.pageNumber])).toEqual(pages);
+  }
+
+  function thenOriginalPageStillHasNumber(originalPageNumber: number, pageNumber: number): void {
+    expect(pagesBefore[originalPageNumber - 1].pageNumber).toBe(pageNumber);
+  }
+
+  function thenTheDescriptionFieldOfPageReads(pageNumber: number, label: string): void {
+    expect(descriptions()[pageNumber - 1].textContent).toContain(label);
+  }
+
+  function thenTheDescriptionsAre(descriptionsByPage: (string | undefined)[]): void {
+    expect(host.pages().map((p) => p.description)).toEqual(descriptionsByPage);
+  }
+
+  function thenOriginalPageHasNoDescription(pageNumber: number): void {
+    expect(pagesBefore[pageNumber - 1].description).toBeUndefined();
+  }
+
+  function thenThereAreNoPages(): void {
+    expect(host.pages()).toEqual([]);
+  }
+
+  function thenEveryOriginalPreviewWasRevoked(): void {
+    expect(revoked).toEqual(pagesBefore.map((p) => p.previewUrl));
+  }
+
+  function thenEveryCreatedPreviewUrlWasRevoked(): void {
     expect(revoked.sort()).toEqual([...created].sort());
-  });
+  }
+
+  function images(count: number): File[] {
+    return Array.from({ length: count }, (_, i) => new File([`p${i}`], `p${i + 1}.png`, { type: 'image/png' }));
+  }
+
+  function page(): HTMLElement {
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  function deleteButtons(): HTMLButtonElement[] {
+    return Array.from(page().querySelectorAll<HTMLButtonElement>('button[aria-label="Delete page"]'));
+  }
+
+  function descriptions(): HTMLElement[] {
+    return Array.from(page().querySelectorAll<HTMLElement>('.page-description'));
+  }
 });
 
 describe('mapWithConcurrency', () => {
+  let inFlight: number;
+  let mostAtOnce: number;
+  let results: number[];
+
+  beforeEach(() => vi.useFakeTimers());
+
+  afterEach(() => vi.useRealTimers());
+
   it('keeps input order and never exceeds the limit', async () => {
-    vi.useFakeTimers();
-    try {
-      let inFlight = 0;
-      let max = 0;
-      const pending = mapWithConcurrency([5, 1, 4, 2, 3], 2, async (n) => {
-        inFlight++;
-        max = Math.max(max, inFlight);
-        await new Promise((r) => setTimeout(r, n));
-        inFlight--;
-        return n * 10;
-      });
-      await vi.runAllTimersAsync();
-      expect(await pending).toEqual([50, 10, 40, 20, 30]);
-      expect(max).toBe(2);
-    } finally {
-      vi.useRealTimers();
-    }
+    await whenIMapTimesTenWithALimitOf([5, 1, 4, 2, 3], 2);
+
+    thenTheResultsAre([50, 10, 40, 20, 30]);
+    thenTheMostRunningAtOnceWas(2);
   });
+
+  /** Each value `n` takes `n` ms, so the calls finish out of order. */
+  async function whenIMapTimesTenWithALimitOf(values: number[], limit: number): Promise<void> {
+    inFlight = 0;
+    mostAtOnce = 0;
+    const pending = mapWithConcurrency(values, limit, async (n) => {
+      inFlight++;
+      mostAtOnce = Math.max(mostAtOnce, inFlight);
+      await new Promise((r) => setTimeout(r, n));
+      inFlight--;
+      return n * 10;
+    });
+    await vi.runAllTimersAsync();
+    results = await pending;
+  }
+
+  function thenTheResultsAre(expected: number[]): void {
+    expect(results).toEqual(expected);
+  }
+
+  function thenTheMostRunningAtOnceWas(count: number): void {
+    expect(mostAtOnce).toBe(count);
+  }
 });
 
 describe('PageGridUploader error reporting', () => {
-  it('tells the user which files were rejected and why', async () => {
-    await TestBed.configureTestingModule({ imports: [Host] }).compileComponents();
-    const fixture = TestBed.createComponent(Host);
-    fixture.detectChanges();
+  let fixture: ComponentFixture<Host>;
 
-    choose(fixture, [
-      new File(['x'], 'notes.txt', { type: 'text/plain' }),
-      new File(['not a zip'], 'broken.cbz', { type: 'application/zip' }),
-    ]);
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [Host] }).compileComponents();
+    fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+  });
+
+  it('tells the user which files were rejected and why', async () => {
+    await whenIChoose(new File(['x'], 'notes.txt', { type: 'text/plain' }), new File(['not a zip'], 'broken.cbz', { type: 'application/zip' }));
+
+    thenTheAlertSays('"notes.txt" was skipped');
+    thenTheAlertSays('"broken.cbz" is not a valid ZIP/CBZ archive');
+    thenNoPageWasAdded();
+  });
+
+  async function whenIChoose(...files: File[]): Promise<void> {
+    choose(fixture, files);
     await fixture.whenStable();
     await settleDecodes(fixture);
+  }
 
-    const alert: HTMLElement = fixture.nativeElement.querySelector('[role="alert"]');
-    expect(alert.textContent).toContain('"notes.txt" was skipped');
-    expect(alert.textContent).toContain('"broken.cbz" is not a valid ZIP/CBZ archive');
+  function thenTheAlertSays(text: string): void {
+    expect((fixture.nativeElement as HTMLElement).querySelector('[role="alert"]')!.textContent).toContain(text);
+  }
+
+  function thenNoPageWasAdded(): void {
     expect(fixture.componentInstance.pages()).toEqual([]);
-  });
+  }
 });

@@ -1,16 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
 import { PlansPage } from '@app/features/subscription/plans-page';
 import { AuthStore } from '@app/core/auth/auth-store';
+import { Subscription } from '@app/core/models/readora.models';
 import { mockUser, signIn } from '../../core/auth/auth-fixtures';
 import { API, fail, ok, provideHttpTesting } from '../../test-utils';
+
+const CHECKOUT_URL = `${API}/subscriptions/checkout`;
 
 describe('PlansPage', () => {
   let fixture: ComponentFixture<PlansPage>;
   let http: HttpTestingController;
   let store: AuthStore;
   let redirectSpy: ReturnType<typeof vi.fn<(url: string) => void>>;
+  let checkoutRequest: TestRequest;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -27,96 +31,176 @@ describe('PlansPage', () => {
 
   afterEach(() => http.verify());
 
-  const subscribeBtn = (): HTMLButtonElement => fixture.nativeElement.querySelector('.btn-subscribe');
-
   it('sends anonymous visitors to login with a returnUrl', async () => {
-    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-    fixture.detectChanges();
-    subscribeBtn().click();
-    await fixture.whenStable();
-    expect(navigate).toHaveBeenCalledWith(['/login'], { queryParams: { returnUrl: '/subscription' } });
-    http.expectNone(`${API}/subscriptions/checkout`);
+    givenIAmOnThePlansPage();
+
+    await whenIClickSubscribe();
+
+    thenIAmOn('/login?returnUrl=%2Fsubscription');
+    thenNoCheckoutWasStarted();
   });
 
   it('starts a PREMIUM checkout and redirects to the Stripe URL for a free reader', async () => {
-    await signIn(store, http);
-    fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Current plan');
+    await givenIAmSignedIn();
+    givenIAmOnThePlansPage();
 
-    subscribeBtn().click();
-    fixture.detectChanges();
-    expect(subscribeBtn().disabled).toBe(true);
+    thenICanSee('Current plan');
 
-    const req = http.expectOne(`${API}/subscriptions/checkout`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ plan: 'PREMIUM' });
-    req.flush(ok({ sessionId: 'cs_1', url: 'https://checkout.stripe.com/c/pay/cs_1' }));
-    await fixture.whenStable();
+    whenIStartTheCheckout();
 
-    expect(redirectSpy).toHaveBeenCalledWith('https://checkout.stripe.com/c/pay/cs_1');
+    thenTheSubscribeButtonIsDisabled();
+    thenACheckoutWasRequestedFor('PREMIUM');
+
+    await whenTheCheckoutAnswers('https://checkout.stripe.com/c/pay/cs_1');
+
+    thenIWasRedirectedTo('https://checkout.stripe.com/c/pay/cs_1');
   });
 
   it.each(['https://evil.example/pay', 'http://checkout.stripe.com/c/pay/cs_1', 'https://checkout.stripe.com.evil.example/x', 'javascript:alert(1)'])(
     'refuses to redirect to an untrusted checkout URL (%s)',
     async (url) => {
-      await signIn(store, http);
-      fixture.detectChanges();
-      subscribeBtn().click();
-      http.expectOne(`${API}/subscriptions/checkout`).flush(ok({ sessionId: 'cs_1', url }));
-      await fixture.whenStable();
-      fixture.detectChanges();
+      await givenIAmSignedIn();
+      givenIAmOnThePlansPage();
 
-      expect(redirectSpy).not.toHaveBeenCalled();
-      expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('unexpected payment page');
-      expect(subscribeBtn().disabled).toBe(false);
+      whenIStartTheCheckout();
+      await whenTheCheckoutAnswers(url);
+
+      thenIWasNotRedirected();
+      thenISeeTheError('unexpected payment page');
+      thenTheSubscribeButtonIsEnabled();
     }
   );
 
   it('shows the error returned by the API when checkout cannot be created', async () => {
-    await signIn(store, http);
-    fixture.detectChanges();
-    subscribeBtn().click();
-    http.expectOne(`${API}/subscriptions/checkout`).flush(
-      fail('Stripe is not configured on this server'),
-      { status: 502, statusText: 'Bad Gateway' }
-    );
-    await fixture.whenStable();
-    fixture.detectChanges();
+    await givenIAmSignedIn();
+    givenIAmOnThePlansPage();
 
-    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Stripe is not configured');
-    expect(subscribeBtn().disabled).toBe(false);
-    expect(redirectSpy).not.toHaveBeenCalled();
+    whenIStartTheCheckout();
+    await whenTheCheckoutFails('Stripe is not configured on this server');
+
+    thenISeeTheError('Stripe is not configured');
+    thenTheSubscribeButtonIsEnabled();
+    thenIWasNotRedirected();
   });
 
   it('shows Cancel instead of Subscribe for an active PREMIUM subscriber', async () => {
-    await signIn(
-      store,
-      http,
-      mockUser({
-        permissions: ['COMMENT_WRITE', 'BOOKMARK_READ', 'BOOKMARK_WRITE'],
-        subscription: { plan: 'PREMIUM', status: 'ACTIVE', active: true, currentPeriodEnd: '2027-01-01T00:00:00Z', planPermissions: ['BOOKMARK_READ', 'BOOKMARK_WRITE'] }
-      })
-    );
-    fixture.detectChanges();
-    expect(subscribeBtn()).toBeNull();
-    expect(fixture.nativeElement.querySelector('.btn-danger').textContent).toContain('Cancel subscription');
+    await givenIAmAPremiumSubscriber({ cancelAtPeriodEnd: false });
+    givenIAmOnThePlansPage();
+
+    thenThereIsNoSubscribeButton();
+    thenTheCancelButtonReads('Cancel subscription');
   });
 
   it('after cancelling, shows when Premium ends and no second Cancel button', async () => {
-    await signIn(
-      store,
-      http,
-      mockUser({
-        permissions: ['COMMENT_WRITE', 'BOOKMARK_READ', 'BOOKMARK_WRITE'],
-        subscription: {
-          plan: 'PREMIUM', status: 'ACTIVE', active: true, currentPeriodEnd: '2027-01-01T00:00:00Z', cancelAtPeriodEnd: true,
-          planPermissions: ['BOOKMARK_READ', 'BOOKMARK_WRITE']
-        }
-      })
-    );
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.btn-danger')).toBeNull();
-    expect(fixture.nativeElement.textContent).toContain('Premium ends');
-    expect(fixture.nativeElement.textContent).not.toContain('Renews');
+    await givenIAmAPremiumSubscriber({ cancelAtPeriodEnd: true });
+    givenIAmOnThePlansPage();
+
+    thenThereIsNoCancelButton();
+    thenICanSee('Premium ends');
+    thenICannotSee('Renews');
   });
+
+  async function givenIAmSignedIn(): Promise<void> {
+    await signIn(store, http);
+  }
+
+  async function givenIAmAPremiumSubscriber(renewal: { cancelAtPeriodEnd: boolean }): Promise<void> {
+    const subscription: Subscription = {
+      plan: 'PREMIUM',
+      status: 'ACTIVE',
+      active: true,
+      currentPeriodEnd: '2027-01-01T00:00:00Z',
+      cancelAtPeriodEnd: renewal.cancelAtPeriodEnd,
+      planPermissions: ['BOOKMARK_READ', 'BOOKMARK_WRITE']
+    };
+    await signIn(store, http, mockUser({ permissions: ['COMMENT_WRITE', 'BOOKMARK_READ', 'BOOKMARK_WRITE'], subscription }));
+  }
+
+  function givenIAmOnThePlansPage(): void {
+    fixture.detectChanges();
+  }
+
+  async function whenIClickSubscribe(): Promise<void> {
+    subscribeButton().click();
+    await fixture.whenStable();
+  }
+
+  function whenIStartTheCheckout(): void {
+    subscribeButton().click();
+    fixture.detectChanges();
+    checkoutRequest = http.expectOne(CHECKOUT_URL);
+  }
+
+  async function whenTheCheckoutAnswers(url: string): Promise<void> {
+    checkoutRequest.flush(ok({ sessionId: 'cs_1', url }));
+    await fixture.whenStable();
+    fixture.detectChanges();
+  }
+
+  async function whenTheCheckoutFails(error: string): Promise<void> {
+    checkoutRequest.flush(fail(error), { status: 502, statusText: 'Bad Gateway' });
+    await fixture.whenStable();
+    fixture.detectChanges();
+  }
+
+  function thenIAmOn(url: string): void {
+    expect(TestBed.inject(Router).url).toBe(url);
+  }
+
+  function thenNoCheckoutWasStarted(): void {
+    http.expectNone(CHECKOUT_URL);
+  }
+
+  function thenACheckoutWasRequestedFor(plan: string): void {
+    expect(checkoutRequest.request.method).toBe('POST');
+    expect(checkoutRequest.request.body).toEqual({ plan });
+  }
+
+  function thenIWasRedirectedTo(url: string): void {
+    expect(redirectSpy).toHaveBeenCalledWith(url);
+  }
+
+  function thenIWasNotRedirected(): void {
+    expect(redirectSpy).not.toHaveBeenCalled();
+  }
+
+  function thenTheSubscribeButtonIsDisabled(): void {
+    expect(subscribeButton().disabled).toBe(true);
+  }
+
+  function thenTheSubscribeButtonIsEnabled(): void {
+    expect(subscribeButton().disabled).toBe(false);
+  }
+
+  function thenThereIsNoSubscribeButton(): void {
+    expect(subscribeButton()).toBeNull();
+  }
+
+  function thenTheCancelButtonReads(label: string): void {
+    expect(page().querySelector('.btn-danger')!.textContent).toContain(label);
+  }
+
+  function thenThereIsNoCancelButton(): void {
+    expect(page().querySelector('.btn-danger')).toBeNull();
+  }
+
+  function thenISeeTheError(text: string): void {
+    expect(page().querySelector('[role="alert"]')!.textContent).toContain(text);
+  }
+
+  function thenICanSee(text: string): void {
+    expect(page().textContent).toContain(text);
+  }
+
+  function thenICannotSee(text: string): void {
+    expect(page().textContent).not.toContain(text);
+  }
+
+  function page(): HTMLElement {
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  function subscribeButton(): HTMLButtonElement {
+    return page().querySelector<HTMLButtonElement>('.btn-subscribe')!;
+  }
 });

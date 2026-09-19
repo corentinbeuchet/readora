@@ -1,30 +1,31 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { ScanlationBoardPage } from '@app/features/scanlation/scanlation-board-page';
-import { AuthStore } from '@app/core/auth/auth-store';
-import { ScanlationProject } from '@app/core/models/readora.models';
-import { mockUser, signIn } from '../../core/auth/auth-fixtures';
+import { ScanlationProject, WorkflowTask } from '@app/core/models/readora.models';
+import { givenIAmSignedInWith } from '../../core/auth/auth-fixtures';
 import { API, fail, ok, provideHttpTesting, settle } from '../../test-utils';
 
 const PROJECT_ID = 'proj-1';
+const TASKS_URL = `${API}/scanlation/projects/${PROJECT_ID}/tasks`;
+
+const RAW_TASK: WorkflowTask = { id: 't-raw', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', pageCount: 22, updatedAt: '2026-09-13T00:00:00Z' };
+const MY_TASK: WorkflowTask = { id: 't-mine', chapterNumber: '11', stage: 'CLEANING', status: 'IN_PROGRESS', assigneeId: 'user-1', pageCount: 20, updatedAt: '2026-09-13T00:00:00Z' };
+const QC_TASK: WorkflowTask = { id: 't-qc', chapterNumber: '9', stage: 'QC_REVIEW', status: 'PENDING', pageCount: 18, updatedAt: '2026-09-13T00:00:00Z' };
 
 const PROJECT: ScanlationProject = {
   id: PROJECT_ID,
   name: 'FlameScans Solo Leveling',
   workId: 'work-1',
   members: [{ userId: 'user-1', roles: ['CLEANER_REDRAWER', 'QUALITY_CHECKER'] }],
-  tasks: [
-    { id: 't-raw', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', pageCount: 22, updatedAt: '2026-09-13T00:00:00Z' },
-    { id: 't-mine', chapterNumber: '11', stage: 'CLEANING', status: 'IN_PROGRESS', assigneeId: 'user-1', pageCount: 20, updatedAt: '2026-09-13T00:00:00Z' },
-    { id: 't-qc', chapterNumber: '9', stage: 'QC_REVIEW', status: 'PENDING', pageCount: 18, updatedAt: '2026-09-13T00:00:00Z' }
-  ]
+  tasks: [RAW_TASK, MY_TASK, QC_TASK]
 };
 
 describe('ScanlationBoardPage (API-driven, permission gated)', () => {
   let fixture: ComponentFixture<ScanlationBoardPage>;
   let http: HttpTestingController;
-  let store: AuthStore;
+  let lastRequest: TestRequest;
+  let taskInDialog: WorkflowTask;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -32,191 +33,341 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
       providers: [provideRouter([]), ...provideHttpTesting()]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
-    store = TestBed.inject(AuthStore);
     fixture = TestBed.createComponent(ScanlationBoardPage);
     fixture.componentRef.setInput('projectId', PROJECT_ID);
   });
 
   afterEach(() => http.verify());
 
-  async function render(): Promise<void> {
-    await settle(fixture);
-    http.expectOne(`${API}/scanlation/projects/${PROJECT_ID}`).flush(ok(PROJECT));
-    await settle(fixture);
-    http.match(`${API}/scanlation/projects/${PROJECT_ID}/page-reports`).forEach((r) => r.flush(ok([])));
-    await settle(fixture);
-  }
-
-  /** Task cards shown in one column of the board. */
-  const column = (stage: string): HTMLElement[] => Array.from(fixture.nativeElement.querySelectorAll(`section[data-stage="${stage}"] .task-card`));
-
-  async function submitDialog(): Promise<void> {
-    q('form.submit-dialog')!.dispatchEvent(new Event('submit', { cancelable: true }));
-    await settle(fixture);
-  }
-
-  const all = (selector: string): HTMLElement[] => Array.from(fixture.nativeElement.querySelectorAll(selector));
-  const q = (selector: string): HTMLElement | null => fixture.nativeElement.querySelector(selector);
-
   it('loads the project from the API and groups tasks by stage', async () => {
-    await signIn(store, http, mockUser({ permissions: ['PROJECT_VIEW'] }));
-    await render();
+    await givenIAmSignedInWith(['PROJECT_VIEW']);
+    await givenIOpenTheBoard(PROJECT);
 
-    expect(q('h1')?.textContent).toContain('FlameScans Solo Leveling');
-    expect(column('RAW_UPLOADED').length).toBe(1);
-    expect(column('QC_REVIEW').length).toBe(1);
-    expect(all('.task-card').length).toBe(3);
+    thenTheTitleShows('FlameScans Solo Leveling');
+    thenColumnHasTasks('RAW_UPLOADED', 1);
+    thenColumnHasTasks('QC_REVIEW', 1);
+    thenTheBoardHasTasks(3);
   });
 
   it('a reader-like member with PROJECT_VIEW only sees no Claim / Submit / Publish buttons', async () => {
-    await signIn(store, http, mockUser({ permissions: ['PROJECT_VIEW'] }));
-    await render();
+    await givenIAmSignedInWith(['PROJECT_VIEW']);
+    await givenIOpenTheBoard(PROJECT);
 
-    expect(all('.btn-claim').length).toBe(0);
-    expect(all('.btn-submit').length).toBe(0);
-    expect(all('.btn-publish').length).toBe(0);
+    thenISeeClaimButtons(0);
+    thenISeeSubmitButtons(0);
+    thenISeePublishButtons(0);
   });
 
   it('a SCANLATOR sees Claim on unassigned tasks, Submit on their own task and Publish on QC tasks', async () => {
-    await signIn(store, http, mockUser({ permissions: ['PROJECT_VIEW', 'TASK_CLAIM', 'TASK_SUBMIT', 'CHAPTER_PUBLISH'] }));
-    await render();
+    await givenIAmSignedInWith(['PROJECT_VIEW', 'TASK_CLAIM', 'TASK_SUBMIT', 'CHAPTER_PUBLISH']);
+    await givenIOpenTheBoard(PROJECT);
 
-    expect(all('.btn-claim').length).toBe(2); // t-raw and t-qc are unassigned
-    expect(all('.btn-submit').length).toBe(1); // t-mine
-    expect(all('.btn-publish').length).toBe(1); // t-qc
+    thenISeeClaimButtons(2);
+    thenISeeSubmitButtons(1);
+    thenISeePublishButtons(1);
   });
 
   it('Claim calls the API and updates the board from the response', async () => {
-    await signIn(store, http, mockUser({ permissions: ['PROJECT_VIEW', 'TASK_CLAIM'] }));
-    await render();
+    await givenIAmSignedInWith(['PROJECT_VIEW', 'TASK_CLAIM']);
+    await givenIOpenTheBoard(PROJECT);
 
-    all('.btn-claim')[0].click();
-    const req = http.expectOne(`${API}/scanlation/projects/${PROJECT_ID}/tasks/t-raw/claim`);
-    expect(req.request.method).toBe('POST');
-    // Identity is taken from the JWT: no userId in the body.
-    expect(req.request.body).toEqual({});
-    req.flush(ok({ ...PROJECT.tasks[0], status: 'IN_PROGRESS', assigneeId: 'user-1' }));
-    await settle(fixture);
+    await whenIClaim(RAW_TASK, { assignedTo: 'user-1' });
 
-    expect(column('RAW_UPLOADED')[0].textContent).toContain('Assigned: ');
-    expect(fixture.nativeElement.textContent).toContain('Assigned: you');
+    thenTheRequestWasAPost();
+    thenTheRequestCarriesNoIdentity();
+    thenTaskCardShows('RAW_UPLOADED', 1, 'Assigned: ');
+    thenICanSee('Assigned: you');
   });
 
   it('Submit opens a Signal Forms dialog, validates, then posts assetUrl/pageCount and advances the task', async () => {
-    await signIn(store, http, mockUser({ permissions: ['PROJECT_VIEW', 'TASK_SUBMIT'] }));
-    await render();
+    await givenIAmSignedInWith(['PROJECT_VIEW', 'TASK_SUBMIT']);
+    await givenIOpenTheBoard(PROJECT);
 
-    all('.btn-submit')[0].click();
-    await settle(fixture); // the dialog is a @defer block: its code loads on first open
-    expect(q('[role="dialog"]')).not.toBeNull();
+    await whenIOpenTheSubmitDialogFor(MY_TASK);
 
-    const url = q('#submit-asset-url') as HTMLInputElement;
-    url.value = 'not a url';
-    url.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-    await submitDialog();
-    expect(fixture.nativeElement.textContent).toContain('Must be an http(s) URL');
-    http.expectNone(`${API}/scanlation/projects/${PROJECT_ID}/tasks/t-mine/submit`);
+    thenTheSubmitDialogIsOpen();
 
-    url.value = 'https://cdn.readora.com/packages/ch11.zip';
-    url.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-    await submitDialog();
+    await whenISubmitAnInvalidAssetUrl('not a url');
 
-    const req = http.expectOne(`${API}/scanlation/projects/${PROJECT_ID}/tasks/t-mine/submit`);
-    expect(req.request.body).toEqual({ assetUrl: 'https://cdn.readora.com/packages/ch11.zip', pageCount: 20 });
-    req.flush(ok({ ...PROJECT.tasks[1], stage: 'TRANSLATING', status: 'PENDING', assigneeId: undefined, assetPackageUrl: 'https://cdn.readora.com/packages/ch11.zip' }));
-    await settle(fixture);
+    thenICanSee('Must be an http(s) URL');
+    thenNothingWasSubmittedFor(MY_TASK);
 
-    expect(q('[role="dialog"]')).toBeNull();
-    expect(column('TRANSLATING').length).toBe(1);
-    expect(column('CLEANING').length).toBe(0);
+    await whenISubmitTheAssetUrl('https://cdn.readora.com/packages/ch11.zip', { advancedTo: 'TRANSLATING' });
+
+    thenTheSubmissionWas({ assetUrl: 'https://cdn.readora.com/packages/ch11.zip', pageCount: 20 });
+    thenTheSubmitDialogIsClosed();
+    thenColumnHasTasks('TRANSLATING', 1);
+    thenColumnHasTasks('CLEANING', 0);
   });
 
   it('Publish calls the API and moves the task to PUBLISHED; API errors are shown', async () => {
-    await signIn(store, http, mockUser({ permissions: ['PROJECT_VIEW', 'CHAPTER_PUBLISH'] }));
-    await render();
+    await givenIAmSignedInWith(['PROJECT_VIEW', 'CHAPTER_PUBLISH']);
+    await givenIOpenTheBoard(PROJECT);
 
-    all('.btn-publish')[0].click();
-    http.expectOne(`${API}/scanlation/projects/${PROJECT_ID}/tasks/t-qc/publish`).flush(
-      fail('User is not a member of this project'),
-      { status: 400, statusText: 'Bad Request' }
-    );
-    await settle(fixture);
-    expect(q('[role="alert"]')?.textContent).toContain('not a member');
-    expect(column('QC_REVIEW').length).toBe(1);
+    await whenIPublishButItIsRefused(QC_TASK, 'User is not a member of this project');
 
-    all('.btn-publish')[0].click();
-    http.expectOne(`${API}/scanlation/projects/${PROJECT_ID}/tasks/t-qc/publish`).flush(ok('Chapter published successfully'));
-    await settle(fixture);
-    expect(column('PUBLISHED').length).toBe(1);
-    expect(column('QC_REVIEW').length).toBe(0);
+    thenISeeTheError('not a member');
+    thenColumnHasTasks('QC_REVIEW', 1);
+
+    await whenIPublish(QC_TASK);
+
+    thenColumnHasTasks('PUBLISHED', 1);
+    thenColumnHasTasks('QC_REVIEW', 0);
   });
 
   it('Upload Studio link is rendered and points to /upload for users with WORK_CREATE permission', async () => {
-    await signIn(store, http, mockUser({ permissions: ['PROJECT_VIEW', 'WORK_CREATE'] }));
-    await render();
+    await givenIAmSignedInWith(['PROJECT_VIEW', 'WORK_CREATE']);
+    await givenIOpenTheBoard(PROJECT);
 
-    const uploadLink = q('.btn-upload') as HTMLAnchorElement;
-    expect(uploadLink).not.toBeNull();
-    expect(uploadLink.getAttribute('href')).toBe('/upload');
-    expect(uploadLink.textContent).toContain('Upload Studio');
+    thenThereIsAnUploadStudioLink();
+    thenTheUploadStudioLinkPointsTo('/upload');
+    thenTheUploadStudioLinkReads('Upload Studio');
   });
 
   it('does not show the previous project while another one loads or when it fails', async () => {
-    await signIn(store, http, mockUser({ permissions: ['PROJECT_VIEW'] }));
-    await render();
-    expect(fixture.nativeElement.querySelector('h1').textContent).toContain('FlameScans Solo Leveling');
+    await givenIAmSignedInWith(['PROJECT_VIEW']);
+    await givenIOpenTheBoard(PROJECT);
 
-    fixture.componentRef.setInput('projectId', 'proj-2');
-    await settle(fixture);
-    expect(fixture.nativeElement.textContent).not.toContain('FlameScans Solo Leveling');
-    expect(all('.task-card').length).toBe(0);
+    thenTheTitleShows('FlameScans Solo Leveling');
 
-    http.expectOne(`${API}/scanlation/projects/proj-2`).flush(fail('not found'), { status: 404, statusText: 'Not Found' });
-    await settle(fixture);
-    expect(fixture.nativeElement.textContent).not.toContain('FlameScans Solo Leveling');
-    expect(fixture.nativeElement.textContent).not.toContain('FlameScans Solo Leveling');
+    await whenISwitchToProject('proj-2');
+
+    thenICannotSee('FlameScans Solo Leveling');
+    thenTheBoardHasTasks(0);
+
+    await whenTheProjectIsNotFound('proj-2');
+
+    thenICannotSee('FlameScans Solo Leveling');
   });
 
   describe('submit dialog accessibility', () => {
-    const key = (target: Element, k: string, shiftKey = false): KeyboardEvent => {
-      const event = new KeyboardEvent('keydown', { key: k, shiftKey, bubbles: true, cancelable: true });
-      target.dispatchEvent(event);
-      fixture.detectChanges();
-      return event;
-    };
-
-    async function openDialog(): Promise<HTMLButtonElement> {
-      await signIn(store, http, mockUser({ permissions: ['PROJECT_VIEW', 'TASK_SUBMIT'] }));
-      await render();
-      const trigger = all('.btn-submit')[0] as HTMLButtonElement;
-      trigger.focus();
-      trigger.click();
-      await settle(fixture);
-      return trigger;
-    }
+    let trigger: HTMLButtonElement;
+    let lastKey: KeyboardEvent;
 
     it('moves focus into the dialog, traps Tab, closes on Escape and returns focus', async () => {
-      const trigger = await openDialog();
-      const dialog = q('[role="dialog"]')!;
-      const first = q('#submit-asset-url')!;
-      const buttons = Array.from(dialog.querySelectorAll('button')) as HTMLButtonElement[];
-      const last = buttons[buttons.length - 1];
+      await givenTheSubmitDialogIsOpenFromItsButton(MY_TASK);
 
-      expect(document.activeElement).toBe(first);
+      thenFocusIsOnTheAssetUrlField();
 
-      last.focus();
-      expect(key(last, 'Tab').defaultPrevented).toBe(true);
-      expect(document.activeElement).toBe(first);
+      whenIFocusTheLastDialogButton();
+      whenIPress('Tab');
 
-      expect(key(first, 'Tab', true).defaultPrevented).toBe(true);
-      expect(document.activeElement).toBe(last);
+      thenTheKeyWasTrapped();
+      thenFocusIsOnTheAssetUrlField();
 
-      key(last, 'Escape');
-      await settle(fixture);
-      expect(q('[role="dialog"]')).toBeNull();
-      expect(document.activeElement).toBe(trigger);
+      whenIPress('Tab', { shift: true });
+
+      thenTheKeyWasTrapped();
+      thenFocusIsOnTheLastDialogButton();
+
+      await whenIPressEscape();
+
+      thenTheSubmitDialogIsClosed();
+      thenFocusIsBackOnTheSubmitButton();
     });
+
+    async function givenTheSubmitDialogIsOpenFromItsButton(task: WorkflowTask): Promise<void> {
+      await givenIAmSignedInWith(['PROJECT_VIEW', 'TASK_SUBMIT']);
+      await givenIOpenTheBoard(PROJECT);
+      trigger = taskButton(task, '.btn-submit');
+      trigger.focus();
+      await whenIOpenTheSubmitDialogFor(task);
+    }
+
+    function whenIFocusTheLastDialogButton(): void {
+      lastDialogButton().focus();
+    }
+
+    function whenIPress(key: string, modifiers: { shift: boolean } = { shift: false }): void {
+      lastKey = new KeyboardEvent('keydown', { key, shiftKey: modifiers.shift, bubbles: true, cancelable: true });
+      document.activeElement!.dispatchEvent(lastKey);
+      fixture.detectChanges();
+    }
+
+    async function whenIPressEscape(): Promise<void> {
+      whenIPress('Escape');
+      await settle(fixture);
+    }
+
+    function thenTheKeyWasTrapped(): void {
+      expect(lastKey.defaultPrevented).toBe(true);
+    }
+
+    function thenFocusIsOnTheAssetUrlField(): void {
+      expect(document.activeElement).toBe(page().querySelector('#submit-asset-url'));
+    }
+
+    function thenFocusIsOnTheLastDialogButton(): void {
+      expect(document.activeElement).toBe(lastDialogButton());
+    }
+
+    function thenFocusIsBackOnTheSubmitButton(): void {
+      expect(document.activeElement).toBe(trigger);
+    }
+
+    function lastDialogButton(): HTMLButtonElement {
+      const buttons = page().querySelectorAll<HTMLButtonElement>('[role="dialog"] button');
+      return buttons[buttons.length - 1];
+    }
   });
+
+  async function givenIOpenTheBoard(project: ScanlationProject): Promise<void> {
+    await settle(fixture);
+    http.expectOne(`${API}/scanlation/projects/${project.id}`).flush(ok(project));
+    await settle(fixture);
+    // The page-reports panel has its own spec.
+    http.match(`${API}/scanlation/projects/${project.id}/page-reports`).forEach((r) => r.flush(ok([])));
+    await settle(fixture);
+  }
+
+  async function whenIClaim(task: WorkflowTask, answer: { assignedTo: string }): Promise<void> {
+    taskButton(task, '.btn-claim').click();
+    lastRequest = http.expectOne(`${TASKS_URL}/${task.id}/claim`);
+    lastRequest.flush(ok({ ...task, status: 'IN_PROGRESS', assigneeId: answer.assignedTo }));
+    await settle(fixture);
+  }
+
+  async function whenIOpenTheSubmitDialogFor(task: WorkflowTask): Promise<void> {
+    taskInDialog = task;
+    taskButton(task, '.btn-submit').click();
+    // The dialog is a @defer block: its code loads on first open.
+    await settle(fixture);
+  }
+
+  async function whenISubmitAnInvalidAssetUrl(url: string): Promise<void> {
+    await typeAndSubmitAssetUrl(url);
+  }
+
+  async function whenISubmitTheAssetUrl(url: string, answer: { advancedTo: WorkflowTask['stage'] }): Promise<void> {
+    await typeAndSubmitAssetUrl(url);
+    lastRequest = http.expectOne(`${TASKS_URL}/${taskInDialog.id}/submit`);
+    lastRequest.flush(ok({ ...taskInDialog, stage: answer.advancedTo, status: 'PENDING', assigneeId: undefined, assetPackageUrl: url }));
+    await settle(fixture);
+  }
+
+  async function whenIPublishButItIsRefused(task: WorkflowTask, error: string): Promise<void> {
+    taskButton(task, '.btn-publish').click();
+    http.expectOne(`${TASKS_URL}/${task.id}/publish`).flush(fail(error), { status: 400, statusText: 'Bad Request' });
+    await settle(fixture);
+  }
+
+  async function whenIPublish(task: WorkflowTask): Promise<void> {
+    taskButton(task, '.btn-publish').click();
+    http.expectOne(`${TASKS_URL}/${task.id}/publish`).flush(ok('Chapter published successfully'));
+    await settle(fixture);
+  }
+
+  async function whenISwitchToProject(projectId: string): Promise<void> {
+    fixture.componentRef.setInput('projectId', projectId);
+    await settle(fixture);
+  }
+
+  async function whenTheProjectIsNotFound(projectId: string): Promise<void> {
+    http.expectOne(`${API}/scanlation/projects/${projectId}`).flush(fail('not found'), { status: 404, statusText: 'Not Found' });
+    await settle(fixture);
+  }
+
+  function thenTheTitleShows(title: string): void {
+    expect(page().querySelector('h1')?.textContent).toContain(title);
+  }
+
+  function thenColumnHasTasks(stage: string, count: number): void {
+    expect(column(stage).length).toBe(count);
+  }
+
+  function thenTheBoardHasTasks(count: number): void {
+    expect(page().querySelectorAll('.task-card').length).toBe(count);
+  }
+
+  function thenISeeClaimButtons(count: number): void {
+    expect(page().querySelectorAll('.btn-claim').length).toBe(count);
+  }
+
+  function thenISeeSubmitButtons(count: number): void {
+    expect(page().querySelectorAll('.btn-submit').length).toBe(count);
+  }
+
+  function thenISeePublishButtons(count: number): void {
+    expect(page().querySelectorAll('.btn-publish').length).toBe(count);
+  }
+
+  function thenTheRequestWasAPost(): void {
+    expect(lastRequest.request.method).toBe('POST');
+  }
+
+  /** Identity is taken from the JWT: no userId in the body. */
+  function thenTheRequestCarriesNoIdentity(): void {
+    expect(lastRequest.request.body).toEqual({});
+  }
+
+  function thenTaskCardShows(stage: string, position: number, text: string): void {
+    expect(column(stage)[position - 1].textContent).toContain(text);
+  }
+
+  function thenTheSubmitDialogIsOpen(): void {
+    expect(page().querySelector('[role="dialog"]')).not.toBeNull();
+  }
+
+  function thenTheSubmitDialogIsClosed(): void {
+    expect(page().querySelector('[role="dialog"]')).toBeNull();
+  }
+
+  function thenNothingWasSubmittedFor(task: WorkflowTask): void {
+    http.expectNone(`${TASKS_URL}/${task.id}/submit`);
+  }
+
+  function thenTheSubmissionWas(body: { assetUrl: string; pageCount: number }): void {
+    expect(lastRequest.request.body).toEqual(body);
+  }
+
+  function thenThereIsAnUploadStudioLink(): void {
+    expect(uploadLink()).not.toBeNull();
+  }
+
+  function thenTheUploadStudioLinkPointsTo(href: string): void {
+    expect(uploadLink()!.getAttribute('href')).toBe(href);
+  }
+
+  function thenTheUploadStudioLinkReads(text: string): void {
+    expect(uploadLink()!.textContent).toContain(text);
+  }
+
+  function thenISeeTheError(text: string): void {
+    expect(page().querySelector('[role="alert"]')?.textContent).toContain(text);
+  }
+
+  function thenICanSee(text: string): void {
+    expect(page().textContent).toContain(text);
+  }
+
+  function thenICannotSee(text: string): void {
+    expect(page().textContent).not.toContain(text);
+  }
+
+  async function typeAndSubmitAssetUrl(url: string): Promise<void> {
+    const field = page().querySelector<HTMLInputElement>('#submit-asset-url')!;
+    field.value = url;
+    field.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    page().querySelector('form.submit-dialog')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    await settle(fixture);
+  }
+
+  function page(): HTMLElement {
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  /** Task cards shown in one column of the board. */
+  function column(stage: string): HTMLElement[] {
+    return Array.from(page().querySelectorAll<HTMLElement>(`section[data-stage="${stage}"] .task-card`));
+  }
+
+  function taskButton(task: WorkflowTask, selector: string): HTMLButtonElement {
+    const card = column(task.stage).find((c) => c.querySelector('strong')?.textContent === `Chapter ${task.chapterNumber}`)!;
+    return card.querySelector<HTMLButtonElement>(selector)!;
+  }
+
+  function uploadLink(): HTMLAnchorElement | null {
+    return page().querySelector<HTMLAnchorElement>('.btn-upload');
+  }
 });
