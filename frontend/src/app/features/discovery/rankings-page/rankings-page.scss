@@ -27,6 +27,9 @@
 
 .ranking-title {
   flex: 1;
+  // Long unbroken titles wrap instead of pushing the row past a 320px screen.
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: inherit;
   font-weight: var(--fw-semibold);
 }
