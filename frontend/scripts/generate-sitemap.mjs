@@ -25,6 +25,11 @@ const defaults = DEFAULTS[CONFIG] ?? DEFAULTS.production;
 const API_URL = (process.env.READORA_API_URL ?? defaults.api).replace(/\/+$/, '');
 const SITE_URL = (process.env.READORA_SITE_URL ?? defaults.site).replace(/\/+$/, '');
 const OUT_DIR = resolve(process.env.READORA_OUT_DIR ?? 'dist/readora-frontend/browser');
+/** Site languages, as in src/app/core/i18n/site-locales.ts and angular.json `i18n` (keep the three in sync). */
+const LOCALES = [
+  { code: 'en', prefix: '' },
+  { code: 'fr', prefix: '/fr' }
+];
 const MAX_WORKS = 1000;
 const TIMEOUT_MS = 10_000;
 
@@ -39,11 +44,17 @@ async function fetchApi(path) {
   }
 }
 
-function url(loc, { lastmod, changefreq = 'weekly', priority = '0.5' } = {}) {
-  const lines = [`    <loc>${SITE_URL}${loc}</loc>`];
-  if (lastmod) lines.push(`    <lastmod>${new Date(lastmod).toISOString()}</lastmod>`);
-  lines.push(`    <changefreq>${changefreq}</changefreq>`, `    <priority>${priority}</priority>`);
-  return `  <url>\n${lines.join('\n')}\n  </url>`;
+/** One <url> per site language for `path`, each listing every language (and x-default) as an alternate. */
+function url(path, { lastmod, changefreq = 'weekly', priority = '0.5' } = {}) {
+  const alternates = [...LOCALES.map((locale) => [locale.code, locale.prefix]), ['x-default', LOCALES[0].prefix]].map(
+    ([hreflang, prefix]) => `    <xhtml:link rel="alternate" hreflang="${hreflang}" href="${SITE_URL}${prefix}${path}"/>`
+  );
+  return LOCALES.map((locale) => {
+    const lines = [`    <loc>${SITE_URL}${locale.prefix}${path}</loc>`, ...alternates];
+    if (lastmod) lines.push(`    <lastmod>${new Date(lastmod).toISOString()}</lastmod>`);
+    lines.push(`    <changefreq>${changefreq}</changefreq>`, `    <priority>${priority}</priority>`);
+    return `  <url>\n${lines.join('\n')}\n  </url>`;
+  }).join('\n');
 }
 
 async function main() {
@@ -62,7 +73,7 @@ async function main() {
     }
   }
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries.join('\n')}\n</urlset>\n`;
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${entries.join('\n')}\n</urlset>\n`;
 
   if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
   const target = resolve(OUT_DIR, 'sitemap.xml');
@@ -76,7 +87,7 @@ async function main() {
     writeFileSync(robotsPath, robots, 'utf8');
   }
 
-  console.log(`[sitemap] Wrote ${entries.length} URLs to ${target}`);
+  console.log(`[sitemap] Wrote ${entries.length * LOCALES.length} URLs (${LOCALES.length} languages) to ${target}`);
 }
 
 main().catch((error) => {
