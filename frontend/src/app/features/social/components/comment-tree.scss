@@ -7,6 +7,11 @@
   width: 100%;
   max-width: 900px;
 }
+.comment-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
 .comment-node {
   border-left: 2px solid color-mix(in srgb, var(--muted) 50%, transparent);
   padding-left: 1rem;

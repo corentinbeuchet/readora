@@ -48,7 +48,7 @@
           aria-label="Account menu"
         >
           @if (auth.user()?.avatarUrl; as avatar) {
-            <img class="avatar" [src]="avatar" alt="" width="24" height="24" />
+            <img class="avatar" [ngSrc]="avatar" alt="" width="24" height="24" />
           }
           <span>{{ auth.user()?.displayName }}</span>
           @if (auth.isPremium()) {

@@ -1,5 +1,6 @@
 <section class="chapter-comments" aria-labelledby="comments-heading">
-  <h2 id="comments-heading" class="sr-only">Comments</h2>
+  @let count = comments.hasValue() ? ' (' + comments.value().length + ')' : '';
+  <h2 id="comments-heading" class="comments-heading">Community Discussion{{ count }}</h2>
 
   @if (comments.isLoading()) {
     <p class="muted" role="status">Loading comments…</p>

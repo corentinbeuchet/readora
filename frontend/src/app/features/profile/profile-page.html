@@ -2,7 +2,7 @@
   @if (auth.user(); as user) {
     <header class="profile-header">
       @if (user.avatarUrl) {
-        <img class="profile-avatar" [src]="user.avatarUrl" [alt]="(user.displayName || user.username) + ' avatar'" width="64" height="64" />
+        <img class="profile-avatar" [ngSrc]="user.avatarUrl" [alt]="(user.displayName || user.username) + ' avatar'" width="64" height="64" />
       } @else {
         <div class="profile-avatar profile-avatar-placeholder" aria-hidden="true">{{ (user.displayName || user.username || 'U').charAt(0) }}</div>
       }

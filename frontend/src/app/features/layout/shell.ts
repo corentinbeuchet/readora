@@ -6,6 +6,7 @@ import { LayoutStore } from '@app/core/layout/layout-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { Omnisearch } from '@app/features/catalog/components/omnisearch';
 import { NotificationBell } from './notification-bell';
+import { NgOptimizedImage } from '@angular/common';
 
 /**
  * Application shell: primary navigation (a list of router links), the header search box, user `Menu`
@@ -13,7 +14,7 @@ import { NotificationBell } from './notification-bell';
  */
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Menu, MenuItem, MenuTrigger, MenuContent, HasPermissionDirective, Omnisearch, NotificationBell],
+  imports: [NgOptimizedImage, RouterOutlet, RouterLink, RouterLinkActive, Menu, MenuItem, MenuTrigger, MenuContent, HasPermissionDirective, Omnisearch, NotificationBell],
   templateUrl: './shell.html',
   styleUrl: './shell.scss'
 })

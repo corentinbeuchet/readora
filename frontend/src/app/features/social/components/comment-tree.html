@@ -1,11 +1,10 @@
 <div class="comments-container">
-  <h3 class="comments-heading">Community Discussion ({{ comments().length }})</h3>
-
-  <div class="comment-list">
+  <!-- A flat list in thread order; aria-level gives screen readers the reply depth that the indent shows. -->
+  <ul class="comment-list">
     @for (row of rows(); track row.comment.id) {
       @let comment = row.comment;
-      <div class="comment-node" [attr.id]="'comment-' + comment.id" [class.comment-highlight]="comment.id === highlightId()"
-           [style.margin-left.rem]="(comment.depth - 1) * 1.5">
+      <li class="comment-node" [attr.id]="'comment-' + comment.id" [attr.aria-level]="comment.depth"
+          [class.comment-highlight]="comment.id === highlightId()" [style.margin-left.rem]="(comment.depth - 1) * 1.5">
         <div class="comment-header">
           <a class="comment-author" [routerLink]="['/u', comment.authorUsername]">{{ comment.authorUsername }}</a>
           @if (comment.pageReference) {
@@ -43,7 +42,7 @@
             </button>
           }
         </div>
-      </div>
+      </li>
     }
-  </div>
+  </ul>
 </div>
