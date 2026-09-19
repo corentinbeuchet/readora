@@ -3,7 +3,7 @@ import { DatePipe, NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Tab, TabContent, TabList, TabPanel, Tabs } from '@angular/aria/tabs';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { UserProfile } from '@app/core/models/identity';
+import { ROLE_LABELS, SUBSCRIPTION_PLAN_LABELS, SUBSCRIPTION_STATUS_LABELS, UserProfile } from '@app/core/models/identity';
 import { SeoService } from '@app/core/seo/seo.service';
 import { BookmarkList } from './bookmark-list/bookmark-list';
 import { ProfileForm } from './profile-form/profile-form';
@@ -18,6 +18,9 @@ export type ProfileTab = 'overview' | 'bookmarks' | 'subscription';
 })
 export class ProfilePage {
   protected readonly auth = inject(AuthStore);
+  protected readonly roleLabels = ROLE_LABELS;
+  protected readonly planLabels = SUBSCRIPTION_PLAN_LABELS;
+  protected readonly subscriptionStatusLabels = SUBSCRIPTION_STATUS_LABELS;
   protected readonly avatarAlt = computed(() => {
     const user = this.auth.user();
     return $localize`:@@profile.page.avatarAlt:${user?.displayName || user?.username}:name: avatar`;

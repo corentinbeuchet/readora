@@ -11,10 +11,10 @@
         <p class="muted" i18n="@@profile.page.joined">&#64;{{ user.username }} · joined {{ user.createdAt | date: 'mediumDate' }}</p>
         <p>
           @for (role of (user.roles || []); track role) {
-            <span class="badge">{{ role }}</span>
+            <span class="badge">{{ roleLabels[role] }}</span>
           }
           @if (user.subscription.active) {
-            <span class="badge badge-premium">{{ user.subscription.plan }}</span>
+            <span class="badge badge-premium">{{ planLabels[user.subscription.plan] }}</span>
           }
         </p>
       </div>
@@ -45,8 +45,8 @@
         <ng-template ngTabContent>
           <h2 i18n="@@profile.page.subscriptionTitle">Subscription</h2>
           <p>
-            <ng-container i18n="@@profile.page.plan">Plan: <strong>{{ user.subscription.plan }}</strong></ng-container>
-            <span class="badge" [class.badge-premium]="user.subscription.active">{{ user.subscription.status }}</span>
+            <ng-container i18n="@@profile.page.plan">Plan: <strong>{{ planLabels[user.subscription.plan] }}</strong></ng-container>
+            <span class="badge" [class.badge-premium]="user.subscription.active">{{ subscriptionStatusLabels[user.subscription.status] }}</span>
           </p>
           @if (user.subscription.currentPeriodEnd) {
             <p class="muted">

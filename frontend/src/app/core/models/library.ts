@@ -4,6 +4,14 @@ import { WorkSummary } from '@app/core/models/catalog';
 
 export type BookmarkStatus = 'READING' | 'COMPLETED' | 'ON_HOLD' | 'DROPPED' | 'PLAN_TO_READ';
 
+export const BOOKMARK_STATUS_LABELS: Record<BookmarkStatus, string> = {
+  READING: $localize`:@@bookmarkStatus.reading:Reading`,
+  COMPLETED: $localize`:@@bookmarkStatus.completed:Completed`,
+  ON_HOLD: $localize`:@@bookmarkStatus.onHold:On hold`,
+  DROPPED: $localize`:@@bookmarkStatus.dropped:Dropped`,
+  PLAN_TO_READ: $localize`:@@bookmarkStatus.planToRead:Plan to read`
+};
+
 export type ReadingStatus = 'READING' | 'PLAN_TO_READ' | 'COMPLETED' | 'DROPPED';
 
 export const READING_STATUS_LABELS: Record<ReadingStatus, string> = {

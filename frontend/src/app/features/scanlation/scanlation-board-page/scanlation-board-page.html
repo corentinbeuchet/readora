@@ -47,7 +47,7 @@
               <article class="task-card" [class.task-mine]="row.mine">
                 <div class="task-card-header">
                   <strong i18n="@@scanlation.board.task.chapter">Chapter {{ task.chapterNumber }}</strong>
-                  <span class="status-pill" [class.status-in-progress]="task.status === 'IN_PROGRESS'" [class.status-completed]="task.status === 'COMPLETED'">{{ task.status }}</span>
+                  <span class="status-pill" [class.status-in-progress]="task.status === 'IN_PROGRESS'" [class.status-completed]="task.status === 'COMPLETED'">{{ taskStatusLabels[task.status] }}</span>
                 </div>
                 <p class="task-meta" i18n="@@scanlation.board.task.pages">Pages: {{ task.pageCount }}</p>
                 @if (task.assigneeId) {
@@ -95,7 +95,7 @@
         <app-dialog labelledBy="submit-title" width="480px" (closed)="closeSubmit()">
           <form class="form submit-dialog" (submit)="onSubmitWork($event)" novalidate>
             <h2 id="submit-title" i18n="@@scanlation.submit.title">Submit work for chapter {{ task.chapterNumber }}</h2>
-            <p class="muted" i18n="@@scanlation.submit.stage">Stage: {{ task.stage }}</p>
+            <p class="muted" i18n="@@scanlation.submit.stage">Stage: {{ stageLabels[task.stage] }}</p>
 
             <div class="field">
               <label for="submit-asset-url" i18n="@@scanlation.submit.assetUrl">Asset package URL</label>

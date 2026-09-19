@@ -35,7 +35,7 @@
             @if (topRatedSelected()) {
               <ng-container i18n="@@discovery.rankings.score">★ {{ entry.score | number: '1.1-1' }} · {entry.ratings, plural, =1 {1 rating} other {{{ entry.ratings }} ratings}}</ng-container>
             } @else {
-              {{ entry.work.type }}
+              {{ typeLabels[entry.work.type] }}
             }
           </span>
         </li>

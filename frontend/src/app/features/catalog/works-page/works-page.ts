@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { DiscoveryApi } from '@app/core/api/discovery-api';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
-import { CatalogQuery, Demographic, WorkStatus, WorkType } from '@app/core/models/catalog';
+import { CatalogQuery, DEMOGRAPHIC_LABELS, Demographic, WORK_STATUS_LABELS, WORK_TYPE_LABELS, WorkStatus, WorkType } from '@app/core/models/catalog';
 import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
 import { LoadError } from '@app/shared/ui/load-error';
@@ -55,6 +55,9 @@ export class WorksPage {
   protected readonly workTypes = WORK_TYPES;
   protected readonly workStatuses = WORK_STATUSES;
   protected readonly demographics = DEMOGRAPHICS;
+  protected readonly typeLabels = WORK_TYPE_LABELS;
+  protected readonly statusLabels = WORK_STATUS_LABELS;
+  protected readonly demographicLabels = DEMOGRAPHIC_LABELS;
 
   // Query parameters (withComponentInputBinding).
   readonly q = input<string>();

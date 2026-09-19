@@ -6,9 +6,9 @@ import { ScanlationApi } from '@app/core/api/scanlation-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { Dialog } from '@app/shared/ui/dialog/dialog';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
-import { WorkflowTask, canClaim, canPublish, canSubmit, isAssignedTo } from '@app/core/models/scanlation';
+import { TASK_STATUS_LABELS, WorkflowTask, canClaim, canPublish, canSubmit, isAssignedTo } from '@app/core/models/scanlation';
 import { SeoService } from '@app/core/seo/seo.service';
-import { STAGES, tasksByStage, withTask, withTaskStage } from './scanlation-board';
+import { STAGES, STAGE_LABELS, tasksByStage, withTask, withTaskStage } from './scanlation-board';
 import { PageReportsPanel } from './page-reports-panel/page-reports-panel';
 import { asyncAction } from '@app/core/utils/async-action';
 import { FieldErrors } from '@app/shared/forms/field-errors';
@@ -27,6 +27,8 @@ interface SubmitModel {
 })
 export class ScanlationBoardPage {
   protected readonly auth = inject(AuthStore);
+  protected readonly taskStatusLabels = TASK_STATUS_LABELS;
+  protected readonly stageLabels = STAGE_LABELS;
   private readonly scanlationApi = inject(ScanlationApi);
   private readonly seo = inject(SeoService);
 

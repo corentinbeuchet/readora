@@ -11,6 +11,9 @@ export const STAGES: readonly { key: WorkflowStage; label: string }[] = [
   { key: 'PUBLISHED', label: $localize`:@@scanlation.board.stage.published:Published` }
 ];
 
+/** Column label of each stage (the submit dialog names the task's current stage). */
+export const STAGE_LABELS = Object.fromEntries(STAGES.map((stage) => [stage.key, stage.label])) as Record<WorkflowStage, string>;
+
 /** The project's tasks grouped by workflow stage (every stage present, possibly empty). */
 export function tasksByStage(project: ScanlationProject | null): Record<WorkflowStage, WorkflowTask[]> {
   const map = Object.fromEntries(STAGES.map((s) => [s.key, [] as WorkflowTask[]])) as Record<WorkflowStage, WorkflowTask[]>;

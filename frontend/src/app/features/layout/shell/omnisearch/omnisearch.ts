@@ -3,7 +3,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { Observable, catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { CatalogApi } from '@app/core/api/catalog-api';
-import { WorkSummary } from '@app/core/models/catalog';
+import { WORK_TYPE_LABELS, WorkSummary } from '@app/core/models/catalog';
 import { WorkCover } from '@app/shared/ui/work-cover/work-cover';
 
 export const SUGGEST_DEBOUNCE_MS = 250;
@@ -34,6 +34,7 @@ export class Omnisearch {
   private readonly router = inject(Router);
 
   protected readonly listboxId = `omnisearch-listbox-${nextId++}`;
+  protected readonly typeLabels = WORK_TYPE_LABELS;
   protected readonly text = signal('');
   protected readonly open = signal(false);
   protected readonly activeIndex = signal(-1);

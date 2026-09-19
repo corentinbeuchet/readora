@@ -5,6 +5,7 @@ import { RankingPeriod } from '@app/core/models/discovery';
 import { SeoService } from '@app/core/seo/seo.service';
 import { LoadError } from '@app/shared/ui/load-error';
 import { DecimalPipe } from '@angular/common';
+import { WORK_TYPE_LABELS } from '@app/core/models/catalog';
 
 const PERIODS: { key: RankingPeriod; label: string }[] = [
   { key: 'TODAY', label: $localize`:@@discovery.rankings.periods.today:Today` },
@@ -23,6 +24,7 @@ const PERIODS: { key: RankingPeriod; label: string }[] = [
 export class RankingsPage {
   private readonly discovery = inject(DiscoveryApi);
   protected readonly periods = PERIODS;
+  protected readonly typeLabels = WORK_TYPE_LABELS;
 
   /** `?list=top-rated` and `?period=` query parameters. */
   readonly list = input<string>();

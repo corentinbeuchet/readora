@@ -16,7 +16,7 @@
         <select (change)="setFacet('type', $event)">
           <option value="" [selected]="!query().type" i18n="@@catalog.works.filters.anyType">Any type</option>
           @for (option of workTypes; track option) {
-            <option [value]="option" [selected]="query().type === option">{{ option }}</option>
+            <option [value]="option" [selected]="query().type === option">{{ typeLabels[option] }}</option>
           }
         </select>
       </label>
@@ -25,7 +25,7 @@
         <select (change)="setFacet('status', $event)">
           <option value="" [selected]="!query().status" i18n="@@catalog.works.filters.anyStatus">Any status</option>
           @for (option of workStatuses; track option) {
-            <option [value]="option" [selected]="query().status === option">{{ option }}</option>
+            <option [value]="option" [selected]="query().status === option">{{ statusLabels[option] }}</option>
           }
         </select>
       </label>
@@ -34,7 +34,7 @@
         <select (change)="setFacet('demographic', $event)">
           <option value="" [selected]="!query().demographic" i18n="@@catalog.works.filters.anyAudience">Any audience</option>
           @for (option of demographics; track option) {
-            <option [value]="option" [selected]="query().demographic === option">{{ option }}</option>
+            <option [value]="option" [selected]="query().demographic === option">{{ demographicLabels[option] }}</option>
           }
         </select>
       </label>
@@ -103,8 +103,8 @@
                 <p class="work-author muted">{{ work.author }}</p>
               }
               <p class="work-meta">
-                <span class="badge">{{ work.type }}</span>
-                <span class="badge">{{ work.status }}</span>
+                <span class="badge">{{ typeLabels[work.type] }}</span>
+                <span class="badge">{{ statusLabels[work.status] }}</span>
               </p>
             </a>
           </li>

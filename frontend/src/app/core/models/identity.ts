@@ -25,6 +25,26 @@ export type SubscriptionPlan = 'FREE' | 'PREMIUM';
 
 export type SubscriptionStatus = 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | 'INCOMPLETE';
 
+/** Display names for the codes above (the API sends the codes). */
+export const ROLE_LABELS: Record<Role, string> = {
+  READER: $localize`:@@role.reader:Reader`,
+  SCANLATOR: $localize`:@@role.scanlator:Scanlator`,
+  MODERATOR: $localize`:@@role.moderator:Moderator`,
+  ADMIN: $localize`:@@role.admin:Admin`
+};
+
+export const SUBSCRIPTION_PLAN_LABELS: Record<SubscriptionPlan, string> = {
+  FREE: $localize`:@@subscriptionPlan.free:Free`,
+  PREMIUM: $localize`:@@subscriptionPlan.premium:Premium`
+};
+
+export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, string> = {
+  ACTIVE: $localize`:@@subscriptionStatus.active:Active`,
+  PAST_DUE: $localize`:@@subscriptionStatus.pastDue:Payment overdue`,
+  CANCELED: $localize`:@@subscriptionStatus.canceled:Cancelled`,
+  INCOMPLETE: $localize`:@@subscriptionStatus.incomplete:Incomplete`
+};
+
 export interface Subscription {
   plan: SubscriptionPlan;
   status: SubscriptionStatus;

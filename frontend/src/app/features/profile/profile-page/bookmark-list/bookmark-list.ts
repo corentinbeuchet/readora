@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { BookmarksApi } from '@app/core/api/bookmarks-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { LoadError } from '@app/shared/ui/load-error';
+import { BOOKMARK_STATUS_LABELS } from '@app/core/models/library';
 
 @Component({
   selector: 'app-bookmark-list',
@@ -14,6 +15,7 @@ import { LoadError } from '@app/shared/ui/load-error';
 export class BookmarkList {
   private readonly bookmarksApi = inject(BookmarksApi);
   protected readonly auth = inject(AuthStore);
+  protected readonly statusLabels = BOOKMARK_STATUS_LABELS;
 
   protected readonly canRead = computed(() => this.auth.can('BOOKMARK_READ'));
   protected readonly bookmarks = this.bookmarksApi.listResource(this.canRead);

@@ -15,7 +15,7 @@
     @for (bookmark of bookmarks.value(); track bookmark.workId) {
       <li class="card bookmark-item">
         <div>
-          <span class="badge">{{ bookmark.status }}</span>
+          <span class="badge">{{ statusLabels[bookmark.status] }}</span>
           <p i18n="@@profile.bookmarks.position">Page {{ bookmark.lastReadPageIndex }} · updated {{ bookmark.updatedAt | date: 'medium' }}</p>
         </div>
         <div class="bookmark-actions">

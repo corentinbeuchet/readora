@@ -4,6 +4,12 @@ export type WorkflowStage = 'RAW_UPLOADED' | 'CLEANING' | 'TRANSLATING' | 'TYPES
 
 export type TaskStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
 
+export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
+  PENDING: $localize`:@@taskStatus.pending:Pending`,
+  IN_PROGRESS: $localize`:@@taskStatus.inProgress:In progress`,
+  COMPLETED: $localize`:@@taskStatus.completed:Completed`
+};
+
 export interface WorkflowTask {
   id: string;
   chapterNumber: string;

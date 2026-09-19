@@ -15,6 +15,7 @@ import { READING_STATUS_LABELS, ReadingStatus } from '@app/core/models/library';
 import { SeoService } from '@app/core/seo/seo.service';
 import { LoadError } from '@app/shared/ui/load-error';
 import { WorkCover } from '@app/shared/ui/work-cover/work-cover';
+import { WORK_STATUS_LABELS, WORK_TYPE_LABELS } from '@app/core/models/catalog';
 
 @Component({
   selector: 'app-work-detail-page',
@@ -46,6 +47,8 @@ export class WorkDetailPage {
   // Library and read markers (free with LIBRARY_USE).
   protected readonly statuses = Object.keys(READING_STATUS_LABELS) as ReadingStatus[];
   protected readonly statusLabels = READING_STATUS_LABELS;
+  protected readonly typeLabels = WORK_TYPE_LABELS;
+  protected readonly workStatusLabels = WORK_STATUS_LABELS;
   private readonly canUseLibrary = computed(() => this.auth.can('LIBRARY_USE'));
   private readonly libraryEntry = this.libraryApi.entryResource(this.workId, this.canUseLibrary);
   private readonly entry = computed(() => (this.libraryEntry.hasValue() ? this.libraryEntry.value() : null));
@@ -91,7 +94,7 @@ export class WorkDetailPage {
       const w = this.work.hasValue() ? this.work.value() : undefined;
       if (w) {
         this.seo.update({
-          title: $localize`:@@catalog.work.seoTitle:${w.title}:title: (${w.type}:type:)`,
+          title: $localize`:@@catalog.work.seoTitle:${w.title}:title: (${WORK_TYPE_LABELS[w.type]}:type:)`,
           description: w.synopsis?.slice(0, 160) || $localize`:@@catalog.work.seoDescription:Read ${w.title}:title: on Readora.`,
           path: `/works/${w.id}`,
           image: w.coverImageUrl ?? undefined,

@@ -12,8 +12,8 @@
       <div class="work-body">
         <h1>{{ w.title }}</h1>
         <p class="work-meta">
-          <span class="badge">{{ w.type }}</span>
-          <span class="badge">{{ w.status }}</span>
+          <span class="badge">{{ typeLabels[w.type] }}</span>
+          <span class="badge">{{ workStatusLabels[w.status] }}</span>
           @for (genre of w.genres; track genre) {
             <span class="badge">{{ genre }}</span>
           }
