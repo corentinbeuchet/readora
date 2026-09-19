@@ -82,12 +82,9 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
             for (PageAsset page : chapter.getPages()) {
                 PageAssetJpaEntity pageEntity = existingPagesByNumber.get(page.pageNumber());
                 if (pageEntity != null) {
-                    pageEntity.setStorageKey(page.storageKey());
-                    pageEntity.setCdnUrl(page.cdnUrl());
-                    pageEntity.setWidth(page.width());
-                    pageEntity.setHeight(page.height());
+                    copyPage(page, pageEntity);
                 } else {
-                    existing.getPages().add(new PageAssetJpaEntity(existing, page.pageNumber(), page.storageKey(), page.cdnUrl(), page.width(), page.height()));
+                    existing.getPages().add(newPageEntity(existing, page));
                 }
             }
 
@@ -109,7 +106,8 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
     private Chapter toDomainState(ChapterJpaEntity entity) {
         List<PageAsset> pages = entity.getPages() != null ?
                 entity.getPages().stream()
-                        .map(p -> new PageAsset(p.getPageNumber(), p.getStorageKey(), p.getCdnUrl(), p.getWidth(), p.getHeight()))
+                        .map(p -> new PageAsset(p.getPageNumber(), p.getStorageKey(), p.getCdnUrl(), p.getWidth(), p.getHeight(),
+                                p.getDescription()))
                         .toList() : List.of();
 
         return new Chapter(
@@ -142,10 +140,24 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
         List<PageAssetJpaEntity> pageEntities = new ArrayList<>();
         if (chapter.getPages() != null) {
             for (PageAsset page : chapter.getPages()) {
-                pageEntities.add(new PageAssetJpaEntity(entity, page.pageNumber(), page.storageKey(), page.cdnUrl(), page.width(), page.height()));
+                pageEntities.add(newPageEntity(entity, page));
             }
         }
         entity.setPages(pageEntities);
         return entity;
+    }
+
+    private static PageAssetJpaEntity newPageEntity(ChapterJpaEntity chapter, PageAsset page) {
+        PageAssetJpaEntity entity = new PageAssetJpaEntity(chapter, page.pageNumber(), page.storageKey(), page.cdnUrl(), page.width(), page.height());
+        entity.setDescription(page.description());
+        return entity;
+    }
+
+    private static void copyPage(PageAsset page, PageAssetJpaEntity entity) {
+        entity.setStorageKey(page.storageKey());
+        entity.setCdnUrl(page.cdnUrl());
+        entity.setWidth(page.width());
+        entity.setHeight(page.height());
+        entity.setDescription(page.description());
     }
 }

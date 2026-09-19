@@ -136,7 +136,8 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
                 "Headon's Floor",
                 List.of(
                         new PageAssetDto(1, "tog/c1/p1.webp", "https://cdn.readora.com/tog/c1/p1.webp", 800, 1200),
-                        new PageAssetDto(2, "tog/c1/p2.webp", "https://cdn.readora.com/tog/c1/p2.webp", 800, 1200)
+                        new PageAssetDto(2, "tog/c1/p2.webp", "https://cdn.readora.com/tog/c1/p2.webp", 800, 1200,
+                                "Bam looks up at the tower")
                 )
         );
 
@@ -157,7 +158,9 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.chapterNumber").value("1"))
                 .andExpect(jsonPath("$.data.pages[0].pageNumber").value(1))
-                .andExpect(jsonPath("$.data.pages[0].cdnUrl", equalTo("https://cdn.readora.com/tog/c1/p1.webp")));
+                .andExpect(jsonPath("$.data.pages[0].cdnUrl", equalTo("https://cdn.readora.com/tog/c1/p1.webp")))
+                .andExpect(jsonPath("$.data.pages[0].description").doesNotExist())
+                .andExpect(jsonPath("$.data.pages[1].description").value("Bam looks up at the tower"));
     }
 
     @Test

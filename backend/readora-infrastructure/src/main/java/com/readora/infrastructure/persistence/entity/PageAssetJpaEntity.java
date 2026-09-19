@@ -27,6 +27,9 @@ public class PageAssetJpaEntity {
     private int width;
     private int height;
 
+    @Column(length = 500)
+    private String description;
+
     public PageAssetJpaEntity() {}
 
     public PageAssetJpaEntity(ChapterJpaEntity chapter, int pageNumber, String storageKey, String cdnUrl, int width, int height) {
@@ -49,4 +52,6 @@ public class PageAssetJpaEntity {
     public void setWidth(int width) { this.width = width; }
     public int getHeight() { return height; }
     public void setHeight(int height) { this.height = height; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 }

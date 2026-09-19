@@ -41,7 +41,7 @@ public record ChapterDto(
 
     private static ChapterDto of(Chapter chapter, @Nullable WorkRef work, @Nullable ChapterId previous, @Nullable ChapterId next) {
         List<PageAssetDto> pageDtos = chapter.getPages().stream()
-                .map(p -> new PageAssetDto(p.pageNumber(), p.storageKey(), p.cdnUrl(), p.width(), p.height()))
+                .map(PageAssetDto::fromDomain)
                 .toList();
 
         return new ChapterDto(

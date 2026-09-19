@@ -125,7 +125,7 @@ public class CatalogController {
             @Valid @RequestBody DirectPublishChapterRequest request
     ) {
         List<PageAsset> pages = request.pages().stream()
-                .map(p -> new PageAsset(p.pageNumber(), p.storageKey(), p.cdnUrl(), p.width(), p.height()))
+                .map(PageAssetDto::toDomain)
                 .toList();
         Chapter chapter = directPublishChapterUseCase.directPublishChapter(
                 WorkId.of(workId),

@@ -41,7 +41,7 @@ public class ChapterReadingService implements ReadChapterUseCase {
                 .map(p -> {
                     if (p.cdnUrl() == null || p.cdnUrl().isBlank()) {
                         String cdnUrl = storagePort.getPublicCdnUrl(p.storageKey());
-                        return new PageAsset(p.pageNumber(), p.storageKey(), cdnUrl, p.width(), p.height());
+                        return p.withCdnUrl(cdnUrl);
                     }
                     return p;
                 }).toList();
