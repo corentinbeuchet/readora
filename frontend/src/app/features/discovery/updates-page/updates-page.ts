@@ -4,13 +4,15 @@ import { DiscoveryApi } from '@app/core/api/discovery-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { SeoService } from '@app/core/seo/seo.service';
 import { LoadError } from '@app/shared/ui/load-error';
-import { WorkCover } from '@app/shared/ui/work-cover/work-cover';
+import { EmptyState } from '@app/shared/ui/empty-state/empty-state';
+import { WorkCard } from '@app/shared/ui/work-card/work-card';
+import { WorkCardSkeleton } from '@app/shared/ui/work-card-skeleton/work-card-skeleton';
 import { TimeAgoPipe } from '@app/shared/ui/time-ago.pipe';
 
 /** Latest updates (US-08): newest chapters, optionally only my library and followed teams. */
 @Component({
   selector: 'app-updates-page',
-  imports: [TimeAgoPipe, WorkCover, LoadError, RouterLink],
+  imports: [TimeAgoPipe, WorkCard, WorkCardSkeleton, EmptyState, LoadError, RouterLink],
   templateUrl: './updates-page.html',
   styleUrl: './updates-page.scss'
 })

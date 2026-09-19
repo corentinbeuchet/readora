@@ -29,7 +29,7 @@ describe('RankingsPage (US-08)', () => {
     await whenIOpen('/rankings', { popular: [ranked(1, 'Horimiya', 18), ranked(2, 'One Piece', 5)] });
 
     thenThePopularRankingWasAskedFor('WEEK');
-    thenTheFirstEntryShows('#1');
+    thenTheFirstEntryShows('Rank 1');
     thenTheFirstEntryShows('Horimiya');
     thenTheSelectedPeriodIs('This week');
 
@@ -42,7 +42,9 @@ describe('RankingsPage (US-08)', () => {
   it('shows top rated with averages and rating counts', async () => {
     await whenIOpen('/rankings?list=top-rated', { topRated: [ranked(1, 'One Piece', 9.1, 40)] });
 
-    thenTheFirstEntryShows('★ 9.1 · 40 ratings');
+    thenTheFirstEntryShows('Average rating:');
+    thenTheFirstEntryShows('9.1');
+    thenTheFirstEntryShows('40 ratings');
   });
 
   /** Only the visible ranking is fetched: `http.verify()` fails on a request for the other one. */
@@ -64,7 +66,7 @@ describe('RankingsPage (US-08)', () => {
   }
 
   function thenTheFirstEntryShows(text: string): void {
-    expect(el().querySelector('.ranking-entry')!.textContent).toContain(text);
+    expect(el().querySelector('app-work-card')!.textContent!.replace(/\s+/g, ' ')).toContain(text);
   }
 
   function thenTheSelectedPeriodIs(label: string): void {

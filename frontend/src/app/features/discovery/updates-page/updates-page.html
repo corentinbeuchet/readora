@@ -9,39 +9,38 @@
   }
 
   @if (releases.isLoading()) {
-    <p class="muted" role="status" i18n="@@discovery.updates.loading">Loading the latest chapters…</p>
+    <app-work-card-skeleton variant="row" count="8" i18n="@@discovery.updates.loading">Loading the latest chapters…</app-work-card-skeleton>
   } @else if (releases.error()) {
     <app-load-error (retry)="releases.reload()"><ng-container i18n="@@discovery.updates.loadError">Could not load the latest chapters.</ng-container></app-load-error>
   } @else if (releases.hasValue() && releases.value().length === 0) {
-    <p class="muted">
-      @if (mine()) {
+    @if (mine()) {
+      <app-empty-state>
         <ng-container i18n="@@discovery.updates.emptyMine">Nothing new in your library yet. Add series to your library to follow them here.</ng-container>
-      } @else {
-        <ng-container i18n="@@discovery.updates.empty">No chapters have been published yet.</ng-container>
-      }
-    </p>
+        <a emptyAction routerLink="/works" class="btn btn-primary" i18n="@@discovery.updates.emptyMine.browse">Browse the catalog</a>
+      </app-empty-state>
+    } @else {
+      <app-empty-state><ng-container i18n="@@discovery.updates.empty">No chapters have been published yet.</ng-container></app-empty-state>
+    }
   } @else if (releases.hasValue()) {
-    <ul class="release-list">
+    <ul class="work-rows">
       @for (release of releases.value(); track release.chapterId) {
-        <li class="card release" [class.release-read]="release.read">
-          <a [routerLink]="['/works', release.work.id]" class="release-cover-link" [attr.aria-label]="release.work.title">
-            <app-work-cover class="release-cover" [src]="release.work.coverImageUrl" width="48" height="67" />
-          </a>
-          <div class="release-body">
-            <h2 class="release-title"><a [routerLink]="['/works', release.work.id]">{{ release.work.title }}</a></h2>
-            <p class="muted">
-              <ng-container i18n="@@discovery.updates.chapter">Chapter {{ release.chapterNumber }}</ng-container>
+        <li>
+          <app-work-card [work]="release.work" variant="row">
+            <p cardMeta class="muted release-line">
+              <span class="release-chapter" i18n="@@discovery.updates.chapter">Chapter {{ release.chapterNumber }}</span>
               @if (release.chapterTitle) {
-                · {{ release.chapterTitle }}
+                <span>{{ release.chapterTitle }}</span>
               }
-              · <time [attr.datetime]="release.publishedAt">{{ release.publishedAt | timeAgo }}</time>
+              <time [attr.datetime]="release.publishedAt">{{ release.publishedAt | timeAgo }}</time>
               @if (release.read) {
-                · <span class="badge" i18n="@@discovery.updates.read">Read</span>
+                <span class="badge" i18n="@@discovery.updates.read">Read</span>
               }
             </p>
-          </div>
-          <a class="btn btn-primary btn-sm" [routerLink]="['/read', release.chapterId]"
-             [attr.aria-label]="readNowLabels().get(release.chapterId)" i18n="@@discovery.updates.readNow">Read now</a>
+            <span cardActions>
+              <a class="btn btn-primary btn-sm" [routerLink]="['/read', release.chapterId]"
+                 [attr.aria-label]="readNowLabels().get(release.chapterId)" i18n="@@discovery.updates.readNow">Read now</a>
+            </span>
+          </app-work-card>
         </li>
       }
     </ul>

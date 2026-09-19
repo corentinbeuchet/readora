@@ -1,42 +1,19 @@
 .feed-tabs {
   display: flex;
-  gap: 0.35rem;
-  margin: 1rem 0 1.5rem;
+  gap: var(--space-1);
+  margin: var(--space-4) 0 var(--space-5);
 }
 
-.release-list {
-  list-style: none;
+// Chapter, its title, when, and "Read": separate pieces with room between them, no separators.
+.release-line {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.release {
-  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.9rem;
+  gap: var(--space-1) var(--space-3);
+  font-size: var(--fs-sm);
 }
 
-.release-cover {
-  width: 48px;
-  height: 67px;
-  border-radius: 4px;
+.release-chapter {
+  color: var(--text);
+  font-weight: var(--fw-medium);
 }
-
-.release-body {
-  flex: 1;
-  min-width: 0;
-}
-
-.release-title {
-  font-size: var(--fs-base);
-
-  a {
-    color: inherit;
-  }
-}
-
-.release-read .release-title {
-  color: var(--muted);
-}
-

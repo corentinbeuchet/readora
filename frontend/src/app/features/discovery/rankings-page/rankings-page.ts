@@ -3,9 +3,12 @@ import { RouterLink } from '@angular/router';
 import { DiscoveryApi } from '@app/core/api/discovery-api';
 import { RankingPeriod } from '@app/core/models/discovery';
 import { SeoService } from '@app/core/seo/seo.service';
+import { EmptyState } from '@app/shared/ui/empty-state/empty-state';
+import { Icon } from '@app/shared/ui/icon/icon';
 import { LoadError } from '@app/shared/ui/load-error';
+import { WorkCard } from '@app/shared/ui/work-card/work-card';
+import { WorkCardSkeleton } from '@app/shared/ui/work-card-skeleton/work-card-skeleton';
 import { DecimalPipe } from '@angular/common';
-import { WORK_TYPE_LABELS } from '@app/core/models/catalog';
 
 const PERIODS: { key: RankingPeriod; label: string }[] = [
   { key: 'TODAY', label: $localize`:@@discovery.rankings.periods.today:Today` },
@@ -17,14 +20,13 @@ const PERIODS: { key: RankingPeriod; label: string }[] = [
 /** Rankings (US-08): popular by period, and top rated. */
 @Component({
   selector: 'app-rankings-page',
-  imports: [DecimalPipe, LoadError, RouterLink],
+  imports: [DecimalPipe, WorkCard, WorkCardSkeleton, EmptyState, Icon, LoadError, RouterLink],
   templateUrl: './rankings-page.html',
   styleUrl: './rankings-page.scss'
 })
 export class RankingsPage {
   private readonly discovery = inject(DiscoveryApi);
   protected readonly periods = PERIODS;
-  protected readonly typeLabels = WORK_TYPE_LABELS;
 
   /** `?list=top-rated` and `?period=` query parameters. */
   readonly list = input<string>();

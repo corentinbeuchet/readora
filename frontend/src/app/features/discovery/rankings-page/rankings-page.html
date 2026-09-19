@@ -20,24 +20,27 @@
 
   @let current = ranking();
   @if (current.isLoading()) {
-    <p class="muted" role="status" i18n="@@discovery.rankings.loading">Loading the ranking…</p>
+    <app-work-card-skeleton variant="row" count="10" i18n="@@discovery.rankings.loading">Loading the ranking…</app-work-card-skeleton>
   } @else if (current.error()) {
     <app-load-error (retry)="current.reload()"><ng-container i18n="@@discovery.rankings.loadError">Could not load the ranking.</ng-container></app-load-error>
   } @else if (current.hasValue() && current.value().length === 0) {
-    <p class="muted" i18n="@@discovery.rankings.empty">Not enough activity yet for this ranking.</p>
+    <app-empty-state>
+      <ng-container i18n="@@discovery.rankings.empty">Not enough activity yet for this ranking.</ng-container>
+      <a emptyAction routerLink="/works" class="btn btn-primary" i18n="@@discovery.rankings.empty.browse">Browse the catalog</a>
+    </app-empty-state>
   } @else if (current.hasValue()) {
-    <ol class="ranking-list">
+    <ol class="work-rows">
       @for (entry of current.value(); track entry.work.id) {
-        <li class="card ranking-entry">
-          <span class="rank" aria-hidden="true">#{{ entry.rank }}</span>
-          <a class="ranking-title" [routerLink]="['/works', entry.work.id]">{{ entry.work.title }}</a>
-          <span class="muted">
+        <li>
+          <app-work-card [work]="entry.work" variant="row" [rank]="entry.rank" [priority]="$first">
             @if (topRatedSelected()) {
-              ★ {{ entry.score | number: '1.1-1' }} · <ng-container i18n="@@discovery.rankings.ratingCount">{entry.ratings, plural, =1 {1 rating} other {{{ entry.ratings }} ratings}}</ng-container>
-            } @else {
-              {{ typeLabels[entry.work.type] }}
+              <p cardMeta class="score">
+                <app-icon name="star" filled /><span class="sr-only" i18n="@@discovery.rankings.score">Average rating:</span>
+                <span class="score-value">{{ entry.score | number: '1.1-1' }}</span>
+                <span class="muted" i18n="@@discovery.rankings.ratingCount">{entry.ratings, plural, =1 {1 rating} other {{{ entry.ratings }} ratings}}</span>
+              </p>
             }
-          </span>
+          </app-work-card>
         </li>
       }
     </ol>

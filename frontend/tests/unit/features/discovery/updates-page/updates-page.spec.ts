@@ -114,12 +114,16 @@ describe('UpdatesPage (US-08)', () => {
   }
 
   function thenReleaseIsMarkedRead(position: number): void {
-    expect(releaseRow(position).classList).toContain('release-read');
-    expect(releaseRow(position).textContent).toContain('Read');
+    expect(readBadge(position)?.textContent?.trim()).toBe('Read');
   }
 
   function thenReleaseIsNotMarkedRead(position: number): void {
-    expect(releaseRow(position).querySelector('.badge')).toBeNull();
+    expect(readBadge(position)).toBeNull();
+  }
+
+  /** The "Read" badge of the release line (the card has its own type and status badges). */
+  function readBadge(position: number): HTMLElement | null {
+    return releaseRow(position).querySelector('[cardMeta] .badge');
   }
 
   function thenThereIsNoFeedChoice(): void {
@@ -139,6 +143,6 @@ describe('UpdatesPage (US-08)', () => {
   }
 
   function releaseRow(position: number): HTMLElement {
-    return page().querySelectorAll<HTMLElement>('.release')[position - 1];
+    return page().querySelectorAll<HTMLElement>('app-work-card')[position - 1];
   }
 });

@@ -2,34 +2,23 @@
 .period-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  margin: 1rem 0;
+  gap: var(--space-1);
+  margin: var(--space-4) 0;
 }
 
-.ranking-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.ranking-entry {
-  display: flex;
+.score {
+  display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-1) var(--space-2);
+  font-size: var(--fs-sm);
+
+  app-icon {
+    color: var(--star);
+  }
 }
 
-.rank {
-  font-weight: var(--fw-black);
-  color: var(--accent);
-  min-width: 2.5rem;
-}
-
-.ranking-title {
-  flex: 1;
-  // Long unbroken titles wrap instead of pushing the row past a 320px screen.
-  min-width: 0;
-  overflow-wrap: anywhere;
-  color: inherit;
-  font-weight: var(--fw-semibold);
+.score-value {
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
 }
