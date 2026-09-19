@@ -8,7 +8,7 @@
     </app-load-error>
   } @else if (work.value(); as w) {
     <article class="work-detail">
-      <app-work-cover class="work-cover" [src]="w.coverImageUrl" [alt]="'Cover of ' + w.title" width="240" height="336" priority />
+      <app-work-cover class="work-cover" [src]="w.coverImageUrl" [alt]="`Cover of ${w.title}`" width="240" height="336" priority />
       <div class="work-body">
         <h1>{{ w.title }}</h1>
         <p class="work-meta">

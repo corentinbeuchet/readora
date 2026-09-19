@@ -1,6 +1,6 @@
 <div class="dialog-backdrop">
   <div class="card dialog" role="dialog" aria-modal="true" [attr.aria-labelledby]="labelledBy()"
-       [style.width]="'min(' + width() + ', 90vw)'" appFocusTrap (escaped)="closed.emit()">
+       [style.width]="`min(${width()}, 90vw)`" appFocusTrap (escaped)="closed.emit()">
     <ng-content />
   </div>
 </div>

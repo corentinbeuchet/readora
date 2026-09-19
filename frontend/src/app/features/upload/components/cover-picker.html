@@ -2,6 +2,7 @@
   <span id="cover-image-label" class="group-label">Cover Image</span>
   @if (previewUrl()) {
     <div class="cover-preview-card">
+      <!-- eslint-disable-next-line @angular-eslint/template/prefer-ngsrc -- blob: preview of a local file, nothing to optimize -->
       <img [src]="previewUrl()" alt="Cover preview" class="cover-img" />
       <button type="button" class="btn btn-danger-outline btn-sm remove-cover-btn" (click)="removed.emit()">
         Change Cover

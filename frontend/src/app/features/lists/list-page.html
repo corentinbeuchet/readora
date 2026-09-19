@@ -24,13 +24,13 @@
           Public: everyone can see and upvote it
         </label>
         <ul class="list-items">
-          @for (item of d.items; track item.workId; let i = $index) {
+          @for (item of d.items; track item.workId) {
             <li class="list-item">
               <div class="list-item-body field">
-                <label [attr.for]="'note-' + item.workId">Note on {{ item.title }}</label>
-                <input [id]="'note-' + item.workId" type="text" maxlength="300" [value]="item.note" (input)="setNote(i, value($event))" />
+                <label [attr.for]="`note-${item.workId}`">Note on {{ item.title }}</label>
+                <input [id]="`note-${item.workId}`" type="text" maxlength="300" [value]="item.note" (input)="setNote($index, value($event))" />
               </div>
-              <button type="button" class="btn btn-sm btn-danger-outline" (click)="removeItem(i)">
+              <button type="button" class="btn btn-sm btn-danger-outline" (click)="removeItem($index)">
                 Remove<span class="sr-only"> {{ item.title }}</span>
               </button>
             </li>

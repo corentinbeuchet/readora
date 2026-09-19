@@ -26,7 +26,7 @@
           <a
             class="btn btn-primary"
             [routerLink]="['/read', item.lastRead.chapterId]"
-            [attr.aria-label]="'Continue ' + item.work.title + ', chapter ' + item.lastRead.chapterNumber"
+            [attr.aria-label]="`Continue ${item.work.title}, chapter ${item.lastRead.chapterNumber}`"
           >Continue</a>
         </li>
       }

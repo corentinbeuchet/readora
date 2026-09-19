@@ -59,7 +59,7 @@
       }
     }
 
-    <div class="viewer-body" [style.transform]="'scale(' + state.zoomLevel() / 100 + ')'">
+    <div class="viewer-body" [style.transform]="`scale(${state.zoomLevel() / 100})`">
       @if (state.viewMode() === 'VERTICAL') {
         <app-vertical-flow />
       } @else {

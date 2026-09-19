@@ -42,6 +42,7 @@
 
     @if (wizard.cover(); as cover) {
       <div class="review-cover-preview">
+        <!-- eslint-disable-next-line @angular-eslint/template/prefer-ngsrc -- blob: preview of a local file, nothing to optimize -->
         <img [src]="cover.previewUrl" alt="Cover" class="cover-thumb" />
       </div>
     }
@@ -57,7 +58,7 @@
   @if (flow.submitting()) {
     <div class="upload-progress-container">
       <div class="progress-bar-track" role="progressbar" aria-label="Upload progress" aria-valuemin="0" aria-valuemax="100"
-           [attr.aria-valuenow]="flow.progress()" [attr.aria-valuetext]="flow.statusText() + ' (' + flow.progress() + '%)'">
+           [attr.aria-valuenow]="flow.progress()" [attr.aria-valuetext]="`${flow.statusText()} (${flow.progress()}%)`">
         <div class="progress-bar-fill" [style.width.%]="flow.progress()"></div>
       </div>
       <p class="progress-text" aria-live="polite">{{ flow.statusText() }} ({{ flow.progress() }}%)</p>

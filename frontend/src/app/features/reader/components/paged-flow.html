@@ -15,6 +15,7 @@
           class="page-image active-page"
         />
       } @else {
+        <!-- eslint-disable-next-line @angular-eslint/template/prefer-ngsrc -- data: URL fallback, which NgOptimizedImage rejects -->
         <img [src]="fallbackPage" [alt]="page.alt" class="page-image active-page" width="800" height="1200" />
       }
     }
@@ -26,6 +27,7 @@
   <!-- The next pages download while the current one is read, so turning is instant (hidden images still load). -->
   <div class="preload" hidden>
     @for (page of state.upcomingPageViews(); track page.pageNumber) {
+      <!-- eslint-disable-next-line @angular-eslint/template/prefer-ngsrc -- hidden preload: must fetch eagerly, not lazily -->
       <img class="preloaded-page" [src]="page.src" alt="" decoding="async" />
     }
   </div>

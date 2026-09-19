@@ -1,7 +1,7 @@
 <div class="omnisearch" role="search">
-  <label class="sr-only" [attr.for]="listboxId + '-input'">Search series by title or author</label>
+  <label class="sr-only" [attr.for]="`${listboxId}-input`">Search series by title or author</label>
   <input
-    [id]="listboxId + '-input'"
+    [id]="`${listboxId}-input`"
     class="omnisearch-input"
     type="search"
     role="combobox"
@@ -21,13 +21,13 @@
   <!-- Focus stays on the input (aria-activedescendant); options are clickable but not tab stops. -->
   <div class="omnisearch-popup" [hidden]="!expanded()">
     <ul [id]="listboxId" role="listbox" aria-label="Search suggestions" class="omnisearch-list">
-      @for (work of suggestions().items; track work.id; let i = $index) {
+      @for (work of suggestions().items; track work.id) {
         <li
-          [id]="optionId(i)"
+          [id]="optionId($index)"
           role="option"
           class="omnisearch-option"
-          [class.active]="activeIndex() === i"
-          [attr.aria-selected]="activeIndex() === i"
+          [class.active]="activeIndex() === $index"
+          [attr.aria-selected]="activeIndex() === $index"
           tabindex="-1"
           (mousedown)="keepFocus($event)"
           (click)="openWork(work)"

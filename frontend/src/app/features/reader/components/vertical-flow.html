@@ -1,5 +1,5 @@
 <div class="vertical-flow">
-  @for (page of state.pageViews(); track page.pageNumber; let first = $first) {
+  @for (page of state.pageViews(); track page.pageNumber) {
     <div #pageWrapper class="page-wrapper" [attr.data-page]="page.pageNumber" [attr.data-page-index]="$index">
       @if (page.src; as src) {
         <!-- Intrinsic size reserves the space (no layout shift); the first page is the LCP image. -->
@@ -7,12 +7,13 @@
           [ngSrc]="src"
           [width]="page.width"
           [height]="page.height"
-          [priority]="first"
+          [priority]="$first"
           [alt]="page.alt"
           (error)="handlePageError($event, fallbackPage)"
           class="page-image"
         />
       } @else {
+        <!-- eslint-disable-next-line @angular-eslint/template/prefer-ngsrc -- data: URL fallback, which NgOptimizedImage rejects -->
         <img [src]="fallbackPage" [alt]="page.alt" class="page-image" width="800" height="1200" />
       }
     </div>

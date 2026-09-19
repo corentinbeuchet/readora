@@ -3,7 +3,7 @@
   <ul class="comment-list">
     @for (row of rows(); track row.comment.id) {
       @let comment = row.comment;
-      <li class="comment-node" [attr.id]="'comment-' + comment.id" [attr.aria-level]="comment.depth"
+      <li class="comment-node" [attr.id]="`comment-${comment.id}`" [attr.aria-level]="comment.depth"
           [class.comment-highlight]="comment.id === highlightId()" [style.margin-left.rem]="(comment.depth - 1) * 1.5">
         <div class="comment-header">
           <a class="comment-author" [routerLink]="['/u', comment.authorUsername]">{{ comment.authorUsername }}</a>
@@ -25,7 +25,7 @@
 
         <div class="comment-footer">
           @if (canUpvote()) {
-            <button type="button" (click)="upvote.emit(comment.id)" class="btn-action btn-upvote" [attr.aria-label]="'Upvote, ' + comment.upvotes + ' votes'">
+            <button type="button" (click)="upvote.emit(comment.id)" class="btn-action btn-upvote" [attr.aria-label]="`Upvote, ${comment.upvotes} votes`">
               ▲ {{ comment.upvotes }}
             </button>
           } @else {

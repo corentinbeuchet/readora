@@ -1,5 +1,6 @@
 @if (src(); as url) {
   <img [ngSrc]="url" [alt]="alt()" [width]="width()" [height]="height()" [priority]="priority()" (error)="handleError($event, fallback)" />
 } @else {
+  <!-- eslint-disable-next-line @angular-eslint/template/prefer-ngsrc -- data: URL fallback, which NgOptimizedImage rejects -->
   <img [src]="fallback" [alt]="alt()" [width]="width()" [height]="height()" />
 }

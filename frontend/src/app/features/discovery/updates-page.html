@@ -41,7 +41,7 @@
             </p>
           </div>
           <a class="btn btn-primary btn-sm" [routerLink]="['/read', release.chapterId]"
-             [attr.aria-label]="'Read now: ' + release.work.title + ', chapter ' + release.chapterNumber">Read now</a>
+             [attr.aria-label]="`Read now: ${release.work.title}, chapter ${release.chapterNumber}`">Read now</a>
         </li>
       }
     </ul>

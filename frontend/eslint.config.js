@@ -14,6 +14,10 @@ module.exports = defineConfig([
       tseslint.configs.stylistic,
       angular.configs.tsRecommended,
     ],
+    languageOptions: {
+      // Type information for no-uncalled-signals.
+      parserOptions: { projectService: true, tsconfigRootDir: __dirname },
+    },
     processor: angular.processInlineTemplates,
     rules: {
       "@angular-eslint/directive-selector": [
@@ -38,7 +42,30 @@ module.exports = defineConfig([
       // Angular 22: root singletons use @Service() instead of @Injectable({ providedIn: 'root' }).
       "@angular-eslint/prefer-service-decorator": "error",
       "@angular-eslint/prefer-standalone": "error",
-      "@angular-eslint/prefer-on-push-component-change-detection": "warn",
+      // OnPush is the default in Angular 22: no explicit changeDetection.
+      "@angular-eslint/prefer-output-readonly": "error",
+      "@angular-eslint/prefer-output-emitter-ref": "error",
+      "@angular-eslint/prefer-signal-model": "error",
+      "@angular-eslint/prefer-host-metadata-property": "error",
+      "@angular-eslint/no-uncalled-signals": "error",
+      "@angular-eslint/no-implicit-take-until-destroyed": "error",
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@angular/forms",
+              importNames: ["FormsModule", "ReactiveFormsModule", "NgModel", "FormControl", "FormGroup", "FormBuilder"],
+              message: "Use Signal Forms (@angular/forms/signals).",
+            },
+            {
+              name: "@angular/common",
+              importNames: ["CommonModule", "NgClass", "NgStyle", "NgIf", "NgFor", "NgSwitch"],
+              message: "Use control flow and [class.x] / [style.x] bindings.",
+            },
+          ],
+        },
+      ],
       "@angular-eslint/use-lifecycle-interface": "error",
       "@angular-eslint/no-input-rename": "error",
       "@angular-eslint/no-output-native": "error",
@@ -62,7 +89,17 @@ module.exports = defineConfig([
       "@angular-eslint/template/alt-text": "error",
       "@angular-eslint/template/elements-content": "error",
       "@angular-eslint/template/button-has-type": "error",
-      "@angular-eslint/template/no-inline-styles": ["error", { allowNgStyle: true, allowBindToStyle: true }],
+      "@angular-eslint/template/no-inline-styles": ["error", { allowNgStyle: false, allowBindToStyle: true }],
+      "@angular-eslint/template/prefer-class-binding": "error",
+      "@angular-eslint/template/prefer-style-binding": "error",
+      "@angular-eslint/template/prefer-ngsrc": "error",
+      "@angular-eslint/template/prefer-at-empty": "error",
+      "@angular-eslint/template/prefer-at-else": "error",
+      "@angular-eslint/template/prefer-contextual-for-variables": "error",
+      "@angular-eslint/template/prefer-built-in-pipes": "error",
+      "@angular-eslint/template/prefer-template-literal": "error",
+      "@angular-eslint/template/no-duplicate-attributes": "error",
+      "@angular-eslint/template/no-empty-control-flow": "error",
       "@angular-eslint/template/click-events-have-key-events": "error",
       "@angular-eslint/template/interactive-supports-focus": "error",
       "@angular-eslint/template/label-has-associated-control": "error",
@@ -77,6 +114,11 @@ module.exports = defineConfig([
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-non-null-assertion": "off",
+      // A focused test must never be committed (it silently skips the rest of the suite).
+      "no-restricted-properties": [
+        "error",
+        ...["describe", "it", "test"].map((object) => ({ object, property: "only", message: "Remove .only before committing." })),
+      ],
     },
   },
 ]);

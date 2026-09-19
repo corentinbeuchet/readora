@@ -63,23 +63,24 @@
     </div>
 
     <ul class="page-grid" role="list">
-      @for (page of pages(); track page.id; let i = $index) {
+      @for (page of pages(); track page.id) {
         <li
           class="page-card"
           draggable="true"
-          (dragstart)="onItemDragStart(i, $event)"
-          (dragover)="onItemDragOver(i, $event)"
-          (drop)="onItemDrop(i, $event)"
+          (dragstart)="onItemDragStart($index, $event)"
+          (dragover)="onItemDragOver($index, $event)"
+          (drop)="onItemDrop($index, $event)"
         >
           <div class="thumbnail-wrapper">
-            <img [src]="page.previewUrl" [alt]="'Page ' + (i + 1)" class="page-thumbnail" loading="lazy" />
-            <span class="page-badge">#{{ i + 1 }}</span>
+            <!-- eslint-disable-next-line @angular-eslint/template/prefer-ngsrc -- blob: preview of a local file, nothing to optimize -->
+            <img [src]="page.previewUrl" [alt]="`Page ${$index + 1}`" class="page-thumbnail" loading="lazy" />
+            <span class="page-badge">#{{ $index + 1 }}</span>
             <div class="page-overlay-actions">
               <button
                 type="button"
                 class="icon-btn"
-                [disabled]="i === 0"
-                (click)="move(i, i - 1); $event.stopPropagation()"
+                [disabled]="$first"
+                (click)="move($index, $index - 1); $event.stopPropagation()"
                 title="Move left"
                 aria-label="Move left"
               >
@@ -88,8 +89,8 @@
               <button
                 type="button"
                 class="icon-btn"
-                [disabled]="i === pages().length - 1"
-                (click)="move(i, i + 1); $event.stopPropagation()"
+                [disabled]="$last"
+                (click)="move($index, $index + 1); $event.stopPropagation()"
                 title="Move right"
                 aria-label="Move right"
               >
@@ -98,7 +99,7 @@
               <button
                 type="button"
                 class="icon-btn btn-delete"
-                (click)="remove(i); $event.stopPropagation()"
+                (click)="remove($index); $event.stopPropagation()"
                 title="Delete page"
                 aria-label="Delete page"
               >
@@ -113,8 +114,8 @@
             }
           </div>
           <label class="page-description">
-            <span>Description <span class="sr-only">of page {{ i + 1 }}</span>(for screen readers)</span>
-            <textarea rows="2" maxlength="500" [value]="page.description ?? ''" (input)="describe(i, $event)"></textarea>
+            <span>Description <span class="sr-only">of page {{ $index + 1 }}</span>(for screen readers)</span>
+            <textarea rows="2" maxlength="500" [value]="page.description ?? ''" (input)="describe($index, $event)"></textarea>
           </label>
         </li>
       }
