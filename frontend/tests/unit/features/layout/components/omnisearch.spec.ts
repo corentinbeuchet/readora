@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
 import { Omnisearch, SUGGEST_DEBOUNCE_MS } from '@app/features/layout/components/omnisearch';
 import { WorkSummary } from '@app/core/models/readora.models';
@@ -20,6 +20,7 @@ describe('Omnisearch (US-04 instant search)', () => {
   let fixture: ComponentFixture<Omnisearch>;
   let http: HttpTestingController;
   let router: Router;
+  let searchRequest: TestRequest;
 
   beforeEach(async () => {
     vi.useFakeTimers();
@@ -38,10 +39,168 @@ describe('Omnisearch (US-04 instant search)', () => {
     vi.useRealTimers();
   });
 
-  const input = (): HTMLInputElement => fixture.nativeElement.querySelector('input[role="combobox"]');
-  const options = (): HTMLElement[] => Array.from(fixture.nativeElement.querySelectorAll('[role="option"]'));
+  it('suggests matches with their author after a short pause, not on every keystroke', async () => {
+    await whenITypeWithoutPausing(['o', 'om', 'omni'], [OMNI]);
 
-  async function type(text: string): Promise<void> {
+    thenTheSearchAskedFor({ q: 'omni', size: 5 });
+    thenTheSuggestionsAreOpen(true);
+    thenThereAreSuggestions(1);
+    thenSuggestionShows(1, 'Omniscient Reader');
+    thenSuggestionShows(1, 'Sing Shong');
+  });
+
+  it('does not search for a single character', async () => {
+    await whenIType('o');
+
+    thenNothingWasSearched();
+    thenTheSuggestionsAreOpen(false);
+  });
+
+  it('moves through suggestions with the arrow keys and opens the active one with Enter', async () => {
+    await givenIHaveSearchedFor('om', [OMNI, OMEGA]);
+    thenTheSearchAskedFor({ q: 'om', size: 5 });
+
+    whenIPress('ArrowDown');
+    whenIPress('ArrowDown');
+
+    thenTheActiveSuggestionIs(2);
+    thenSuggestionIsSelected(2);
+
+    whenIPress('ArrowDown');
+
+    thenTheActiveSuggestionIs(1);
+
+    await whenIPressEnter();
+
+    thenIAmOn('/works/w-2');
+    thenTheSearchBoxContains('');
+  });
+
+  it('Enter without an active suggestion opens the full results page', async () => {
+    await givenIHaveSearchedFor('omni', [OMNI]);
+    thenTheSearchAskedFor({ q: 'omni', size: 5 });
+
+    await whenIPressEnter();
+
+    thenIAmOn('/works?q=omni');
+  });
+
+  it('Escape closes the suggestions, a second Escape clears the text', async () => {
+    await givenIHaveSearchedFor('omni', [OMNI]);
+    thenTheSearchAskedFor({ q: 'omni', size: 5 });
+
+    whenIPress('Escape');
+
+    thenTheSuggestionsAreOpen(false);
+    thenTheSearchBoxContains('omni');
+
+    whenIPress('Escape');
+
+    thenTheSearchBoxContains('');
+  });
+
+  it('says when nothing matches and when search is unavailable', async () => {
+    await whenISearchFor('zzz', []);
+
+    thenTheSearchAskedFor({ q: 'zzz', size: 5 });
+    thenICanSee('No series match “zzz”.');
+
+    await whenISearchForButSearchIsDown('zzzz');
+
+    thenICanSee('Search is unavailable right now.');
+
+    await whenISearchFor('omni', [OMNI]);
+
+    thenTheSearchAskedFor({ q: 'omni', size: 5 });
+    thenThereAreSuggestions(1);
+  });
+
+  async function givenIHaveSearchedFor(text: string, results: WorkSummary[]): Promise<void> {
+    await search(text, results);
+  }
+
+  async function whenIType(text: string): Promise<void> {
+    await typeAndPause(text);
+  }
+
+  /** Every keystroke but the last comes before the debounce ends; only the last text is searched. */
+  async function whenITypeWithoutPausing(keystrokes: string[], results: WorkSummary[]): Promise<void> {
+    for (const text of keystrokes.slice(0, -1)) {
+      input().value = text;
+      input().dispatchEvent(new Event('input'));
+    }
+    await search(keystrokes[keystrokes.length - 1], results);
+  }
+
+  async function whenISearchFor(text: string, results: WorkSummary[]): Promise<void> {
+    await search(text, results);
+  }
+
+  async function whenISearchForButSearchIsDown(text: string): Promise<void> {
+    await typeAndPause(text);
+    http.expectOne((r) => r.url === `${API}/works`).flush(fail('down'));
+    fixture.detectChanges();
+  }
+
+  function whenIPress(key: string): void {
+    input().dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+    fixture.detectChanges();
+  }
+
+  async function whenIPressEnter(): Promise<void> {
+    whenIPress('Enter');
+    await vi.advanceTimersByTimeAsync(0);
+  }
+
+  function thenTheSearchAskedFor(params: { q: string; size: number }): void {
+    expect(searchRequest.request.params.get('q')).toBe(params.q);
+    expect(searchRequest.request.params.get('size')).toBe(String(params.size));
+  }
+
+  function thenNothingWasSearched(): void {
+    http.expectNone((r) => r.url === `${API}/works`);
+  }
+
+  function thenTheSuggestionsAreOpen(open: boolean): void {
+    expect(input().getAttribute('aria-expanded')).toBe(String(open));
+  }
+
+  function thenThereAreSuggestions(count: number): void {
+    expect(options()).toHaveLength(count);
+  }
+
+  function thenSuggestionShows(position: number, text: string): void {
+    expect(options()[position - 1].textContent).toContain(text);
+  }
+
+  function thenTheActiveSuggestionIs(position: number): void {
+    expect(input().getAttribute('aria-activedescendant')).toBe(options()[position - 1].id);
+  }
+
+  function thenSuggestionIsSelected(position: number): void {
+    expect(options()[position - 1].getAttribute('aria-selected')).toBe('true');
+  }
+
+  function thenIAmOn(url: string): void {
+    expect(router.url).toBe(url);
+  }
+
+  function thenTheSearchBoxContains(text: string): void {
+    expect(input().value).toBe(text);
+  }
+
+  function thenICanSee(text: string): void {
+    expect(fixture.nativeElement.textContent).toContain(text);
+  }
+
+  async function search(text: string, results: WorkSummary[]): Promise<void> {
+    await typeAndPause(text);
+    searchRequest = http.expectOne((r) => r.url === `${API}/works`);
+    searchRequest.flush(ok({ items: results, page: 0, size: 5, totalElements: results.length, totalPages: 1 }));
+    fixture.detectChanges();
+  }
+
+  async function typeAndPause(text: string): Promise<void> {
     input().value = text;
     input().dispatchEvent(new Event('input'));
     fixture.detectChanges();
@@ -49,93 +208,11 @@ describe('Omnisearch (US-04 instant search)', () => {
     fixture.detectChanges();
   }
 
-  function answer(items: WorkSummary[], text: string): void {
-    const request = http.expectOne((r) => r.url === `${API}/works`);
-    expect(request.request.params.get('q')).toBe(text);
-    expect(request.request.params.get('size')).toBe('5');
-    request.flush(ok({ items, page: 0, size: 5, totalElements: items.length, totalPages: 1 }));
-    fixture.detectChanges();
+  function input(): HTMLInputElement {
+    return fixture.nativeElement.querySelector('input[role="combobox"]');
   }
 
-  function press(key: string): void {
-    input().dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
-    fixture.detectChanges();
+  function options(): HTMLElement[] {
+    return Array.from(fixture.nativeElement.querySelectorAll('[role="option"]'));
   }
-
-  it('suggests matches with their author after a short pause, not on every keystroke', async () => {
-    input().value = 'o';
-    input().dispatchEvent(new Event('input'));
-    input().value = 'om';
-    input().dispatchEvent(new Event('input'));
-    await type('omni');
-
-    answer([OMNI], 'omni');
-
-    expect(input().getAttribute('aria-expanded')).toBe('true');
-    expect(options()).toHaveLength(1);
-    expect(options()[0].textContent).toContain('Omniscient Reader');
-    expect(options()[0].textContent).toContain('Sing Shong');
-  });
-
-  it('does not search for a single character', async () => {
-    await type('o');
-
-    http.expectNone((r) => r.url === `${API}/works`);
-    expect(input().getAttribute('aria-expanded')).toBe('false');
-  });
-
-  it('moves through suggestions with the arrow keys and opens the active one with Enter', async () => {
-    await type('om');
-    answer([OMNI, OMEGA], 'om');
-
-    press('ArrowDown');
-    press('ArrowDown');
-    expect(input().getAttribute('aria-activedescendant')).toBe(options()[1].id);
-    expect(options()[1].getAttribute('aria-selected')).toBe('true');
-
-    press('ArrowDown');
-    expect(input().getAttribute('aria-activedescendant')).toBe(options()[0].id);
-
-    press('Enter');
-    await vi.advanceTimersByTimeAsync(0);
-    expect(router.url).toBe('/works/w-2');
-    expect(input().value).toBe('');
-  });
-
-  it('Enter without an active suggestion opens the full results page', async () => {
-    await type('omni');
-    answer([OMNI], 'omni');
-
-    press('Enter');
-    await vi.advanceTimersByTimeAsync(0);
-
-    expect(router.url).toBe('/works?q=omni');
-  });
-
-  it('Escape closes the suggestions, a second Escape clears the text', async () => {
-    await type('omni');
-    answer([OMNI], 'omni');
-
-    press('Escape');
-    expect(input().getAttribute('aria-expanded')).toBe('false');
-    expect(input().value).toBe('omni');
-
-    press('Escape');
-    expect(input().value).toBe('');
-  });
-
-  it('says when nothing matches and when search is unavailable', async () => {
-    await type('zzz');
-    answer([], 'zzz');
-    expect(fixture.nativeElement.textContent).toContain('No series match “zzz”.');
-
-    await type('zzzz');
-    http.expectOne((r) => r.url === `${API}/works`).flush(fail('down'));
-    fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Search is unavailable right now.');
-
-    await type('omni');
-    answer([OMNI], 'omni');
-    expect(options()).toHaveLength(1);
-  });
 });

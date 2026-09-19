@@ -1,15 +1,23 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
 import { LoginPage } from '@app/features/auth/login-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { mockAuthResponse } from '../../core/auth/auth-fixtures';
 import { API, fail, provideHttpTesting } from '../../test-utils';
 
+interface Credentials {
+  email: string;
+  password: string;
+}
+
 describe('LoginPage (Signal Forms)', () => {
   let fixture: ComponentFixture<LoginPage>;
   let http: HttpTestingController;
   let router: Router;
+  let store: AuthStore;
+  let loginSpy: ReturnType<typeof vi.spyOn>;
+  let loginRequest: TestRequest;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -18,60 +26,39 @@ describe('LoginPage (Signal Forms)', () => {
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     router = TestBed.inject(Router);
-    fixture = TestBed.createComponent(LoginPage);
-    fixture.detectChanges();
+    store = TestBed.inject(AuthStore);
   });
 
   afterEach(() => http.verify());
 
-  const el = <T extends HTMLElement>(selector: string): T => fixture.nativeElement.querySelector(selector) as T;
-
-  function type(selector: string, value: string): void {
-    const input = el<HTMLInputElement>(selector);
-    input.value = value;
-    input.dispatchEvent(new Event('input'));
-    input.dispatchEvent(new Event('blur'));
-    fixture.detectChanges();
-  }
-
-  async function submitForm(): Promise<void> {
-    el<HTMLFormElement>('form').dispatchEvent(new Event('submit', { cancelable: true }));
-    await fixture.whenStable();
-    fixture.detectChanges();
-  }
-
   it('shows validation messages and does not call the API when the form is invalid', async () => {
-    await submitForm();
-    const errors = Array.from(fixture.nativeElement.querySelectorAll('.field-error')).map((e) => (e as HTMLElement).textContent?.trim());
-    expect(errors).toContain('Email is required');
-    expect(errors).toContain('Password is required');
-    // aria-describedby targets are unique containers, never ids repeated inside @for.
-    const ids = Array.from(fixture.nativeElement.querySelectorAll('[id]')).map((e) => (e as HTMLElement).id);
-    expect(new Set(ids).size).toBe(ids.length);
-    expect(el('#login-email-error').textContent).toContain('Email is required');
-    expect(el('#login-email').getAttribute('aria-describedby')).toBe('login-email-error');
-    http.expectNone(`${API}/auth/login`);
+    givenIAmOnTheLoginPage();
 
-    type('#login-email', 'not-an-email');
-    expect(fixture.nativeElement.textContent).toContain('Enter a valid email address');
-    expect(el('#login-email').getAttribute('aria-invalid')).toBe('true');
+    await whenISubmitTheForm();
+
+    thenAFieldErrorSays('Email is required');
+    thenAFieldErrorSays('Password is required');
+    thenNoElementIdIsRepeated();
+    thenTheEmailErrorSays('Email is required');
+    thenTheEmailFieldIsDescribedByItsError();
+    thenNoSignInRequestWasSent();
+
+    whenITypeMyEmail('not-an-email');
+
+    thenICanSee('Enter a valid email address');
+    thenTheEmailFieldIsInvalid();
   });
 
   it('submits valid credentials through AuthStore and redirects to returnUrl', async () => {
-    const store = TestBed.inject(AuthStore);
-    const loginSpy = vi.spyOn(store, 'login');
-    type('#login-email', 'reader@readora.test');
-    type('#login-password', 'Sup3rSecret!');
-    const pending = submitForm();
+    givenIAmOnTheLoginPage();
+    givenIHaveEnteredMyCredentials({ email: 'reader@readora.test', password: 'Sup3rSecret!' });
 
-    const req = http.expectOne(`${API}/auth/login`);
-    expect(req.request.body).toEqual({ email: 'reader@readora.test', password: 'Sup3rSecret!' });
-    req.flush(mockAuthResponse());
-    await pending;
+    await whenISubmitAndTheServerAcceptsThem();
 
-    expect(loginSpy).toHaveBeenCalledWith({ email: 'reader@readora.test', password: 'Sup3rSecret!' });
-    expect(store.isAuthenticated()).toBe(true);
-    expect(router.url).toBe('/');
+    thenTheSignInRequestSent({ email: 'reader@readora.test', password: 'Sup3rSecret!' });
+    thenTheStoreSignedInWith({ email: 'reader@readora.test', password: 'Sup3rSecret!' });
+    thenIAmSignedIn();
+    thenIAmOn('/');
   });
 
   it.each([
@@ -79,28 +66,128 @@ describe('LoginPage (Signal Forms)', () => {
     ['//evil.example/phish', '/'],
     ['https://evil.example', '/']
   ])('after login follows returnUrl %s only when it is a same-site path', async (returnUrl, expected) => {
-    fixture.componentRef.setInput('returnUrl', returnUrl);
-    type('#login-email', 'reader@readora.test');
-    type('#login-password', 'Sup3rSecret!');
-    const pending = submitForm();
-    http.expectOne(`${API}/auth/login`).flush(mockAuthResponse());
-    await pending;
+    givenIAmOnTheLoginPage({ returnUrl });
+    givenIHaveEnteredMyCredentials({ email: 'reader@readora.test', password: 'Sup3rSecret!' });
 
-    expect(router.url).toBe(expected);
+    await whenISubmitAndTheServerAcceptsThem();
+
+    thenIAmOn(expected);
   });
 
   it('shows the API error message when credentials are rejected', async () => {
-    type('#login-email', 'reader@readora.test');
-    type('#login-password', 'wrong-password');
-    const pending = submitForm();
+    givenIAmOnTheLoginPage();
+    givenIHaveEnteredMyCredentials({ email: 'reader@readora.test', password: 'wrong-password' });
 
-    http.expectOne(`${API}/auth/login`).flush(
-      fail('Invalid email or password'),
-      { status: 401, statusText: 'Unauthorized' }
-    );
-    await pending;
+    await whenISubmitAndTheServerRejectsThem('Invalid email or password');
 
-    expect(el('[role="alert"]').textContent).toContain('Invalid email or password');
-    expect(TestBed.inject(AuthStore).isAuthenticated()).toBe(false);
+    thenTheAlertSays('Invalid email or password');
+    thenIAmNotSignedIn();
   });
+
+  function givenIAmOnTheLoginPage(inputs: { returnUrl?: string } = {}): void {
+    loginSpy = vi.spyOn(store, 'login');
+    fixture = TestBed.createComponent(LoginPage);
+    fixture.detectChanges();
+    if (inputs.returnUrl !== undefined) fixture.componentRef.setInput('returnUrl', inputs.returnUrl);
+  }
+
+  function givenIHaveEnteredMyCredentials(credentials: Credentials): void {
+    typeInto('#login-email', credentials.email);
+    typeInto('#login-password', credentials.password);
+  }
+
+  async function whenISubmitTheForm(): Promise<void> {
+    await submit();
+  }
+
+  function whenITypeMyEmail(email: string): void {
+    typeInto('#login-email', email);
+  }
+
+  async function whenISubmitAndTheServerAcceptsThem(): Promise<void> {
+    const pending = submit();
+    loginRequest = http.expectOne(`${API}/auth/login`);
+    loginRequest.flush(mockAuthResponse());
+    await pending;
+  }
+
+  async function whenISubmitAndTheServerRejectsThem(message: string): Promise<void> {
+    const pending = submit();
+    loginRequest = http.expectOne(`${API}/auth/login`);
+    loginRequest.flush(fail(message), { status: 401, statusText: 'Unauthorized' });
+    await pending;
+  }
+
+  function thenAFieldErrorSays(message: string): void {
+    const errors = Array.from<HTMLElement>(fixture.nativeElement.querySelectorAll('.field-error')).map((e) => e.textContent?.trim());
+    expect(errors).toContain(message);
+  }
+
+  /** aria-describedby targets are unique containers, never ids repeated inside @for. */
+  function thenNoElementIdIsRepeated(): void {
+    const ids = Array.from<HTMLElement>(fixture.nativeElement.querySelectorAll('[id]')).map((e) => e.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  }
+
+  function thenTheEmailErrorSays(message: string): void {
+    expect(el('#login-email-error').textContent).toContain(message);
+  }
+
+  function thenTheEmailFieldIsDescribedByItsError(): void {
+    expect(el('#login-email').getAttribute('aria-describedby')).toBe('login-email-error');
+  }
+
+  function thenTheEmailFieldIsInvalid(): void {
+    expect(el('#login-email').getAttribute('aria-invalid')).toBe('true');
+  }
+
+  function thenNoSignInRequestWasSent(): void {
+    http.expectNone(`${API}/auth/login`);
+  }
+
+  function thenTheSignInRequestSent(credentials: Credentials): void {
+    expect(loginRequest.request.body).toEqual(credentials);
+  }
+
+  function thenTheStoreSignedInWith(credentials: Credentials): void {
+    expect(loginSpy).toHaveBeenCalledWith(credentials);
+  }
+
+  function thenIAmSignedIn(): void {
+    expect(store.isAuthenticated()).toBe(true);
+  }
+
+  function thenIAmNotSignedIn(): void {
+    expect(store.isAuthenticated()).toBe(false);
+  }
+
+  function thenIAmOn(url: string): void {
+    expect(router.url).toBe(url);
+  }
+
+  function thenTheAlertSays(message: string): void {
+    expect(el('[role="alert"]').textContent).toContain(message);
+  }
+
+  function thenICanSee(text: string): void {
+    expect(fixture.nativeElement.textContent).toContain(text);
+  }
+
+  function typeInto(selector: string, value: string): void {
+    const input = el<HTMLInputElement>(selector);
+    input.value = value;
+    input.dispatchEvent(new Event('input'));
+    input.dispatchEvent(new Event('blur'));
+    fixture.detectChanges();
+  }
+
+  async function submit(): Promise<void> {
+    el<HTMLFormElement>('form').dispatchEvent(new Event('submit', { cancelable: true }));
+    await fixture.whenStable();
+    fixture.detectChanges();
+  }
+
+  function el<T extends HTMLElement>(selector: string): T {
+    return fixture.nativeElement.querySelector(selector) as T;
+  }
 });
