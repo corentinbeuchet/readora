@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, linkedSignal, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '@app/core/api/api-client';
@@ -30,22 +30,23 @@ export class ListPage {
   readonly listId = input<string>();
 
   protected readonly list = this.api.listResource(this.listId);
-  protected readonly current = signal<ReadingList | null>(null);
-  protected readonly isOwner = computed(() => !!this.current() && this.current()!.ownerId === this.auth.user()?.id);
+  /** The loaded list, `null` while loading or on error. Local changes are written back with `list.set(...)`. */
+  protected readonly current = computed<ReadingList | null>(() => (this.list.hasValue() ? (this.list.value() ?? null) : null));
+  protected readonly isOwner = computed(() => this.current()?.ownerId === this.auth.user()?.id && !!this.current());
   protected readonly canUpvote = computed(() => this.auth.can('LIBRARY_USE') && !this.isOwner());
-  protected readonly draft = signal<Draft | null>(null);
+  /** The owner's edit in progress; dropped when another list is opened, so it can never be saved to that list. */
+  protected readonly draft = linkedSignal<string | undefined, Draft | null>({ source: this.listId, computation: () => null });
   protected readonly busy = signal(false);
   protected readonly message = signal<string | null>(null);
   protected readonly error = signal<string | null>(null);
 
   constructor() {
     effect(() => {
-      const loaded = this.list.hasValue() ? this.list.value() : undefined;
+      const loaded = this.current();
       if (loaded) {
-        untracked(() => {
-          this.current.set(loaded);
-          this.seo.update({ title: `${loaded.title} — a list by ${loaded.ownerUsername}`, description: loaded.description || loaded.title, path: `/lists/${loaded.id}` });
-        });
+        untracked(() =>
+          this.seo.update({ title: `${loaded.title} — a list by ${loaded.ownerUsername}`, description: loaded.description || loaded.title, path: `/lists/${loaded.id}` })
+        );
       }
     });
   }
@@ -99,7 +100,7 @@ export class ListPage {
           items: draft.items.map((item) => ({ workId: item.workId, note: item.note || null }))
         })
       );
-      this.current.set(saved);
+      this.list.set(saved);
       this.draft.set(null);
       this.message.set(saved.published ? 'Saved. Your list is public.' : 'Saved. Your list is private.');
     });
@@ -110,7 +111,7 @@ export class ListPage {
     if (!list) return;
     await this.run(async () => {
       const upvotes = await firstValueFrom(this.api.upvote(list.id));
-      this.current.set({ ...list, upvotes });
+      this.list.update((l) => (l ? { ...l, upvotes } : l));
     });
   }
 

@@ -84,6 +84,29 @@ describe('ListPage (US-05)', () => {
     expect(fixture.nativeElement.textContent).toContain('Saved. Your list is public.');
   });
 
+  it('drops an unsaved edit when another list is opened, and never shows the previous list', async () => {
+    await open('kenji-id');
+    Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find((b) => b.textContent?.includes('Edit list'))!.click();
+    await settle(fixture);
+    expect(fixture.nativeElement.querySelector('form')).not.toBeNull();
+
+    fixture.componentRef.setInput('listId', 'l-2');
+    await settle(fixture);
+    expect(fixture.nativeElement.textContent).not.toContain('Peak Webtoons');
+    http.expectOne(`${API}/lists/l-2`).flush({
+      success: true,
+      data: { ...LIST, id: 'l-2', title: 'Comfort reads', ownerId: 'aoi-id', ownerUsername: 'aoi', published: true },
+      error: null
+    });
+    await settle(fixture);
+
+    expect(fixture.nativeElement.querySelector('form')).toBeNull();
+    expect(fixture.nativeElement.querySelector('h1').textContent).toContain('Comfort reads');
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).map((b) => b.textContent);
+    expect(buttons.some((t) => t?.includes('Edit list'))).toBe(false);
+    expect(buttons.some((t) => t?.includes('Upvote'))).toBe(true);
+  });
+
   it('lets other readers upvote a public list, but not the owner', async () => {
     await open('aoi-id', { ...LIST, published: true, upvotes: 2 });
     const upvote = (): HTMLButtonElement | undefined =>
