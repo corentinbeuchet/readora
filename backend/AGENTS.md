@@ -176,3 +176,30 @@ Open (needs a product decision):
 - B19 Scanlation drafts/QC publish invent page keys `scans/{work}/{n}/p{i}.webp` that match no uploaded file; tasks only
   carry one asset-package URL. Decide how final pages are produced (unpack the QC package into page assets, or
   require a page upload step) before publishing through the scanlation workflow in production.
+
+Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = reported with path:line, re-check before acting):
+- R4 `CHAPTER_NOT_PUBLISHED` was text inside the English message, so the API answered `VALIDATION_FAILED`. A code is
+  never part of a message: `DomainValidationException.withCode(...)`, and acceptance steps assert `code()`. — fixed 88fceb7
+- R10 Dead fail-open `catch` around the S3 default credentials chain. — fixed 1922c97
+- R11 Last EAGER association (`UserAccountJpaEntity.subscription`): login took 2 statements. — fixed 52b6605
+- R13 `POST /storage/upload` is `isAuthenticated()` only (any reader, 50 MB); `AssetService` skips the content-type
+  allow-list when the type is blank and allows `application/octet-stream`.
+- R14 `UseCaseTransactions` never sets `readOnly`: query-only use cases run read-write, adapters' `readOnly = true` is ignored.
+- Same sweep as R4 still to do (survey): uncoded reader-visible rules in `WorkManagementService`, `ReaderSocialService`, `SubscriptionService`.
+- R19/R20 (survey) Rankings query: three correlated counts per work; missing indexes `chapter_reads(work_id, read_at)`,
+  `refresh_tokens(expires_at)`, `chapters(scanlation_project_id)`; `%text%` search on unindexed title/author.
+- R21/R22 (survey) Unbounded lists (chapter comments, work chapters, library list/export, bookmarks); the chapter list
+  loads every page row for `pageCount`.
+- R23/R24 (survey) Scanlation "not a member" answers 400 instead of 403; `ProfileController` PUT and
+  `SubscriptionController` checkout/cancel lack `@PreAuthorize`; `/api/v1/auth/me` sits under a `permitAll` prefix.
+- R25/R27/R28 (survey) Stripe calls inside the DB transaction; 9 of 19 application services without unit tests
+  (`SubscriptionService` first); no graceful shutdown, structured logs or correlation id.
+
+CI / deploy (same review; nothing here has ever run, the repository has no remote):
+- R1 Production health check curled `/api-docs`, disabled in production. — fixed 070ce66
+- R2 Node 24 in deploys vs 26 in CI and `engines`. — fixed a286dbb (`frontend/.nvmrc`)
+- R3 `i18n:check` was not a CI gate. — fixed c7deb38
+- Open, needs a decision: default JWT secret and DB password still in `application.yml` (only `production` is
+  guarded); deploys don't wait for App Runner before the frontend prerender build; production deploy skips tests and
+  runs from any ref; the JAR is built but never shipped while `backend/Dockerfile` is unused by the deploy path;
+  long-lived admin AWS keys instead of OIDC; no Dependabot/CodeQL; no IaC; no `.gitattributes`, Maven wrapper, README.

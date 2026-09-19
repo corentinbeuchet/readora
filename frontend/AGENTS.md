@@ -166,6 +166,8 @@ breakpoints).
   `i18n-aria-label` / `i18n-placeholder` / `i18n-alt` / `i18n-title` on attributes, `` $localize`:@@id:Text ${x}:name:` ``
   in TS (name every placeholder). Choices between texts are `@if` blocks with an `i18n` container each (no English
   ternaries); counts are ICU plurals (`{n, plural, =1 {…} other {…}}`), never `I18nPluralPipe` maps or `n + 's'`.
+  Every **French** plural has its own `=0` and `=1` forms, even when English only has `other` ("series"): French
+  counts 0 as singular ("0 page", "1 série"). `tests/unit/i18n/languages.spec.ts` checks the real files.
 - Dates, numbers, prices through the pipes (`date`, `number`, `currency: 'EUR'`) and `timeAgo` (Intl, build locale).
   API codes shown to readers go through the label maps in `core/models` (`WORK_STATUS_LABELS`, `ROLE_LABELS`…).
 - API errors are translated by code: `ApiError.code` (backend `ErrorCodes`) → `core/api/error-messages.ts`; a code
@@ -229,6 +231,11 @@ Checklists per test type: skills `frontend-unit-tests` (services, stores, pure f
     in `afterEach`. Retry is 0.
   - Nothing mutable is shared between tests. E2E data is created per test (fixtures, `uniqueSuffix()` inside the
     test). CI fails on a test that only passes on retry (`failOnFlakyTests`).
+  - Spec files run isolated (`angular.json` test `"isolate": true`; the Angular builder's default is `false`). Keep
+    it: Angular resolves a template's i18n texts once per component, so without isolation the French loaded by
+    `languages.spec.ts` leaks into whichever spec renders the same page next in that worker.
+  - The French dev server (`serve` configuration `fr`) has `"prebundle": false`: two `ng serve` sharing
+    `.angular/cache/.../vite/deps` invalidate each other's bundles (`$localize is not defined`, blank client routes).
   - A new or changed spec passes `npm run test:shuffle` (unit, random order) / `npm run e2e:stress` (e2e, 5 repeats;
     stack started with `READORA_AUTH_RATE_LIMIT=200`).
   - A flaky test is fixed, or skipped with a backlog id here, the same day. Never retried away, never given a longer timeout.
@@ -323,3 +330,20 @@ Accessibility and responsive gaps (2026-09-19 research, skills `frontend-accessi
   04d871f (+ e2e in the same branch). Still open: notification messages are English text stored by the backend (send
   a type + parameters instead); CloudFront must serve `/fr/*` fallbacks from `fr/index.csr.html` and may redirect `/`
   by `Accept-Language`; `VALIDATION_FAILED` details stay English (backstop checks the forms already make).
+
+Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = reported with path:line, re-check before acting):
+- R5 French plurals printed "0 membres" and "1 séries". — fixed 5a51ed4
+- R6 Reader zoom buttons: visible "Zoom +" but `aria-label` "Zoom in" (WCAG 2.5.3 Label in Name). — fixed 9d97e9d
+- R7 Reader page and scanlation board hand-rolled their error block (offline read as "unpublished" / "not a member"). — fixed a4170d1
+- R8 `robots.txt` missed `/library`, `/history`, `/moderation`, `/upload` and every private `/fr/` page. — fixed a5e7427
+- R9 Bare `subscribe()` on the shell logout. — fixed 79d1f9f
+- R-e2e Two dev servers sharing the Vite deps cache broke client routes in e2e. — fixed bcec9ea
+- R-flaky French texts leaking between non-isolated spec files. — fixed e84d498
+- R15 `file-utils.ts` zip-bomb guard uses JSZip private `_data` / `internalStream` and has no spec; `jszip` is a static import.
+- R16 No spec for `shared/ui/dialog`, `core/a11y/focus-trap.directive`, `core/api/api-client`, `register-page`, `publish-flow`.
+- R17 `PlansPage` hand-rolls busy/error (`asyncAction()` exists) and confirms the cancellation with `window.confirm` (`app-dialog` exists).
+- R18 The kanban shows the raw `assigneeId` UUID: the task DTO has no assignee name (backend + frontend).
+- R26 (survey) Axe and responsive e2e only scan public pages: no signed-in page, no open dialog.
+- Smaller (survey): `noUncheckedIndexedAccess` off; 8 `(event.target as …)` casts; silent upvote failure
+  (`chapter-comments.ts`); unused `requirePermission()`; footer year baked at prerender; identical "Show Spoiler"
+  names; `app.routes.server.ts` reads `environment`; hand-rolled omnisearch combobox vs `@angular/aria`.
