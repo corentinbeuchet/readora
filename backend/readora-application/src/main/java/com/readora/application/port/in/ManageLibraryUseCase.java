@@ -30,4 +30,11 @@ public interface ManageLibraryUseCase {
 
     /// The reader's library, most recently updated first; a `null` status lists everything.
     List<LibraryItem> list(UserId userId, @Nullable ReadingStatus status);
+
+    /// @param lastChapterRead number of the last chapter opened in the series, `null` if none
+    record ExportRow(String title, ReadingStatus status, @Nullable String lastChapterRead) {
+    }
+
+    /// My whole library with the last chapter read in each series (US-12 export).
+    List<ExportRow> export(UserId userId);
 }

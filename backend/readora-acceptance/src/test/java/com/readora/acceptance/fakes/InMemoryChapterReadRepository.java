@@ -72,6 +72,11 @@ public class InMemoryChapterReadRepository implements ChapterReadRepositoryPort 
         return counts;
     }
 
+    /// Every read of the reader (fake-only helper for profile stats).
+    public List<ChapterRead> allFor(UserId userId) {
+        return byUser(userId).toList();
+    }
+
     private java.util.stream.Stream<ChapterRead> byUser(UserId userId) {
         return reads.values().stream().filter(r -> r.userId().equals(userId));
     }

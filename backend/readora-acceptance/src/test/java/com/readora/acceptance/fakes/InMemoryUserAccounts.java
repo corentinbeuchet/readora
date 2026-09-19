@@ -24,6 +24,11 @@ public class InMemoryUserAccounts implements UserAccountRepositoryPort {
     }
 
     @Override
+    public Optional<UserAccount> findByUsername(String username) {
+        return accounts.values().stream().filter(a -> a.getUsername().equalsIgnoreCase(username)).findFirst();
+    }
+
+    @Override
     public Optional<UserAccount> findByExternalCustomerId(String externalCustomerId) {
         return Optional.empty();
     }

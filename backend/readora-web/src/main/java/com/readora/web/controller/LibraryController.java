@@ -13,6 +13,8 @@ import com.readora.web.security.CurrentUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jspecify.annotations.Nullable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -44,6 +46,40 @@ public class LibraryController {
                 .map(LibraryItemDto::fromDomain)
                 .toList();
         return ResponseEntity.ok(ApiResponse.ok(items));
+    }
+
+    @GetMapping("/export")
+    @Operation(summary = "Download my library (series, status, last chapter read) as CSV or JSON")
+    public ResponseEntity<?> export(@RequestParam(defaultValue = "csv") String format) {
+        var rows = manageLibraryUseCase.export(currentUserProvider.requireUserId());
+        if ("json".equalsIgnoreCase(format)) {
+            List<Map<String, String>> json = rows.stream().map(row -> {
+                Map<String, String> item = new java.util.LinkedHashMap<>();
+                item.put("title", row.title());
+                item.put("status", row.status().name());
+                item.put("lastChapterRead", row.lastChapterRead());
+                return item;
+            }).toList();
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"readora-library.json\"")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(json);
+        }
+        StringBuilder csv = new StringBuilder("title,status,last_chapter_read\n");
+        for (var row : rows) {
+            csv.append(csvCell(row.title())).append(',').append(row.status().name()).append(',')
+                    .append(csvCell(row.lastChapterRead() != null ? row.lastChapterRead() : "")).append('\n');
+        }
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"readora-library.csv\"")
+                .contentType(new MediaType("text", "csv", java.nio.charset.StandardCharsets.UTF_8))
+                .body(csv.toString());
+    }
+
+    /// Quotes cells with separators or quotes, and neutralises spreadsheet formulas (CSV injection).
+    private static String csvCell(String value) {
+        String safe = !value.isEmpty() && "=+-@".indexOf(value.charAt(0)) >= 0 ? "'" + value : value;
+        return safe.contains(",") || safe.contains("\"") || safe.contains("\n") ? "\"" + safe.replace("\"", "\"\"") + "\"" : safe;
     }
 
     @GetMapping("/{workId}")

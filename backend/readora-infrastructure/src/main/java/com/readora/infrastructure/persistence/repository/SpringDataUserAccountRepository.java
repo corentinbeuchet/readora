@@ -13,4 +13,5 @@ public interface SpringDataUserAccountRepository extends JpaRepository<UserAccou
     Optional<UserAccountJpaEntity> findBySubscriptionStripeSubscriptionId(String stripeSubscriptionId);
     boolean existsByEmail(String email);
     boolean existsByUsernameIgnoreCase(String username);
+    Optional<UserAccountJpaEntity> findByUsernameIgnoreCase(String username);
 }

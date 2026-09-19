@@ -42,6 +42,13 @@ public class InMemoryDiscovery implements DiscoveryQueryPort {
         this.reads = reads;
     }
 
+    private java.util.function.Function<UserId, Set<com.readora.domain.scanlation.ProjectId>> followedTeams = user -> Set.of();
+
+    /// Teams each reader follows (their chapters join the reader's "My library" updates).
+    public void followedTeams(java.util.function.Function<UserId, Set<com.readora.domain.scanlation.ProjectId>> lookup) {
+        this.followedTeams = lookup;
+    }
+
     public void record(WorkId workId, Activity activity, Instant at) {
         events.add(new Event(workId, activity, at));
     }
@@ -52,7 +59,8 @@ public class InMemoryDiscovery implements DiscoveryQueryPort {
                 : library.findByUser(onlyFor, null).stream().map(e -> e.getWorkId()).collect(Collectors.toSet());
         return works.all().stream()
                 .flatMap(work -> chapters.findPublishedByWorkId(work.getId()).stream())
-                .filter(chapter -> onlyFor == null || mine.contains(chapter.getWorkId()))
+                .filter(chapter -> onlyFor == null || mine.contains(chapter.getWorkId())
+                        || (chapter.getScanlationProjectId() != null && followedTeams.apply(onlyFor).contains(chapter.getScanlationProjectId())))
                 .sorted(Comparator.comparing((Chapter c) -> Objects.requireNonNull(c.getPublishedAt())).reversed())
                 .skip((long) page * size)
                 .limit(size)

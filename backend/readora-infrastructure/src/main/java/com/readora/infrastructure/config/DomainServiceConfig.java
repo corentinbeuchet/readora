@@ -2,6 +2,7 @@ package com.readora.infrastructure.config;
 
 import com.readora.application.port.in.AuthenticateUserUseCase;
 import com.readora.application.port.in.BrowseCatalogUseCase;
+import com.readora.application.port.in.CommunityUseCase;
 import com.readora.application.port.in.DirectPublishChapterUseCase;
 import com.readora.application.port.in.DiscoverUseCase;
 import com.readora.application.port.in.ManageAssetsUseCase;
@@ -24,6 +25,7 @@ import com.readora.application.service.AuthenticationService;
 import com.readora.application.service.BookmarkService;
 import com.readora.application.service.CatalogService;
 import com.readora.application.service.ChapterReadingService;
+import com.readora.application.service.CommunityService;
 import com.readora.application.service.DiscoveryService;
 import com.readora.application.service.LibraryService;
 import com.readora.application.service.ModerationService;
@@ -202,6 +204,13 @@ public class DomainServiceConfig {
     public ModerateCommentsUseCase moderateCommentsUseCase(CommentReportRepositoryPort reports, CommentRepositoryPort comments,
                                                            UserAccountRepositoryPort users) {
         return transactional(new ModerationService(reports, comments, users, Clock.systemUTC()), ModerateCommentsUseCase.class,
+                transactionManager);
+    }
+
+    @Bean
+    public CommunityUseCase communityUseCase(UserAccountRepositoryPort users, CommunityQueryPort community,
+                                             ScanlationProjectRepositoryPort projects, WorkRepositoryPort works, ChapterRepositoryPort chapters) {
+        return transactional(new CommunityService(users, community, projects, works, chapters, Clock.systemUTC()), CommunityUseCase.class,
                 transactionManager);
     }
 

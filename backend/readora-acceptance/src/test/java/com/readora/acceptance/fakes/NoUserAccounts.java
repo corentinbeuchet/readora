@@ -20,6 +20,11 @@ public class NoUserAccounts implements UserAccountRepositoryPort {
     }
 
     @Override
+    public Optional<UserAccount> findByUsername(String username) {
+        return Optional.empty();
+    }
+
+    @Override
     public Optional<UserAccount> findByExternalCustomerId(String externalCustomerId) {
         return Optional.empty();
     }

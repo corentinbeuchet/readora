@@ -64,6 +64,15 @@ public class LibraryService implements ManageLibraryUseCase {
     }
 
     @Override
+    public List<ExportRow> export(UserId userId) {
+        Map<WorkId, String> lastRead = chapterReadRepository.findLatestPerWork(userId, Integer.MAX_VALUE).stream()
+                .collect(Collectors.toMap(read -> read.workId(), read -> read.chapterNumber().value()));
+        return list(userId, null).stream()
+                .map(item -> new ExportRow(item.work().getTitle(), item.entry().getStatus(), lastRead.get(item.work().getId())))
+                .toList();
+    }
+
+    @Override
     public List<LibraryItem> list(UserId userId, @Nullable ReadingStatus status) {
         List<LibraryEntry> entries = libraryRepository.findByUser(userId, status);
         if (entries.isEmpty()) {

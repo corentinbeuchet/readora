@@ -1,8 +1,8 @@
 # From docs/use-cases (2026-09): UC-25 profiles, UC-26 follows, UC-30 team pages, UC-31 chapter versions,
 # UC-19 library export. Nice-to-haves, all @could.
-# @wip = not built yet (feature level: nothing here is built).
+# @wip = not built yet: several teams' versions of one chapter needs chapters unique per team rather than per number
+# (publishing, reading history, next/previous chapter and the reader all assume one chapter per number).
 
-@wip
 Feature: Community and scanlation teams
   As a reader
   I want to see who reads and translates what
@@ -28,7 +28,7 @@ Feature: Community and scanlation teams
     Then they see its members, the series it translates and its latest chapters
 
   # Inspired by: MangaDex
-  @could
+  @could @wip
   Scenario: Several teams translated the same chapter
     Given "Shadow Scans" and "Moon Scans" both published chapter 5 of "Solo Leveling"
     When "Kenji" opens chapter 5

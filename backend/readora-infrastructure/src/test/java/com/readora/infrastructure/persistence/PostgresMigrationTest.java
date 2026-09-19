@@ -14,6 +14,7 @@ import com.readora.domain.social.ReadingStatus;
 import com.readora.infrastructure.persistence.adapter.ChapterReadRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.CommentReportRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.CommentRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.CommunityQueryAdapter;
 import com.readora.infrastructure.persistence.adapter.DiscoveryQueryAdapter;
 import com.readora.infrastructure.persistence.adapter.ChapterRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.LibraryRepositoryAdapter;
@@ -248,6 +249,32 @@ class PostgresMigrationTest {
         comments.save(comment);
         assertThat(comments.findByChapterId(chapter.getId())).isEmpty();
         assertThat(comments.findById(comment.getId())).get().extracting(c -> c.isHidden()).isEqualTo(true);
+    }
+
+    @Autowired
+    private CommunityQueryAdapter community;
+
+    @Test
+    @DisplayName("Profile stats (genres of finished reads), usernames and team follows run on PostgreSQL")
+    void communityQueriesRunOnPostgres() {
+        Work work = workRepository.save(Work.create("PG Community", "", WorkType.MANGA, "c.png", Set.of("Mystery")));
+        ScanlationProject team = projectRepository.save(ScanlationProject.create("PG Team 2", work.getId(), UserId.of("pg-leader-2")));
+        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", team.getId());
+        chapter.updatePages(List.of(PageAsset.create(1, "p1.webp", null)));
+        chapter.publish(UserId.of("qc"));
+        chapterRepository.save(chapter);
+        UserId reader = UserId.of("pg-community");
+        chapterReads.save(new ChapterRead(reader, work.getId(), chapter.getId(), chapter.getChapterNumber(), java.time.Instant.now(), true));
+
+        var stats = community.readingStats(reader, 3);
+        assertThat(stats.chaptersRead()).isEqualTo(1);
+        assertThat(stats.topGenres()).containsExactly("Mystery");
+        assertThat(community.follow(reader, team.getId(), java.time.Instant.now())).isTrue();
+        assertThat(community.follow(reader, team.getId(), java.time.Instant.now())).isFalse();
+        assertThat(community.countFollowers(team.getId())).isEqualTo(1);
+        assertThat(discovery.findLatestReleases(reader, 0, 10)).extracting(r -> r.chapterId()).contains(chapter.getId());
+        assertThat(community.unfollow(reader, team.getId())).isTrue();
+        assertThat(community.usernames(List.of(reader))).isEmpty();
     }
 
     private static void sleepPastClockTick() {
