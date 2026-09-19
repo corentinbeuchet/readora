@@ -261,6 +261,17 @@ fieldset.field {
   padding: 0.6rem 0.75rem;
 }
 
+/* An empty, always-rendered error region (live region waiting for its message) takes no space. */
+.form-error:empty {
+  padding: 0;
+  border: 0;
+}
+
+/* …and inside a .form it doesn't add the flex gap either (the gap is 1rem). */
+.form > .form-error:empty {
+  margin-block-end: -1rem;
+}
+
 .load-error {
   display: block;
 }
