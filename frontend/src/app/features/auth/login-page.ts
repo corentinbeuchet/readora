@@ -1,5 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { FormField, email, form, required, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import { AuthStore } from '@app/core/auth/auth-store';
@@ -21,8 +21,14 @@ interface LoginModel {
 export class LoginPage {
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
   private readonly seo = inject(SeoService);
+
+  /** `?returnUrl=` set by the auth guards; only same-site paths are followed. */
+  readonly returnUrl = input<string>();
+  private readonly safeReturnUrl = computed(() => {
+    const url = this.returnUrl();
+    return url?.startsWith('/') && !url.startsWith('//') ? url : '/';
+  });
 
   protected readonly model = signal<LoginModel>({ email: '', password: '' });
   protected readonly loginForm = form(this.model, (path) => {
@@ -43,13 +49,8 @@ export class LoginPage {
     await submit(this.loginForm, async (f) => {
       await this.signingIn.run(async () => {
         await firstValueFrom(this.auth.login(f().value()));
-        await this.router.navigateByUrl(this.returnUrl());
+        await this.router.navigateByUrl(this.safeReturnUrl());
       });
     });
-  }
-
-  private returnUrl(): string {
-    const raw = this.route.snapshot.queryParamMap.get('returnUrl');
-    return raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/';
   }
 }

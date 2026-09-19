@@ -77,6 +77,23 @@ describe('LoginPage (Signal Forms)', () => {
     expect(navigateSpy).toHaveBeenCalledWith('/');
   });
 
+  it.each([
+    ['/works/42?tab=chapters', '/works/42?tab=chapters'],
+    ['//evil.example/phish', '/'],
+    ['https://evil.example', '/']
+  ])('after login follows returnUrl %s only when it is a same-site path', async (returnUrl, expected) => {
+    fixture.componentRef.setInput('returnUrl', returnUrl);
+    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+
+    type('#login-email', 'reader@readora.test');
+    type('#login-password', 'Sup3rSecret!');
+    const pending = submitForm();
+    http.expectOne(`${environment.apiUrl}/auth/login`).flush(mockAuthResponse());
+    await pending;
+
+    expect(navigateSpy).toHaveBeenCalledWith(expected);
+  });
+
   it('shows the API error message when credentials are rejected', async () => {
     type('#login-email', 'reader@readora.test');
     type('#login-password', 'wrong-password');
