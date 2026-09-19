@@ -21,7 +21,7 @@ import { isNotFoundError } from '@app/core/api/api-client';
       {{ notFound() }}
     } @else {
       <ng-content />
-      <button type="button" class="btn btn-link" (click)="retry.emit()">Retry</button>
+      <button type="button" class="btn btn-link" (click)="retry.emit()" i18n="@@loadError.retry">Retry</button>
     }
     <ng-content select="[actions]" />
   `,

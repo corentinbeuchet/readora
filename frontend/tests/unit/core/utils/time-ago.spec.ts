@@ -26,12 +26,22 @@ describe('timeAgo', () => {
     thenItReads('just now');
   });
 
+  it('speaks the language of the build', () => {
+    givenItIs('2026-09-15T12:00:00Z');
+
+    whenIFormat('2026-09-15T11:50:00Z', 'fr');
+    thenItReads('il y a 10 minutes');
+
+    whenIFormat('2026-09-12T12:00:00Z', 'fr');
+    thenItReads('il y a 3 jours');
+  });
+
   function givenItIs(iso: string): void {
     now = Date.parse(iso);
   }
 
-  function whenIFormat(iso: string): void {
-    formatted = timeAgo(iso, now);
+  function whenIFormat(iso: string, locale?: string): void {
+    formatted = timeAgo(iso, now, locale);
   }
 
   function thenItReads(text: string): void {

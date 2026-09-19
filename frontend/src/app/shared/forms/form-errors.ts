@@ -7,17 +7,17 @@ export function errorMessage(error: ValidationError): string {
   }
   switch (error.kind) {
     case 'required':
-      return 'This field is required';
+      return $localize`:@@form.required:This field is required`;
     case 'email':
-      return 'Enter a valid email address';
+      return $localize`:@@form.email:Enter a valid email address`;
     case 'minLength':
-      return `Must be at least ${(error as { minLength?: number }).minLength ?? ''} characters`.trim();
+      return $localize`:@@form.minLength:Must be at least ${(error as { minLength?: number }).minLength ?? ''}:min: characters`;
     case 'maxLength':
-      return `Must be at most ${(error as { maxLength?: number }).maxLength ?? ''} characters`.trim();
+      return $localize`:@@form.maxLength:Must be at most ${(error as { maxLength?: number }).maxLength ?? ''}:max: characters`;
     case 'pattern':
-      return 'Invalid format';
+      return $localize`:@@form.pattern:Invalid format`;
     default:
-      return 'Invalid value';
+      return $localize`:@@form.invalid:Invalid value`;
   }
 }
 

@@ -26,6 +26,7 @@
     "error.alreadyHandled": "Cela a déjà été traité.",
     "error.noActiveSubscription": "Vous n'avez aucun abonnement actif à résilier.",
     "error.cancellationAlreadyScheduled": "Votre abonnement prend déjà fin à la fin de cette période.",
+    "time.justNow": "à l'instant",
     "bell.panel": "Notifications",
     "bell.title": "Notifications",
     "bell.markAllRead": "Tout marquer comme lu",
@@ -66,6 +67,13 @@
     "shell.theme.label": "Thème",
     "shell.theme.system": "Système",
     "shell.theme.light": "Clair",
-    "shell.theme.dark": "Sombre"
+    "shell.theme.dark": "Sombre",
+    "form.required": "Ce champ est obligatoire",
+    "form.email": "Saisissez une adresse e-mail valide",
+    "form.minLength": "Au moins {$min} caractères",
+    "form.maxLength": "Au plus {$max} caractères",
+    "form.pattern": "Format invalide",
+    "form.invalid": "Valeur invalide",
+    "loadError.retry": "Réessayer"
   }
 }

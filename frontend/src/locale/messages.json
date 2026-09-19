@@ -26,6 +26,7 @@
     "error.alreadyHandled": "This has already been handled.",
     "error.noActiveSubscription": "You have no active subscription to cancel.",
     "error.cancellationAlreadyScheduled": "Your subscription is already set to end with this period.",
+    "time.justNow": "just now",
     "bell.panel": "Notifications",
     "bell.title": "Notifications",
     "bell.markAllRead": "Mark all as read",
@@ -66,6 +67,13 @@
     "shell.theme.label": "Theme",
     "shell.theme.system": "System",
     "shell.theme.light": "Light",
-    "shell.theme.dark": "Dark"
+    "shell.theme.dark": "Dark",
+    "form.required": "This field is required",
+    "form.email": "Enter a valid email address",
+    "form.minLength": "Must be at least {$min} characters",
+    "form.maxLength": "Must be at most {$max} characters",
+    "form.pattern": "Invalid format",
+    "form.invalid": "Invalid value",
+    "loadError.retry": "Retry"
   }
 }
