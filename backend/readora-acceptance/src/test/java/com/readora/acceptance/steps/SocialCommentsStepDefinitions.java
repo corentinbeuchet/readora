@@ -52,6 +52,15 @@ public class SocialCommentsStepDefinitions {
             }
 
             @Override
+
+            public java.util.Optional<java.time.Instant> findLatestCommentTime(UserId authorId) {
+
+                return java.util.Optional.empty();
+
+            }
+
+
+            @Override
             public ChapterComment save(ChapterComment comment) {
                 commentStore.put(comment.getId(), comment);
                 return comment;

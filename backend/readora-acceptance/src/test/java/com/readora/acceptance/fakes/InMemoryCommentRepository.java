@@ -6,6 +6,7 @@ import com.readora.domain.social.ChapterComment;
 import com.readora.domain.social.CommentId;
 import com.readora.domain.work.ChapterId;
 
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -26,9 +27,15 @@ public class InMemoryCommentRepository implements CommentRepositoryPort {
     @Override
     public List<ChapterComment> findByChapterId(ChapterId chapterId) {
         return comments.values().stream()
-                .filter(c -> c.getChapterId().equals(chapterId))
+                .filter(c -> c.getChapterId().equals(chapterId) && !c.isHidden())
                 .sorted(Comparator.comparing(ChapterComment::getCreatedAt))
                 .toList();
+    }
+
+    @Override
+    public Optional<Instant> findLatestCommentTime(UserId authorId) {
+        return comments.values().stream().filter(c -> c.getAuthorId().equals(authorId)).map(ChapterComment::getCreatedAt)
+                .max(Comparator.naturalOrder());
     }
 
     @Override

@@ -30,6 +30,9 @@ readora:
     allowed-origins: http://localhost:4200
   jobs:
     enabled: false
+  comments:
+    # Tests post several comments in a row; CommentRateLimitIntegrationTest turns the limit back on.
+    min-interval: 0s
   security:
     cookie-secure: false
     rate-limit:

@@ -12,7 +12,10 @@ import java.util.UUID;
 
 @Repository
 public interface SpringDataCommentRepository extends JpaRepository<ChapterCommentJpaEntity, UUID> {
-    List<ChapterCommentJpaEntity> findByChapterIdOrderByCreatedAtAsc(UUID chapterId);
+    List<ChapterCommentJpaEntity> findByChapterIdAndHiddenFalseOrderByCreatedAtAsc(UUID chapterId);
+
+    @Query("select max(c.createdAt) from ChapterCommentJpaEntity c where c.authorId = :authorId")
+    java.util.Optional<java.time.Instant> findLatestCreatedAt(@Param("authorId") String authorId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update ChapterCommentJpaEntity c set c.upvotes = c.upvotes + 1 where c.id = :id")

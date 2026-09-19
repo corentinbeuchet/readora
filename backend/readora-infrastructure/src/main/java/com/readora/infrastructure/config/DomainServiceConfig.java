@@ -11,6 +11,7 @@ import com.readora.application.port.in.ManageProfileUseCase;
 import com.readora.application.port.in.ManageScanlationTaskUseCase;
 import com.readora.application.port.in.ManageSubscriptionUseCase;
 import com.readora.application.port.in.ManageWorkUseCase;
+import com.readora.application.port.in.ModerateCommentsUseCase;
 import com.readora.application.port.in.NotifyUseCase;
 import com.readora.application.port.in.ReadChapterUseCase;
 import com.readora.application.port.in.RateWorkUseCase;
@@ -25,6 +26,7 @@ import com.readora.application.service.CatalogService;
 import com.readora.application.service.ChapterReadingService;
 import com.readora.application.service.DiscoveryService;
 import com.readora.application.service.LibraryService;
+import com.readora.application.service.ModerationService;
 import com.readora.application.service.NotificationService;
 import com.readora.application.service.PageReportService;
 import com.readora.application.service.RatingService;
@@ -46,7 +48,7 @@ import static com.readora.infrastructure.config.UseCaseTransactions.transactiona
 /// Wires the framework-free application services. Every `port.in` bean is wrapped by
 /// [UseCaseTransactions#transactional] so each use-case call is atomic.
 @Configuration
-@EnableConfigurationProperties({SecurityProperties.class, StripeProperties.class})
+@EnableConfigurationProperties({SecurityProperties.class, StripeProperties.class, CommentProperties.class})
 public class DomainServiceConfig {
 
     private final PlatformTransactionManager transactionManager;
@@ -97,8 +99,10 @@ public class DomainServiceConfig {
     public ReaderInteractionUseCase readerInteractionUseCase(
             CommentRepositoryPort commentRepository,
             ChapterRepositoryPort chapterRepository,
-            EventPublisherPort eventPublisher) {
-        return transactional(new ReaderSocialService(commentRepository, chapterRepository, eventPublisher),
+            EventPublisherPort eventPublisher,
+            CommentProperties commentProperties) {
+        return transactional(new ReaderSocialService(commentRepository, chapterRepository, eventPublisher, Clock.systemUTC(),
+                        commentProperties.minInterval()),
                 ReaderInteractionUseCase.class, transactionManager);
     }
 
@@ -192,6 +196,13 @@ public class DomainServiceConfig {
                                        ChapterRepositoryPort chapters, WorkRepositoryPort works, CommentRepositoryPort comments) {
         return transactional(new NotificationService(notifications, library, chapters, works, comments, Clock.systemUTC()),
                 NotifyUseCase.class, transactionManager);
+    }
+
+    @Bean
+    public ModerateCommentsUseCase moderateCommentsUseCase(CommentReportRepositoryPort reports, CommentRepositoryPort comments,
+                                                           UserAccountRepositoryPort users) {
+        return transactional(new ModerationService(reports, comments, users, Clock.systemUTC()), ModerateCommentsUseCase.class,
+                transactionManager);
     }
 
     @Bean

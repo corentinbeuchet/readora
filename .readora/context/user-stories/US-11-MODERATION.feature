@@ -1,7 +1,6 @@
 # From docs/use-cases (2026-09): UC-37 report queue, UC-38 anti-spam. Broken pages are reported in US-06.
-# Priority tags: @must / @should / @could. @wip = not built yet (feature level: nothing here is built).
+# Priority tags: @must / @should / @could.
 
-@wip
 Feature: Keeping discussions healthy
   As a reader and as a moderator
   I want to report bad comments and have them handled quickly

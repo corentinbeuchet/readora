@@ -23,7 +23,7 @@ class UserAccountDomainTest {
 
         assertThat(account.getRoles()).containsExactly(Role.READER);
         assertThat(account.getEmail().value()).isEqualTo("reader@example.com");
-        assertThat(account.effectivePermissions()).containsExactlyInAnyOrder(Permission.COMMENT_WRITE, Permission.COMMENT_UPVOTE, Permission.LIBRARY_USE, Permission.PAGE_REPORT, Permission.RATE_WORK);
+        assertThat(account.effectivePermissions()).containsExactlyInAnyOrder(Permission.COMMENT_WRITE, Permission.COMMENT_UPVOTE, Permission.LIBRARY_USE, Permission.PAGE_REPORT, Permission.RATE_WORK, Permission.COMMENT_REPORT);
         assertThat(account.can(Permission.BOOKMARK_WRITE)).isFalse();
         assertThat(account.getDomainEvents()).singleElement().isInstanceOf(UserRegisteredEvent.class);
     }
@@ -130,5 +130,14 @@ class UserAccountDomainTest {
         assertThat(account.getAvatarUrl()).isNull();
         assertThatThrownBy(() -> account.updateProfile("   ", null, null))
                 .isInstanceOf(DomainValidationException.class);
+    }
+
+    @Test
+    @DisplayName("Moderators can moderate comments; readers and scanlators cannot")
+    void moderatorRole() {
+        assertThat(Role.MODERATOR.permissions()).contains(Permission.COMMENT_MODERATE, Permission.COMMENT_REPORT, Permission.COMMENT_WRITE);
+        assertThat(Role.READER.permissions()).doesNotContain(Permission.COMMENT_MODERATE);
+        assertThat(Role.SCANLATOR.permissions()).doesNotContain(Permission.COMMENT_MODERATE);
+        assertThat(Role.ADMIN.permissions()).contains(Permission.COMMENT_MODERATE);
     }
 }

@@ -1,5 +1,6 @@
 package com.readora.application.service;
 
+import com.readora.application.exception.CommentRateLimitedException;
 import com.readora.application.port.in.ReaderInteractionUseCase;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.CommentRepositoryPort;
@@ -12,6 +13,8 @@ import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.common.UserId;
 
+import java.time.Clock;
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 
@@ -19,16 +22,41 @@ public class ReaderSocialService implements ReaderInteractionUseCase {
     private final CommentRepositoryPort commentRepository;
     private final ChapterRepositoryPort chapterRepository;
     private final EventPublisherPort eventPublisher;
+    private final Clock clock;
+    private final Duration minInterval;
 
+    /// Without a rate limit (tests and tools).
     public ReaderSocialService(CommentRepositoryPort commentRepository, ChapterRepositoryPort chapterRepository, EventPublisherPort eventPublisher) {
+        this(commentRepository, chapterRepository, eventPublisher, Clock.systemUTC(), Duration.ZERO);
+    }
+
+    /// @param minInterval minimum time between two comments by the same author (anti-spam); zero disables it
+    public ReaderSocialService(CommentRepositoryPort commentRepository, ChapterRepositoryPort chapterRepository, EventPublisherPort eventPublisher,
+                               Clock clock, Duration minInterval) {
         this.commentRepository = Objects.requireNonNull(commentRepository, "CommentRepositoryPort cannot be null");
         this.chapterRepository = Objects.requireNonNull(chapterRepository, "ChapterRepositoryPort cannot be null");
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "EventPublisherPort cannot be null");
+        this.clock = Objects.requireNonNull(clock, "Clock cannot be null");
+        this.minInterval = Objects.requireNonNull(minInterval, "minInterval cannot be null");
+    }
+
+    /// @throws CommentRateLimitedException if the author commented less than `minInterval` ago
+    private void checkRateLimit(UserId authorId) {
+        if (minInterval.isZero()) {
+            return;
+        }
+        commentRepository.findLatestCommentTime(authorId).ifPresent(last -> {
+            Duration since = Duration.between(last, clock.instant());
+            if (since.compareTo(minInterval) < 0) {
+                throw new CommentRateLimitedException(Math.max(1, minInterval.minus(since).toSeconds()));
+            }
+        });
     }
 
     @Override
     public ChapterComment postRootComment(ChapterId chapterId, UserId authorId, String username, String text, Integer pageRef, boolean isSpoiler) {
         requirePublishedChapter(chapterId);
+        checkRateLimit(authorId);
         ChapterComment comment = ChapterComment.createRoot(chapterId, authorId, username, text, pageRef, isSpoiler);
         ChapterComment saved = commentRepository.save(comment);
         comment.pollDomainEvents().forEach(eventPublisher::publish);
@@ -38,7 +66,9 @@ public class ReaderSocialService implements ReaderInteractionUseCase {
     @Override
     public ChapterComment replyToComment(CommentId parentCommentId, UserId authorId, String username, String text, boolean isSpoiler) {
         ChapterComment parent = commentRepository.findById(parentCommentId)
+                .filter(c -> !c.isHidden())
                 .orElseThrow(() -> new NotFoundException("Parent comment", parentCommentId));
+        checkRateLimit(authorId);
 
         ChapterComment reply = ChapterComment.createReply(parent, authorId, username, text, isSpoiler);
         ChapterComment saved = commentRepository.save(reply);

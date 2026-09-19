@@ -41,6 +41,9 @@ public class ChapterCommentJpaEntity {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    @Column(nullable = false)
+    private boolean hidden;
+
     public ChapterCommentJpaEntity() {}
 
     public ChapterCommentJpaEntity(UUID id, UUID chapterId, String authorId, String authorUsername, String content, Integer pageReference, UUID parentId, int depth, boolean isSpoiler, int upvotes, Instant createdAt) {
@@ -68,4 +71,7 @@ public class ChapterCommentJpaEntity {
     public boolean isSpoiler() { return isSpoiler; }
     public int getUpvotes() { return upvotes; }
     public Instant getCreatedAt() { return createdAt; }
+
+    public boolean isHidden() { return hidden; }
+    public void setHidden(boolean hidden) { this.hidden = hidden; }
 }

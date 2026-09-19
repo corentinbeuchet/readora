@@ -36,14 +36,21 @@ public class CommentRepositoryAdapter implements CommentRepositoryPort {
 
     @Override
     public List<ChapterComment> findByChapterId(ChapterId chapterId) {
-        return springDataRepository.findByChapterIdOrderByCreatedAtAsc(chapterId.value()).stream()
+        return springDataRepository.findByChapterIdAndHiddenFalseOrderByCreatedAtAsc(chapterId.value()).stream()
                 .map(this::toDomain)
                 .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<Instant> findLatestCommentTime(UserId authorId) {
+        return springDataRepository.findLatestCreatedAt(authorId.value());
+    }
+
+    @Override
     public ChapterComment save(ChapterComment comment) {
         ChapterCommentJpaEntity entity = toEntity(comment);
+        entity.setHidden(comment.isHidden());
         ChapterCommentJpaEntity saved = springDataRepository.save(entity);
         return toDomain(saved);
     }
@@ -74,7 +81,8 @@ public class CommentRepositoryAdapter implements CommentRepositoryPort {
                 entity.getDepth(),
                 entity.isSpoiler(),
                 entity.getUpvotes(),
-                entity.getCreatedAt()
+                entity.getCreatedAt(),
+                entity.isHidden()
         );
     }
 

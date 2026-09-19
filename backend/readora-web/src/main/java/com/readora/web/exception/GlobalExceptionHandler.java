@@ -1,5 +1,6 @@
 package com.readora.web.exception;
 
+import com.readora.application.exception.CommentRateLimitedException;
 import com.readora.application.exception.StorageUnavailableException;
 import com.readora.application.exception.PaymentProviderException;
 import com.readora.application.exception.WebhookVerificationException;
@@ -42,6 +43,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleDomainValidationException(DomainValidationException ex) {
         log.warn("Domain rule violation: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(CommentRateLimitedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleCommentRateLimited(CommentRateLimitedException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(NotFoundException.class)

@@ -21,12 +21,21 @@ public class ChapterComment extends AggregateRoot<CommentId> {
     private final int depth;
     private boolean isSpoiler;
     private int upvotes;
+    private boolean hidden;
     private final Instant createdAt;
 
     public ChapterComment(CommentId id, ChapterId chapterId, UserId authorId, @Nullable String authorUsername, CommentContent content,
                           @Nullable Integer pageReference, @Nullable CommentId parentId, int depth, boolean isSpoiler, int upvotes,
                           @Nullable Instant createdAt) {
+        this(id, chapterId, authorId, authorUsername, content, pageReference, parentId, depth, isSpoiler, upvotes, createdAt, false);
+    }
+
+    /// @param hidden removed by a moderator: nobody sees it any more (US-11)
+    public ChapterComment(CommentId id, ChapterId chapterId, UserId authorId, @Nullable String authorUsername, CommentContent content,
+                          @Nullable Integer pageReference, @Nullable CommentId parentId, int depth, boolean isSpoiler, int upvotes,
+                          @Nullable Instant createdAt, boolean hidden) {
         super(id);
+        this.hidden = hidden;
         this.chapterId = Objects.requireNonNull(chapterId, "ChapterId cannot be null");
         this.authorId = Objects.requireNonNull(authorId, "AuthorId cannot be null");
         this.authorUsername = authorUsername != null ? authorUsername : "Anonymous";
@@ -105,5 +114,19 @@ public class ChapterComment extends AggregateRoot<CommentId> {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    /// A moderator removes the comment from the discussion.
+    ///
+    /// @throws DomainValidationException if it is already hidden
+    public void hide() {
+        if (hidden) {
+            throw new DomainValidationException("This comment is already hidden");
+        }
+        hidden = true;
+    }
+
+    public boolean isHidden() {
+        return hidden;
     }
 }

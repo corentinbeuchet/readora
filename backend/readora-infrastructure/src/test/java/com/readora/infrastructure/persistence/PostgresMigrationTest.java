@@ -12,6 +12,8 @@ import com.readora.domain.report.PageReportReason;
 import com.readora.domain.library.LibraryEntry;
 import com.readora.domain.social.ReadingStatus;
 import com.readora.infrastructure.persistence.adapter.ChapterReadRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.CommentReportRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.CommentRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.DiscoveryQueryAdapter;
 import com.readora.infrastructure.persistence.adapter.ChapterRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.LibraryRepositoryAdapter;
@@ -218,6 +220,34 @@ class PostgresMigrationTest {
         notificationRepository.markAllRead(reader, java.time.Instant.now());
         assertThat(notificationRepository.countUnread(reader)).isZero();
         assertThat(notificationRepository.findRecent(reader, 5)).hasSize(1);
+    }
+
+    @Autowired
+    private CommentReportRepositoryAdapter commentReports;
+
+    @Autowired
+    private CommentRepositoryAdapter comments;
+
+    @Test
+    @DisplayName("Hidden comments, the author's last comment time and comment reports work on PostgreSQL")
+    void moderationQueriesRunOnPostgres() {
+        Work work = workRepository.save(Work.create("PG Moderated", "", WorkType.MANGA, "c.png", Set.of("Action")));
+        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", null);
+        chapter.updatePages(List.of(PageAsset.create(1, "p1.webp", null)));
+        chapter.publish(UserId.of("qc"));
+        chapterRepository.save(chapter);
+        UserId author = UserId.of("pg-author");
+        var comment = comments.save(com.readora.domain.social.ChapterComment.createRoot(chapter.getId(), author, "pg", "Hello", null, false));
+        assertThat(comments.findLatestCommentTime(author)).isPresent();
+
+        var report = commentReports.save(com.readora.domain.moderation.CommentReport.open(comment.getId(), UserId.of("pg-reporter"),
+                com.readora.domain.moderation.CommentReportReason.SPAM, java.time.Instant.now()));
+        assertThat(commentReports.findOpen(10)).extracting(r -> r.getId()).contains(report.getId());
+
+        comment.hide();
+        comments.save(comment);
+        assertThat(comments.findByChapterId(chapter.getId())).isEmpty();
+        assertThat(comments.findById(comment.getId())).get().extracting(c -> c.isHidden()).isEqualTo(true);
     }
 
     private static void sleepPastClockTick() {
