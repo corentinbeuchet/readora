@@ -20,8 +20,7 @@ public record ListRequest(
         boolean published,
 
         @Size(max = 100, message = "A list holds at most 100 series")
-        @Valid
-        @Nullable List<Item> items
+        @Nullable List<@Valid Item> items
 ) {
     public record Item(
             @NotNull(message = "Each item needs a series") UUID workId,

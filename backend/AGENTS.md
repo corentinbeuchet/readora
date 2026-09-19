@@ -63,7 +63,8 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
   assertion in tests (Hibernate statistics or datasource-proxy) to catch N+1.
 
 ## Web
-- Requests: records with Bean Validation + messages (model: `dto/RegisterRequest.java`). Validate nested lists with `@Valid`.
+- Requests: records with Bean Validation + messages (model: `dto/RegisterRequest.java`). Validate list elements with `List<@Valid Item>` (`@Valid` on the
+  container is deprecated in Hibernate Validator 9).
 - Responses: records with `static fromDomain(...)`, wrapped in `ApiResponse.ok(...)`. Creates return 201.
 - Actor always from `currentUserProvider.require()`. `@PreAuthorize` with a specific permission on every mutating endpoint;
   the service re-checks fresh permissions where it matters (model: `BookmarkService`).

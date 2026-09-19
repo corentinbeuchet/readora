@@ -17,6 +17,5 @@ public record DirectPublishChapterRequest(
 
         @NotEmpty(message = "Pages list cannot be empty")
         @Size(max = 1000, message = "A chapter cannot have more than 1000 pages")
-        @Valid
-        List<PageAssetDto> pages
+        List<@Valid PageAssetDto> pages
 ) {}
