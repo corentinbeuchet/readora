@@ -102,4 +102,43 @@ describe('NotificationBell (US-10)', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.bell-panel [role="alert"]').textContent).toContain('Could not load your notifications.');
   });
+
+  it('closes on Escape and gives focus back to the bell', async () => {
+    await answerCount(0);
+    trigger().click();
+    http.expectOne(`${API}/notifications`).flush({ success: true, data: [NEW_CHAPTER], error: null });
+    await vi.advanceTimersByTimeAsync(0);
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.bell-list a') as HTMLElement).focus();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    fixture.detectChanges();
+    expect(trigger().getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(trigger());
+  });
+
+  it('does not poll while the tab is hidden', async () => {
+    await answerCount(1);
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    await vi.advanceTimersByTimeAsync(NOTIFICATION_POLL_MS);
+    http.expectNone(`${API}/notifications/unread-count`);
+    visibility.mockReturnValue('visible');
+    await vi.advanceTimersByTimeAsync(NOTIFICATION_POLL_MS);
+    await answerCount(2);
+    expect(fixture.nativeElement.querySelector('.bell-count').textContent.trim()).toBe('2');
+  });
+
+  it("never shows the previous account's notifications after switching user", async () => {
+    await answerCount(4);
+    trigger().click();
+    http.expectOne(`${API}/notifications`).flush({ success: true, data: [NEW_CHAPTER], error: null });
+    await vi.advanceTimersByTimeAsync(0);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.bell-list li')).toHaveLength(1);
+
+    await signIn(TestBed.inject(AuthStore), http, mockUser({ id: 'user-2', permissions: ['LIBRARY_USE'] }));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.bell-count')).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.bell-list li')).toHaveLength(0);
+  });
 });

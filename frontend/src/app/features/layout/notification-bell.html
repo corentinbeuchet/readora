@@ -1,5 +1,5 @@
 <div class="bell">
-  <button type="button" class="btn bell-trigger" [attr.aria-label]="label()" [attr.aria-expanded]="open()"
+  <button #trigger type="button" class="btn bell-trigger" [attr.aria-label]="label()" [attr.aria-expanded]="open()"
           aria-controls="notification-panel" (click)="toggle()">
     <span aria-hidden="true">🔔</span>
     @if (store.unread() > 0) {

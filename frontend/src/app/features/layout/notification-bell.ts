@@ -1,4 +1,4 @@
-import { Component, DOCUMENT, DestroyRef, afterNextRender, computed, inject, signal } from '@angular/core';
+import { Component, DOCUMENT, DestroyRef, ElementRef, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
@@ -15,7 +15,7 @@ export const NOTIFICATION_POLL_MS = 60_000;
   selector: 'app-notification-bell',
   templateUrl: './notification-bell.html',
   styleUrl: './notification-bell.scss',
-  host: { '(document:keydown.escape)': 'close()' }
+  host: { '(document:keydown.escape)': 'closeAndFocusTrigger()' }
 })
 export class NotificationBell {
   protected readonly store = inject(NotificationStore);
@@ -23,6 +23,8 @@ export class NotificationBell {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly timeAgo = timeAgo;
+
+  private readonly trigger = viewChild.required<ElementRef<HTMLButtonElement>>('trigger');
 
   protected readonly open = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -35,7 +37,12 @@ export class NotificationBell {
     // Browser only: the count follows navigation and a slow poll.
     afterNextRender(() => {
       void this.store.refreshCount();
-      const timer = this.document.defaultView?.setInterval(() => void this.store.refreshCount(), NOTIFICATION_POLL_MS);
+      // No polling while the tab is in the background; navigation and the next tick catch up.
+      const timer = this.document.defaultView?.setInterval(() => {
+        if (this.document.visibilityState !== 'hidden') {
+          void this.store.refreshCount();
+        }
+      }, NOTIFICATION_POLL_MS);
       this.destroyRef.onDestroy(() => this.document.defaultView?.clearInterval(timer));
       this.router.events
         .pipe(filter((event) => event instanceof NavigationEnd), takeUntilDestroyed(this.destroyRef))
@@ -54,6 +61,14 @@ export class NotificationBell {
 
   protected close(): void {
     this.open.set(false);
+  }
+
+  /** Escape: close the panel and give focus back to the bell, so it isn't lost in the hidden panel. */
+  protected closeAndFocusTrigger(): void {
+    if (this.open()) {
+      this.close();
+      this.trigger().nativeElement.focus();
+    }
   }
 
   protected async markAllRead(): Promise<void> {
