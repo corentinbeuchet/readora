@@ -55,4 +55,4 @@ jobs:
 
       - name: Production Health Check
         run: |
-          curl --fail --retry 5 --retry-delay 10 https://api.readora.com/api-docs || exit 1
+          curl --fail --retry 5 --retry-delay 10 https://api.readora.com/actuator/health/readiness || exit 1
