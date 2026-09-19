@@ -27,10 +27,12 @@ export function mockUser(overrides: Partial<UserProfile> = {}): UserProfile {
   };
 }
 
+/** A session as `/auth/login` returns it (token `jwt-1`, a reader), with `overrides`. */
+export function mockSession(overrides: Partial<AuthResponse> = {}): AuthResponse {
+  return { accessToken: 'jwt-1', tokenType: 'Bearer', expiresIn: 900, user: mockUser(), ...overrides };
+}
+
+/** `mockSession` wrapped in the API envelope, ready to `flush()`. */
 export function mockAuthResponse(overrides: Partial<AuthResponse> = {}): ApiResponse<AuthResponse> {
-  return {
-    success: true,
-    error: null,
-    data: { accessToken: 'jwt-1', tokenType: 'Bearer', expiresIn: 900, user: mockUser(), ...overrides }
-  };
+  return { success: true, error: null, data: mockSession(overrides) };
 }

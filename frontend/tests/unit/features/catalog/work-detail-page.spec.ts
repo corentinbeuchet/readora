@@ -69,6 +69,7 @@ describe('WorkDetailPage', () => {
     expect(fixture.nativeElement.textContent).not.toContain('No chapters have been published yet.');
   });
 
+  /** Given/When/Then model for component tests (see the frontend-component-tests skill). */
   describe('library and read markers (LIBRARY_USE)', () => {
     const CHAPTERS = ['1', '2', '3'].map((n) => ({
       id: `c-${n}`,
@@ -79,7 +80,11 @@ describe('WorkDetailPage', () => {
       pageCount: 10
     }));
 
-    async function openAsFreeReader(inLibrary: boolean): Promise<void> {
+    /**
+     * A free reader on the page of a 3-chapter series. What the tests assert on is passed in: whether the series is
+     * in the library, which chapters are finished and which one is next.
+     */
+    async function givenWorkPage(state: { inLibrary: boolean; finished: string[]; next: string }): Promise<void> {
       await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: ['LIBRARY_USE'] }));
       fixture = TestBed.createComponent(WorkDetailPage);
       fixture.componentRef.setInput('workId', WORK.id);
@@ -88,67 +93,79 @@ describe('WorkDetailPage', () => {
       http.expectOne(`${API}/works/${WORK.id}/chapters`).flush(ok(CHAPTERS));
       // Only this series' library entry is fetched; 404 = not in my library.
       const entry = http.expectOne(`${API}/library/${WORK.id}`);
-      if (inLibrary) {
+      if (state.inLibrary) {
         entry.flush(ok({ workId: WORK.id, status: 'READING', addedAt: '', updatedAt: '', newChapterNotifications: true }));
       } else {
         entry.flush(fail('Not found'), { status: 404, statusText: 'Not Found' });
       }
-      http.expectOne(`${API}/reading/works/${WORK.id}`).flush(ok({ workId: WORK.id, finishedChapterIds: ['c-1'], nextChapterId: 'c-2' }));
+      http.expectOne(`${API}/reading/works/${WORK.id}`).flush(ok({ workId: WORK.id, finishedChapterIds: state.finished, nextChapterId: state.next }));
       await settle(fixture);
     }
 
-    it('dims finished chapters, highlights the next one and continues from it', async () => {
-      await openAsFreeReader(true);
+    const chapterLinks = (): HTMLElement[] => Array.from(fixture.nativeElement.querySelectorAll('.chapter-link'));
+    const markPreviousButtons = (): HTMLButtonElement[] => Array.from(fixture.nativeElement.querySelectorAll('.mark-previous'));
+    const button = (label: string): HTMLButtonElement =>
+      Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('button')).find((b) => b.textContent?.includes(label))!;
+    const libraryStatus = (): string | undefined => fixture.nativeElement.querySelector('.library-status select')?.value;
 
-      const links: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.chapter-link'));
-      expect(links[0].classList).toContain('chapter-read');
-      expect(links[0].textContent).toContain('✓ Read');
-      expect(links[1].classList).toContain('chapter-next');
-      expect(links[1].textContent).toContain('Next up');
-      expect(links[2].classList).not.toContain('chapter-read');
+    it('dims finished chapters, highlights the next one and continues from it', async () => {
+      // Given
+      await givenWorkPage({ inLibrary: true, finished: ['c-1'], next: 'c-2' });
+
+      // Then
+      expect(chapterLinks()[0].classList).toContain('chapter-read');
+      expect(chapterLinks()[0].textContent).toContain('✓ Read');
+      expect(chapterLinks()[1].classList).toContain('chapter-next');
+      expect(chapterLinks()[1].textContent).toContain('Next up');
+      expect(chapterLinks()[2].classList).not.toContain('chapter-read');
       const primary: HTMLAnchorElement = fixture.nativeElement.querySelector('.work-actions a.btn-primary');
       expect(primary.textContent).toContain('Continue with chapter 2');
       expect(primary.getAttribute('href')).toBe('/read/c-2');
-      expect(fixture.nativeElement.querySelector('.library-status select').value).toBe('READING');
+      expect(libraryStatus()).toBe('READING');
     });
 
     it('Marking all previous chapters as read', async () => {
-      await openAsFreeReader(true);
-      const markButtons = (): HTMLButtonElement[] => Array.from(fixture.nativeElement.querySelectorAll('.mark-previous'));
-      // Chapter 1 has nothing before it and is read; chapter 2 only has read chapters before it.
-      expect(markButtons()).toHaveLength(1);
-      expect(markButtons()[0].textContent).toContain('before chapter 3');
+      // Given chapter 1 read: chapter 2 only has read chapters before it, so only chapter 3 offers the action
+      await givenWorkPage({ inLibrary: true, finished: ['c-1'], next: 'c-2' });
+      expect(markPreviousButtons()).toHaveLength(1);
+      expect(markPreviousButtons()[0].textContent).toContain('before chapter 3');
 
-      markButtons()[0].click();
-      const req = http.expectOne(`${API}/reading/chapters/c-3/read-up-to`);
-      expect(req.request.method).toBe('POST');
-      req.flush(ok({ workId: WORK.id, finishedChapterIds: ['c-1', 'c-2'], nextChapterId: 'c-3' }));
+      // When
+      markPreviousButtons()[0].click();
+      const request = http.expectOne(`${API}/reading/chapters/c-3/read-up-to`);
+      request.flush(ok({ workId: WORK.id, finishedChapterIds: ['c-1', 'c-2'], nextChapterId: 'c-3' }));
       await settle(fixture);
 
-      const links: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.chapter-link'));
-      expect(links[1].classList).toContain('chapter-read');
-      expect(links[2].classList).toContain('chapter-next');
-      expect(markButtons()).toHaveLength(0);
+      // Then
+      expect(request.request.method).toBe('POST');
+      expect(chapterLinks()[1].classList).toContain('chapter-read');
+      expect(chapterLinks()[2].classList).toContain('chapter-next');
+      expect(markPreviousButtons()).toHaveLength(0);
     });
 
     it('adds the series to the library, then removes it', async () => {
-      await openAsFreeReader(false);
+      // Given
+      await givenWorkPage({ inLibrary: false, finished: [], next: 'c-1' });
 
-      const add: HTMLButtonElement = Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('.work-actions button')).find((b) =>
-        b.textContent?.includes('Add to library')
-      )!;
-      add.click();
+      // When
+      button('Add to library').click();
       const save = http.expectOne(`${API}/library/${WORK.id}`);
-      expect(save.request.method).toBe('PUT');
-      expect(save.request.body).toEqual({});
       save.flush(ok({ workId: WORK.id, status: 'READING', addedAt: '', updatedAt: '' }));
       await settle(fixture);
-      expect(fixture.nativeElement.querySelector('.library-status select').value).toBe('READING');
 
-      fixture.nativeElement.querySelector('.work-actions .btn-link').click();
+      // Then
+      expect(save.request.method).toBe('PUT');
+      expect(save.request.body).toEqual({});
+      expect(libraryStatus()).toBe('READING');
+
+      // When
+      button('Remove from library').click();
       http.expectOne(`${API}/library/${WORK.id}`).flush(null, { status: 204, statusText: 'No Content' });
       await settle(fixture);
-      expect(fixture.nativeElement.textContent).toContain('+ Add to library');
+
+      // Then
+      expect(libraryStatus()).toBeUndefined();
+      expect(button('Add to library')).toBeDefined();
     });
   });
 });

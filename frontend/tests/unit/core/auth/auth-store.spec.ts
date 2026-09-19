@@ -1,11 +1,13 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { firstValueFrom } from 'rxjs';
 import { AuthStore, SESSION_HINT_KEY } from '@app/core/auth/auth-store';
-import { mockAuthResponse, mockUser } from './auth-fixtures';
+import { AuthResponse } from '@app/core/models/readora.models';
+import { mockAuthResponse, mockSession, mockUser } from './auth-fixtures';
 import { BrowserStorage } from '@app/core/storage/browser-storage';
 import { API, MemoryStorage, fail, ok, provideHttpTesting } from '../../test-utils';
 
+/** Given/When/Then model for service and store tests (see the frontend-unit-tests skill). */
 describe('AuthStore', () => {
   let store: AuthStore;
   let http: HttpTestingController;
@@ -20,20 +22,49 @@ describe('AuthStore', () => {
 
   afterEach(() => http.verify());
 
+  /** Starts a login and returns its request (to assert on) and a `complete(response)` that answers it. */
+  function whenLoggingIn(email = 'reader@readora.test'): { request: TestRequest; complete: (response: AuthResponse) => Promise<AuthResponse> } {
+    const login = firstValueFrom(store.login({ email, password: 'Sup3rSecret!' }));
+    const request = http.expectOne(`${API}/auth/login`);
+    return {
+      request,
+      complete: (response) => {
+        request.flush(ok(response));
+        return login;
+      }
+    };
+  }
+
+  /** A signed-in session built from `response` (defaults: a reader with token `jwt-1`). */
+  async function givenSignedIn(response: AuthResponse = mockSession()): Promise<void> {
+    await whenLoggingIn().complete(response);
+  }
+
+  async function whenLoggingOut(): Promise<TestRequest> {
+    const logout = firstValueFrom(store.logout());
+    const request = http.expectOne(`${API}/auth/logout`);
+    request.flush(ok('Logged out'));
+    await logout;
+    return request;
+  }
+
   it('starts anonymous with no permissions', () => {
+    // Given a fresh store (beforeEach)
+
+    // Then
     expect(store.isAuthenticated()).toBe(false);
     expect(store.can('COMMENT_WRITE')).toBe(false);
     expect(store.accessToken()).toBeNull();
   });
 
   it('login stores the token in memory and exposes permissions', async () => {
-    const login = firstValueFrom(store.login({ email: 'reader@readora.test', password: 'Sup3rSecret!' }));
-    const req = http.expectOne(`${API}/auth/login`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.withCredentials).toBe(true);
-    req.flush(mockAuthResponse());
-    await login;
+    // When
+    const login = whenLoggingIn();
+    await login.complete(mockSession({ accessToken: 'jwt-1' }));
 
+    // Then
+    expect(login.request.request.method).toBe('POST');
+    expect(login.request.request.withCredentials).toBe(true);
     expect(store.isAuthenticated()).toBe(true);
     expect(store.accessToken()).toBe('jwt-1');
     expect(store.can('COMMENT_WRITE')).toBe(true);
@@ -41,73 +72,88 @@ describe('AuthStore', () => {
     expect(store.hasAnyPermission('CHAPTER_PUBLISH', 'COMMENT_UPVOTE')).toBe(true);
     expect(store.hasAllPermissions('CHAPTER_PUBLISH', 'COMMENT_UPVOTE')).toBe(false);
     expect(store.isPremium()).toBe(false);
-    // Token must never be persisted: only the in-memory signal holds it.
-    expect(typeof globalThis.localStorage === 'undefined' || globalThis.localStorage.getItem('accessToken') === null).toBe(true);
+    // The token is never persisted: only the in-memory signal holds it.
+    expect(JSON.stringify([...storage.values])).not.toContain('jwt-1');
   });
 
   it('refresh rotates the token, is shared between concurrent callers and clears the session on 401', async () => {
+    // When two callers refresh at once
     const a = firstValueFrom(store.refresh());
     const b = firstValueFrom(store.refresh());
     const requests = http.match(`${API}/auth/refresh`);
-    expect(requests.length).toBe(1);
     requests[0].flush(mockAuthResponse({ accessToken: 'jwt-2' }));
     await Promise.all([a, b]);
+
+    // Then one request served both
+    expect(requests).toHaveLength(1);
     expect(store.accessToken()).toBe('jwt-2');
 
+    // When the refresh cookie is rejected
     const failed = firstValueFrom(store.refresh());
     http.expectOne(`${API}/auth/refresh`).flush(fail('expired'), { status: 401, statusText: 'Unauthorized' });
+
+    // Then
     expect(await failed).toBeNull();
     expect(store.isAuthenticated()).toBe(false);
   });
 
   it('restoreSession never throws even when the API is unreachable', async () => {
+    // Given this browser signed in before
     storage.write(SESSION_HINT_KEY, true);
+
+    // When
     const restore = firstValueFrom(store.restoreSession());
     http.expectOne(`${API}/auth/refresh`).error(new ProgressEvent('error'));
+
+    // Then
     expect(await restore).toBeNull();
     expect(store.restoring()).toBe(false);
   });
 
   it('premium user exposes plan permissions and isPremium', async () => {
-    const login = firstValueFrom(store.login({ email: 'p@readora.test', password: 'Sup3rSecret!' }));
-    http.expectOne(`${API}/auth/login`).flush(
-      mockAuthResponse({
+    // When
+    await whenLoggingIn('p@readora.test').complete(
+      mockSession({
         user: mockUser({
           permissions: ['COMMENT_WRITE', 'COMMENT_UPVOTE', 'BOOKMARK_READ', 'BOOKMARK_WRITE'],
           subscription: { plan: 'PREMIUM', status: 'ACTIVE', active: true, currentPeriodEnd: '2027-01-01T00:00:00Z', planPermissions: ['BOOKMARK_READ', 'BOOKMARK_WRITE'] }
         })
       })
     );
-    await login;
+
+    // Then
     expect(store.isPremium()).toBe(true);
     expect(store.can('BOOKMARK_WRITE')).toBe(true);
   });
 
   it('logout revokes the cookie server-side and clears the session locally', async () => {
-    const login = firstValueFrom(store.login({ email: 'reader@readora.test', password: 'Sup3rSecret!' }));
-    http.expectOne(`${API}/auth/login`).flush(mockAuthResponse());
-    await login;
+    // Given
+    await givenSignedIn();
 
-    const logout = firstValueFrom(store.logout());
-    const req = http.expectOne(`${API}/auth/logout`);
-    expect(req.request.withCredentials).toBe(true);
-    req.flush(ok('Logged out'));
-    await logout;
+    // When
+    const logout = await whenLoggingOut();
+
+    // Then
+    expect(logout.request.withCredentials).toBe(true);
     expect(store.isAuthenticated()).toBe(false);
     expect(store.user()).toBeNull();
   });
 
   it('remembers that this browser has a session (a flag, never the token) until logout', async () => {
+    // Given
     expect(storage.read(SESSION_HINT_KEY)).toBeNull();
-    const login = firstValueFrom(store.login({ email: 'reader@readora.test', password: 'Sup3rSecret!' }));
-    http.expectOne(`${API}/auth/login`).flush(mockAuthResponse({ accessToken: 'jwt-secret' }));
-    await login;
+
+    // When
+    await givenSignedIn(mockSession({ accessToken: 'jwt-secret' }));
+
+    // Then
     expect(storage.read(SESSION_HINT_KEY)).toBe(true);
     expect(JSON.stringify([...storage.values])).not.toContain('jwt-secret');
 
-    const logout = firstValueFrom(store.logout());
-    http.expectOne(`${API}/auth/logout`).flush(ok('Logged out'));
-    await logout;
+    // When
+    await whenLoggingOut();
+
+    // Then
     expect(storage.read(SESSION_HINT_KEY)).toBe(false);
   });
 });

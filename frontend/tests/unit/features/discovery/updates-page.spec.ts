@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { UpdatesPage } from '@app/features/discovery/updates-page';
@@ -19,6 +19,7 @@ function release(id: string, title: string, number: string, minutesAgo: number, 
   };
 }
 
+/** Given/When/Then model for routed-page tests (see the frontend-component-tests skill). */
 describe('UpdatesPage (US-08)', () => {
   let harness: RouterTestingHarness;
   let http: HttpTestingController;
@@ -38,48 +39,64 @@ describe('UpdatesPage (US-08)', () => {
   });
 
   const el = (): HTMLElement => harness.routeNativeElement as HTMLElement;
+  const rows = (): HTMLElement[] => Array.from(el().querySelectorAll('.release'));
 
-  async function open(url: string, releases: Release[], mine: boolean): Promise<void> {
+  /** Opens `url` through the real router; returns the feed request, still unanswered, so the test decides the answer. */
+  async function givenUpdatesPageAt(url: string): Promise<TestRequest> {
     harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(url);
     await settle(harness);
-    const req = http.expectOne((r) => r.url === `${API}/updates`);
-    expect(req.request.params.get('mine')).toBe(String(mine));
-    req.flush(ok(releases));
+    return http.expectOne((r) => r.url === `${API}/updates`);
+  }
+
+  async function whenFeedAnswers(request: TestRequest, releases: Release[]): Promise<void> {
+    request.flush(ok(releases));
     await settle(harness);
   }
 
   it('lists the newest chapters with their age and a Read now link; guests get no "My library" tab', async () => {
-    await open('/updates', [release('op-180', 'One Piece', '180', 10), release('sl-6', 'Solo Leveling', '6', 120)], false);
+    // Given
+    const feed = await givenUpdatesPageAt('/updates');
 
-    const rows = el().querySelectorAll('.release');
-    expect(rows[0].textContent).toContain('One Piece');
-    expect(rows[0].textContent).toContain('10 minutes ago');
-    expect(rows[0].querySelector<HTMLAnchorElement>('a.btn-primary')!.getAttribute('href')).toBe('/read/op-180');
+    // When
+    await whenFeedAnswers(feed, [release('op-180', 'One Piece', '180', 10), release('sl-6', 'Solo Leveling', '6', 120)]);
+
+    // Then
+    expect(feed.request.params.get('mine')).toBe('false');
+    expect(rows()[0].textContent).toContain('One Piece');
+    expect(rows()[0].textContent).toContain('10 minutes ago');
+    expect(rows()[0].querySelector<HTMLAnchorElement>('a.btn-primary')!.getAttribute('href')).toBe('/read/op-180');
     expect(el().querySelector('.feed-tabs')).toBeNull();
   });
 
   it('shows only my library with read badges when "My library" is chosen', async () => {
+    // Given
     await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: ['LIBRARY_USE'] }));
-    await open('/updates?feed=mine', [release('sl-6', 'Solo Leveling', '6', 5), release('sl-5', 'Solo Leveling', '5', 60, true)], true);
+    const feed = await givenUpdatesPageAt('/updates?feed=mine');
 
+    // When
+    await whenFeedAnswers(feed, [release('sl-6', 'Solo Leveling', '6', 5), release('sl-5', 'Solo Leveling', '5', 60, true)]);
+
+    // Then
+    expect(feed.request.params.get('mine')).toBe('true');
     expect(el().querySelector('.tab[aria-current="page"]')!.textContent!.trim()).toBe('My library');
-    const rows = el().querySelectorAll('.release');
-    expect(rows[1].classList).toContain('release-read');
-    expect(rows[1].textContent).toContain('Read');
-    expect(rows[0].querySelector('.badge')).toBeNull();
+    expect(rows()[1].classList).toContain('release-read');
+    expect(rows()[1].textContent).toContain('Read');
+    expect(rows()[0].querySelector('.badge')).toBeNull();
   });
 
   it('offers a retry when the feed fails', async () => {
-    harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl('/updates');
+    // Given
+    const failing = await givenUpdatesPageAt('/updates');
+    failing.flush(fail('down'));
     await settle(harness);
-    http.expectOne((r) => r.url === `${API}/updates`).flush(fail('down'));
-    await settle(harness);
+
+    // When
     el().querySelector<HTMLButtonElement>('[role="alert"] button')!.click();
     await settle(harness);
-    http.expectOne((r) => r.url === `${API}/updates`).flush(ok([]));
-    await settle(harness);
+    await whenFeedAnswers(http.expectOne((r) => r.url === `${API}/updates`), []);
+
+    // Then
     expect(el().textContent).toContain('No chapters have been published yet.');
   });
 });
