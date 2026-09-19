@@ -4,20 +4,6 @@
   margin: 1rem 0 1.5rem;
 }
 
-.tab {
-  padding: 0.4rem 0.9rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  color: var(--muted);
-  text-decoration: none;
-
-  &.active {
-    border-color: var(--accent);
-    color: var(--accent);
-    font-weight: 600;
-  }
-}
-
 .release-list {
   list-style: none;
   display: flex;
@@ -54,9 +40,3 @@
   color: var(--muted);
 }
 
-.pager {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1.5rem;
-}

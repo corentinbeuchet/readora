@@ -6,25 +6,6 @@
   margin: 1rem 0;
 }
 
-.tab {
-  padding: 0.4rem 0.9rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  color: var(--muted);
-  text-decoration: none;
-
-  &.active {
-    border-color: var(--accent);
-    color: var(--accent);
-    font-weight: 600;
-  }
-}
-
-.tab-sm {
-  padding: 0.25rem 0.7rem;
-  font-size: 0.85rem;
-}
-
 .ranking-list {
   list-style: none;
   display: flex;

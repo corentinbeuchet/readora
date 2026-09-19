@@ -375,3 +375,37 @@ fieldset.field {
   justify-content: flex-end;
   gap: 0.5rem;
 }
+
+/* Link tabs (router links with .active), e.g. library statuses, rankings, updates. */
+.tab {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  text-decoration: none;
+
+  &.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.tab-sm {
+  padding: 0.25rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+/* Previous / next page links under a list. */
+.pager {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
