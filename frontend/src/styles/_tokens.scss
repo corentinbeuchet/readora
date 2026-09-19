@@ -2,22 +2,25 @@
 // Emitted once through `@use 'tokens'` in styles.scss.
 
 :root {
-  --bg: #0b1120;
-  --surface: #0f172a;
-  --surface-2: #1e293b;
-  --border: #1e293b;
-  --text: #f8fafc;
-  --muted: #94a3b8;
-  --accent: #38bdf8;
-  --accent-strong: #0ea5e9;
-  --danger: #f87171;
-  --success: #4ade80;
-  --violet: #a78bfa;
+  /* Follows the device setting; ThemeStore pins one with data-theme. Each colour is light-dark(<light>, <dark>). */
+  color-scheme: light dark;
+
+  --bg: light-dark(#f8fafc, #0b1120);
+  --surface: light-dark(#ffffff, #0f172a);
+  --surface-2: light-dark(#e2e8f0, #1e293b);
+  --border: light-dark(#cbd5e1, #1e293b);
+  --text: light-dark(#0f172a, #f8fafc);
+  --muted: light-dark(#475569, #94a3b8);
+  --accent: light-dark(#0369a1, #38bdf8);
+  --accent-strong: light-dark(#075985, #0ea5e9);
+  --danger: light-dark(#b91c1c, #f87171);
+  --success: light-dark(#166534, #4ade80);
+  --violet: light-dark(#6d28d9, #a78bfa);
   /* Text on filled accent / danger / success backgrounds (contrast AA). */
-  --on-accent: #082f49;
-  --on-danger: #1f0707;
-  --on-success: #052e16;
-  --star: #facc15;
+  --on-accent: light-dark(#ffffff, #082f49);
+  --on-danger: light-dark(#ffffff, #1f0707);
+  --on-success: light-dark(#ffffff, #052e16);
+  --star: light-dark(#854d0e, #facc15);
   /* Tints of the colours above (backgrounds, borders); they follow the theme with their base colour. */
   --accent-tint: color-mix(in srgb, var(--accent) 8%, transparent);
   --accent-soft: color-mix(in srgb, var(--accent) 15%, transparent);
@@ -27,11 +30,11 @@
   --success-soft: color-mix(in srgb, var(--success) 10%, transparent);
   --success-line: color-mix(in srgb, var(--success) 30%, transparent);
   /* Elevation: popovers, menus and raised cards. */
-  --shadow-color: rgb(0 0 0 / 0.4);
+  --shadow-color: light-dark(rgb(15 23 42 / 0.15), rgb(0 0 0 / 0.4));
   --shadow-popover: 0 10px 30px var(--shadow-color);
   --shadow-card: 0 4px 12px var(--shadow-color);
   /* Dims the page behind a dialog. */
-  --scrim: rgb(2 6 23 / 0.7);
+  --scrim: light-dark(rgb(15 23 42 / 0.45), rgb(2 6 23 / 0.7));
   /* On top of artwork (covers, page thumbnails): dark in every theme, with light text. */
   --overlay: rgb(0 0 0 / 0.75);
   --overlay-strong: rgb(0 0 0 / 0.85);
@@ -66,4 +69,12 @@
   --fw-semibold: 600;
   --fw-bold: 700;
   --fw-black: 800;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
