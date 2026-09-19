@@ -54,9 +54,10 @@ async function whenIChooseTheReadingMode(page: Page, mode: 'Vertical' | 'Paged')
   await page.getByRole('button', { name: mode }).click();
 }
 
+/** On phones and portrait tablets the primary navigation sits behind the "Menu" button. */
 async function thenICanSeeTheSiteHeader(page: Page): Promise<void> {
   await expect(page.getByRole('link', { name: 'Readora home' })).toBeVisible();
-  await expect(page.getByRole('navigation', { name: 'Primary' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Primary' }).or(page.getByRole('button', { name: 'Menu' }))).toBeVisible();
 }
 
 async function thenICanSeeTheHeading(page: Page, name: string): Promise<void> {
