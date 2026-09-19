@@ -30,8 +30,8 @@ Source of truth: `frontend/AGENTS.md` "Tests". Model specs:
   for requests owned by a child with its own spec (model: ratings in `work-detail-page.spec.ts`), with a comment.
 - `settle(fixture)` after creating the component and after each flush while an `httpResource` is involved
   (`whenStable()` waits forever while a request is pending). Otherwise `await fixture.whenStable()`.
-- Signed-in state: `await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: [...] }))`: permissions
-  the test depends on are explicit arguments.
+- Signed-in state: `await givenIAmSignedInWith(['LIBRARY_USE'])` (`auth-fixtures.ts`): the permissions the test
+  depends on are explicit arguments.
 - `@defer` blocks: `deferBlockBehavior: DeferBlockBehavior.Manual` and render the state you test.
 
 ## Routing

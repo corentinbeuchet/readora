@@ -156,7 +156,7 @@ Checklists per test type: skills `frontend-unit-tests` (services, stores, pure f
   ones move to the helper files; no logic in test bodies; comments only for a non-obvious "why".
   E2E: fixtures create the data, methods take `page`. Models: `core/auth/auth-store.spec.ts`,
   `features/catalog/work-detail-page.spec.ts` (library block), `features/discovery/updates-page.spec.ts`,
-  `tests/e2e/reader-viewer.spec.ts`. Other specs follow when next edited.
+  `tests/e2e/reader-viewer.spec.ts`. Every spec follows it.
 - **No flaky tests:**
   - No real waits. Time is faked: fake timers, and `FIXED_NOW` / `freezeDate()` for anything relative to "now".
   - `vitest-base.config.ts` auto-restores spies, stubbed globals and env stubs; fake timers need `useRealTimers()`
@@ -168,7 +168,7 @@ Checklists per test type: skills `frontend-unit-tests` (services, stores, pure f
   - A flaky test is fixed, or skipped with a backlog id here, the same day. Never retried away, never given a longer timeout.
 - Shared helpers, never local copies: `tests/unit/test-utils.ts` (`API`, `ok(data)`/`fail(msg)` envelopes,
   `provideHttpTesting()`, `settle(fixtureOrHarness)`, `resourcesStable()`, `ANY_URL` routes, `MemoryStorage`,
-  `FIXED_NOW`, `freezeDate()`) and `tests/unit/core/auth/auth-fixtures.ts` (`signIn`, `mockUser`, `mockSession`).
+  `FIXED_NOW`, `freezeDate()`) and `tests/unit/core/auth/auth-fixtures.ts` (`givenIAmSignedInWith(permissions)`, `signIn`, `mockUser`, `mockSession`).
   `http.verify()` in `afterEach`; `http.match` in `afterEach` only for requests a child with its own spec owns.
 - Real router: `provideRouter(ANY_URL)` or real routes + `RouterTestingHarness`, assert `router.url`; never mock
   `navigate`/`navigateByUrl`. Guards are covered through the real table (`tests/unit/app.guarded-routes.spec.ts`).

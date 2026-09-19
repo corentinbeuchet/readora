@@ -18,7 +18,7 @@ Components and routed pages use the `frontend-component-tests` skill instead.
 - Browser storage: `{ provide: BrowserStorage, useValue: new MemoryStorage() }` (values are JSON strings like the real
   storage; plant corrupt values in `storage.values`). Never real `localStorage`.
 - Helpers live in `tests/unit/test-utils.ts` (`API`, `ok`, `fail`, `provideHttpTesting`, `MemoryStorage`, `FIXED_NOW`,
-  `freezeDate`, `resourcesStable`) and `tests/unit/core/auth/auth-fixtures.ts` (`signIn`, `mockUser`, `mockSession`,
+  `freezeDate`, `resourcesStable`) and `tests/unit/core/auth/auth-fixtures.ts` (`givenIAmSignedInWith`, `signIn`, `mockUser`, `mockSession`,
   `mockAuthResponse`). Never a local copy.
 
 ## Signals, effects and resources
