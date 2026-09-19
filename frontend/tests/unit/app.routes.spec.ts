@@ -2,7 +2,7 @@ import { routes } from '@app/app.routes';
 import { serverRoutes } from '@app/app.routes.server';
 import { PrerenderFallback, RenderMode } from '@angular/ssr';
 import { ReaderPage } from '@app/features/reader/reader-page';
-import { KanbanBoard } from '@app/features/scanlation/components/kanban-board';
+import { ScanlationBoardPage } from '@app/features/scanlation/scanlation-board-page';
 
 describe('app routes', () => {
   it('lazy-load every page (loadComponent, never an eager component)', () => {
@@ -17,8 +17,8 @@ describe('app routes', () => {
   it('resolve the reader and the scanlation board lazily', async () => {
     const load = (path: string) => (routes.find((r) => r.path === path)!.loadComponent as () => Promise<unknown>)();
     expect(await load('read/:chapterId')).toBe(ReaderPage);
-    expect(await load('scanlation')).toBe(KanbanBoard);
-    expect(await load('scanlation/:projectId')).toBe(KanbanBoard);
+    expect(await load('scanlation')).toBe(ScanlationBoardPage);
+    expect(await load('scanlation/:projectId')).toBe(ScanlationBoardPage);
   });
 
   it('give every page an explicit server render mode, with a browser fallback for prerendered params', () => {

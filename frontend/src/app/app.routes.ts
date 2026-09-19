@@ -57,13 +57,13 @@ export const routes: Routes = [
   },
   {
     path: 'scanlation',
-    loadComponent: () => import('@app/features/scanlation/components/kanban-board').then((m) => m.KanbanBoard),
+    loadComponent: () => import('@app/features/scanlation/scanlation-board-page').then((m) => m.ScanlationBoardPage),
     canActivate: [permissionGuard],
     data: { permission: 'PROJECT_VIEW' }
   },
   {
     path: 'scanlation/:projectId',
-    loadComponent: () => import('@app/features/scanlation/components/kanban-board').then((m) => m.KanbanBoard),
+    loadComponent: () => import('@app/features/scanlation/scanlation-board-page').then((m) => m.ScanlationBoardPage),
     canActivate: [permissionGuard],
     data: { permission: 'PROJECT_VIEW' }
   },

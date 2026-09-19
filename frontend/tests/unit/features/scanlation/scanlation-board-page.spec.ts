@@ -2,12 +2,12 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { KanbanBoard } from '@app/features/scanlation/components/kanban-board';
+import { ScanlationBoardPage } from '@app/features/scanlation/scanlation-board-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { ScanlationProject } from '@app/core/models/readora.models';
-import { environment } from '../../../../../src/environments/environment';
-import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
-import { settle } from '../../../test-utils';
+import { environment } from '../../../../src/environments/environment';
+import { mockUser, signIn } from '../../core/auth/auth-fixtures';
+import { settle } from '../../test-utils';
 
 const API = environment.apiUrl;
 const PROJECT_ID = 'proj-1';
@@ -24,19 +24,19 @@ const PROJECT: ScanlationProject = {
   ]
 };
 
-describe('KanbanBoard (API-driven, permission gated)', () => {
-  let fixture: ComponentFixture<KanbanBoard>;
+describe('ScanlationBoardPage (API-driven, permission gated)', () => {
+  let fixture: ComponentFixture<ScanlationBoardPage>;
   let http: HttpTestingController;
   let store: AuthStore;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [KanbanBoard],
+      imports: [ScanlationBoardPage],
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     store = TestBed.inject(AuthStore);
-    fixture = TestBed.createComponent(KanbanBoard);
+    fixture = TestBed.createComponent(ScanlationBoardPage);
     fixture.componentRef.setInput('projectId', PROJECT_ID);
   });
 

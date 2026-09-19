@@ -8,8 +8,8 @@ import { Dialog } from '@app/shared/ui/dialog';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { WorkflowTask } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
-import { STAGES, tasksByStage, withTask, withTaskStage } from '@app/features/scanlation/services/scanlation-board';
-import { PageReportsPanel } from './page-reports-panel';
+import { STAGES, tasksByStage, withTask, withTaskStage } from './services/scanlation-board';
+import { PageReportsPanel } from './components/page-reports-panel';
 import { asyncAction } from '@app/core/utils/async-action';
 import { FieldErrors } from '@app/shared/forms/field-errors';
 import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
@@ -20,12 +20,12 @@ interface SubmitModel {
 }
 
 @Component({
-  selector: 'app-kanban-board',
+  selector: 'app-scanlation-board-page',
   imports: [FieldErrors, AriaInvalidDirective, RouterLink, FormField, HasPermissionDirective, Dialog, PageReportsPanel],
-  templateUrl: './kanban-board.html',
-  styleUrl: './kanban-board.scss'
+  templateUrl: './scanlation-board-page.html',
+  styleUrl: './scanlation-board-page.scss'
 })
-export class KanbanBoard {
+export class ScanlationBoardPage {
   protected readonly auth = inject(AuthStore);
   private readonly scanlationApi = inject(ScanlationApi);
   private readonly seo = inject(SeoService);
