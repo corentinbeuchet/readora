@@ -147,13 +147,16 @@
 ## Tests (Vitest in `tests/unit`, mirroring `src/app`; Playwright in `tests/e2e`)
 Checklists per test type: skills `frontend-unit-tests` (services, stores, pure functions, guards, interceptors),
 `frontend-component-tests` (components, routed pages, directives), `frontend-e2e-tests` (Playwright).
-- **Given / When / Then** (team convention, chosen after Fowler, SWE at Google ch. 12, Kent C. Dodds, xUnit Test
-  Patterns): every test has `// Given`, `// When`, `// Then` sections. `given…` helpers build the precondition,
-  return what the test uses, and take the values the test asserts on as arguments (no hidden "mystery guest" data).
-  `when…` helpers only for multi-step actions shared by 2+ tests. **No `then…` helpers: assertions stay in the test.**
-  No logic in tests; `beforeEach` only for TestBed setup/cleanup. E2E: Playwright fixtures are the Given.
-  Models: `core/auth/auth-store.spec.ts`, `features/catalog/work-detail-page.spec.ts` (library block),
-  `features/discovery/updates-page.spec.ts`, `tests/e2e/reader-viewer.spec.ts`. Other specs follow when next edited.
+- **Given / When / Then as methods** (team convention): a test body is only calls to extracted first-person methods
+  `given…` / `when…` / `then…` (`whenIVisit(page, '/read')`, `thenICanSeePage(page, 1)`), without phase comments and
+  without raw `expect`/DOM/HTTP code. Guard-rails (from Fowler, SWE at Google ch. 12, Kent C. Dodds, xUnit Test
+  Patterns, whose concern is hidden setup and assertions far from the test): the data the scenario is about is an
+  argument on both sides (`givenIAmOnTheWorkPage({ inLibrary: false })`, `thenChapterIsRead(1)`); one `then…`
+  checks one fact; one `when…` is one action; methods are function declarations after the tests (hoisted); shared
+  ones move to the helper files; no logic in test bodies; comments only for a non-obvious "why".
+  E2E: fixtures create the data, methods take `page`. Models: `core/auth/auth-store.spec.ts`,
+  `features/catalog/work-detail-page.spec.ts` (library block), `features/discovery/updates-page.spec.ts`,
+  `tests/e2e/reader-viewer.spec.ts`. Other specs follow when next edited.
 - **No flaky tests:**
   - No real waits. Time is faked: fake timers, and `FIXED_NOW` / `freezeDate()` for anything relative to "now".
   - `vitest-base.config.ts` auto-restores spies, stubbed globals and env stubs; fake timers need `useRealTimers()`

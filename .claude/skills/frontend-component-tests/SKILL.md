@@ -1,6 +1,6 @@
 ---
 name: frontend-component-tests
-description: How to write and review Readora frontend component tests (Vitest + TestBed driving the DOM) for components, routed pages (RouterTestingHarness), directives and forms in frontend/tests/unit. Use whenever such a spec is created or edited, an @ui scenario gets its test, or a component test is flaky. Covers the Given/When/Then convention and the anti-flakiness rules.
+description: How to write and review Readora frontend component tests (Vitest + TestBed driving the DOM) for components, routed pages (RouterTestingHarness), directives and forms in frontend/tests/unit. Use whenever such a spec is created or edited, an @ui scenario gets its test, or a component test is flaky. Covers the given/when/then methods convention and the anti-flakiness rules.
 ---
 
 # Frontend component tests (components, routed pages, directives)
@@ -39,33 +39,55 @@ Source of truth: `frontend/AGENTS.md` "Tests". Model specs:
   `RouterTestingHarness.create()` + `harness.navigateByUrl(url)`; assert `router.url`. Never spy on or mock
   `navigate` / `navigateByUrl` (a spy that only counts real navigations is fine).
 - Route/query params reach the page as inputs (`withComponentInputBinding()`), so navigate with the query string
-  (model: `updates-page.spec.ts` `givenUpdatesPageAt('/updates?feed=mine')`).
+  (model: `updates-page.spec.ts` `givenIOpenTheUpdates('/updates?feed=mine')`).
 - Where a guarded URL lands is covered by `tests/unit/app.guarded-routes.spec.ts` (real route table).
 
 ## Given / When / Then (team convention, all test types)
+Model: `features/catalog/work-detail-page.spec.ts`.
 ```ts
 it('adds the series to the library, then removes it', async () => {
-  // Given
-  await givenWorkPage({ inLibrary: false, finished: [], next: 'c-1' });
+  await givenIAmOnTheWorkPage({ inLibrary: false, finished: [], next: 'c-1' });
 
-  // When
-  button('Add to library').click();
-  const save = http.expectOne(`${API}/library/${WORK.id}`);
-  save.flush(ok({ workId: WORK.id, status: 'READING', addedAt: '', updatedAt: '' }));
-  await settle(fixture);
+  await whenIAddTheSeriesToMyLibrary({ savedAs: 'READING' });
 
-  // Then
-  expect(save.request.body).toEqual({});
-  expect(libraryStatus()).toBe('READING');
+  thenTheRequestWas('PUT', `${API}/library/${WORK.id}`, {});
+  thenMyLibraryStatusIs('READING');
+
+  await whenIRemoveTheSeriesFromMyLibrary();
+
+  thenTheSeriesIsNotInMyLibrary();
 });
+
+async function whenIAddTheSeriesToMyLibrary(answer: { savedAs: string }): Promise<void> {
+  button('Add to library').click();
+  lastRequest = http.expectOne(`${API}/library/${WORK.id}`);
+  lastRequest.flush(ok({ workId: WORK.id, status: answer.savedAs, addedAt: '', updatedAt: '' }));
+  await settle(fixture);
+}
+
+function thenMyLibraryStatusIs(status: string): void {
+  expect(fixture.nativeElement.querySelector('.library-status select')?.value).toBe(status);
+}
 ```
-- Every test has `// Given`, `// When`, `// Then` sections (a scenario may chain several When/Then pairs).
-- `given…` helpers open the page in a state and **return** what the test needs (e.g. the unanswered request).
-  Whatever the test asserts on is an **argument** (`finished: ['c-1']`), never baked into the helper (mystery guest).
-- `when…` helpers only for multi-step actions shared by 2+ tests; small DOM accessors (`button(label)`,
-  `chapterLinks()`) are fine and keep the test readable.
-- **No `then…` helpers**: assertions stay in the test. No `if`/loops in tests; `it.each` for tables of cases.
-- `beforeEach` only for TestBed configuration and cleanup.
+Small DOM accessors used by the methods (`button(label)`, `chapterLink(n)`) sit after them, also hoisted.
+- The test body is only calls to extracted methods named `given…`, `when…`, `then…`, in that order (a scenario may
+  chain several when/then rounds). No `// Given` / `// When` / `// Then` comments, no raw `expect`, DOM, HTTP or
+  `page` code in the body: the method names are the documentation. Names are first-person domain sentences
+  (`givenIAmOnTheWorkPage`, `whenIAddTheSeriesToMyLibrary`, `thenMyLibraryStatusIs`).
+- Keep the test readable without opening the methods (what the community warns about: hidden setup, assertions
+  far from the test):
+  - the data the scenario is about is an **argument**, on both sides: `givenIAmOnTheWorkPage({ inLibrary: false,
+    finished: ['c-1'] })`, `thenChapterIsRead(1)`, `thenTheFeedWasAskedFor({ mine: true })`; defaults only for
+    values the test doesn't care about;
+  - one `then…` checks **one** observable fact and its name says which; several `then…` calls per test are normal;
+  - one `when…` is one user or caller action, including answering the requests it triggers;
+  - state shared by the methods (fixture, last request, spies) lives in the `describe`, not in return values the
+    test has to juggle.
+- Methods are function declarations **after** the tests of their `describe` (hoisted), so a spec reads scenarios
+  first. A method used by several spec files moves to the shared helpers.
+- No logic in test bodies (`if`, loops); `it.each` for tables of cases. Comments only for a non-obvious "why"
+  (e.g. why a request is answered 404), never to label phases.
+- `beforeEach` only for TestBed setup and cleanup; scenario state is built by `given…` methods.
 
 ## No flakiness
 - No real waits (`setTimeout` promises, polling). Debounces, polls and timeouts use `vi.useFakeTimers()` +

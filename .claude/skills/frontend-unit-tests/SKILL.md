@@ -1,6 +1,6 @@
 ---
 name: frontend-unit-tests
-description: How to write and review Readora frontend unit tests (Vitest + TestBed, no DOM) for services, stores, API clients, resources, pure functions, guards, interceptors and pipes in frontend/tests/unit. Use whenever such a spec is created or edited, or a test of that kind is flaky. Covers the Given/When/Then convention and the anti-flakiness rules.
+description: How to write and review Readora frontend unit tests (Vitest + TestBed, no DOM) for services, stores, API clients, resources, pure functions, guards, interceptors and pipes in frontend/tests/unit. Use whenever such a spec is created or edited, or a test of that kind is flaky. Covers the given/when/then methods convention and the anti-flakiness rules.
 ---
 
 # Frontend unit tests (services, stores, pure functions, guards, interceptors, pipes)
@@ -38,28 +38,47 @@ Components and routed pages use the `frontend-component-tests` skill instead.
   (`API_BASE_URL`) with `{ provide, useValue }` instead of editing the environment.
 
 ## Given / When / Then (team convention, all test types)
+Model: `core/auth/auth-store.spec.ts`.
 ```ts
 it('logout revokes the cookie server-side and clears the session locally', async () => {
-  // Given
-  await givenSignedIn();
+  await givenIAmSignedIn();
 
-  // When
-  const logout = await whenLoggingOut();
+  await whenILogOut();
 
-  // Then
-  expect(logout.request.withCredentials).toBe(true);
-  expect(store.isAuthenticated()).toBe(false);
+  thenTheLogoutSentTheRefreshCookie();
+  thenIAmAnonymous();
 });
+
+async function whenILogOut(): Promise<void> {
+  const logout = firstValueFrom(store.logout());
+  lastRequest = http.expectOne(`${API}/auth/logout`);
+  lastRequest.flush(ok('Logged out'));
+  await logout;
+}
+
+function thenIAmAnonymous(): void {
+  expect(store.isAuthenticated()).toBe(false);
+  expect(store.accessToken()).toBeNull();
+}
 ```
-- Every test has `// Given`, `// When`, `// Then` sections (Given may be "the beforeEach"; several When/Then pairs
-  are fine for one scenario).
-- `given…` helpers build the precondition and **return** what the test uses. Values the test asserts on are
-  **arguments** (`givenSignedIn(mockSession({ accessToken: 'jwt-secret' }))`), never hidden inside the helper
-  (the "mystery guest" of xUnit Test Patterns).
-- `when…` helpers only for a multi-step action used by 2+ tests; a one-liner stays inline.
-- **No `then…` helpers.** Assertions stay in the test body. An extracted assertion checks one fact.
-- No logic in tests (`if`, loops, computed expectations). DAMP over DRY: a little duplication beats indirection.
-- `beforeEach` only for TestBed setup and cleanup, no nested `beforeEach` chains for scenario data.
+- The test body is only calls to extracted methods named `given…`, `when…`, `then…`, in that order (a scenario may
+  chain several when/then rounds). No `// Given` / `// When` / `// Then` comments, no raw `expect`, DOM, HTTP or
+  `page` code in the body: the method names are the documentation. Names are first-person domain sentences
+  (`givenIAmOnTheWorkPage`, `whenIAddTheSeriesToMyLibrary`, `thenMyLibraryStatusIs`).
+- Keep the test readable without opening the methods (what the community warns about: hidden setup, assertions
+  far from the test):
+  - the data the scenario is about is an **argument**, on both sides: `givenIAmOnTheWorkPage({ inLibrary: false,
+    finished: ['c-1'] })`, `thenChapterIsRead(1)`, `thenTheFeedWasAskedFor({ mine: true })`; defaults only for
+    values the test doesn't care about;
+  - one `then…` checks **one** observable fact and its name says which; several `then…` calls per test are normal;
+  - one `when…` is one user or caller action, including answering the requests it triggers;
+  - state shared by the methods (fixture, last request, spies) lives in the `describe`, not in return values the
+    test has to juggle.
+- Methods are function declarations **after** the tests of their `describe` (hoisted), so a spec reads scenarios
+  first. A method used by several spec files moves to the shared helpers.
+- No logic in test bodies (`if`, loops); `it.each` for tables of cases. Comments only for a non-obvious "why"
+  (e.g. why a request is answered 404), never to label phases.
+- `beforeEach` only for TestBed setup and cleanup; scenario state is built by `given…` methods.
 
 ## No flakiness
 - No real waiting: no `setTimeout` promises, no polling loops. Time is faked: `vi.useFakeTimers()` +

@@ -1,6 +1,6 @@
 ---
 name: frontend-e2e-tests
-description: How to write, run and debug Readora Playwright end-to-end tests in frontend/tests/e2e (real backend via docker compose). Use whenever an e2e spec, fixture or helper is created or edited, playwright.config.ts changes, or an e2e test is flaky. Covers fixtures as Given, locators, web-first assertions, test data and the anti-flakiness rules.
+description: How to write, run and debug Readora Playwright end-to-end tests in frontend/tests/e2e (real backend via docker compose). Use whenever an e2e spec, fixture or helper is created or edited, playwright.config.ts changes, or an e2e test is flaky. Covers fixtures and given/when/then methods, locators, web-first assertions, test data and the anti-flakiness rules.
 ---
 
 # Frontend e2e tests (Playwright)
@@ -17,9 +17,9 @@ Support: `tests/e2e/support/fixtures.ts` (`test` with fixtures) and `tests/e2e/s
   `READORA_AUTH_RATE_LIMIT=200 docker compose up -d` (the default 10 auth calls/min/IP stops repeated sign-ups).
 - Failures: open the trace (`npx playwright show-trace test-results/…/trace.zip`), not just the screenshot.
 
-## Test data and isolation (the Given)
+## Test data and isolation
 - Every test creates what it needs, through the API, and nothing else depends on it: fixtures in
-  `support/fixtures.ts` are the Given step (`async ({ page, publishedChapter }) => …`). A fixture runs only for tests
+  `support/fixtures.ts` create it (`async ({ page, publishedChapter }) => …`). A fixture runs only for tests
   that request it and gives each test fresh data. Add a fixture rather than a `beforeEach`.
 - Never depend on seed data or on what an environment happens to contain, and never `test.skip` for missing data.
   Seed accounts are for privileged setup only (`publishChapter` logs in as the publisher).
@@ -39,23 +39,43 @@ Support: `tests/e2e/support/fixtures.ts` (`test` with fixtures) and `tests/e2e/s
 - Every Playwright call is awaited (`@typescript-eslint/no-floating-promises` is an error in tests).
 
 ## Given / When / Then (team convention, all test types)
+Model: `tests/e2e/reader-viewer.spec.ts`.
 ```ts
 test('a published chapter can be read and switched to paged mode', async ({ page, publishedChapter }) => {
-  // Given
-  await page.goto(`/works/${publishedChapter.workId}`);
+  await givenIAmOnTheSeriesPage(page, publishedChapter);
 
-  // When
-  await page.getByRole('link', { name: /Ch\. 1/ }).click();
-  await page.getByRole('button', { name: 'Paged' }).click();
+  await whenIOpenChapter(page, 1);
+  await whenIChooseTheReadingMode(page, 'Paged');
 
-  // Then
-  await expect(page.getByRole('button', { name: 'Paged' })).toHaveAttribute('aria-pressed', 'true');
+  await thenTheReadingModeIs(page, 'Paged');
+  await thenICanSeePage(page, 1);
 });
+
+async function thenTheReadingModeIs(page: Page, mode: 'Vertical' | 'Paged'): Promise<void> {
+  await expect(page.getByRole('button', { name: mode })).toHaveAttribute('aria-pressed', 'true');
+}
 ```
-- `// Given`, `// When`, `// Then` in every test. Given = fixtures (plus the navigation to the starting page).
-- `when…` helpers / page-object methods only for flows used by 2+ tests (`signUp(page, 'reader')`); name them after
-  the domain action. Page objects are exposed as fixtures when they appear.
-- **Assertions stay in the test.** No logic or loops in tests.
+Fixtures (`publishedChapter`) create the data; `given…` methods put the browser in the starting state. The methods
+take `page` and the fixture data, are module-level functions after the `test.describe`, and use web-first
+assertions inside `then…`. Methods shared by several specs move to `tests/e2e/support`.
+- The test body is only calls to extracted methods named `given…`, `when…`, `then…`, in that order (a scenario may
+  chain several when/then rounds). No `// Given` / `// When` / `// Then` comments, no raw `expect`, DOM, HTTP or
+  `page` code in the body: the method names are the documentation. Names are first-person domain sentences
+  (`givenIAmOnTheWorkPage`, `whenIAddTheSeriesToMyLibrary`, `thenMyLibraryStatusIs`).
+- Keep the test readable without opening the methods (what the community warns about: hidden setup, assertions
+  far from the test):
+  - the data the scenario is about is an **argument**, on both sides: `givenIAmOnTheWorkPage({ inLibrary: false,
+    finished: ['c-1'] })`, `thenChapterIsRead(1)`, `thenTheFeedWasAskedFor({ mine: true })`; defaults only for
+    values the test doesn't care about;
+  - one `then…` checks **one** observable fact and its name says which; several `then…` calls per test are normal;
+  - one `when…` is one user or caller action, including answering the requests it triggers;
+  - state shared by the methods (fixture, last request, spies) lives in the `describe`, not in return values the
+    test has to juggle.
+- Methods are function declarations **after** the tests of their `describe` (hoisted), so a spec reads scenarios
+  first. A method used by several spec files moves to the shared helpers.
+- No logic in test bodies (`if`, loops); `it.each` for tables of cases. Comments only for a non-obvious "why"
+  (e.g. why a request is answered 404), never to label phases.
+- `beforeEach` only for TestBed setup and cleanup; scenario state is built by `given…` methods.
 
 ## No flakiness
 - CI: `retries: 2` collects a trace, and `failOnFlakyTests` makes a pass-on-retry fail the run. `forbidOnly` on CI
