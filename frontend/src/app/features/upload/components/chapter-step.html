@@ -1,0 +1,62 @@
+<div class="card wizard-card">
+  <h2>2. Initial Chapter Details</h2>
+  <p class="muted">Configure chapter metadata and choose your preferred publishing mode.</p>
+
+  <div class="field">
+    <label for="chapter-number">Chapter Number <span class="required" aria-hidden="true">*</span></label>
+    <input id="chapter-number" type="text" placeholder="e.g. 1, 1.5, 10"
+           [formField]="form.chapterNumber" [attr.aria-invalid]="errors(form.chapterNumber).length > 0" aria-describedby="chapter-number-error" />
+    <div id="chapter-number-error" class="field-errors">
+      @for (msg of errors(form.chapterNumber); track $index) {
+        <span class="field-error">{{ msg }}</span>
+      }
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="chapter-title">Chapter Title (Optional)</label>
+    <input id="chapter-title" type="text" placeholder="e.g. Prologue, The Beginning"
+           [formField]="form.chapterTitle" [attr.aria-invalid]="errors(form.chapterTitle).length > 0" aria-describedby="chapter-title-error" />
+    <div id="chapter-title-error" class="field-errors">
+      @for (msg of errors(form.chapterTitle); track $index) {
+        <span class="field-error">{{ msg }}</span>
+      }
+    </div>
+  </div>
+
+  <!-- Native radios: arrow keys, Space and checked state come from the browser. -->
+  <fieldset class="field">
+    <legend>Publishing Pipeline</legend>
+    <div class="mode-cards">
+      @let mode = wizard.draft().publishingMode;
+      <label class="mode-card" [class.selected]="mode === 'DIRECT'">
+        <input type="radio" name="publishing-mode" value="DIRECT" class="sr-only" [checked]="mode === 'DIRECT'" (change)="wizard.setPublishingMode('DIRECT')" />
+        <span class="mode-card-header">
+          <span class="mode-badge live">Instant Direct</span>
+          <span class="mode-title">Direct Live Release</span>
+        </span>
+        <span class="muted mode-desc">
+          Instantly publish all chapter pages to the public catalog. Ideal for solo creators and official releases.
+        </span>
+      </label>
+
+      <label class="mode-card" [class.selected]="mode === 'SCANLATION'">
+        <input type="radio" name="publishing-mode" value="SCANLATION" class="sr-only" [checked]="mode === 'SCANLATION'" (change)="wizard.setPublishingMode('SCANLATION')" />
+        <span class="mode-card-header">
+          <span class="mode-badge workflow">Scanlation Team</span>
+          <span class="mode-title">Scanlation Workspace</span>
+        </span>
+        <span class="muted mode-desc">
+          Upload raw package into your team's Kanban board to assign cleaning, translation, and QC stages.
+        </span>
+      </label>
+    </div>
+  </fieldset>
+
+  <div class="wizard-actions">
+    <button type="button" class="btn" (click)="wizard.goTo('manga')">&larr; Back</button>
+    <button type="button" class="btn btn-primary" [disabled]="!wizard.chapterValid()" (click)="wizard.goTo('pages')">
+      Next: Upload Pages &rarr;
+    </button>
+  </div>
+</div>

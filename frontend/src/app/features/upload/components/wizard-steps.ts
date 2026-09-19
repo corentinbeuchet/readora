@@ -1,16 +1,21 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
+import { UploadStep } from '../services/upload-wizard';
 
-export type UploadStep = 'manga' | 'chapter' | 'pages' | 'review' | 'success';
+export type { UploadStep } from '../services/upload-wizard';
 type WizardStep = Exclude<UploadStep, 'success'>;
 
-const ORDER: WizardStep[] = ['manga', 'chapter', 'pages', 'review'];
+const STEPS: { key: WizardStep; label: string }[] = [
+  { key: 'manga', label: 'Manga Details' },
+  { key: 'chapter', label: 'Chapter Setup' },
+  { key: 'pages', label: 'Page Uploader' },
+  { key: 'review', label: 'Review & Publish' }
+];
 
 /** Step indicator of the upload wizard; a step is reachable once all previous steps are valid. */
 @Component({
   selector: 'app-wizard-steps',
   templateUrl: './wizard-steps.html',
-  styleUrl: './wizard-steps.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './wizard-steps.scss'
 })
 export class WizardSteps {
   readonly current = input.required<UploadStep>();
@@ -19,33 +24,22 @@ export class WizardSteps {
   readonly pagesValid = input(false);
   readonly stepSelected = output<WizardStep>();
 
-  protected readonly steps: { key: WizardStep; label: string }[] = [
-    { key: 'manga', label: 'Manga Details' },
-    { key: 'chapter', label: 'Chapter Setup' },
-    { key: 'pages', label: 'Page Uploader' },
-    { key: 'review', label: 'Review & Publish' },
-  ];
-
-  private valid(step: WizardStep): boolean {
-    switch (step) {
-      case 'manga':
-        return this.mangaValid();
-      case 'chapter':
-        return this.chapterValid();
-      case 'pages':
-        return this.pagesValid();
-      default:
-        return false;
-    }
-  }
-
-  protected isReachable(step: WizardStep): boolean {
-    return ORDER.slice(0, ORDER.indexOf(step)).every((s) => this.valid(s));
-  }
-
-  protected isCompleted(step: WizardStep): boolean {
+  /** One entry per step with its state (computed once, not per template call). */
+  protected readonly steps = computed(() => {
+    const valid: Record<WizardStep, boolean> = {
+      manga: this.mangaValid(),
+      chapter: this.chapterValid(),
+      pages: this.pagesValid(),
+      review: false
+    };
     const current = this.current();
-    const currentIndex = current === 'success' ? ORDER.length : ORDER.indexOf(current);
-    return step !== 'review' && ORDER.indexOf(step) < currentIndex && this.valid(step);
-  }
+    const currentIndex = current === 'success' ? STEPS.length : STEPS.findIndex((s) => s.key === current);
+    return STEPS.map((step, index) => ({
+      ...step,
+      number: index + 1,
+      current: step.key === current,
+      reachable: STEPS.slice(0, index).every((s) => valid[s.key]),
+      completed: step.key !== 'review' && index < currentIndex && valid[step.key]
+    }));
+  });
 }

@@ -16,6 +16,7 @@
   --accent-strong: #0ea5e9;
   --danger: #f87171;
   --success: #4ade80;
+  --violet: #a78bfa;
   --radius: 10px;
 }
 
@@ -329,4 +330,37 @@ fieldset.field {
 .badge-premium {
   background: rgba(56, 189, 248, 0.15);
   color: var(--accent);
+}
+
+/* Multi-step forms (upload studio): the step card and its Back / Next row. */
+.wizard-card {
+  padding: 2rem;
+
+  h2 {
+    font-size: 1.35rem;
+    margin-top: 0;
+    margin-bottom: 0.35rem;
+  }
+
+  p.muted {
+    margin-bottom: 1.5rem;
+  }
+}
+
+.wizard-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.wizard-actions-end {
+  justify-content: flex-end;
+}
+
+/* "*" next to a required field's label (the input itself carries `required`). */
+.required {
+  color: var(--danger);
 }

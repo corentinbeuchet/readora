@@ -8,6 +8,16 @@
       </button>
     </div>
   } @else {
+    <!-- Outside the drop zone: a control must not sit inside another (role="button"); the zone opens it. -->
+    <input
+      #coverInput
+      type="file"
+      accept="image/jpeg,image/png,image/webp"
+      class="sr-only"
+      tabindex="-1"
+      aria-hidden="true"
+      (change)="onInputChange($event)"
+    />
     <div
       class="cover-drop-zone"
       (dragover)="$event.preventDefault()"
@@ -19,14 +29,6 @@
       role="button"
       aria-label="Upload cover image"
     >
-      <input
-        #coverInput
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        class="sr-only"
-        tabindex="-1"
-        (change)="onInputChange($event)"
-      />
       <span class="cover-icon" aria-hidden="true">🖼️</span>
       <p><strong>Upload Cover</strong></p>
       <p class="muted small">Drag & drop or browse (JPEG, PNG, WebP)</p>

@@ -1,0 +1,15 @@
+<div class="card wizard-card">
+  <h2>3. Chapter Pages</h2>
+  <p class="muted">
+    Upload multiple page images or drop a <code>.zip</code> / <code>.cbz</code> archive. Pages will be sorted naturally.
+  </p>
+
+  <app-page-grid-uploader [(pages)]="wizard.pages" />
+
+  <div class="wizard-actions">
+    <button type="button" class="btn" (click)="wizard.goTo('chapter')">&larr; Back</button>
+    <button type="button" class="btn btn-primary" [disabled]="!wizard.pagesValid()" (click)="wizard.goTo('review')">
+      Next: Review &rarr;
+    </button>
+  </div>
+</div>

@@ -121,6 +121,7 @@ describe('UploadStudioPage', () => {
 
     type('#manga-title', '   ');
     expect(button('Next: Chapter Setup').disabled).toBe(true);
+    expect(el().querySelector('#manga-title-error')!.textContent).toContain('Give the series a title');
 
     type('#manga-title', 'Solo Leveling');
     click('Next: Chapter Setup');
@@ -177,6 +178,8 @@ describe('UploadStudioPage', () => {
     click('Next: Chapter Setup');
     type('#chapter-number', '1abc');
     expect(button('Next: Upload Pages').disabled).toBe(true);
+    expect(el().querySelector('#chapter-number')!.getAttribute('aria-invalid')).toBe('true');
+    expect(el().querySelector('#chapter-number-error')!.textContent).toContain('positive number such as 1, 10 or 12.5');
     type('#chapter-number', '12.5');
     click('Next: Upload Pages');
     expect(heading()).toBe('3. Chapter Pages');

@@ -1,0 +1,19 @@
+@let draft = wizard.draft();
+<div class="card wizard-card success-card">
+  <div class="success-icon" aria-hidden="true">🎉</div>
+  <h2>Series & Chapter Uploaded Successfully!</h2>
+  <p class="muted"><strong>{{ draft.title }}</strong> (Chapter {{ draft.chapterNumber }}) has been processed and created.</p>
+
+  <div class="success-actions">
+    @if (flow.createdChapterId(); as chapterId) {
+      <a [routerLink]="['/read', chapterId]" class="btn btn-primary">Read Chapter {{ draft.chapterNumber }} Now</a>
+    }
+    @if (flow.createdWork(); as work) {
+      <a [routerLink]="['/works', work.id]" class="btn">View in Catalog</a>
+    }
+    @if (flow.createdProjectId(); as projectId) {
+      <a [routerLink]="['/scanlation', projectId]" class="btn btn-primary">Open Scanlation Board</a>
+    }
+    <button type="button" class="btn" (click)="flow.startOver()">Upload Another Manga</button>
+  </div>
+</div>

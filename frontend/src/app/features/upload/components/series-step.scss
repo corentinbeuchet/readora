@@ -1,0 +1,67 @@
+.form-layout {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 2rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+
+  @media (max-width: 500px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.genre-pill-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.genre-pill {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.8rem;
+  border-radius: 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  // Same colours as .btn-primary (contrast checked there).
+  &.selected {
+    background: var(--accent-strong);
+    border-color: var(--accent-strong);
+    color: #082f49;
+    font-weight: 600;
+  }
+}
+
+.custom-genre-row {
+  display: flex;
+  gap: 0.5rem;
+
+  .input-sm {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.85rem;
+    max-width: 200px;
+  }
+}

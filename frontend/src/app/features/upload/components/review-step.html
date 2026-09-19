@@ -1,0 +1,78 @@
+@let draft = wizard.draft();
+<div class="card wizard-card">
+  <h2>4. Review & Confirmation</h2>
+  <p class="muted">Please double check your series metadata and chapter details before proceeding.</p>
+
+  <div class="review-grid">
+    <dl class="review-summary">
+      <div class="review-item">
+        <dt class="label">Series Title:</dt>
+        <dd class="value strong">{{ draft.title }}</dd>
+      </div>
+      <div class="review-item">
+        <dt class="label">Format & Status:</dt>
+        <dd class="value">{{ draft.type }} &bull; {{ draft.status }}</dd>
+      </div>
+      <div class="review-item">
+        <dt class="label">Genres:</dt>
+        <dd class="value">{{ genres() }}</dd>
+      </div>
+      <div class="review-item">
+        <dt class="label">Chapter:</dt>
+        <dd class="value">
+          Chapter {{ draft.chapterNumber }}
+          @if (draft.chapterTitle) {
+            — {{ draft.chapterTitle }}
+          }
+        </dd>
+      </div>
+      <div class="review-item">
+        <dt class="label">Total Pages:</dt>
+        <dd class="value strong">{{ wizard.pages().length }} pages</dd>
+      </div>
+      <div class="review-item">
+        <dt class="label">Pipeline:</dt>
+        <dd class="value">
+          <span class="badge" [class.badge-premium]="draft.publishingMode === 'DIRECT'">
+            {{ draft.publishingMode === 'DIRECT' ? 'Direct Catalog Release' : 'Scanlation Workspace Task' }}
+          </span>
+        </dd>
+      </div>
+    </dl>
+
+    @if (wizard.cover(); as cover) {
+      <div class="review-cover-preview">
+        <img [src]="cover.previewUrl" alt="Cover" class="cover-thumb" />
+      </div>
+    }
+  </div>
+
+  @if (flow.createdWork(); as work) {
+    <p class="muted retry-hint">
+      The series "{{ work.title }}" was already created: publishing again reuses it and only uploads the pages
+      that are not uploaded yet.
+    </p>
+  }
+
+  @if (flow.submitting()) {
+    <div class="upload-progress-container">
+      <div class="progress-bar-track" role="progressbar" aria-label="Upload progress" aria-valuemin="0" aria-valuemax="100"
+           [attr.aria-valuenow]="flow.progress()" [attr.aria-valuetext]="flow.statusText() + ' (' + flow.progress() + '%)'">
+        <div class="progress-bar-fill" [style.width.%]="flow.progress()"></div>
+      </div>
+      <p class="progress-text" aria-live="polite">{{ flow.statusText() }} ({{ flow.progress() }}%)</p>
+    </div>
+  }
+
+  <div class="wizard-actions">
+    <button type="button" class="btn" [disabled]="flow.submitting()" (click)="wizard.goTo('pages')">&larr; Back</button>
+    <button type="button" class="btn btn-primary btn-publish" [disabled]="flow.submitting()" (click)="flow.publish()">
+      @if (flow.submitting()) {
+        <span class="spinner" aria-hidden="true"></span>
+        Publishing…
+      } @else {
+        Publish Series & Chapter &rarr;
+      }
+    </button>
+  </div>
+</div>

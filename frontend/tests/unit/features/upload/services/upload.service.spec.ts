@@ -2,9 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { firstValueFrom } from 'rxjs';
-import { UploadService } from '@app/core/upload/upload.service';
-import { ArchiveError, ArchiveLimits, PageUploadItem, naturalCompare, sortFilesNaturally, extractArchiveImages } from '@app/core/upload/file-utils';
-import { environment } from '../../../../src/environments/environment';
+import { UploadService } from '@app/features/upload/services/upload.service';
+import { ArchiveError, ArchiveLimits, PageUploadItem, naturalCompare, sortFilesNaturally, extractArchiveImages } from '@app/features/upload/services/file-utils';
+import { environment } from '../../../../../src/environments/environment';
 import JSZip from 'jszip';
 
 const API = environment.apiUrl;
@@ -14,7 +14,6 @@ describe('UploadService and file-utils', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],
     });
@@ -146,37 +145,6 @@ describe('UploadService and file-utils', () => {
       ]);
     });
 
-    it('createWork delegates to CatalogApi', async () => {
-      const workPromise = firstValueFrom(
-        service.createWork({
-          title: 'Naruto',
-          synopsis: 'Ninja story',
-          type: 'MANGA',
-          status: 'ONGOING',
-          genres: ['Action'],
-        })
-      );
-
-      const req = http.expectOne(`${API}/works`);
-      expect(req.request.method).toBe('POST');
-      req.flush({
-        success: true,
-        data: {
-          id: 'w-1',
-          title: 'Naruto',
-          synopsis: 'Ninja story',
-          type: 'MANGA',
-          status: 'ONGOING',
-          coverImageUrl: '',
-          genres: ['Action'],
-        },
-        error: null,
-      });
-
-      const work = await workPromise;
-      expect(work.id).toBe('w-1');
-      expect(work.title).toBe('Naruto');
-    });
   });
 });
 

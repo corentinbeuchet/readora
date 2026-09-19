@@ -11,7 +11,7 @@ import {
   mapWithConcurrency,
   naturalCompare,
   revokePreviewUrl,
-} from '@app/core/upload/file-utils';
+} from '../services/file-utils';
 
 /** How many images are decoded in parallel to read their dimensions. */
 export const IMAGE_DECODE_CONCURRENCY = 4;
@@ -52,19 +52,19 @@ export class PageGridUploader {
     inject(DestroyRef).onDestroy(() => (this.destroyed = true));
   }
 
-  onDragOver(event: DragEvent): void {
+  protected onDragOver(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
     this.isDragging.set(true);
   }
 
-  onDragLeave(event: DragEvent): void {
+  protected onDragLeave(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
     this.isDragging.set(false);
   }
 
-  onDrop(event: DragEvent): void {
+  protected onDrop(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
     this.isDragging.set(false);
@@ -73,7 +73,7 @@ export class PageGridUploader {
     }
   }
 
-  onFileInputChange(event: Event): void {
+  protected onFileInputChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files) {
       void this.handleFiles(Array.from(input.files));
@@ -81,7 +81,7 @@ export class PageGridUploader {
     }
   }
 
-  async handleFiles(incoming: File[]): Promise<void> {
+  private async handleFiles(incoming: File[]): Promise<void> {
     const imagesToAdd: File[] = [];
     const problems: string[] = [];
     const limits = DEFAULT_ARCHIVE_LIMITS;
@@ -129,11 +129,11 @@ export class PageGridUploader {
     this.pages.update((current) => renumber([...current, ...newItems]));
   }
 
-  sortNaturally(): void {
+  protected sortNaturally(): void {
     this.pages.update((current) => renumber([...current].sort((a, b) => naturalCompare(a.file.name, b.file.name))));
   }
 
-  move(from: number, to: number): void {
+  protected move(from: number, to: number): void {
     if (to < 0 || to >= this.pages().length) return;
     const items = [...this.pages()];
     const [moved] = items.splice(from, 1);
@@ -141,7 +141,7 @@ export class PageGridUploader {
     this.pages.set(renumber(items));
   }
 
-  remove(index: number): void {
+  protected remove(index: number): void {
     const items = [...this.pages()];
     const [removed] = items.splice(index, 1);
     if (removed) {
@@ -151,29 +151,29 @@ export class PageGridUploader {
   }
 
   /** Optional page description for screen-reader users (US-07). */
-  describe(index: number, event: Event): void {
+  protected describe(index: number, event: Event): void {
     const description = (event.target as HTMLTextAreaElement).value;
     this.pages.update((items) => items.map((item, i) => (i === index ? { ...item, description } : item)));
   }
 
-  clearAll(): void {
+  protected clearAll(): void {
     this.pages().forEach((item) => revokePreviewUrl(item.previewUrl));
     this.pages.set([]);
     this.problems.set([]);
   }
 
-  onItemDragStart(index: number, event: DragEvent): void {
+  protected onItemDragStart(index: number, event: DragEvent): void {
     this.dragSourceIndex = index;
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = 'move';
     }
   }
 
-  onItemDragOver(_index: number, event: DragEvent): void {
+  protected onItemDragOver(_index: number, event: DragEvent): void {
     event.preventDefault();
   }
 
-  onItemDrop(index: number, event: DragEvent): void {
+  protected onItemDrop(index: number, event: DragEvent): void {
     event.preventDefault();
     if (this.dragSourceIndex !== null && this.dragSourceIndex !== index) {
       this.move(this.dragSourceIndex, index);

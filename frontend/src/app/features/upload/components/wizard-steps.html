@@ -1,17 +1,17 @@
 <nav aria-label="Upload steps">
   <ol class="wizard-nav">
-    @for (step of steps; track step.key; let i = $index) {
+    @for (step of steps(); track step.key) {
       <li>
         <button
           type="button"
           class="wizard-step"
-          [class.active]="current() === step.key"
-          [class.completed]="isCompleted(step.key)"
-          [attr.aria-current]="current() === step.key ? 'step' : null"
-          [disabled]="!isReachable(step.key)"
+          [class.active]="step.current"
+          [class.completed]="step.completed"
+          [attr.aria-current]="step.current ? 'step' : null"
+          [disabled]="!step.reachable"
           (click)="stepSelected.emit(step.key)"
         >
-          <span class="step-number" aria-hidden="true">{{ i + 1 }}</span>
+          <span class="step-number" aria-hidden="true">{{ step.number }}</span>
           <span class="step-label">{{ step.label }}</span>
         </button>
       </li>

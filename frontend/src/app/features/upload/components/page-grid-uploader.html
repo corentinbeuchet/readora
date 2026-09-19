@@ -1,4 +1,15 @@
 <div class="page-uploader-container">
+  <!-- Outside the drop zone: a control must not sit inside another (role="button"); the zone opens it. -->
+  <input
+    #fileInput
+    type="file"
+    multiple
+    accept="image/jpeg,image/png,image/webp,image/gif,image/avif,.zip,.cbz"
+    class="sr-only"
+    tabindex="-1"
+    aria-hidden="true"
+    (change)="onFileInputChange($event)"
+  />
   <div
     class="drop-zone"
     [class.dragging]="isDragging()"
@@ -12,14 +23,6 @@
     (keydown.enter)="fileInput.click()"
     (keydown.space)="$event.preventDefault(); fileInput.click()"
   >
-    <input
-      #fileInput
-      type="file"
-      multiple
-      accept="image/jpeg,image/png,image/webp,image/gif,image/avif,.zip,.cbz"
-      class="sr-only"
-      (change)="onFileInputChange($event)"
-    />
     <div class="drop-prompt">
       <span class="upload-icon" aria-hidden="true">📁</span>
       <p class="primary-text">

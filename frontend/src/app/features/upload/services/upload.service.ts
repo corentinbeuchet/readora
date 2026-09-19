@@ -1,25 +1,12 @@
 import { Service, inject } from '@angular/core';
 import { Observable, catchError, from, map, mergeMap, of, toArray } from 'rxjs';
-import { ApiClient, apiErrorMessage } from '../api/api-client';
-import { CatalogApi } from '../api/catalog-api';
-import { ScanlationApi } from '../api/scanlation-api';
-import {
-  Chapter,
-  CreateTaskRequest,
-  CreateWorkPayload,
-  DirectPublishChapterPayload,
-  ScanlationProject,
-  StorageUploadResult,
-  Work,
-  WorkflowTask,
-} from '../models/readora.models';
+import { ApiClient, apiErrorMessage } from '@app/core/api/api-client';
+import { StorageUploadResult } from '@app/core/models/readora.models';
 import { PageUploadItem } from './file-utils';
 
 @Service()
 export class UploadService {
   private readonly api = inject(ApiClient);
-  private readonly catalogApi = inject(CatalogApi);
-  private readonly scanlationApi = inject(ScanlationApi);
 
   /**
    * Upload a single multipart file to storage.
@@ -87,33 +74,5 @@ export class UploadService {
       toArray(),
       map((results) => [...results].sort((a, b) => a.pageNumber - b.pageNumber))
     );
-  }
-
-  /**
-   * Create a new work.
-   */
-  createWork(payload: CreateWorkPayload): Observable<Work> {
-    return this.catalogApi.createWork(payload);
-  }
-
-  /**
-   * Directly publish a chapter with pages.
-   */
-  directPublishChapter(workId: string, payload: DirectPublishChapterPayload): Observable<Chapter> {
-    return this.catalogApi.directPublishChapter(workId, payload);
-  }
-
-  /**
-   * Create a scanlation workflow task attached to a project.
-   */
-  createScanlationTask(projectId: string, req: CreateTaskRequest): Observable<WorkflowTask> {
-    return this.scanlationApi.createTask(projectId, req);
-  }
-
-  /**
-   * List projects associated with a work.
-   */
-  getProjectsForWork(workId: string): Observable<ScanlationProject[]> {
-    return this.catalogApi.listProjects(workId);
   }
 }
