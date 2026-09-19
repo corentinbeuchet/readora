@@ -3,12 +3,26 @@ Allow: /
 Allow: /works
 Allow: /read/
 
-# Private / session-dependent pages
+# Private / session-dependent pages (rules are path prefixes, so the French site under /fr/ needs its own lines)
 Disallow: /login
 Disallow: /register
 Disallow: /profile
+Disallow: /library
+Disallow: /history
 Disallow: /subscription
+Disallow: /upload
 Disallow: /scanlation
+Disallow: /moderation
 Disallow: /forbidden
+Disallow: /fr/login
+Disallow: /fr/register
+Disallow: /fr/profile
+Disallow: /fr/library
+Disallow: /fr/history
+Disallow: /fr/subscription
+Disallow: /fr/upload
+Disallow: /fr/scanlation
+Disallow: /fr/moderation
+Disallow: /fr/forbidden
 
 Sitemap: https://readora.com/sitemap.xml
