@@ -40,6 +40,13 @@ public class ReadingController {
         return ResponseEntity.ok(ApiResponse.ok(ChapterReadDto.fromDomain(read)));
     }
 
+    @PostMapping("/chapters/{chapterId}/read-up-to")
+    @Operation(summary = "Mark every published chapter before this one as read")
+    public ResponseEntity<ApiResponse<WorkProgressDto>> markReadUpTo(@PathVariable UUID chapterId) {
+        var progress = trackReadingUseCase.markReadUpTo(currentUserProvider.requireUserId(), ChapterId.of(chapterId));
+        return ResponseEntity.ok(ApiResponse.ok(WorkProgressDto.fromDomain(progress)));
+    }
+
     @GetMapping("/history")
     @Operation(summary = "The series I read most recently, newest first")
     public ResponseEntity<ApiResponse<List<HistoryItemDto>>> history(@RequestParam(defaultValue = "20") int limit) {

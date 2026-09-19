@@ -65,6 +65,31 @@ public class ReadingTrackerService implements TrackReadingUseCase {
     }
 
     @Override
+    public WorkProgress markReadUpTo(UserId userId, ChapterId chapterId) {
+        Chapter chapter = chapterRepository.findById(chapterId)
+                .filter(Chapter::isPublished)
+                .orElseThrow(() -> new NotFoundException("Chapter", chapterId));
+        List<ChapterRepositoryPort.PublishedChapterRef> earlier = chapterRepository.findPublishedRefsByWorkId(chapter.getWorkId()).stream()
+                .takeWhile(ref -> !ref.id().equals(chapterId))
+                .toList();
+        Map<ChapterId, ChapterRead> existing = chapterReadRepository.findByUserAndWork(userId, chapter.getWorkId()).stream()
+                .collect(Collectors.toMap(ChapterRead::chapterId, Function.identity()));
+        Instant now = clock.instant();
+        for (int i = 0; i < earlier.size(); i++) {
+            var ref = earlier.get(i);
+            ChapterRead read = existing.get(ref.id());
+            if (read == null) {
+                // Staggered by a millisecond so the history's "Continue" points at the highest chapter marked.
+                Instant at = now.minusMillis(earlier.size() - i);
+                chapterReadRepository.save(new ChapterRead(userId, chapter.getWorkId(), ref.id(), ref.number(), at, true));
+            } else if (!read.finished()) {
+                chapterReadRepository.save(new ChapterRead(userId, read.workId(), read.chapterId(), read.chapterNumber(), read.readAt(), true));
+            }
+        }
+        return progress(userId, chapter.getWorkId());
+    }
+
+    @Override
     public WorkProgress progress(UserId userId, WorkId workId) {
         List<Chapter> published = chapterRepository.findPublishedByWorkId(workId);
         Set<ChapterId> finished = chapterReadRepository.findByUserAndWork(userId, workId).stream()

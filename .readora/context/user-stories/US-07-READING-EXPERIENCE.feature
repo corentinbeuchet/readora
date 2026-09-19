@@ -131,7 +131,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     Then chapters load lighter, lower-quality images
 
   # Inspired by: MangaDex (from docs/use-cases UC-17)
-  @should @wip
+  @should
   Scenario: Marking all previous chapters as read
     Given "Kenji" read chapters 1 to 49 of "Solo Leveling" on another site
     When he chooses "Mark all previous as read" on chapter 50

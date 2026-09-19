@@ -126,6 +126,27 @@ public class ReadingExperienceStepDefinitions {
         assertThat(progress.nextToRead()).isEqualTo(chapter("Solo Leveling", number).getId());
     }
 
+    @Given("{string} read chapters {int} to {int} of {string} on another site")
+    public void readChaptersOnAnotherSite(String name, int from, int to, String title) {
+        WorkId workId = works.byTitle(title).getId();
+        for (int n = from; n <= to + 1; n++) {
+            if (chapters.findByWorkIdAndChapterNumber(workId, ChapterNumber.of(String.valueOf(n))).isEmpty()) {
+                publish(workId, n, START.minus(Duration.ofDays(1)));
+            }
+        }
+    }
+
+    @When("he chooses {string} on chapter {int}")
+    public void heChoosesOnChapter(String action, int number) {
+        assertThat(action).isEqualTo("Mark all previous as read");
+        progress = reading.markReadUpTo(reader, chapter("Solo Leveling", number).getId());
+    }
+
+    @Then("chapters {int} to {int} are marked as read")
+    public void chaptersAreMarkedAsRead(int from, int to) {
+        chaptersAreDimmed(from, to);
+    }
+
     @Given("{string} read {string} yesterday and {string} today")
     public void readYesterdayAndToday(String name, String yesterday, String today) {
         read(yesterday, 3);

@@ -35,4 +35,10 @@ public interface TrackReadingUseCase {
     List<HistoryItem> history(UserId userId, int limit);
 
     WorkProgress progress(UserId userId, WorkId workId);
+
+    /// "Mark all previous as read": every published chapter before this one becomes finished, for readers who
+    /// caught up elsewhere. The chapter itself is left as it is, so it becomes the next one to read.
+    ///
+    /// @throws com.readora.domain.common.NotFoundException if the chapter doesn't exist or isn't published
+    WorkProgress markReadUpTo(UserId userId, ChapterId chapterId);
 }

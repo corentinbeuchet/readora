@@ -20,6 +20,7 @@ import java.util.Set;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -133,6 +134,24 @@ class LibraryAndReadingIntegrationTest extends AuthTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].work.title").value("Library Work"))
                 .andExpect(jsonPath("$.data[0].lastRead.chapterId").value(one.getId().value().toString()));
+    }
+
+    @Test
+    @DisplayName("'Mark all previous as read' finishes the earlier chapters and makes this one the next to read")
+    void markAllPreviousAsRead() throws Exception {
+        Chapter three = publish("3.5");
+        Session kenji = register();
+
+        mockMvc.perform(post("/api/v1/reading/chapters/" + three.getId().value() + "/read-up-to"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/v1/reading/chapters/" + three.getId().value() + "/read-up-to").header("Authorization", kenji.bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.finishedChapterIds.length()").value(2))
+                .andExpect(jsonPath("$.data.nextChapterId").value(three.getId().value().toString()));
+        mockMvc.perform(get("/api/v1/reading/history").header("Authorization", kenji.bearer()))
+                .andExpect(jsonPath("$.data[0].lastRead.chapterId").value(two.getId().value().toString()));
+        mockMvc.perform(post("/api/v1/reading/chapters/" + draft.getId().value() + "/read-up-to").header("Authorization", kenji.bearer()))
+                .andExpect(status().isNotFound());
     }
 
     @Test
