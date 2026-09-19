@@ -2,7 +2,7 @@ import { Component, inject, input, output, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Dialog } from '@app/shared/ui/dialog/dialog';
 import { PageReportsApi } from '@app/core/api/page-reports-api';
-import { PAGE_REPORT_REASON_LABELS, PageReportReason } from '@app/core/models/readora.models';
+import { PAGE_REPORT_REASON_LABELS, PageReportReason } from '@app/core/models/page-reports';
 import { asyncAction } from '@app/core/utils/async-action';
 
 /** "Report this page" (US-06): why the page doesn't display; the scanlation team gets the report. */

@@ -1,6 +1,6 @@
 import { Service, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { ReaderNotification } from '@app/core/models/readora.models';
+import { ReaderNotification } from '@app/core/models/notifications';
 import { ApiClient } from './api-client';
 
 /** `/api/v1/notifications` (US-10): the signed-in reader's notifications (`LIBRARY_USE`). */

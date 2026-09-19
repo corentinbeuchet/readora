@@ -1,6 +1,6 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal, inject } from '@angular/core';
-import { Chapter } from '@app/core/models/readora.models';
+import { Chapter } from '@app/core/models/chapter';
 import { ApiClient, parseEnvelope } from './api-client';
 
 /** `/api/v1/chapters` (public). */

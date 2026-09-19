@@ -5,7 +5,9 @@ import { PROGRESS_SYNC_DEBOUNCE_MS, ReaderPage, ZEN_CONTROLS_HIDE_MS } from '@ap
 import { ReaderState } from '@app/features/reader/reader-page/reader-state';
 import { ReaderPreferencesStore } from '@app/features/reader/reader-page/reader-preferences-store';
 import { LayoutStore } from '@app/core/layout/layout-store';
-import { Chapter, ChapterComment, Permission } from '@app/core/models/readora.models';
+import { Chapter } from '@app/core/models/chapter';
+import { ChapterComment } from '@app/core/models/comments';
+import { Permission } from '@app/core/models/identity';
 import { givenIAmSignedInWith } from '../../../core/auth/auth-fixtures';
 import { ANY_URL, API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 

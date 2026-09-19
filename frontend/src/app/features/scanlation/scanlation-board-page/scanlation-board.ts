@@ -1,4 +1,4 @@
-import { ScanlationProject, TaskStatus, WorkflowStage, WorkflowTask } from '@app/core/models/readora.models';
+import { ScanlationProject, TaskStatus, WorkflowStage, WorkflowTask } from '@app/core/models/scanlation';
 
 /** Board columns, in workflow order. */
 export const STAGES: readonly { key: WorkflowStage; label: string }[] = [

@@ -1,6 +1,6 @@
 import { Service, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { UpdateProfileRequest, UserProfile } from '@app/core/models/readora.models';
+import { UpdateProfileRequest, UserProfile } from '@app/core/models/identity';
 import { ApiClient } from './api-client';
 
 /** `/api/v1/profile` */

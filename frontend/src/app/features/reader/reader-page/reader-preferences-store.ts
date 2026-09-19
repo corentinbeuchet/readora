@@ -1,5 +1,5 @@
 import { Service, computed, inject, signal } from '@angular/core';
-import { WorkType } from '@app/core/models/readora.models';
+import { WorkType } from '@app/core/models/catalog';
 import { BrowserStorage } from '@app/core/storage/browser-storage';
 
 export type ViewMode = 'VERTICAL' | 'PAGED';

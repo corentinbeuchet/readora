@@ -1,5 +1,5 @@
 import { Service, Signal, computed, inject, linkedSignal, signal } from '@angular/core';
-import { Chapter, PageAsset } from '@app/core/models/readora.models';
+import { Chapter, PageAsset } from '@app/core/models/chapter';
 import { ReaderPreferencesStore, ReadingDirection, SeriesLayout, ViewMode } from './reader-preferences-store';
 
 export type { ViewMode };

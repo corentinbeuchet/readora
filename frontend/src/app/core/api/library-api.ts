@@ -2,7 +2,7 @@ import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { ResourceRef, Service, Signal, inject } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Observable } from 'rxjs';
-import { LibraryEntry, LibraryItem, ReadingStatus } from '@app/core/models/readora.models';
+import { LibraryEntry, LibraryItem, ReadingStatus } from '@app/core/models/library';
 import { ApiClient, nullIfNotFound, parseEnvelope } from './api-client';
 
 /** `/api/v1/library`: the reader's own library (requires `LIBRARY_USE`). */

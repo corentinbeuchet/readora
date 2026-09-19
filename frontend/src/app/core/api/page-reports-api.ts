@@ -1,7 +1,7 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { PageReport, PageReportReason } from '@app/core/models/readora.models';
+import { PageReport, PageReportReason } from '@app/core/models/page-reports';
 import { ApiClient, parseEnvelope } from './api-client';
 
 /** Broken-page reports: readers report (`PAGE_REPORT`), the chapter's team lists and fixes them. */

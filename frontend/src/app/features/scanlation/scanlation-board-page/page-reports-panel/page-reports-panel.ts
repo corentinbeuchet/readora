@@ -3,7 +3,7 @@ import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { PageReportsApi } from '@app/core/api/page-reports-api';
-import { PAGE_REPORT_REASON_LABELS, PageReport } from '@app/core/models/readora.models';
+import { PAGE_REPORT_REASON_LABELS, PageReport } from '@app/core/models/page-reports';
 import { asyncAction } from '@app/core/utils/async-action';
 import { LoadError } from '@app/shared/ui/load-error';
 

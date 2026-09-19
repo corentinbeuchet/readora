@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { WorkType } from '@app/core/models/readora.models';
+import { WorkType } from '@app/core/models/catalog';
 import { BrowserStorage } from '@app/core/storage/browser-storage';
 import {
   AutoScrollSpeed,

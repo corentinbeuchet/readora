@@ -2,7 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { firstValueFrom } from 'rxjs';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { ApiResponse, AuthResponse, Permission, UserProfile } from '@app/core/models/readora.models';
+import { ApiResponse } from '@app/core/models/api';
+import { AuthResponse, Permission, UserProfile } from '@app/core/models/identity';
 import { API } from '../../test-utils';
 
 /** Establishes a full session (token + user) in the store by replaying a fake login. */

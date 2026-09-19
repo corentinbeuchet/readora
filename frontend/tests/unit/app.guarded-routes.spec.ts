@@ -3,7 +3,7 @@ import { HttpTestingController } from '@angular/common/http/testing';
 import { Router, provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from '@app/app.routes';
-import { Permission } from '@app/core/models/readora.models';
+import { Permission } from '@app/core/models/identity';
 import { givenIAmSignedInWith } from './core/auth/auth-fixtures';
 import { provideHttpTesting } from './test-utils';
 

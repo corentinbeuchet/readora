@@ -1,7 +1,7 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { ChapterComment } from '@app/core/models/readora.models';
+import { ChapterComment } from '@app/core/models/comments';
 
 @Component({
   selector: 'app-comment-tree',

@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { WorkRatings } from '@app/features/catalog/work-detail-page/work-ratings/work-ratings';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { WorkReview } from '@app/core/models/readora.models';
+import { WorkReview } from '@app/core/models/reviews';
 import { mockUser, signIn } from '../../../../core/auth/auth-fixtures';
 import { API, fail, ok, provideHttpTesting, settle } from '../../../../test-utils';
 

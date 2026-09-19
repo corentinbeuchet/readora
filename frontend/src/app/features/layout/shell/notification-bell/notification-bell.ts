@@ -3,7 +3,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { NotificationStore } from '@app/core/notifications/notification-store';
-import { ReaderNotification } from '@app/core/models/readora.models';
+import { ReaderNotification } from '@app/core/models/notifications';
 import { asyncAction } from '@app/core/utils/async-action';
 import { TimeAgoPipe } from '@app/shared/ui/time-ago.pipe';
 

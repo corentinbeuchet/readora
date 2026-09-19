@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ListsApi } from '@app/core/api/lists-api';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { ReadingList } from '@app/core/models/readora.models';
+import { ReadingList } from '@app/core/models/reading-lists';
 import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
 import { LoadError } from '@app/shared/ui/load-error';

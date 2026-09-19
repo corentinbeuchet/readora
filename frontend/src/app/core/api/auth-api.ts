@@ -1,6 +1,6 @@
 import { Service, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AuthResponse, LoginRequest, RegisterRequest } from '@app/core/models/readora.models';
+import { AuthResponse, LoginRequest, RegisterRequest } from '@app/core/models/identity';
 import { ApiClient } from './api-client';
 
 /** `/api/v1/auth` — every call carries the HttpOnly refresh cookie (`withCredentials`). */

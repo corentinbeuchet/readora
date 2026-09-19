@@ -3,7 +3,7 @@ import { HttpTestingController, TestRequest } from '@angular/common/http/testing
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { RankingsPage } from '@app/features/discovery/rankings-page/rankings-page';
-import { RankedWork } from '@app/core/models/readora.models';
+import { RankedWork } from '@app/core/models/discovery';
 import { API, ok, provideHttpTesting, settle } from '../../../test-utils';
 
 function ranked(rank: number, title: string, score: number, ratings = 0): RankedWork {

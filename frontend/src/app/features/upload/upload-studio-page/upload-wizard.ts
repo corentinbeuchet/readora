@@ -1,6 +1,6 @@
 import { DestroyRef, Service, computed, inject, signal } from '@angular/core';
 import { form, maxLength, required, validate } from '@angular/forms/signals';
-import { Demographic, WorkStatus, WorkType } from '@app/core/models/readora.models';
+import { Demographic, WorkStatus, WorkType } from '@app/core/models/catalog';
 import { PageUploadItem, createPreviewUrl, isImageFile, revokePreviewUrl } from './file-utils';
 
 export type UploadStep = 'manga' | 'chapter' | 'pages' | 'review' | 'success';

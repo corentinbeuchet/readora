@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { PublicProfilePage } from '@app/features/community/public-profile-page/public-profile-page';
-import { WorkSummary } from '@app/core/models/readora.models';
+import { WorkSummary } from '@app/core/models/catalog';
 import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 
 interface ReaderStats {

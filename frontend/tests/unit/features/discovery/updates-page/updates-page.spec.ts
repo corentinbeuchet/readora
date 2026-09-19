@@ -4,7 +4,7 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { UpdatesPage } from '@app/features/discovery/updates-page/updates-page';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { Release } from '@app/core/models/readora.models';
+import { Release } from '@app/core/models/discovery';
 import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
 import { API, FIXED_NOW, fail, freezeDate, ok, provideHttpTesting, settle } from '../../../test-utils';
 

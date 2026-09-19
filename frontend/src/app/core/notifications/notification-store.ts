@@ -2,7 +2,7 @@ import { Service, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { NotificationsApi } from '@app/core/api/notifications-api';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { ReaderNotification } from '@app/core/models/readora.models';
+import { ReaderNotification } from '@app/core/models/notifications';
 
 interface NotificationsState {
   /** The user the data was loaded for: after a logout or a switch of account it's never shown to someone else. */

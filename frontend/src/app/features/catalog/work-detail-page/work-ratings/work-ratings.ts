@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { RatingsApi } from '@app/core/api/ratings-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
-import { WorkReview } from '@app/core/models/readora.models';
+import { WorkReview } from '@app/core/models/reviews';
 import { asyncAction } from '@app/core/utils/async-action';
 import { FieldErrors } from '@app/shared/forms/field-errors';
 import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';

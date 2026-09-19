@@ -11,7 +11,7 @@ import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { WorkRatings } from './work-ratings/work-ratings';
 import { AddToList } from './add-to-list/add-to-list';
-import { READING_STATUS_LABELS, ReadingStatus } from '@app/core/models/readora.models';
+import { READING_STATUS_LABELS, ReadingStatus } from '@app/core/models/library';
 import { SeoService } from '@app/core/seo/seo.service';
 import { LoadError } from '@app/shared/ui/load-error';
 import { WorkCover } from '@app/shared/ui/work-cover/work-cover';

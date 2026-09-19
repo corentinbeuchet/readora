@@ -3,7 +3,7 @@ import { FormField, form, maxLength, pattern, required, submit } from '@angular/
 import { firstValueFrom } from 'rxjs';
 import { ProfileApi } from '@app/core/api/profile-api';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { UserProfile } from '@app/core/models/readora.models';
+import { UserProfile } from '@app/core/models/identity';
 import { apiErrorMessage } from '@app/core/api/api-client';
 import { FieldErrors } from '@app/shared/forms/field-errors';
 import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';

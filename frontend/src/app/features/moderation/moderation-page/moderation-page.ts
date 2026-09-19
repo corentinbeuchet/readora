@@ -3,7 +3,7 @@ import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ModerationApi } from '@app/core/api/moderation-api';
-import { COMMENT_REPORT_REASON_LABELS, ModerationItem } from '@app/core/models/readora.models';
+import { COMMENT_REPORT_REASON_LABELS, ModerationItem } from '@app/core/models/comments';
 import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
 import { LoadError } from '@app/shared/ui/load-error';

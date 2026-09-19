@@ -4,7 +4,7 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { LibraryPage } from '@app/features/library/library-page/library-page';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { LibraryItem } from '@app/core/models/readora.models';
+import { LibraryItem } from '@app/core/models/library';
 import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
 import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 

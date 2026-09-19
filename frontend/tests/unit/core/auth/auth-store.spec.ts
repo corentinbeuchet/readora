@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { firstValueFrom } from 'rxjs';
 import { AuthStore, SESSION_HINT_KEY } from '@app/core/auth/auth-store';
-import { AuthResponse, Permission } from '@app/core/models/readora.models';
+import { AuthResponse, Permission } from '@app/core/models/identity';
 import { mockSession, mockUser } from './auth-fixtures';
 import { BrowserStorage } from '@app/core/storage/browser-storage';
 import { API, MemoryStorage, fail, ok, provideHttpTesting } from '../../test-utils';

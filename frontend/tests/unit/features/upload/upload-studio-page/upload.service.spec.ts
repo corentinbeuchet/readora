@@ -3,7 +3,7 @@ import { HttpTestingController, TestRequest } from '@angular/common/http/testing
 import { firstValueFrom } from 'rxjs';
 import { UploadService } from '@app/features/upload/upload-studio-page/upload.service';
 import { ArchiveError, ArchiveLimits, PageUploadItem, naturalCompare, sortFilesNaturally, extractArchiveImages } from '@app/features/upload/upload-studio-page/file-utils';
-import { StorageUploadResult } from '@app/core/models/readora.models';
+import { StorageUploadResult } from '@app/core/models/chapter';
 import JSZip from 'jszip';
 import { API, fail, ok, provideHttpTesting } from '../../../test-utils';
 

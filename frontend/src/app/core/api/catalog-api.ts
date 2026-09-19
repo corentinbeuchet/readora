@@ -2,17 +2,10 @@ import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import {
-  CatalogQuery,
-  Chapter,
-  ChapterSummary,
-  CreateWorkPayload,
-  DirectPublishChapterPayload,
-  PagedResponse,
-  ScanlationProject,
-  Work,
-  WorkSummary
-} from '@app/core/models/readora.models';
+import { PagedResponse } from '@app/core/models/api';
+import { CatalogQuery, CreateWorkPayload, Work, WorkSummary } from '@app/core/models/catalog';
+import { Chapter, ChapterSummary, DirectPublishChapterPayload } from '@app/core/models/chapter';
+import { ScanlationProject } from '@app/core/models/scanlation';
 import { ApiClient, parseEnvelope } from './api-client';
 
 const EMPTY_PAGE: PagedResponse<WorkSummary> = { items: [], page: 0, size: 0, totalElements: 0, totalPages: 0 };

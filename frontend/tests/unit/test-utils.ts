@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Routes } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { ApiResponse } from '@app/core/models/readora.models';
+import { ApiResponse } from '@app/core/models/api';
 import { BrowserStorage } from '@app/core/storage/browser-storage';
 import { environment } from '../../src/environments/environment';
 

@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { ModerationPage } from '@app/features/moderation/moderation-page/moderation-page';
-import { ModerationItem } from '@app/core/models/readora.models';
+import { ModerationItem } from '@app/core/models/comments';
 import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 
 const ITEM: ModerationItem = {

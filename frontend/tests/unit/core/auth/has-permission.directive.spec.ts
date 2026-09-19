@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
-import { Permission } from '@app/core/models/readora.models';
+import { Permission } from '@app/core/models/identity';
 import { givenIAmSignedInWith, mockUser } from './auth-fixtures';
 import { provideHttpTesting } from '../../test-utils';
 

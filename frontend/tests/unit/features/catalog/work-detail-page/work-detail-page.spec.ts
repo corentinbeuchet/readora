@@ -3,7 +3,8 @@ import { HttpTestingController, TestRequest } from '@angular/common/http/testing
 import { provideRouter } from '@angular/router';
 import { WorkDetailPage } from '@app/features/catalog/work-detail-page/work-detail-page';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { ApiResponse, Work } from '@app/core/models/readora.models';
+import { ApiResponse } from '@app/core/models/api';
+import { Work } from '@app/core/models/catalog';
 import { givenIAmSignedInWith, mockUser, signIn } from '../../../core/auth/auth-fixtures';
 import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 

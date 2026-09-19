@@ -1,4 +1,4 @@
-import { ScanlationProject, TaskStatus, WorkflowStage, WorkflowTask } from '@app/core/models/readora.models';
+import { ScanlationProject, TaskStatus, WorkflowStage, WorkflowTask } from '@app/core/models/scanlation';
 import { STAGES, tasksByStage, withTask, withTaskStage } from '@app/features/scanlation/scanlation-board-page/scanlation-board';
 
 const PROJECT: ScanlationProject = {

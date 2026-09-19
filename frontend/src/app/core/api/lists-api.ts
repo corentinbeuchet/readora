@@ -1,7 +1,7 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { ReadingList, ReadingListPayload } from '@app/core/models/readora.models';
+import { ReadingList, ReadingListPayload } from '@app/core/models/reading-lists';
 import { ApiClient, parseEnvelope } from './api-client';
 
 /** Readers' lists of series (US-05). Published lists are public; writes need `LIBRARY_USE`. */

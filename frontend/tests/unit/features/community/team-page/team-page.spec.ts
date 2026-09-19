@@ -3,7 +3,7 @@ import { HttpTestingController, TestRequest } from '@angular/common/http/testing
 import { provideRouter } from '@angular/router';
 import { TeamPage } from '@app/features/community/team-page/team-page';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { TeamProfile } from '@app/core/models/readora.models';
+import { TeamProfile } from '@app/core/models/community';
 import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
 import { API, ok, provideHttpTesting, settle } from '../../../test-utils';
 

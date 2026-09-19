@@ -3,7 +3,8 @@ import { HttpTestingController, TestRequest } from '@angular/common/http/testing
 import { provideRouter } from '@angular/router';
 import { ChapterComments, insertInThread } from '@app/features/social/chapter-comments/chapter-comments';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { ChapterComment, UserProfile } from '@app/core/models/readora.models';
+import { ChapterComment } from '@app/core/models/comments';
+import { UserProfile } from '@app/core/models/identity';
 import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
 import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 

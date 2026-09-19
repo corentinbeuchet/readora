@@ -3,7 +3,7 @@ import { HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { HistoryPage } from '@app/features/library/history-page/history-page';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { HistoryItem } from '@app/core/models/readora.models';
+import { HistoryItem } from '@app/core/models/library';
 import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
 import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 

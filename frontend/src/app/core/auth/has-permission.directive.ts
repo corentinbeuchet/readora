@@ -1,5 +1,5 @@
 import { Directive, TemplateRef, ViewContainerRef, effect, inject, input } from '@angular/core';
-import { Permission } from '@app/core/models/readora.models';
+import { Permission } from '@app/core/models/identity';
 import { AuthStore } from './auth-store';
 
 /**

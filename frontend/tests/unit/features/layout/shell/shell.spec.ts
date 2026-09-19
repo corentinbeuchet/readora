@@ -6,7 +6,7 @@ import { Router, provideRouter } from '@angular/router';
 import { Shell } from '@app/features/layout/shell/shell';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { LayoutStore } from '@app/core/layout/layout-store';
-import { Permission } from '@app/core/models/readora.models';
+import { Permission } from '@app/core/models/identity';
 import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
 
 @Component({ template: '<h1>Page</h1>' })

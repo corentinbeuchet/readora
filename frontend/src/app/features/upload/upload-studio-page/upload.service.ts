@@ -1,7 +1,7 @@
 import { Service, inject } from '@angular/core';
 import { Observable, catchError, from, map, mergeMap, of, toArray } from 'rxjs';
 import { ApiClient, apiErrorMessage } from '@app/core/api/api-client';
-import { StorageUploadResult } from '@app/core/models/readora.models';
+import { StorageUploadResult } from '@app/core/models/chapter';
 import { PageUploadItem } from './file-utils';
 
 @Service()

@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { ScanlationBoardPage } from '@app/features/scanlation/scanlation-board-page/scanlation-board-page';
-import { ScanlationProject, WorkflowTask } from '@app/core/models/readora.models';
+import { ScanlationProject, WorkflowTask } from '@app/core/models/scanlation';
 import { givenIAmSignedInWith } from '../../../core/auth/auth-fixtures';
 import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 

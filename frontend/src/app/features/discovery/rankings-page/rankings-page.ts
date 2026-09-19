@@ -1,7 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DiscoveryApi } from '@app/core/api/discovery-api';
-import { RankingPeriod } from '@app/core/models/readora.models';
+import { RankingPeriod } from '@app/core/models/discovery';
 import { SeoService } from '@app/core/seo/seo.service';
 import { LoadError } from '@app/shared/ui/load-error';
 import { DecimalPipe, I18nPluralPipe } from '@angular/common';

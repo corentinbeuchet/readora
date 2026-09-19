@@ -6,7 +6,7 @@ import { ScanlationApi } from '@app/core/api/scanlation-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { Dialog } from '@app/shared/ui/dialog/dialog';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
-import { WorkflowTask } from '@app/core/models/readora.models';
+import { WorkflowTask } from '@app/core/models/scanlation';
 import { SeoService } from '@app/core/seo/seo.service';
 import { STAGES, tasksByStage, withTask, withTaskStage } from './scanlation-board';
 import { PageReportsPanel } from './page-reports-panel/page-reports-panel';

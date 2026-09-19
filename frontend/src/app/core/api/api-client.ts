@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { Service, inject } from '@angular/core';
 import { Observable, OperatorFunction, catchError, map, of, throwError } from 'rxjs';
 import { API_BASE_URL } from '@app/core/config/urls';
-import { ApiResponse } from '@app/core/models/readora.models';
+import { ApiResponse } from '@app/core/models/api';
 
 /** Normalised error raised by every API client. */
 export class ApiError extends Error {

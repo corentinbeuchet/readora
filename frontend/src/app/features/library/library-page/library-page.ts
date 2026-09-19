@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { CommunityApi } from '@app/core/api/community-api';
 import { LibraryApi } from '@app/core/api/library-api';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { LibraryItem, READING_STATUS_LABELS, ReadingStatus } from '@app/core/models/readora.models';
+import { LibraryItem, READING_STATUS_LABELS, ReadingStatus } from '@app/core/models/library';
 import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
 import { LoadError } from '@app/shared/ui/load-error';

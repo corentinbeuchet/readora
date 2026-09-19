@@ -5,7 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { CommentsApi } from '@app/core/api/comments-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
-import { ChapterComment } from '@app/core/models/readora.models';
+import { ChapterComment } from '@app/core/models/comments';
 import { CommentTree } from './comment-tree/comment-tree';
 import { ReportCommentDialog } from './report-comment-dialog/report-comment-dialog';
 import { asyncAction } from '@app/core/utils/async-action';

@@ -1,7 +1,8 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { CatalogQuery, RankedWork, RankingPeriod, Release, WorkSummary } from '@app/core/models/readora.models';
+import { CatalogQuery, WorkSummary } from '@app/core/models/catalog';
+import { RankedWork, RankingPeriod, Release } from '@app/core/models/discovery';
 import { ApiClient, nullIfNotFound, parseEnvelope } from './api-client';
 import { catalogParams } from './catalog-api';
 

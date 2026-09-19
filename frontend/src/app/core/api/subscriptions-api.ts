@@ -1,6 +1,6 @@
 import { Service, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { CheckoutSession, Subscription, SubscriptionPlan } from '@app/core/models/readora.models';
+import { CheckoutSession, Subscription, SubscriptionPlan } from '@app/core/models/identity';
 import { ApiClient } from './api-client';
 
 /** `/api/v1/subscriptions` */

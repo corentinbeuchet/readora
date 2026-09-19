@@ -3,7 +3,7 @@ import { DatePipe, NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Tab, TabContent, TabList, TabPanel, Tabs } from '@angular/aria/tabs';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { UserProfile } from '@app/core/models/readora.models';
+import { UserProfile } from '@app/core/models/identity';
 import { SeoService } from '@app/core/seo/seo.service';
 import { BookmarkList } from './bookmark-list/bookmark-list';
 import { ProfileForm } from './profile-form/profile-form';

@@ -1,6 +1,8 @@
 import { PrerenderFallback, RenderMode, ServerRoute } from '@angular/ssr';
 import { environment } from '../environments/environment';
-import { ApiResponse, ChapterSummary, PagedResponse, WorkSummary } from '@app/core/models/readora.models';
+import { ApiResponse, PagedResponse } from '@app/core/models/api';
+import { WorkSummary } from '@app/core/models/catalog';
+import { ChapterSummary } from '@app/core/models/chapter';
 
 const API = environment.apiUrl.replace(/\/+$/, '');
 /** Upper bound of catalog pages prerendered at build time. */

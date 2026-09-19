@@ -3,7 +3,7 @@ import { signal } from '@angular/core';
 import { ReaderState } from '@app/features/reader/reader-page/reader-state';
 import { ReaderPreferencesStore, ReadingDirection, SeriesLayout, ViewMode } from '@app/features/reader/reader-page/reader-preferences-store';
 import { BrowserStorage } from '@app/core/storage/browser-storage';
-import { Chapter } from '@app/core/models/readora.models';
+import { Chapter } from '@app/core/models/chapter';
 import { MemoryStorage } from '../../../test-utils';
 
 const pages = (n: number) => Array.from({ length: n }, (_, i) => ({ pageNumber: i + 1, storageKey: `p${i + 1}`, cdnUrl: `c${i + 1}` }));

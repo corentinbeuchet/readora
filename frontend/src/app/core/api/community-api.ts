@@ -1,7 +1,7 @@
 import { HttpClient, httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal, inject } from '@angular/core';
 import { Observable, catchError } from 'rxjs';
-import { PublicProfile, TeamProfile } from '@app/core/models/readora.models';
+import { PublicProfile, TeamProfile } from '@app/core/models/community';
 import { ApiClient, parseEnvelope, toApiError } from './api-client';
 
 /** Public profiles, team pages, team follows and the library export (US-12). */
