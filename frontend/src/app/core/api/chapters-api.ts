@@ -1,19 +1,12 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal, inject } from '@angular/core';
-import { Observable } from 'rxjs';
 import { Chapter } from '../models/readora.models';
 import { ApiClient, parseEnvelope } from './api-client';
-
-export type ViewMode = 'VERTICAL' | 'PAGED';
 
 /** `/api/v1/chapters` (public). */
 @Service()
 export class ChaptersApi {
   private readonly api = inject(ApiClient);
-
-  getChapter(chapterId: string, viewMode: ViewMode = 'VERTICAL'): Observable<Chapter> {
-    return this.api.get<Chapter>(`/chapters/${chapterId}`, { params: { viewMode } });
-  }
 
   /**
    * Reactive chapter loader: re-fetches whenever `chapterId()` changes; idle while it is empty.

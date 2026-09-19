@@ -8,10 +8,6 @@ import { ApiClient } from './api-client';
 export class ProfileApi {
   private readonly api = inject(ApiClient);
 
-  get(): Observable<UserProfile> {
-    return this.api.get<UserProfile>('/profile');
-  }
-
   update(request: UpdateProfileRequest): Observable<UserProfile> {
     return this.api.put<UserProfile>('/profile', request);
   }

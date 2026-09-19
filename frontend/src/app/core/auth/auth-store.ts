@@ -77,11 +77,6 @@ export class AuthStore {
     );
   }
 
-  /** Re-reads the profile (e.g. after a Stripe checkout) without rotating tokens. */
-  reloadUser(): Observable<UserProfile> {
-    return this.authApi.me().pipe(tap((user) => this._user.set(user)));
-  }
-
   setUser(user: UserProfile): void {
     this._user.set(user);
   }

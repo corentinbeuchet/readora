@@ -9,10 +9,6 @@ import { ApiClient, parseEnvelope } from './api-client';
 export class ScanlationApi {
   private readonly api = inject(ApiClient);
 
-  getProject(projectId: string): Observable<ScanlationProject> {
-    return this.api.get<ScanlationProject>(`/scanlation/projects/${projectId}`);
-  }
-
   createTask(projectId: string, request: CreateTaskRequest): Observable<WorkflowTask> {
     return this.api.post<WorkflowTask>(`/scanlation/projects/${projectId}/tasks`, request);
   }

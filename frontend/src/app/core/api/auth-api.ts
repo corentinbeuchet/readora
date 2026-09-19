@@ -1,6 +1,6 @@
 import { Service, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AuthResponse, LoginRequest, RegisterRequest, UserProfile } from '../models/readora.models';
+import { AuthResponse, LoginRequest, RegisterRequest } from '../models/readora.models';
 import { ApiClient } from './api-client';
 
 /** `/api/v1/auth` — every call carries the HttpOnly refresh cookie (`withCredentials`). */
@@ -24,7 +24,4 @@ export class AuthApi {
     return this.api.post<string>('/auth/logout', {}, { withCredentials: true });
   }
 
-  me(): Observable<UserProfile> {
-    return this.api.get<UserProfile>('/auth/me');
-  }
 }

@@ -9,10 +9,6 @@ import { ApiClient, parseEnvelope } from './api-client';
 export class CommentsApi {
   private readonly api = inject(ApiClient);
 
-  forChapter(chapterId: string): Observable<ChapterComment[]> {
-    return this.api.get<ChapterComment[]>(`/comments/chapter/${chapterId}`);
-  }
-
   post(chapterId: string, request: CreateCommentRequest): Observable<ChapterComment> {
     return this.api.post<ChapterComment>(`/comments/chapter/${chapterId}`, request);
   }

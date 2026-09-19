@@ -8,10 +8,6 @@ import { ApiClient } from './api-client';
 export class SubscriptionsApi {
   private readonly api = inject(ApiClient);
 
-  current(): Observable<Subscription> {
-    return this.api.get<Subscription>('/subscriptions/me');
-  }
-
   checkout(plan: Exclude<SubscriptionPlan, 'FREE'> = 'PREMIUM'): Observable<CheckoutSession> {
     return this.api.post<CheckoutSession>('/subscriptions/checkout', { plan });
   }

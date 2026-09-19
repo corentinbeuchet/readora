@@ -9,14 +9,6 @@ import { ApiClient, parseEnvelope } from './api-client';
 export class BookmarksApi {
   private readonly api = inject(ApiClient);
 
-  list(): Observable<Bookmark[]> {
-    return this.api.get<Bookmark[]>('/bookmarks');
-  }
-
-  forWork(workId: string): Observable<Bookmark> {
-    return this.api.get<Bookmark>(`/bookmarks/${workId}`);
-  }
-
   updateProgress(workId: string, request: UpdateProgressRequest): Observable<Bookmark> {
     return this.api.put<Bookmark>(`/bookmarks/${workId}/progress`, request);
   }

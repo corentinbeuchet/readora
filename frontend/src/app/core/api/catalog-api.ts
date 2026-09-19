@@ -2,17 +2,7 @@ import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import {
-  CatalogQuery,
-  Chapter,
-  ChapterSummary,
-  CreateWorkPayload,
-  DirectPublishChapterPayload,
-  PagedResponse,
-  ScanlationProject,
-  Work,
-  WorkSummary
-} from '../models/readora.models';
+import { CatalogQuery, Chapter, ChapterSummary, CreateWorkPayload, DirectPublishChapterPayload, PagedResponse, ScanlationProject, Work, WorkSummary } from '../models/readora.models';
 import { ApiClient, parseEnvelope } from './api-client';
 
 const EMPTY_PAGE: PagedResponse<WorkSummary> = { items: [], page: 0, size: 0, totalElements: 0, totalPages: 0 };
@@ -42,16 +32,8 @@ export class CatalogApi {
       .pipe(map((page) => page.items));
   }
 
-  getWork(workId: string): Observable<Work> {
-    return this.api.get<Work>(`/works/${workId}`);
-  }
-
   createWork(payload: CreateWorkPayload): Observable<Work> {
     return this.api.post<Work>('/works', payload);
-  }
-
-  listChapters(workId: string): Observable<ChapterSummary[]> {
-    return this.api.get<ChapterSummary[]>(`/works/${workId}/chapters`);
   }
 
   listProjects(workId: string): Observable<ScanlationProject[]> {

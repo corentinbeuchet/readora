@@ -79,7 +79,7 @@ describe('ProfilePage (Angular Aria Tabs + Signal Forms)', () => {
     name.dispatchEvent(new Event('input'));
     fixture.detectChanges();
 
-    // e.g. AuthStore.reloadUser() after a Stripe checkout: same user, new object.
+    // e.g. AuthStore refreshing the user after a Stripe checkout: same user, new object.
     store.setUser(mockUser({ displayName: 'Jane Reader', bio: 'Bio from the server', username: 'jane' }));
     fixture.detectChanges();
     await fixture.whenStable();
