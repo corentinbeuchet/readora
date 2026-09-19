@@ -1,9 +1,10 @@
 import { ApplicationConfig } from '@angular/core';
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling, withNavigationErrorHandler } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+import { provideClientHydration, withEventReplay, withHttpTransferCacheOptions } from '@angular/platform-browser';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { isTransferCacheable } from './core/api/transfer-cache';
 import { recoverFromChunkLoadFailure } from './core/routing/chunk-load-recovery';
 
 export const appConfig: ApplicationConfig = {
@@ -17,7 +18,8 @@ export const appConfig: ApplicationConfig = {
     ),
     // FetchBackend is the default HttpBackend in Angular 22 (withFetch() is deprecated).
     provideHttpClient(withInterceptors([authInterceptor])),
-    provideClientHydration(withEventReplay())
+    // Only public catalog reads are handed from the prerendered HTML to the browser; user data is always fetched.
+    provideClientHydration(withEventReplay(), withHttpTransferCacheOptions({ filter: isTransferCacheable }))
     // Session restore is browser-only: see app.config.browser.ts.
   ]
 };
