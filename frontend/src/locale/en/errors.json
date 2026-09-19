@@ -25,6 +25,7 @@
     "error.listDuplicateSeries": "This series is already in the list.",
     "error.alreadyHandled": "This has already been handled.",
     "error.noActiveSubscription": "You have no active subscription to cancel.",
+    "error.chapterNotPublished": "This chapter is not published yet.",
     "error.cancellationAlreadyScheduled": "Your subscription is already set to end with this period."
   }
 }

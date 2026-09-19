@@ -84,6 +84,17 @@ class ChapterReadingControllerIntegrationTest {
                 .andExpect(jsonPath("$.data.nextChapterId").doesNotExist());
     }
 
+    @Test
+    @DisplayName("An unpublished chapter is refused with the CHAPTER_NOT_PUBLISHED code, so the client can translate it")
+    void unpublishedChapterIsRefusedWithItsOwnCode() throws Exception {
+        Chapter draft = chapterRepository.save(Chapter.createDraft(work.getId(), ChapterNumber.of("2"), "Draft", null));
+
+        mockMvc.perform(get("/api/v1/chapters/" + draft.getId().value()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("CHAPTER_NOT_PUBLISHED"));
+    }
+
     private Chapter publish(String number) {
         Chapter next = Chapter.createDraft(work.getId(), ChapterNumber.of(number), "Chapter " + number, null);
         next.updatePages(List.of(PageAsset.create(1, "scans/solo/" + number + "/p1.webp", "https://cdn.readora.com/p.webp")));

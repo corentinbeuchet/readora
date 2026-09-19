@@ -209,7 +209,7 @@ public class ReaderViewerStepDefinitions {
     @Then("the access should be rejected with a {string} error")
     public void verifyRejectionError(String expectedErrorCode) {
         assertThat(thrownException)
-                .isInstanceOf(DomainValidationException.class)
-                .hasMessageContaining(expectedErrorCode);
+                .isInstanceOfSatisfying(DomainValidationException.class,
+                        rejection -> assertThat(rejection.code()).isEqualTo(expectedErrorCode));
     }
 }

@@ -25,6 +25,7 @@
     "error.listDuplicateSeries": "Cette série est déjà dans la liste.",
     "error.alreadyHandled": "Cela a déjà été traité.",
     "error.noActiveSubscription": "Vous n'avez aucun abonnement actif à résilier.",
-    "error.cancellationAlreadyScheduled": "Votre abonnement prend déjà fin à la fin de cette période."
+    "error.cancellationAlreadyScheduled": "Votre abonnement prend déjà fin à la fin de cette période.",
+    "error.chapterNotPublished": "Ce chapitre n'est pas encore publié."
   }
 }

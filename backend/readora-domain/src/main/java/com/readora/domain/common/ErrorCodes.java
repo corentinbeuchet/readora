@@ -36,6 +36,7 @@ public final class ErrorCodes {
     public static final String CANCELLATION_ALREADY_SCHEDULED = "CANCELLATION_ALREADY_SCHEDULED";
     public static final String UNSUPPORTED_FILE_FORMAT = "UNSUPPORTED_FILE_FORMAT";
     public static final String EMPTY_FILE = "EMPTY_FILE";
+    public static final String CHAPTER_NOT_PUBLISHED = "CHAPTER_NOT_PUBLISHED";
 
     private ErrorCodes() {
     }

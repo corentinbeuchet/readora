@@ -51,6 +51,8 @@ export function errorMessageForCode(code: string | null): string | undefined {
       return $localize`:@@error.alreadyHandled:This has already been handled.`;
     case 'NO_ACTIVE_SUBSCRIPTION':
       return $localize`:@@error.noActiveSubscription:You have no active subscription to cancel.`;
+    case 'CHAPTER_NOT_PUBLISHED':
+      return $localize`:@@error.chapterNotPublished:This chapter is not published yet.`;
     case 'CANCELLATION_ALREADY_SCHEDULED':
       return $localize`:@@error.cancellationAlreadyScheduled:Your subscription is already set to end with this period.`;
     default:
