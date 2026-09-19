@@ -1,0 +1,22 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+}
+
+// The screentone sits beside the words, never under them.
+.tone {
+  inline-size: 100%;
+  block-size: 3rem;
+  border-radius: var(--radius-sm);
+  background: var(--screentone), var(--surface-2);
+}
+
+.message {
+  color: var(--muted);
+  max-inline-size: var(--measure);
+}

@@ -1,0 +1,28 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.track {
+  display: flex;
+  gap: var(--space-4);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: var(--space-1);
+  // Room for the focus ring of the first and last tile, and for the scrollbar.
+  padding: var(--space-1) var(--space-1) var(--space-3);
+  margin-inline: calc(-1 * var(--space-1));
+  list-style: none;
+  scrollbar-width: thin;
+}
+
+// The arrows are for a mouse; touch screens swipe, keyboards Tab through the links.
+.arrows {
+  display: none;
+
+  @media (hover: hover) and (pointer: fine) {
+    display: inline-flex;
+    gap: var(--space-1);
+  }
+}

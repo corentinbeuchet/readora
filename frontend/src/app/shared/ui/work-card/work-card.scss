@@ -1,0 +1,123 @@
+@use 'breakpoints' as bp;
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.work-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  block-size: 100%;
+}
+
+.cover {
+  aspect-ratio: 5 / 7;
+  inline-size: 100%;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  outline: 1px solid var(--border);
+  outline-offset: -1px;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+// The one link of the card, stretched over it: the whole card is the target, named by the title.
+.title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  text-decoration: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-sm);
+  }
+
+  &:focus-visible {
+    outline: none;
+
+    &::after {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 3px;
+    }
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .work-card:hover .title {
+    color: var(--accent);
+  }
+
+  .work-card:hover .cover {
+    outline-color: var(--border-strong);
+  }
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.badge-new {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.rank {
+  font-size: var(--fs-2xl);
+  font-stretch: var(--wdth-display);
+  font-weight: var(--fw-black);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--accent);
+}
+
+// Row: rank, cover, text, then the projected actions on the right (under the text on a phone).
+.row {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+
+  .cover {
+    inline-size: 3.25rem;
+    flex: none;
+
+    @include bp.from(md) {
+      inline-size: 4.5rem;
+    }
+  }
+
+  .body {
+    flex: 1 1 10rem;
+  }
+
+  .rank {
+    flex: none;
+    min-inline-size: 2.75rem;
+    text-align: center;
+  }
+
+  .title::after {
+    border-radius: var(--radius-md);
+  }
+}

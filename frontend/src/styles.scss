@@ -1,6 +1,7 @@
 /* Global Styles */
 @use "tokens";
 @use "fonts";
+@use "breakpoints" as bp;
 
 * {
   box-sizing: border-box;
@@ -504,6 +505,59 @@ fieldset.field {
     display: inline-flex;
     align-items: center;
   }
+}
+
+/* Series lists: a grid of cover tiles, or a column of rows. Pages and their skeletons share them (<app-work-card>). */
+.work-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 8rem), 1fr));
+  gap: var(--space-5) var(--space-4);
+  list-style: none;
+}
+
+@include bp.from(md) {
+  .work-grid {
+    grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+  }
+}
+
+.work-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+}
+
+/* One entry of an <app-rail>: a fixed-width tile that snaps into place. */
+.rail-item {
+  flex: none;
+  inline-size: 8.5rem;
+  scroll-snap-align: start;
+  list-style: none;
+}
+
+@include bp.from(md) {
+  .rail-item {
+    inline-size: 10.5rem;
+  }
+}
+
+.rail-item-wide {
+  inline-size: min(18rem, 80vw);
+}
+
+/* Content projected into <app-work-card> stays clickable above the card's stretched link. */
+[cardActions],
+[cardMeta] a {
+  position: relative;
+  z-index: 1;
+}
+
+[cardActions] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 /* Previous / next page links under a list. */

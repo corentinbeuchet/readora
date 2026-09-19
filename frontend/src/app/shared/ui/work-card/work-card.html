@@ -1,0 +1,24 @@
+<article class="work-card" [class.row]="variant() === 'row'">
+  @if (rank(); as position) {
+    <p class="rank"><span class="sr-only" i18n="@@workCard.rank">Rank</span> {{ position }}</p>
+  }
+  @if (variant() === 'row') {
+    <app-work-cover class="cover" [src]="work().coverImageUrl" width="72" height="101" [priority]="priority()" />
+  } @else {
+    <app-work-cover class="cover" [src]="work().coverImageUrl" width="240" height="336" [priority]="priority()" />
+  }
+  <div class="body">
+    <a class="title" [routerLink]="['/works', work().id]">{{ work().title }}</a>
+    <p class="badges">
+      @if (newChapters() > 0) {
+        <span class="badge badge-new" i18n="@@workCard.newChapters">{newChapters(), plural, =1 {1 new} other {{{ newChapters() }} new}}<span class="sr-only"> chapters</span></span>
+      }
+      <span class="badge">{{ typeLabel() }}</span>
+      @if (newChapters() === 0) {
+        <span class="badge">{{ statusLabel() }}</span>
+      }
+    </p>
+    <ng-content select="[cardMeta]" />
+  </div>
+  <ng-content select="[cardActions]" />
+</article>

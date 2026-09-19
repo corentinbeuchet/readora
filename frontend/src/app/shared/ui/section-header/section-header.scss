@@ -1,0 +1,24 @@
+:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-4);
+  margin-block-end: var(--space-3);
+}
+
+.heading {
+  margin-inline-end: auto;
+}
+
+.see-all {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 1.75rem;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

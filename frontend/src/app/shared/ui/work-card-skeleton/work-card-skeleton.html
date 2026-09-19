@@ -1,0 +1,12 @@
+<span class="sr-only"><ng-content /></span>
+<ul aria-hidden="true" [class.work-grid]="variant() === 'grid'" [class.work-rows]="variant() === 'row'" [class.rail-line]="variant() === 'rail'">
+  @for (placeholder of placeholders(); track placeholder) {
+    <li [class.row]="variant() === 'row'" [class.rail-item]="variant() === 'rail'">
+      <span class="skeleton cover"></span>
+      <span class="lines">
+        <span class="skeleton line"></span>
+        <span class="skeleton line short"></span>
+      </span>
+    </li>
+  }
+</ul>

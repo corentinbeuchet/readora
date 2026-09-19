@@ -1,0 +1,51 @@
+:host {
+  display: block;
+}
+
+li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.cover {
+  aspect-ratio: 5 / 7;
+  inline-size: 100%;
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+}
+
+.line {
+  block-size: 0.9rem;
+  inline-size: 85%;
+
+  &.short {
+    inline-size: 50%;
+  }
+}
+
+.rail-line {
+  display: flex;
+  gap: var(--space-4);
+  overflow: hidden;
+  list-style: none;
+}
+
+.row {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+
+  .cover {
+    inline-size: 3.25rem;
+    flex: none;
+  }
+}

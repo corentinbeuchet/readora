@@ -1,0 +1,15 @@
+<section class="rail" [attr.aria-labelledby]="headingId">
+  <app-section-header [heading]="heading()" [headingId]="headingId" [seeAll]="seeAll()" [seeAllParams]="seeAllParams()">
+    <span class="arrows">
+      <button type="button" class="btn btn-ghost btn-icon" [disabled]="atStart()" (click)="page(-1)" [attr.aria-label]="backLabel()">
+        <app-icon name="chevron-left" />
+      </button>
+      <button type="button" class="btn btn-ghost btn-icon" [disabled]="atEnd()" (click)="page(1)" [attr.aria-label]="forwardLabel()">
+        <app-icon name="chevron-right" />
+      </button>
+    </span>
+  </app-section-header>
+  <ul #track class="track">
+    <ng-content />
+  </ul>
+</section>

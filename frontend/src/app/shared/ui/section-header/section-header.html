@@ -1,0 +1,6 @@
+<h2 class="heading" [attr.id]="headingId()">{{ heading() }}</h2>
+@if (seeAll(); as link) {
+  <!-- The link's name includes the section, so five "See all" on a page are told apart. -->
+  <a class="see-all" [routerLink]="link" [queryParams]="seeAllParams()"><ng-container i18n="@@sectionHeader.seeAll">See all</ng-container><span class="sr-only">: {{ heading() }}</span></a>
+}
+<ng-content />

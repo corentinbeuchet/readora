@@ -1,0 +1,84 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.list-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  block-size: 100%;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+// Three covers fanned like books on a shelf.
+.stack {
+  display: flex;
+  flex: none;
+  padding-inline-start: 1.25rem;
+}
+
+.cover {
+  inline-size: 3.25rem;
+  aspect-ratio: 5 / 7;
+  margin-inline-start: -1.25rem;
+  border-radius: var(--radius-sm);
+  outline: 2px solid var(--surface);
+  background: var(--surface-2);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.title {
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  text-decoration: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-md);
+  }
+
+  &:focus-visible {
+    outline: none;
+
+    &::after {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .list-card:hover .title {
+    color: var(--accent);
+  }
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+.upvotes {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-variant-numeric: tabular-nums;
+}

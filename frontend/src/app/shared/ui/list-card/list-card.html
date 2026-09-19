@@ -1,0 +1,24 @@
+<article class="list-card">
+  <div class="stack" aria-hidden="true">
+    @for (work of covers(); track work.id) {
+      <app-work-cover class="cover" [src]="work.coverImageUrl" width="72" height="101" />
+    } @empty {
+      <span class="cover skeleton"></span>
+    }
+  </div>
+  <div class="body">
+    <a class="title" [routerLink]="['/lists', list().id]">{{ list().title }}</a>
+    <p class="muted" i18n="@@listCard.by">by {{ list().ownerUsername }}</p>
+    <p class="facts">
+      <span i18n="@@listCard.seriesCount">{list().items.length, plural, =1 {1 series} other {{{ list().items.length }} series}}</span>
+      <span class="upvotes"><app-icon name="arrow-big-up" /><span class="sr-only" i18n="@@listCard.upvotes">Upvotes:</span> {{ list().upvotes }}</span>
+      @if (showVisibility()) {
+        @if (list().published) {
+          <span class="badge" i18n="@@listCard.public">Public</span>
+        } @else {
+          <span class="badge" i18n="@@listCard.private">Private</span>
+        }
+      }
+    </p>
+  </div>
+</article>
