@@ -84,6 +84,9 @@ checklist to apply while coding. Deeper docs: the `angular-developer` skill refe
 ## Imports and layers
 - `@app/...` only, no `../`. core <- shared <- features; a feature imports only itself (reader -> social
   `ChapterComments` is the one exception). Lint enforces it: put code in the right layer rather than adding exceptions.
+- API types come from `@app/core/models/<domain>` (one file per domain). A rule about a model (who may claim, can a
+  plan be cancelled) is a pure function beside the type, unit-tested, not an inline comparison in a component and
+  not a class method.
 
 ## Reuse, don't copy
 Before adding UI or helpers, search `src/app/shared/` and `src/app/core/utils/`. One implementation each:

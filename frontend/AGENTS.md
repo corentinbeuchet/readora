@@ -147,6 +147,12 @@ breakpoints).
 
 ## Naming & layout
 - `core/` = app-wide singletons (api, auth, seo). A feature-only service lives in its feature.
+- API types: one file per domain in `core/models/<domain>.ts` (`catalog`, `chapter`, `scanlation`, `identity`, …),
+  imported by that path (no barrel, no catch-all model file). Domain rules on those types (`canClaim(task)`,
+  `canCancelSubscription(sub)`) are pure functions exported beside them and unit-tested in
+  `tests/unit/core/models/`. Components and stores call them rather than comparing statuses inline. Types stay
+  interfaces, not classes: API data is plain JSON, and resource updates spread objects, which would drop class
+  methods (decided 2026-09-19).
 - File suffixes: `*-store.ts`, `*-api.ts`, `*.guard.ts`, `*.interceptor.ts`, `*.directive.ts`, `*-page.ts` for routed pages.
 - Folders by feature, then **one folder per component** (angular.dev style guide; the CLI's default): a component
   with a template or styles lives in `<name>/<name>.{ts,html,scss}`; single-file units (services, stores, pipes,
