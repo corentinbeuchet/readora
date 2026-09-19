@@ -126,6 +126,7 @@
           "options": {
             "runner": "vitest",
             "runnerConfig": "vitest-base.config.ts",
+            "isolate": true,
             "tsConfig": "tsconfig.spec.json",
             "buildTarget": "readora-frontend:build:development",
             "include": [
