@@ -3,7 +3,6 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { KanbanBoard } from '@app/features/scanlation/components/kanban-board';
-import { ScanlationState } from '@app/features/scanlation/services/scanlation-state';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { ScanlationProject } from '@app/core/models/readora.models';
 import { environment } from '../../../../../src/environments/environment';
@@ -29,7 +28,6 @@ describe('KanbanBoard (API-driven, permission gated)', () => {
   let fixture: ComponentFixture<KanbanBoard>;
   let http: HttpTestingController;
   let store: AuthStore;
-  let state: ScanlationState;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -39,7 +37,6 @@ describe('KanbanBoard (API-driven, permission gated)', () => {
     http = TestBed.inject(HttpTestingController);
     store = TestBed.inject(AuthStore);
     fixture = TestBed.createComponent(KanbanBoard);
-    state = fixture.debugElement.injector.get(ScanlationState);
     fixture.componentRef.setInput('projectId', PROJECT_ID);
   });
 
@@ -52,6 +49,9 @@ describe('KanbanBoard (API-driven, permission gated)', () => {
     http.match(`${API}/scanlation/projects/${PROJECT_ID}/page-reports`).forEach((r) => r.flush({ success: true, data: [], error: null }));
     await settle(fixture);
   }
+
+  /** Task cards shown in one column of the board. */
+  const column = (stage: string): HTMLElement[] => Array.from(fixture.nativeElement.querySelectorAll(`section[data-stage="${stage}"] .task-card`));
 
   async function submitDialog(): Promise<void> {
     q('form.submit-dialog')!.dispatchEvent(new Event('submit', { cancelable: true }));
@@ -66,8 +66,8 @@ describe('KanbanBoard (API-driven, permission gated)', () => {
     await render();
 
     expect(q('h1')?.textContent).toContain('FlameScans Solo Leveling');
-    expect(state.tasksByStage().RAW_UPLOADED.length).toBe(1);
-    expect(state.tasksByStage().QC_REVIEW.length).toBe(1);
+    expect(column('RAW_UPLOADED').length).toBe(1);
+    expect(column('QC_REVIEW').length).toBe(1);
     expect(all('.task-card').length).toBe(3);
   });
 
@@ -101,7 +101,7 @@ describe('KanbanBoard (API-driven, permission gated)', () => {
     req.flush({ success: true, error: null, data: { ...PROJECT.tasks[0], status: 'IN_PROGRESS', assigneeId: 'user-1' } });
     await settle(fixture);
 
-    expect(state.tasksByStage().RAW_UPLOADED[0].assigneeId).toBe('user-1');
+    expect(column('RAW_UPLOADED')[0].textContent).toContain('Assigned: ');
     expect(fixture.nativeElement.textContent).toContain('Assigned: you');
   });
 
@@ -132,8 +132,8 @@ describe('KanbanBoard (API-driven, permission gated)', () => {
     await settle(fixture);
 
     expect(q('[role="dialog"]')).toBeNull();
-    expect(state.tasksByStage().TRANSLATING.length).toBe(1);
-    expect(state.tasksByStage().CLEANING.length).toBe(0);
+    expect(column('TRANSLATING').length).toBe(1);
+    expect(column('CLEANING').length).toBe(0);
   });
 
   it('Publish calls the API and moves the task to PUBLISHED; API errors are shown', async () => {
@@ -147,13 +147,13 @@ describe('KanbanBoard (API-driven, permission gated)', () => {
     );
     await settle(fixture);
     expect(q('[role="alert"]')?.textContent).toContain('not a member');
-    expect(state.tasksByStage().QC_REVIEW.length).toBe(1);
+    expect(column('QC_REVIEW').length).toBe(1);
 
     all('.btn-publish')[0].click();
     http.expectOne(`${API}/scanlation/projects/${PROJECT_ID}/tasks/t-qc/publish`).flush({ success: true, data: 'Chapter published successfully', error: null });
     await settle(fixture);
-    expect(state.tasksByStage().PUBLISHED.length).toBe(1);
-    expect(state.tasksByStage().QC_REVIEW.length).toBe(0);
+    expect(column('PUBLISHED').length).toBe(1);
+    expect(column('QC_REVIEW').length).toBe(0);
   });
 
   it('Upload Studio link is rendered and points to /upload for users with WORK_CREATE permission', async () => {
@@ -169,23 +169,17 @@ describe('KanbanBoard (API-driven, permission gated)', () => {
   it('does not show the previous project while another one loads or when it fails', async () => {
     await signIn(store, http, mockUser({ permissions: ['PROJECT_VIEW'] }));
     await render();
-    expect(state.currentProject()?.id).toBe(PROJECT_ID);
+    expect(fixture.nativeElement.querySelector('h1').textContent).toContain('FlameScans Solo Leveling');
 
     fixture.componentRef.setInput('projectId', 'proj-2');
     await settle(fixture);
-    expect(state.currentProject()).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('FlameScans Solo Leveling');
     expect(all('.task-card').length).toBe(0);
 
     http.expectOne(`${API}/scanlation/projects/proj-2`).flush({ success: false, data: null, error: 'not found' }, { status: 404, statusText: 'Not Found' });
     await settle(fixture);
-    expect(state.currentProject()).toBeNull();
     expect(fixture.nativeElement.textContent).not.toContain('FlameScans Solo Leveling');
-  });
-
-  it('gives every board its own state (not a root singleton)', () => {
-    const other = TestBed.createComponent(KanbanBoard);
-    expect(other.debugElement.injector.get(ScanlationState)).not.toBe(state);
-    expect(() => TestBed.inject(ScanlationState)).toThrow();
+    expect(fixture.nativeElement.textContent).not.toContain('FlameScans Solo Leveling');
   });
 
   describe('submit dialog accessibility', () => {

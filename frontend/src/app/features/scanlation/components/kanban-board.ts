@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormField, form, min, pattern, required, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
@@ -6,10 +6,10 @@ import { ScanlationApi } from '@app/core/api/scanlation-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { FocusTrapDirective } from '@app/core/a11y/focus-trap.directive';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
-import { WorkflowStage, WorkflowTask } from '@app/core/models/readora.models';
+import { WorkflowTask } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
 import { AnyField, apiErrorMessage, visibleErrors } from '@app/features/auth/auth-form.utils';
-import { ScanlationState } from '../services/scanlation-state';
+import { STAGES, tasksByStage, withTask, withTaskStage } from '../services/scanlation-board';
 import { PageReportsPanel } from './page-reports-panel';
 
 interface SubmitModel {
@@ -22,12 +22,9 @@ interface SubmitModel {
   imports: [RouterLink, FormField, HasPermissionDirective, FocusTrapDirective, PageReportsPanel],
   templateUrl: './kanban-board.html',
   styleUrl: './kanban-board.scss',
-  // Page-scoped state: a fresh ScanlationState per board, discarded on navigation.
-  providers: [ScanlationState],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class KanbanBoard {
-  readonly state = inject(ScanlationState);
   protected readonly auth = inject(AuthStore);
   private readonly scanlationApi = inject(ScanlationApi);
   private readonly seo = inject(SeoService);
@@ -35,22 +32,33 @@ export class KanbanBoard {
   /** Bound from `scanlation/:projectId`. */
   readonly projectId = input<string | undefined>(undefined);
 
+  /** The project resource is the board's only state: local changes are written back with `project.update(...)`. */
   protected readonly project = this.scanlationApi.projectResource(this.projectId);
+  protected readonly currentProject = computed(() => (this.project.hasValue() ? (this.project.value() ?? null) : null));
   protected readonly busyTaskId = signal<string | null>(null);
   protected readonly actionError = signal<string | null>(null);
   protected readonly submitTarget = signal<WorkflowTask | null>(null);
 
   protected readonly currentUserId = computed(() => this.auth.user()?.id ?? null);
 
-  readonly stages: { key: WorkflowStage; label: string }[] = [
-    { key: 'RAW_UPLOADED', label: 'RAW Package' },
-    { key: 'CLEANING', label: 'Cleaning & Redraw' },
-    { key: 'TRANSLATING', label: 'Translation' },
-    { key: 'TYPESETTING', label: 'Typesetting' },
-    { key: 'PROOFREADING', label: 'Proofreading' },
-    { key: 'QC_REVIEW', label: 'QC Review' },
-    { key: 'PUBLISHED', label: 'Published' }
-  ];
+  /** One entry per column, with what the current user may do on each task (computed once, not per template call). */
+  protected readonly columns = computed(() => {
+    const byStage = tasksByStage(this.currentProject());
+    const me = this.currentUserId();
+    return STAGES.map((stage) => ({
+      ...stage,
+      tasks: byStage[stage.key].map((task) => {
+        const mine = !!task.assigneeId && task.assigneeId === me;
+        return {
+          task,
+          mine,
+          canClaim: task.stage !== 'PUBLISHED' && task.status !== 'COMPLETED' && !task.assigneeId,
+          canSubmit: task.stage !== 'PUBLISHED' && task.stage !== 'QC_REVIEW' && mine,
+          canPublish: task.stage === 'QC_REVIEW'
+        };
+      })
+    }));
+  });
 
   protected readonly submitModel = signal<SubmitModel>({ assetUrl: '', pageCount: 1 });
   protected readonly submitForm = form(this.submitModel, (path) => {
@@ -61,45 +69,16 @@ export class KanbanBoard {
 
   constructor() {
     this.seo.private_('Scanlation workspace');
-    effect(() => {
-      const id = this.projectId();
-      // `value()` throws while the resource is in error state: check `hasValue()` first.
-      const loaded = this.project.hasValue() ? this.project.value() : undefined;
-      untracked(() => {
-        if (loaded && loaded.id === id) {
-          this.state.setProject(loaded);
-        } else if (this.state.currentProject()?.id !== id || this.project.error()) {
-          // Another project is loading, or it failed: never keep showing the previous project.
-          this.state.clear();
-        }
-      });
-    });
   }
 
   protected errors(field: AnyField): string[] {
     return visibleErrors(field);
   }
 
-  protected isMine(task: WorkflowTask): boolean {
-    return !!task.assigneeId && task.assigneeId === this.currentUserId();
-  }
-
-  protected canClaim(task: WorkflowTask): boolean {
-    return task.stage !== 'PUBLISHED' && task.status !== 'COMPLETED' && !task.assigneeId;
-  }
-
-  protected canSubmit(task: WorkflowTask): boolean {
-    return task.stage !== 'PUBLISHED' && task.stage !== 'QC_REVIEW' && this.isMine(task);
-  }
-
-  protected canPublish(task: WorkflowTask): boolean {
-    return task.stage === 'QC_REVIEW';
-  }
-
   protected async claim(task: WorkflowTask): Promise<void> {
     await this.run(task, async () => {
       const updated = await firstValueFrom(this.scanlationApi.claimTask(this.requireProjectId(), task.id));
-      this.state.upsertTask(updated);
+      this.project.update((p) => (p ? withTask(p, updated) : p));
     });
   }
 
@@ -125,7 +104,7 @@ export class KanbanBoard {
         const updated = await firstValueFrom(
           this.scanlationApi.submitTask(this.requireProjectId(), task.id, { assetUrl, pageCount })
         );
-        this.state.upsertTask(updated);
+        this.project.update((p) => (p ? withTask(p, updated) : p));
         this.submitTarget.set(null);
       });
     });
@@ -134,7 +113,7 @@ export class KanbanBoard {
   protected async publish(task: WorkflowTask): Promise<void> {
     await this.run(task, async () => {
       await firstValueFrom(this.scanlationApi.publishTask(this.requireProjectId(), task.id));
-      this.state.updateTaskStage(task.id, 'PUBLISHED', 'COMPLETED');
+      this.project.update((p) => (p ? withTaskStage(p, task.id, 'PUBLISHED', 'COMPLETED', new Date()) : p));
     });
   }
 
@@ -155,7 +134,7 @@ export class KanbanBoard {
   }
 
   private requireProjectId(): string {
-    const id = this.projectId() ?? this.state.currentProject()?.id;
+    const id = this.projectId() ?? this.currentProject()?.id;
     if (!id) {
       throw new Error('No project selected');
     }

@@ -11,8 +11,8 @@
   } @else {
     <header class="kanban-header">
       <div class="header-info">
-        <h1>{{ state.currentProject()?.name || 'Scanlation Workspace' }}</h1>
-        @if (state.currentProject(); as p) {
+        <h1>{{ currentProject()?.name || 'Scanlation Workspace' }}</h1>
+        @if (currentProject(); as p) {
           <p class="muted">{{ p.members.length }} members · {{ p.tasks.length }} tasks</p>
         }
       </div>
@@ -28,39 +28,40 @@
     }
 
     <div class="kanban-board">
-      @for (stage of stages; track stage.key) {
-        <section class="kanban-column" [attr.data-stage]="stage.key" [attr.aria-label]="stage.label">
+      @for (column of columns(); track column.key) {
+        <section class="kanban-column" [attr.data-stage]="column.key" [attr.aria-label]="column.label">
           <div class="column-header">
-            <span class="stage-label">{{ stage.label }}</span>
-            <span class="count-badge">{{ state.tasksByStage()[stage.key].length }}</span>
+            <span class="stage-label">{{ column.label }}</span>
+            <span class="count-badge">{{ column.tasks.length }}</span>
           </div>
 
           <div class="task-list">
-            @for (task of state.tasksByStage()[stage.key]; track task.id) {
-              <article class="task-card" [class.task-mine]="isMine(task)">
+            @for (row of column.tasks; track row.task.id) {
+              @let task = row.task;
+              <article class="task-card" [class.task-mine]="row.mine">
                 <div class="task-card-header">
                   <strong>Chapter {{ task.chapterNumber }}</strong>
                   <span class="status-pill" [class]="task.status.toLowerCase()">{{ task.status }}</span>
                 </div>
                 <p class="task-meta">Pages: {{ task.pageCount }}</p>
                 @if (task.assigneeId) {
-                  <p class="task-assignee">Assigned: {{ isMine(task) ? 'you' : task.assigneeId }}</p>
+                  <p class="task-assignee">Assigned: {{ row.mine ? 'you' : task.assigneeId }}</p>
                 }
 
                 <div class="task-actions">
-                  @if (canClaim(task)) {
+                  @if (row.canClaim) {
                     <button *appHasPermission="'TASK_CLAIM'" type="button" class="btn btn-claim"
                             (click)="claim(task)" [disabled]="busyTaskId() === task.id">
                       Claim
                     </button>
                   }
-                  @if (canSubmit(task)) {
+                  @if (row.canSubmit) {
                     <button *appHasPermission="'TASK_SUBMIT'" type="button" class="btn btn-submit"
                             (click)="openSubmit(task)" [disabled]="busyTaskId() === task.id">
                       Submit work
                     </button>
                   }
-                  @if (canPublish(task)) {
+                  @if (row.canPublish) {
                     <button *appHasPermission="'CHAPTER_PUBLISH'" type="button" class="btn btn-primary btn-publish"
                             (click)="publish(task)" [disabled]="busyTaskId() === task.id">
                       Publish
