@@ -181,6 +181,24 @@ app-omnisearch {
   font-size: var(--fs-sm);
 }
 
+.language-picker ul {
+  display: flex;
+  gap: 0.75rem;
+  list-style: none;
+
+  a,
+  [aria-current] {
+    // WCAG 2.5.8: at least 24px tall.
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 1.5rem;
+  }
+
+  [aria-current] {
+    font-weight: var(--fw-semibold);
+  }
+}
+
 .theme-picker {
   flex-direction: row;
   align-items: center;

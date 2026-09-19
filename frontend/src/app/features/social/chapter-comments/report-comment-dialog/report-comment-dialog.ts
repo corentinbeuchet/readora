@@ -22,7 +22,7 @@ export class ReportCommentDialog {
   protected readonly reasons = Object.keys(COMMENT_REPORT_REASON_LABELS) as CommentReportReason[];
   protected readonly labels = COMMENT_REPORT_REASON_LABELS;
   protected readonly reason = signal<CommentReportReason>('UNMARKED_SPOILER');
-  protected readonly sending = asyncAction('Could not send the report. Please try again.');
+  protected readonly sending = asyncAction($localize`:@@social.reportComment.error:Could not send the report. Please try again.`);
 
   protected async send(event: Event): Promise<void> {
     event.preventDefault();

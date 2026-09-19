@@ -98,15 +98,15 @@ export class ReaderPage {
 
     effect(() => {
       if (this.chapter.error()) {
-        untracked(() => this.seo.notFound('Chapter unavailable'));
+        untracked(() => this.seo.notFound($localize`:@@reader.page.seoUnavailable:Chapter unavailable`));
         return;
       }
       const loaded = this.state.currentChapter();
       if (loaded) {
         untracked(() =>
           this.seo.update({
-            title: `${loaded.title} — Chapter ${loaded.chapterNumber}`,
-            description: `Read chapter ${loaded.chapterNumber} (${loaded.pages.length} pages) online on Readora.`,
+            title: $localize`:@@reader.page.seoTitle:${loaded.title}:title: — Chapter ${loaded.chapterNumber}:number:`,
+            description: $localize`:@@reader.page.seoDescription:Read chapter ${loaded.chapterNumber}:number: (${loaded.pages.length}:pages: pages) online on Readora.`,
             path: `/read/${loaded.id}`,
             image: loaded.pages[0]?.cdnUrl ?? undefined,
             type: 'article'
@@ -196,7 +196,7 @@ export class ReaderPage {
 
   protected onReported(pageNumber: number): void {
     this.reportingPage.set(null);
-    this.reportConfirmation.set(`Thanks! Page ${pageNumber} was reported to the team.`);
+    this.reportConfirmation.set($localize`:@@reader.page.reported:Thanks! Page ${pageNumber}:page: was reported to the team.`);
   }
 
   /** Zen mode on: site header gone, reader controls hidden until the mouse moves or the screen is tapped. */

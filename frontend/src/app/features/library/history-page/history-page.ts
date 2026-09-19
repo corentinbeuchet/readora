@@ -19,9 +19,19 @@ export class HistoryPage {
 
   private readonly enabled = computed(() => this.auth.can('LIBRARY_USE'));
   protected readonly history = inject(ReadingApi).historyResource(this.enabled);
+  /** Accessible name of each row's "Continue" link, by series id. */
+  protected readonly continueLabels = computed(
+    () =>
+      new Map(
+        (this.history.hasValue() ? this.history.value() : []).map((item) => [
+          item.work.id,
+          $localize`:@@library.history.continue.label:Continue ${item.work.title}:title:, chapter ${item.lastRead.chapterNumber}:chapter:`
+        ])
+      )
+  );
 
   constructor() {
-    inject(SeoService).private_('Reading history');
+    inject(SeoService).private_($localize`:@@library.history.seoTitle:Reading history`);
   }
 
   protected reload(): void {

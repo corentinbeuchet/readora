@@ -1,6 +1,6 @@
 <section class="page-narrow">
-  <h1>Create your account</h1>
-  <p class="muted">Free forever. Upgrade to Premium anytime for bookmarks and reading progress.</p>
+  <h1 i18n="@@auth.register.title">Create your account</h1>
+  <p class="muted" i18n="@@auth.register.intro">Free forever. Upgrade to Premium anytime for bookmarks and reading progress.</p>
 
   <form class="form card" (submit)="onSubmit($event)" novalidate>
     @if (registering.error(); as error) {
@@ -8,37 +8,41 @@
     }
 
     <div class="field">
-      <label for="reg-email">Email</label>
+      <label for="reg-email" i18n="@@auth.register.email">Email</label>
       <input id="reg-email" type="email" autocomplete="email" [formField]="registerForm.email"
              [appAriaInvalid]="registerForm.email" aria-describedby="reg-email-error" />
       <app-field-errors id="reg-email-error" [field]="registerForm.email" />
     </div>
 
     <div class="field">
-      <label for="reg-username">Username</label>
+      <label for="reg-username" i18n="@@auth.register.username">Username</label>
       <input id="reg-username" type="text" autocomplete="username" [formField]="registerForm.username"
              [appAriaInvalid]="registerForm.username" aria-describedby="reg-username-error" />
       <app-field-errors id="reg-username-error" [field]="registerForm.username" />
     </div>
 
     <div class="field">
-      <label for="reg-password">Password</label>
+      <label for="reg-password" i18n="@@auth.register.password">Password</label>
       <input id="reg-password" type="password" autocomplete="new-password" [formField]="registerForm.password"
              [appAriaInvalid]="registerForm.password" aria-describedby="reg-password-error" />
       <app-field-errors id="reg-password-error" [field]="registerForm.password" />
     </div>
 
     <div class="field">
-      <label for="reg-confirm">Confirm password</label>
+      <label for="reg-confirm" i18n="@@auth.register.confirm">Confirm password</label>
       <input id="reg-confirm" type="password" autocomplete="new-password" [formField]="registerForm.confirmPassword"
              [appAriaInvalid]="registerForm.confirmPassword" aria-describedby="reg-confirm-error" />
       <app-field-errors id="reg-confirm-error" [field]="registerForm.confirmPassword" />
     </div>
 
     <button type="submit" class="btn btn-primary" [disabled]="registering.busy()">
-      {{ registering.busy() ? 'Creating account…' : 'Sign up' }}
+      @if (registering.busy()) {
+        <ng-container i18n="@@auth.register.submitting">Creating account…</ng-container>
+      } @else {
+        <ng-container i18n="@@auth.register.submit">Sign up</ng-container>
+      }
     </button>
 
-    <p class="muted">Already registered? <a routerLink="/login">Log in</a></p>
+    <p class="muted" i18n="@@auth.register.haveAccount">Already registered? <a routerLink="/login">Log in</a></p>
   </form>
 </section>

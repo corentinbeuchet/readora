@@ -1,23 +1,23 @@
 <section class="page">
-  <h1>Latest updates</h1>
+  <h1 i18n="@@discovery.updates.heading">Latest updates</h1>
 
   @if (canFilter()) {
-    <nav class="feed-tabs" aria-label="Which updates">
-      <a routerLink="/updates" class="tab" [class.active]="!mine()" [attr.aria-current]="!mine() ? 'page' : null">All</a>
-      <a routerLink="/updates" [queryParams]="{ feed: 'mine' }" class="tab" [class.active]="mine()" [attr.aria-current]="mine() ? 'page' : null">My library</a>
+    <nav class="feed-tabs" aria-label="Which updates" i18n-aria-label="@@discovery.updates.tabs.label">
+      <a routerLink="/updates" class="tab" [class.active]="!mine()" [attr.aria-current]="!mine() ? 'page' : null" i18n="@@discovery.updates.tabs.all">All</a>
+      <a routerLink="/updates" [queryParams]="{ feed: 'mine' }" class="tab" [class.active]="mine()" [attr.aria-current]="mine() ? 'page' : null" i18n="@@discovery.updates.tabs.mine">My library</a>
     </nav>
   }
 
   @if (releases.isLoading()) {
-    <p class="muted" role="status">Loading the latest chapters…</p>
+    <p class="muted" role="status" i18n="@@discovery.updates.loading">Loading the latest chapters…</p>
   } @else if (releases.error()) {
-    <app-load-error (retry)="releases.reload()">Could not load the latest chapters.</app-load-error>
+    <app-load-error (retry)="releases.reload()"><ng-container i18n="@@discovery.updates.loadError">Could not load the latest chapters.</ng-container></app-load-error>
   } @else if (releases.hasValue() && releases.value().length === 0) {
     <p class="muted">
       @if (mine()) {
-        Nothing new in your library yet. Add series to your library to follow them here.
+        <ng-container i18n="@@discovery.updates.emptyMine">Nothing new in your library yet. Add series to your library to follow them here.</ng-container>
       } @else {
-        No chapters have been published yet.
+        <ng-container i18n="@@discovery.updates.empty">No chapters have been published yet.</ng-container>
       }
     </p>
   } @else if (releases.hasValue()) {
@@ -30,27 +30,27 @@
           <div class="release-body">
             <h2 class="release-title"><a [routerLink]="['/works', release.work.id]">{{ release.work.title }}</a></h2>
             <p class="muted">
-              Chapter {{ release.chapterNumber }}
+              <ng-container i18n="@@discovery.updates.chapter">Chapter {{ release.chapterNumber }}</ng-container>
               @if (release.chapterTitle) {
                 · {{ release.chapterTitle }}
               }
               · <time [attr.datetime]="release.publishedAt">{{ release.publishedAt | timeAgo }}</time>
               @if (release.read) {
-                · <span class="badge">Read</span>
+                · <span class="badge" i18n="@@discovery.updates.read">Read</span>
               }
             </p>
           </div>
           <a class="btn btn-primary btn-sm" [routerLink]="['/read', release.chapterId]"
-             [attr.aria-label]="`Read now: ${release.work.title}, chapter ${release.chapterNumber}`">Read now</a>
+             [attr.aria-label]="readNowLabels().get(release.chapterId)" i18n="@@discovery.updates.readNow">Read now</a>
         </li>
       }
     </ul>
-    <nav class="pager" aria-label="Updates pages">
+    <nav class="pager" aria-label="Updates pages" i18n-aria-label="@@discovery.updates.pager.label">
       @if (pageIndex() > 0) {
-        <a class="btn" routerLink="/updates" [queryParams]="{ page: pageIndex() - 1 || null }" queryParamsHandling="merge">&larr; Newer</a>
+        <a class="btn" routerLink="/updates" [queryParams]="{ page: pageIndex() - 1 || null }" queryParamsHandling="merge" i18n="@@discovery.updates.pager.newer">&larr; Newer</a>
       }
       @if (releases.value().length >= 30) {
-        <a class="btn" routerLink="/updates" [queryParams]="{ page: pageIndex() + 1 }" queryParamsHandling="merge">Older &rarr;</a>
+        <a class="btn" routerLink="/updates" [queryParams]="{ page: pageIndex() + 1 }" queryParamsHandling="merge" i18n="@@discovery.updates.pager.older">Older &rarr;</a>
       }
     </nav>
   }

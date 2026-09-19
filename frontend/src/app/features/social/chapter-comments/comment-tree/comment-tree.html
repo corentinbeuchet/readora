@@ -8,16 +8,16 @@
         <div class="comment-header">
           <a class="comment-author" [routerLink]="['/u', comment.authorUsername]">{{ comment.authorUsername }}</a>
           @if (comment.pageReference) {
-            <span class="badge-page">Page {{ comment.pageReference }}</span>
+            <span class="badge-page" i18n="@@social.commentTree.page">Page {{ comment.pageReference }}</span>
           }
           <span class="comment-date">{{ comment.createdAt | date:'short' }}</span>
         </div>
 
         @if (row.hidden) {
           <!-- The spoiler text is not in the DOM (nor in prerendered HTML) until revealed. -->
-          <p class="comment-content spoiler-placeholder muted">This comment contains spoilers.</p>
+          <p class="comment-content spoiler-placeholder muted" i18n="@@social.commentTree.spoilerHidden">This comment contains spoilers.</p>
           <button type="button" (click)="revealSpoiler(comment.id)" class="btn-spoiler">
-            Show Spoiler
+            <ng-container i18n="@@social.commentTree.showSpoiler">Show Spoiler</ng-container>
           </button>
         } @else {
           <div class="comment-content">{{ comment.content }}</div>
@@ -25,7 +25,7 @@
 
         <div class="comment-footer">
           @if (canUpvote()) {
-            <button type="button" (click)="upvote.emit(comment.id)" class="btn-action btn-upvote" [attr.aria-label]="`Upvote, ${comment.upvotes} votes`">
+            <button type="button" (click)="upvote.emit(comment.id)" class="btn-action btn-upvote" [attr.aria-label]="row.upvoteLabel">
               ▲ {{ comment.upvotes }}
             </button>
           } @else {
@@ -33,12 +33,12 @@
           }
           @if (canReply()) {
             <button type="button" (click)="reply.emit(comment)" class="btn-action btn-reply">
-              Reply
+              <ng-container i18n="@@social.commentTree.reply">Reply</ng-container>
             </button>
           }
           @if (canReport() && comment.authorId !== currentUserId()) {
             <button type="button" (click)="report.emit(comment)" class="btn-action btn-report">
-              Report<span class="sr-only"> comment by {{ comment.authorUsername }}</span>
+              <ng-container i18n="@@social.commentTree.report">Report<span class="sr-only"> comment by {{ comment.authorUsername }}</span></ng-container>
             </button>
           }
         </div>

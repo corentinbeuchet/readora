@@ -2,13 +2,13 @@ import { ScanlationProject, TaskStatus, WorkflowStage, WorkflowTask } from '@app
 
 /** Board columns, in workflow order. */
 export const STAGES: readonly { key: WorkflowStage; label: string }[] = [
-  { key: 'RAW_UPLOADED', label: 'RAW Package' },
-  { key: 'CLEANING', label: 'Cleaning & Redraw' },
-  { key: 'TRANSLATING', label: 'Translation' },
-  { key: 'TYPESETTING', label: 'Typesetting' },
-  { key: 'PROOFREADING', label: 'Proofreading' },
-  { key: 'QC_REVIEW', label: 'QC Review' },
-  { key: 'PUBLISHED', label: 'Published' }
+  { key: 'RAW_UPLOADED', label: $localize`:@@scanlation.board.stage.raw:RAW Package` },
+  { key: 'CLEANING', label: $localize`:@@scanlation.board.stage.cleaning:Cleaning & Redraw` },
+  { key: 'TRANSLATING', label: $localize`:@@scanlation.board.stage.translating:Translation` },
+  { key: 'TYPESETTING', label: $localize`:@@scanlation.board.stage.typesetting:Typesetting` },
+  { key: 'PROOFREADING', label: $localize`:@@scanlation.board.stage.proofreading:Proofreading` },
+  { key: 'QC_REVIEW', label: $localize`:@@scanlation.board.stage.qcReview:QC Review` },
+  { key: 'PUBLISHED', label: $localize`:@@scanlation.board.stage.published:Published` }
 ];
 
 /** The project's tasks grouped by workflow stage (every stage present, possibly empty). */

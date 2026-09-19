@@ -2,13 +2,13 @@
   @if (auth.user(); as user) {
     <header class="profile-header">
       @if (user.avatarUrl) {
-        <img class="profile-avatar" [ngSrc]="user.avatarUrl" [alt]="`${user.displayName || user.username} avatar`" width="64" height="64" />
+        <img class="profile-avatar" [ngSrc]="user.avatarUrl" [alt]="avatarAlt()" width="64" height="64" />
       } @else {
         <div class="profile-avatar profile-avatar-placeholder" aria-hidden="true">{{ (user.displayName || user.username || 'U').charAt(0) }}</div>
       }
       <div>
         <h1>{{ user.displayName || user.username }}</h1>
-        <p class="muted">&#64;{{ user.username }} · joined {{ user.createdAt | date: 'mediumDate' }}</p>
+        <p class="muted" i18n="@@profile.page.joined">&#64;{{ user.username }} · joined {{ user.createdAt | date: 'mediumDate' }}</p>
         <p>
           @for (role of (user.roles || []); track role) {
             <span class="badge">{{ role }}</span>
@@ -21,45 +21,49 @@
     </header>
 
     <div ngTabs>
-      <div ngTabList [(selectedTab)]="selectedTab" aria-label="Profile sections">
-        <button type="button" ngTab value="overview">Overview</button>
-        <button type="button" ngTab value="bookmarks">Bookmarks</button>
-        <button type="button" ngTab value="subscription">Subscription</button>
+      <div ngTabList [(selectedTab)]="selectedTab" aria-label="Profile sections" i18n-aria-label="@@profile.page.sections">
+        <button type="button" ngTab value="overview" i18n="@@profile.page.tabOverview">Overview</button>
+        <button type="button" ngTab value="bookmarks" i18n="@@profile.page.tabBookmarks">Bookmarks</button>
+        <button type="button" ngTab value="subscription" i18n="@@profile.page.tabSubscription">Subscription</button>
       </div>
 
       <div ngTabPanel value="overview" class="card">
         <ng-template ngTabContent>
-          <h2>Edit profile</h2>
+          <h2 i18n="@@profile.page.editTitle">Edit profile</h2>
           <app-profile-form [profile]="user" (saved)="onSaved($event)" />
         </ng-template>
       </div>
 
       <div ngTabPanel value="bookmarks">
         <ng-template ngTabContent>
-          <h2>Bookmarks</h2>
+          <h2 i18n="@@profile.page.bookmarksTitle">Bookmarks</h2>
           <app-bookmark-list />
         </ng-template>
       </div>
 
       <div ngTabPanel value="subscription" class="card">
         <ng-template ngTabContent>
-          <h2>Subscription</h2>
+          <h2 i18n="@@profile.page.subscriptionTitle">Subscription</h2>
           <p>
-            Plan: <strong>{{ user.subscription.plan }}</strong>
+            <ng-container i18n="@@profile.page.plan">Plan: <strong>{{ user.subscription.plan }}</strong></ng-container>
             <span class="badge" [class.badge-premium]="user.subscription.active">{{ user.subscription.status }}</span>
           </p>
           @if (user.subscription.currentPeriodEnd) {
             <p class="muted">
-              {{ user.subscription.cancelAtPeriodEnd ? 'Premium ends' : 'Current period ends' }}
+              @if (user.subscription.cancelAtPeriodEnd) {
+                <ng-container i18n="@@profile.page.premiumEnds">Premium ends</ng-container>
+              } @else {
+                <ng-container i18n="@@profile.page.periodEnds">Current period ends</ng-container>
+              }
               {{ user.subscription.currentPeriodEnd | date: 'medium' }}
             </p>
           }
-          <p class="muted">Effective permissions: {{ permissions() }}</p>
-          <a routerLink="/subscription" class="btn btn-primary">Manage subscription</a>
+          <p class="muted" i18n="@@profile.page.permissions">Effective permissions: {{ permissions() }}</p>
+          <a routerLink="/subscription" class="btn btn-primary" i18n="@@profile.page.manageSubscription">Manage subscription</a>
         </ng-template>
       </div>
     </div>
   } @else {
-    <p class="muted" role="status">Loading your profile…</p>
+    <p class="muted" role="status" i18n="@@profile.page.loading">Loading your profile…</p>
   }
 </section>

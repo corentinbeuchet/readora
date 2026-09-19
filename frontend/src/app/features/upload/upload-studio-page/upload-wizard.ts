@@ -8,7 +8,8 @@ export type PublishingMode = 'DIRECT' | 'SCANLATION';
 
 /** Positive chapter number such as `1`, `10` or `12.5` (backend: `@Positive BigDecimal`, max 50 chars). */
 const CHAPTER_NUMBER_PATTERN = /^\d{1,6}(\.\d{1,3})?$/;
-export const CHAPTER_NUMBER_ERROR = 'Chapter number must be a positive number such as 1, 10 or 12.5';
+export const CHAPTER_NUMBER_ERROR = $localize`:@@upload.chapter.number.invalid:Chapter number must be a positive number such as 1, 10 or 12.5`;
+const TITLE_REQUIRED = $localize`:@@upload.series.title.required:Give the series a title`;
 export const TITLE_MAX = 255;
 
 /** Normalised chapter number (e.g. `"012.50"` -> `"12.5"`), or `null` when invalid. Never defaults to 1. */
@@ -74,8 +75,8 @@ const NEW_DRAFT: UploadDraft = {
 export class UploadWizard {
   readonly draft = signal<UploadDraft>(NEW_DRAFT);
   readonly form = form(this.draft, (path) => {
-    required(path.title, { message: 'Give the series a title' });
-    validate(path.title, ({ value }) => (value() && !value().trim() ? { kind: 'required', message: 'Give the series a title' } : undefined));
+    required(path.title, { message: TITLE_REQUIRED });
+    validate(path.title, ({ value }) => (value() && !value().trim() ? { kind: 'required', message: TITLE_REQUIRED } : undefined));
     maxLength(path.title, TITLE_MAX);
     maxLength(path.author, 120);
     maxLength(path.chapterTitle, TITLE_MAX);
@@ -130,7 +131,7 @@ export class UploadWizard {
 
   setCover(file: File): void {
     if (!isImageFile(file)) {
-      this._message.set('Cover file must be an image (JPEG, PNG, WebP)');
+      this._message.set($localize`:@@upload.cover.notImage:Cover file must be an image (JPEG, PNG, WebP)`);
       return;
     }
     this.removeCover();

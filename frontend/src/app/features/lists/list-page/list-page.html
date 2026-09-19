@@ -1,58 +1,58 @@
 <section class="page">
   @if (list.isLoading() && !current()) {
-    <p class="muted" role="status">Loading the list…</p>
+    <p class="muted" role="status" i18n="@@lists.list.loading">Loading the list…</p>
   } @else if (list.error()) {
-    <app-load-error [error]="list.error()" notFound="This list doesn't exist or is private." (retry)="list.reload()">
-      Could not load the list.
-      <a actions routerLink="/lists" class="btn btn-link">See public lists</a>
+    <app-load-error [error]="list.error()" notFound="This list doesn't exist or is private." i18n-notFound="@@lists.list.notFound" (retry)="list.reload()">
+      <ng-container i18n="@@lists.list.loadError">Could not load the list.</ng-container>
+      <a actions routerLink="/lists" class="btn btn-link" i18n="@@lists.list.seePublic">See public lists</a>
     </app-load-error>
   } @else if (current(); as l) {
     @if (draft(); as d) {
       <form class="card form" (submit)="$event.preventDefault(); save()" novalidate>
-        <h1>Edit list</h1>
+        <h1 i18n="@@lists.list.edit.heading">Edit list</h1>
         <div class="field">
-          <label for="list-title">Title</label>
+          <label for="list-title" i18n="@@lists.list.edit.title">Title</label>
           <input id="list-title" type="text" maxlength="100" [value]="d.title" (input)="updateDraft({ title: value($event) })" />
         </div>
         <div class="field">
-          <label for="list-description">Description</label>
+          <label for="list-description" i18n="@@lists.list.edit.description">Description</label>
           <textarea id="list-description" rows="2" maxlength="500" [value]="d.description"
                     (input)="updateDraft({ description: value($event) })"></textarea>
         </div>
         <label class="checkbox">
           <input type="checkbox" [checked]="d.published" (change)="updateDraft({ published: checked($event) })" />
-          Public: everyone can see and upvote it
+          <ng-container i18n="@@lists.list.edit.public">Public: everyone can see and upvote it</ng-container>
         </label>
         <ul class="list-items">
           @for (item of d.items; track item.workId) {
             <li class="list-item">
               <div class="list-item-body field">
-                <label [attr.for]="`note-${item.workId}`">Note on {{ item.title }}</label>
+                <label [attr.for]="`note-${item.workId}`" i18n="@@lists.list.edit.note">Note on {{ item.title }}</label>
                 <input [id]="`note-${item.workId}`" type="text" maxlength="300" [value]="item.note" (input)="setNote($index, value($event))" />
               </div>
-              <button type="button" class="btn btn-sm btn-danger-outline" (click)="removeItem($index)">
+              <button type="button" class="btn btn-sm btn-danger-outline" (click)="removeItem($index)" i18n="@@lists.list.edit.remove">
                 Remove<span class="sr-only"> {{ item.title }}</span>
               </button>
             </li>
           } @empty {
-            <li class="muted">No series yet. Add some from a series page with "Add to a list".</li>
+            <li class="muted" i18n="@@lists.list.edit.empty">No series yet. Add some from a series page with "Add to a list".</li>
           }
         </ul>
         @if (action.error(); as message) {
           <p class="form-error" role="alert">{{ message }}</p>
         }
         <div class="list-actions">
-          <button type="button" class="btn" (click)="draft.set(null)">Cancel</button>
-          <button type="submit" class="btn btn-primary" [disabled]="action.busy()">Save list</button>
+          <button type="button" class="btn" (click)="draft.set(null)" i18n="@@lists.list.edit.cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="action.busy()" i18n="@@lists.list.edit.save">Save list</button>
         </div>
       </form>
     } @else {
       <header>
         <h1>{{ l.title }}</h1>
         <p class="muted">
-          by <a [routerLink]="['/u', l.ownerUsername]">{{ l.ownerUsername }}</a> · {{ l.items.length }} series
+          <ng-container i18n="@@lists.list.byline">by <a [routerLink]="['/u', l.ownerUsername]">{{ l.ownerUsername }}</a> · {l.items.length, plural, other {{{ l.items.length }} series}}</ng-container>
           @if (!l.published) {
-            · <span class="badge">private</span>
+            · <span class="badge" i18n="@@lists.list.private">private</span>
           }
         </p>
         @if (l.description) {
@@ -60,12 +60,12 @@
         }
         <div class="list-actions">
           @if (canUpvote() && l.published) {
-            <button type="button" class="btn" [disabled]="action.busy()" (click)="upvote()">▲ Upvote <span class="sr-only">this list</span>({{ l.upvotes }})</button>
+            <button type="button" class="btn" [disabled]="action.busy()" (click)="upvote()" i18n="@@lists.list.upvote">▲ Upvote <span class="sr-only">this list</span>({{ l.upvotes }})</button>
           } @else {
             <span class="muted">▲ {{ l.upvotes }}</span>
           }
           @if (isOwner()) {
-            <button type="button" class="btn" (click)="startEditing()">Edit list</button>
+            <button type="button" class="btn" (click)="startEditing()" i18n="@@lists.list.editButton">Edit list</button>
           }
         </div>
         <p class="muted" role="status">{{ message() }}</p>

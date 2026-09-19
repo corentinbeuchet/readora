@@ -32,7 +32,7 @@ export class AddToList {
     this.message.set(null);
     await this.adding.run(async () => {
       const list = await firstValueFrom(this.api.addItem(listId, this.workId(), this.note().trim() || undefined));
-      this.message.set(`Added to “${list.title}”.`);
+      this.message.set($localize`:@@catalog.addToList.added:Added to “${list.title}:title:”.`);
       this.note.set('');
     });
   }

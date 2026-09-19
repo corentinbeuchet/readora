@@ -1,27 +1,27 @@
 @if (!canRead()) {
   <div class="card">
-    <h3>Bookmarks are a Premium feature</h3>
-    <p class="muted">Upgrade to save your reading progress on every work and pick up where you left off.</p>
-    <a routerLink="/subscription" class="btn btn-primary">See plans</a>
+    <h3 i18n="@@profile.bookmarks.premiumTitle">Bookmarks are a Premium feature</h3>
+    <p class="muted" i18n="@@profile.bookmarks.premiumHint">Upgrade to save your reading progress on every work and pick up where you left off.</p>
+    <a routerLink="/subscription" class="btn btn-primary" i18n="@@profile.bookmarks.seePlans">See plans</a>
   </div>
 } @else if (bookmarks.isLoading()) {
-  <p class="muted" role="status">Loading your bookmarks…</p>
+  <p class="muted" role="status" i18n="@@profile.bookmarks.loading">Loading your bookmarks…</p>
 } @else if (bookmarks.error()) {
-  <app-load-error (retry)="reload()">Could not load bookmarks.</app-load-error>
+  <app-load-error (retry)="reload()" i18n="@@profile.bookmarks.loadError">Could not load bookmarks.</app-load-error>
 } @else if (!bookmarks.value() || bookmarks.value().length === 0) {
-  <p class="muted">You have no bookmarks yet. Start reading a chapter and your progress will be saved here.</p>
+  <p class="muted" i18n="@@profile.bookmarks.empty">You have no bookmarks yet. Start reading a chapter and your progress will be saved here.</p>
 } @else {
   <ul class="bookmark-list">
     @for (bookmark of bookmarks.value(); track bookmark.workId) {
       <li class="card bookmark-item">
         <div>
           <span class="badge">{{ bookmark.status }}</span>
-          <p>Page {{ bookmark.lastReadPageIndex }} · updated {{ bookmark.updatedAt | date: 'medium' }}</p>
+          <p i18n="@@profile.bookmarks.position">Page {{ bookmark.lastReadPageIndex }} · updated {{ bookmark.updatedAt | date: 'medium' }}</p>
         </div>
         <div class="bookmark-actions">
-          <a [routerLink]="['/works', bookmark.workId]" class="btn">Work</a>
+          <a [routerLink]="['/works', bookmark.workId]" class="btn" i18n="@@profile.bookmarks.work">Work</a>
           @if (bookmark.lastReadChapterId) {
-            <a [routerLink]="['/read', bookmark.lastReadChapterId]" class="btn btn-primary">Continue reading</a>
+            <a [routerLink]="['/read', bookmark.lastReadChapterId]" class="btn btn-primary" i18n="@@profile.bookmarks.continue">Continue reading</a>
           }
         </div>
       </li>

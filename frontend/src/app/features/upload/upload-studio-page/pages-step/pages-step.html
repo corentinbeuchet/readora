@@ -1,14 +1,14 @@
 <div class="card wizard-card">
-  <h2>3. Chapter Pages</h2>
-  <p class="muted">
+  <h2 i18n="@@upload.pages.title">3. Chapter Pages</h2>
+  <p class="muted" i18n="@@upload.pages.intro">
     Upload multiple page images or drop a <code>.zip</code> / <code>.cbz</code> archive. Pages will be sorted naturally.
   </p>
 
   <app-page-grid-uploader [(pages)]="wizard.pages" />
 
   <div class="wizard-actions">
-    <button type="button" class="btn" (click)="wizard.goTo('chapter')">&larr; Back</button>
-    <button type="button" class="btn btn-primary" [disabled]="!wizard.pagesValid()" (click)="wizard.goTo('review')">
+    <button type="button" class="btn" (click)="wizard.goTo('chapter')" i18n="@@upload.pages.back">&larr; Back</button>
+    <button type="button" class="btn btn-primary" [disabled]="!wizard.pagesValid()" (click)="wizard.goTo('review')" i18n="@@upload.pages.next">
       Next: Review &rarr;
     </button>
   </div>

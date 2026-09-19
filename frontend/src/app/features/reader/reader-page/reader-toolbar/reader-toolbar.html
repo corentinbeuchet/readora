@@ -4,65 +4,71 @@
       @if (chapter.work; as work) {
         <a class="series-link" [routerLink]="['/works', work.id]">{{ work.title }}</a>
         @if (chapter.scanlationProjectId; as teamId) {
-          <a class="series-link team-link" [routerLink]="['/teams', teamId]">Translation team</a>
+          <a class="series-link team-link" [routerLink]="['/teams', teamId]" i18n="@@reader.toolbar.team">Translation team</a>
         }
       }
     }
-    <h1 class="chapter-title">{{ state.currentChapter()?.title || 'No Chapter Loaded' }}</h1>
-    <span class="page-indicator" aria-hidden="true">Page {{ state.currentPageIndex() + 1 }} / {{ state.totalPages() }}</span>
-    <span class="sr-only page-announcement" aria-live="polite">Page {{ state.currentPageIndex() + 1 }} of {{ state.totalPages() }}</span>
+    <h1 class="chapter-title">
+      @if (state.currentChapter()?.title; as title) {
+        {{ title }}
+      } @else {
+        <ng-container i18n="@@reader.toolbar.noChapter">No Chapter Loaded</ng-container>
+      }
+    </h1>
+    <span class="page-indicator" aria-hidden="true" i18n="@@reader.toolbar.pageIndicator">Page {{ state.currentPageIndex() + 1 }} / {{ state.totalPages() }}</span>
+    <span class="sr-only page-announcement" aria-live="polite" i18n="@@reader.toolbar.pageAnnouncement">Page {{ state.currentPageIndex() + 1 }} of {{ state.totalPages() }}</span>
   </div>
 
-  <div class="viewer-actions" ngToolbar aria-label="Reader controls">
+  <div class="viewer-actions" ngToolbar aria-label="Reader controls" i18n-aria-label="@@reader.toolbar.controls">
     <div ngToolbarWidgetGroup>
       <button type="button" ngToolbarWidget value="VERTICAL" (click)="state.chooseViewMode('VERTICAL')"
               [class.active]="state.viewMode() === 'VERTICAL'" [attr.aria-pressed]="state.viewMode() === 'VERTICAL'">
-        Vertical
+        <ng-container i18n="@@reader.toolbar.vertical">Vertical</ng-container>
       </button>
       <button type="button" ngToolbarWidget value="PAGED" (click)="state.chooseViewMode('PAGED')"
               [class.active]="state.viewMode() === 'PAGED'" [attr.aria-pressed]="state.viewMode() === 'PAGED'">
-        Paged
+        <ng-container i18n="@@reader.toolbar.paged">Paged</ng-container>
       </button>
     </div>
     @if (state.viewMode() === 'PAGED') {
-      <div ngToolbarWidgetGroup aria-label="Reading direction">
+      <div ngToolbarWidgetGroup aria-label="Reading direction" i18n-aria-label="@@reader.toolbar.direction">
         <button type="button" ngToolbarWidget value="LTR" (click)="state.chooseDirection('LTR')"
                 [class.active]="state.direction() === 'LTR'" [attr.aria-pressed]="state.direction() === 'LTR'">
-          Left to right
+          <ng-container i18n="@@reader.toolbar.ltr">Left to right</ng-container>
         </button>
         <button type="button" ngToolbarWidget value="RTL" (click)="state.chooseDirection('RTL')"
                 [class.active]="state.direction() === 'RTL'" [attr.aria-pressed]="state.direction() === 'RTL'">
-          Right to left
+          <ng-container i18n="@@reader.toolbar.rtl">Right to left</ng-container>
         </button>
       </div>
     } @else {
       <div ngToolbarWidgetGroup>
         <button type="button" ngToolbarWidget value="auto-scroll" data-auto-scroll-toggle (click)="autoScroll.toggle()"
                 [class.active]="autoScroll.active()" [attr.aria-pressed]="autoScroll.active()">
-          Auto-scroll
+          <ng-container i18n="@@reader.toolbar.autoScroll">Auto-scroll</ng-container>
         </button>
       </div>
     }
     <div ngToolbarWidgetGroup>
       <button type="button" ngToolbarWidget value="zen" (click)="zenToggled.emit(!zen())"
-              [class.active]="zen()" [attr.aria-pressed]="zen()" title="Hide everything but the pages (Esc to leave)">
-        Zen mode
+              [class.active]="zen()" [attr.aria-pressed]="zen()" title="Hide everything but the pages (Esc to leave)" i18n-title="@@reader.toolbar.zenTitle">
+        <ng-container i18n="@@reader.toolbar.zen">Zen mode</ng-container>
       </button>
       <button *appHasPermission="'PAGE_REPORT'" type="button" ngToolbarWidget value="report" (click)="reportRequested.emit()">
-        Report page
+        <ng-container i18n="@@reader.toolbar.report">Report page</ng-container>
       </button>
       <button #chaptersButton type="button" ngToolbarWidget value="chapters" (click)="chaptersToggled.emit()"
               [attr.aria-expanded]="chaptersOpen()" aria-controls="reader-chapters">
-        Chapters
+        <ng-container i18n="@@reader.toolbar.chapters">Chapters</ng-container>
       </button>
       <button #settingsButton type="button" ngToolbarWidget value="settings" (click)="settingsToggled.emit()"
               [attr.aria-expanded]="settingsOpen()" aria-controls="reader-settings">
-        Settings
+        <ng-container i18n="@@reader.toolbar.settings">Settings</ng-container>
       </button>
     </div>
     <div ngToolbarWidgetGroup>
-      <button type="button" ngToolbarWidget value="zoom-in" (click)="state.setZoom(state.zoomLevel() + 10)" aria-label="Zoom in">Zoom +</button>
-      <button type="button" ngToolbarWidget value="zoom-out" (click)="state.setZoom(state.zoomLevel() - 10)" aria-label="Zoom out">Zoom -</button>
+      <button type="button" ngToolbarWidget value="zoom-in" (click)="state.setZoom(state.zoomLevel() + 10)" aria-label="Zoom in" i18n-aria-label="@@reader.toolbar.zoomInLabel" i18n="@@reader.toolbar.zoomIn">Zoom +</button>
+      <button type="button" ngToolbarWidget value="zoom-out" (click)="state.setZoom(state.zoomLevel() - 10)" aria-label="Zoom out" i18n-aria-label="@@reader.toolbar.zoomOutLabel" i18n="@@reader.toolbar.zoomOut">Zoom -</button>
     </div>
   </div>
 </header>

@@ -1,33 +1,33 @@
 <div class="card wizard-card">
-  <h2>2. Initial Chapter Details</h2>
-  <p class="muted">Configure chapter metadata and choose your preferred publishing mode.</p>
+  <h2 i18n="@@upload.chapter.title">2. Initial Chapter Details</h2>
+  <p class="muted" i18n="@@upload.chapter.intro">Configure chapter metadata and choose your preferred publishing mode.</p>
 
   <div class="field">
-    <label for="chapter-number">Chapter Number <span class="required" aria-hidden="true">*</span></label>
-    <input id="chapter-number" type="text" placeholder="e.g. 1, 1.5, 10"
+    <label for="chapter-number" i18n="@@upload.chapter.number">Chapter Number <span class="required" aria-hidden="true">*</span></label>
+    <input id="chapter-number" type="text" placeholder="e.g. 1, 1.5, 10" i18n-placeholder="@@upload.chapter.number.placeholder"
            [formField]="form.chapterNumber" [appAriaInvalid]="form.chapterNumber" aria-describedby="chapter-number-error" />
     <app-field-errors id="chapter-number-error" [field]="form.chapterNumber" />
   </div>
 
   <div class="field">
-    <label for="chapter-title">Chapter Title (Optional)</label>
-    <input id="chapter-title" type="text" placeholder="e.g. Prologue, The Beginning"
+    <label for="chapter-title" i18n="@@upload.chapter.chapterTitle">Chapter Title (Optional)</label>
+    <input id="chapter-title" type="text" placeholder="e.g. Prologue, The Beginning" i18n-placeholder="@@upload.chapter.chapterTitle.placeholder"
            [formField]="form.chapterTitle" [appAriaInvalid]="form.chapterTitle" aria-describedby="chapter-title-error" />
     <app-field-errors id="chapter-title-error" [field]="form.chapterTitle" />
   </div>
 
   <!-- Native radios: arrow keys, Space and checked state come from the browser. -->
   <fieldset class="field">
-    <legend>Publishing Pipeline</legend>
+    <legend i18n="@@upload.chapter.pipeline">Publishing Pipeline</legend>
     <div class="mode-cards">
       @let mode = wizard.draft().publishingMode;
       <label class="mode-card" [class.selected]="mode === 'DIRECT'">
         <input type="radio" name="publishing-mode" value="DIRECT" class="sr-only" [checked]="mode === 'DIRECT'" (change)="wizard.setPublishingMode('DIRECT')" />
         <span class="mode-card-header">
-          <span class="mode-badge live">Instant Direct</span>
-          <span class="mode-title">Direct Live Release</span>
+          <span class="mode-badge live" i18n="@@upload.chapter.direct.badge">Instant Direct</span>
+          <span class="mode-title" i18n="@@upload.chapter.direct.title">Direct Live Release</span>
         </span>
-        <span class="muted mode-desc">
+        <span class="muted mode-desc" i18n="@@upload.chapter.direct.description">
           Instantly publish all chapter pages to the public catalog. Ideal for solo creators and official releases.
         </span>
       </label>
@@ -35,10 +35,10 @@
       <label class="mode-card" [class.selected]="mode === 'SCANLATION'">
         <input type="radio" name="publishing-mode" value="SCANLATION" class="sr-only" [checked]="mode === 'SCANLATION'" (change)="wizard.setPublishingMode('SCANLATION')" />
         <span class="mode-card-header">
-          <span class="mode-badge workflow">Scanlation Team</span>
-          <span class="mode-title">Scanlation Workspace</span>
+          <span class="mode-badge workflow" i18n="@@upload.chapter.scanlation.badge">Scanlation Team</span>
+          <span class="mode-title" i18n="@@upload.chapter.scanlation.title">Scanlation Workspace</span>
         </span>
-        <span class="muted mode-desc">
+        <span class="muted mode-desc" i18n="@@upload.chapter.scanlation.description">
           Upload raw package into your team's Kanban board to assign cleaning, translation, and QC stages.
         </span>
       </label>
@@ -46,8 +46,8 @@
   </fieldset>
 
   <div class="wizard-actions">
-    <button type="button" class="btn" (click)="wizard.goTo('manga')">&larr; Back</button>
-    <button type="button" class="btn btn-primary" [disabled]="!wizard.chapterValid()" (click)="wizard.goTo('pages')">
+    <button type="button" class="btn" (click)="wizard.goTo('manga')" i18n="@@upload.chapter.back">&larr; Back</button>
+    <button type="button" class="btn btn-primary" [disabled]="!wizard.chapterValid()" (click)="wizard.goTo('pages')" i18n="@@upload.chapter.next">
       Next: Upload Pages &rarr;
     </button>
   </div>

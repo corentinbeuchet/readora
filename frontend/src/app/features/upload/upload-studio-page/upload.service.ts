@@ -66,7 +66,7 @@ export class UploadService {
             error: undefined,
           })),
           catchError((err: unknown) =>
-            of<PageUploadItem>({ ...item, status: 'error', progress: 0, error: apiErrorMessage(err, 'Upload failed') })
+            of<PageUploadItem>({ ...item, status: 'error', progress: 0, error: apiErrorMessage(err, $localize`:@@upload.service.uploadFailed:Upload failed`) })
           ),
           map(settle)
         );

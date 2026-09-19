@@ -54,7 +54,7 @@ export class WorkDetailPage {
   /** New-chapter notifications for this series (US-10); updated locally after a change. */
   protected readonly libraryNotify = linkedSignal<boolean>(() => this.entry()?.newChapterNotifications ?? true);
   /** Library, notification and read-marker changes: one busy/error state. */
-  protected readonly library = asyncAction('Could not update your library. Please try again.');
+  protected readonly library = asyncAction($localize`:@@catalog.work.libraryError:Could not update your library. Please try again.`);
 
   private readonly progress = this.readingApi.progressResource(this.workId, this.canUseLibrary);
   private readonly finished = computed(() => new Set(this.progress.hasValue() ? (this.progress.value()?.finishedChapterIds ?? []) : []));
@@ -85,14 +85,14 @@ export class WorkDetailPage {
   constructor() {
     effect(() => {
       if (this.work.error()) {
-        this.seo.notFound('Work not found');
+        this.seo.notFound($localize`:@@catalog.work.seoNotFound:Work not found`);
         return;
       }
       const w = this.work.hasValue() ? this.work.value() : undefined;
       if (w) {
         this.seo.update({
-          title: `${w.title} (${w.type})`,
-          description: w.synopsis?.slice(0, 160) || `Read ${w.title} on Readora.`,
+          title: $localize`:@@catalog.work.seoTitle:${w.title}:title: (${w.type}:type:)`,
+          description: w.synopsis?.slice(0, 160) || $localize`:@@catalog.work.seoDescription:Read ${w.title}:title: on Readora.`,
           path: `/works/${w.id}`,
           image: w.coverImageUrl ?? undefined,
           type: 'article'
@@ -103,7 +103,7 @@ export class WorkDetailPage {
 
   protected async markPreviousAsRead(chapterId: string): Promise<void> {
     await this.library.run(async () => this.progress.set(await firstValueFrom(this.readingApi.markReadUpTo(chapterId))), {
-      fallback: 'Could not update your read chapters. Please try again.'
+      fallback: $localize`:@@catalog.work.readMarkError:Could not update your read chapters. Please try again.`
     });
   }
 
@@ -123,7 +123,7 @@ export class WorkDetailPage {
         await firstValueFrom(this.libraryApi.setNotifications(this.workId(), enabled));
         this.libraryNotify.set(enabled);
       },
-      { fallback: 'Could not update your notifications. Please try again.' }
+      { fallback: $localize`:@@catalog.work.notifyError:Could not update your notifications. Please try again.` }
     );
   }
 

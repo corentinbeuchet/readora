@@ -1,8 +1,8 @@
 <app-dialog labelledBy="report-comment-title" (closed)="closed.emit()">
   <form class="form" (submit)="send($event)" novalidate>
-    <h2 id="report-comment-title">Report {{ comment().authorUsername }}'s comment</h2>
+    <h2 id="report-comment-title" i18n="@@social.reportComment.title">Report {{ comment().authorUsername }}'s comment</h2>
     <fieldset class="report-reasons">
-      <legend>What is wrong with it?</legend>
+      <legend i18n="@@social.reportComment.question">What is wrong with it?</legend>
       @for (option of reasons; track option) {
         <label class="checkbox">
           <input type="radio" name="comment-report-reason" [value]="option" [checked]="reason() === option" (change)="reason.set(option)" />
@@ -14,8 +14,14 @@
       <p class="form-error" role="alert">{{ message }}</p>
     }
     <div class="dialog-actions">
-      <button type="button" class="btn" (click)="closed.emit()">Cancel</button>
-      <button type="submit" class="btn btn-primary" [disabled]="sending.busy()">{{ sending.busy() ? 'Sending…' : 'Send report' }}</button>
+      <button type="button" class="btn" (click)="closed.emit()" i18n="@@social.reportComment.cancel">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="sending.busy()">
+        @if (sending.busy()) {
+          <ng-container i18n="@@social.reportComment.sending">Sending…</ng-container>
+        } @else {
+          <ng-container i18n="@@social.reportComment.send">Send report</ng-container>
+        }
+      </button>
     </div>
   </form>
 </app-dialog>

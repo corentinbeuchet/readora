@@ -3,31 +3,35 @@
     <p class="form-error" role="alert">{{ error }}</p>
   }
   @if (status() === 'saved') {
-    <p class="form-success" role="status">Profile saved.</p>
+    <p class="form-success" role="status" i18n="@@profile.form.saved">Profile saved.</p>
   }
 
   <div class="field">
-    <label for="profile-display-name">Display name</label>
+    <label for="profile-display-name" i18n="@@profile.form.displayName">Display name</label>
     <input id="profile-display-name" type="text" autocomplete="nickname" [formField]="profileForm.displayName"
            [appAriaInvalid]="profileForm.displayName" aria-describedby="profile-display-name-error" />
     <app-field-errors id="profile-display-name-error" [field]="profileForm.displayName" />
   </div>
 
   <div class="field">
-    <label for="profile-bio">Bio</label>
+    <label for="profile-bio" i18n="@@profile.form.bio">Bio</label>
     <textarea id="profile-bio" [formField]="profileForm.bio"
               [appAriaInvalid]="profileForm.bio" aria-describedby="profile-bio-error"></textarea>
     <app-field-errors id="profile-bio-error" [field]="profileForm.bio" />
   </div>
 
   <div class="field">
-    <label for="profile-avatar">Avatar URL</label>
+    <label for="profile-avatar" i18n="@@profile.form.avatarUrl">Avatar URL</label>
     <input id="profile-avatar" type="url" autocomplete="photo" [formField]="profileForm.avatarUrl"
            [appAriaInvalid]="profileForm.avatarUrl" aria-describedby="profile-avatar-error" />
     <app-field-errors id="profile-avatar-error" [field]="profileForm.avatarUrl" />
   </div>
 
   <button type="submit" class="btn btn-primary" [disabled]="status() === 'saving'">
-    {{ status() === 'saving' ? 'Saving…' : 'Save changes' }}
+    @if (status() === 'saving') {
+      <ng-container i18n="@@profile.form.saving">Saving…</ng-container>
+    } @else {
+      <ng-container i18n="@@profile.form.save">Save changes</ng-container>
+    }
   </button>
 </form>

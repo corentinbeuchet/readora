@@ -1,30 +1,30 @@
 <section class="page">
-  <h1>Rankings</h1>
+  <h1 i18n="@@discovery.rankings.heading">Rankings</h1>
 
-  <nav class="ranking-tabs" aria-label="Ranking">
-    <a routerLink="/rankings" class="tab" [class.active]="!topRatedSelected()" [attr.aria-current]="!topRatedSelected() ? 'page' : null">Popular</a>
+  <nav class="ranking-tabs" aria-label="Ranking" i18n-aria-label="@@discovery.rankings.tabs.label">
+    <a routerLink="/rankings" class="tab" [class.active]="!topRatedSelected()" [attr.aria-current]="!topRatedSelected() ? 'page' : null" i18n="@@discovery.rankings.tabs.popular">Popular</a>
     <a routerLink="/rankings" [queryParams]="{ list: 'top-rated' }" class="tab" [class.active]="topRatedSelected()"
-       [attr.aria-current]="topRatedSelected() ? 'page' : null">Top rated</a>
+       [attr.aria-current]="topRatedSelected() ? 'page' : null" i18n="@@discovery.rankings.tabs.topRated">Top rated</a>
   </nav>
 
   @if (!topRatedSelected()) {
-    <nav class="period-tabs" aria-label="Period">
+    <nav class="period-tabs" aria-label="Period" i18n-aria-label="@@discovery.rankings.periods.label">
       @for (option of periods; track option.key) {
         <a routerLink="/rankings" [queryParams]="{ period: option.key }" class="tab tab-sm"
            [class.active]="selectedPeriod() === option.key" [attr.aria-current]="selectedPeriod() === option.key ? 'page' : null">{{ option.label }}</a>
       }
     </nav>
   } @else {
-    <p class="muted">Series with at least 5 ratings, best average first.</p>
+    <p class="muted" i18n="@@discovery.rankings.topRatedHint">Series with at least 5 ratings, best average first.</p>
   }
 
   @let current = ranking();
   @if (current.isLoading()) {
-    <p class="muted" role="status">Loading the ranking…</p>
+    <p class="muted" role="status" i18n="@@discovery.rankings.loading">Loading the ranking…</p>
   } @else if (current.error()) {
-    <app-load-error (retry)="current.reload()">Could not load the ranking.</app-load-error>
+    <app-load-error (retry)="current.reload()"><ng-container i18n="@@discovery.rankings.loadError">Could not load the ranking.</ng-container></app-load-error>
   } @else if (current.hasValue() && current.value().length === 0) {
-    <p class="muted">Not enough activity yet for this ranking.</p>
+    <p class="muted" i18n="@@discovery.rankings.empty">Not enough activity yet for this ranking.</p>
   } @else if (current.hasValue()) {
     <ol class="ranking-list">
       @for (entry of current.value(); track entry.work.id) {
@@ -33,7 +33,7 @@
           <a class="ranking-title" [routerLink]="['/works', entry.work.id]">{{ entry.work.title }}</a>
           <span class="muted">
             @if (topRatedSelected()) {
-              ★ {{ entry.score | number: '1.1-1' }} · {{ entry.ratings | i18nPlural: ratingsPlural }}
+              <ng-container i18n="@@discovery.rankings.score">★ {{ entry.score | number: '1.1-1' }} · {entry.ratings, plural, =1 {1 rating} other {{{ entry.ratings }} ratings}}</ng-container>
             } @else {
               {{ entry.work.type }}
             }

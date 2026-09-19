@@ -7,10 +7,10 @@ export type BookmarkStatus = 'READING' | 'COMPLETED' | 'ON_HOLD' | 'DROPPED' | '
 export type ReadingStatus = 'READING' | 'PLAN_TO_READ' | 'COMPLETED' | 'DROPPED';
 
 export const READING_STATUS_LABELS: Record<ReadingStatus, string> = {
-  READING: 'Reading',
-  PLAN_TO_READ: 'Plan to read',
-  COMPLETED: 'Completed',
-  DROPPED: 'Dropped'
+  READING: $localize`:@@readingStatus.reading:Reading`,
+  PLAN_TO_READ: $localize`:@@readingStatus.planToRead:Plan to read`,
+  COMPLETED: $localize`:@@readingStatus.completed:Completed`,
+  DROPPED: $localize`:@@readingStatus.dropped:Dropped`
 };
 
 export interface LibraryEntry {

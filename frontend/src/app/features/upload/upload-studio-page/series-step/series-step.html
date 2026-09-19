@@ -1,59 +1,59 @@
 <div class="card wizard-card">
-  <h2>1. Manga / Series Information</h2>
-  <p class="muted">Provide basic metadata and a cover image for readers to discover your work.</p>
+  <h2 i18n="@@upload.series.heading">1. Manga / Series Information</h2>
+  <p class="muted" i18n="@@upload.series.intro">Provide basic metadata and a cover image for readers to discover your work.</p>
 
   <div class="form-layout">
     <div class="form-fields">
       <div class="field">
-        <label for="manga-title">Series Title <span class="required" aria-hidden="true">*</span></label>
-        <input id="manga-title" type="text" placeholder="e.g. Solo Leveling, Berserk"
+        <label for="manga-title" i18n="@@upload.series.title">Series Title <span class="required" aria-hidden="true">*</span></label>
+        <input id="manga-title" type="text" placeholder="e.g. Solo Leveling, Berserk" i18n-placeholder="@@upload.series.title.placeholder"
                [formField]="form.title" [appAriaInvalid]="form.title" aria-describedby="manga-title-error" />
         <app-field-errors id="manga-title-error" [field]="form.title" />
       </div>
 
       <div class="form-row">
         <div class="field">
-          <label for="manga-type">Work Type</label>
+          <label for="manga-type" i18n="@@upload.series.type">Work Type</label>
           <select id="manga-type" [formField]="form.type">
-            <option value="MANGA">Manga (Japanese)</option>
-            <option value="MANHWA">Manhwa (Korean)</option>
-            <option value="MANHUA">Manhua (Chinese)</option>
-            <option value="COMIC">Comic (Western / Global)</option>
+            <option value="MANGA" i18n="@@upload.series.type.manga">Manga (Japanese)</option>
+            <option value="MANHWA" i18n="@@upload.series.type.manhwa">Manhwa (Korean)</option>
+            <option value="MANHUA" i18n="@@upload.series.type.manhua">Manhua (Chinese)</option>
+            <option value="COMIC" i18n="@@upload.series.type.comic">Comic (Western / Global)</option>
           </select>
         </div>
 
         <div class="field">
-          <label for="manga-status">Publication Status</label>
+          <label for="manga-status" i18n="@@upload.series.status">Publication Status</label>
           <select id="manga-status" [formField]="form.status">
-            <option value="ONGOING">Ongoing</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="HIATUS">Hiatus</option>
+            <option value="ONGOING" i18n="@@upload.series.status.ongoing">Ongoing</option>
+            <option value="COMPLETED" i18n="@@upload.series.status.completed">Completed</option>
+            <option value="HIATUS" i18n="@@upload.series.status.hiatus">Hiatus</option>
           </select>
         </div>
       </div>
 
       <div class="form-row">
         <div class="field">
-          <label for="manga-author">Author</label>
-          <input id="manga-author" type="text" placeholder="e.g. Chugong"
+          <label for="manga-author" i18n="@@upload.series.author">Author</label>
+          <input id="manga-author" type="text" placeholder="e.g. Chugong" i18n-placeholder="@@upload.series.author.placeholder"
                  [formField]="form.author" [appAriaInvalid]="form.author" aria-describedby="manga-author-error" />
           <app-field-errors id="manga-author-error" [field]="form.author" />
         </div>
 
         <div class="field">
-          <label for="manga-demographic">Audience</label>
+          <label for="manga-demographic" i18n="@@upload.series.audience">Audience</label>
           <select id="manga-demographic" [formField]="form.demographic">
-            <option value="">Not specified</option>
-            <option value="SHOUNEN">Shounen</option>
-            <option value="SHOUJO">Shoujo</option>
-            <option value="SEINEN">Seinen</option>
-            <option value="JOSEI">Josei</option>
+            <option value="" i18n="@@upload.series.audience.none">Not specified</option>
+            <option value="SHOUNEN" i18n="@@upload.series.audience.shounen">Shounen</option>
+            <option value="SHOUJO" i18n="@@upload.series.audience.shoujo">Shoujo</option>
+            <option value="SEINEN" i18n="@@upload.series.audience.seinen">Seinen</option>
+            <option value="JOSEI" i18n="@@upload.series.audience.josei">Josei</option>
           </select>
         </div>
       </div>
 
       <fieldset class="field">
-        <legend>Genres</legend>
+        <legend i18n="@@upload.series.genres">Genres</legend>
         <div class="genre-pill-container">
           @for (genre of genres(); track genre.name) {
             <button type="button" class="genre-pill" [class.selected]="genre.selected" [attr.aria-pressed]="genre.selected"
@@ -63,15 +63,15 @@
           }
         </div>
         <div class="custom-genre-row">
-          <input #custom type="text" class="input-sm" placeholder="Add custom genre" aria-label="Custom genre"
+          <input #custom type="text" class="input-sm" placeholder="Add custom genre" i18n-placeholder="@@upload.series.customGenre.placeholder" aria-label="Custom genre" i18n-aria-label="@@upload.series.customGenre.label"
                  (keydown.enter)="addGenre(custom); $event.preventDefault()" />
-          <button type="button" class="btn btn-sm" (click)="addGenre(custom)">Add</button>
+          <button type="button" class="btn btn-sm" (click)="addGenre(custom)" i18n="@@upload.series.customGenre.add">Add</button>
         </div>
       </fieldset>
 
       <div class="field">
-        <label for="manga-synopsis">Synopsis</label>
-        <textarea id="manga-synopsis" rows="4" placeholder="Brief summary of the story, characters, and setting…"
+        <label for="manga-synopsis" i18n="@@upload.series.synopsis">Synopsis</label>
+        <textarea id="manga-synopsis" rows="4" placeholder="Brief summary of the story, characters, and setting…" i18n-placeholder="@@upload.series.synopsis.placeholder"
                   [formField]="form.synopsis"></textarea>
       </div>
     </div>
@@ -80,7 +80,7 @@
   </div>
 
   <div class="wizard-actions wizard-actions-end">
-    <button type="button" class="btn btn-primary" [disabled]="!wizard.seriesValid()" (click)="wizard.goTo('chapter')">
+    <button type="button" class="btn btn-primary" [disabled]="!wizard.seriesValid()" (click)="wizard.goTo('chapter')" i18n="@@upload.series.next">
       Next: Chapter Setup &rarr;
     </button>
   </div>

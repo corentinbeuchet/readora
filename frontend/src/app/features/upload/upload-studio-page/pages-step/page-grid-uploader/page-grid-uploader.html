@@ -20,22 +20,23 @@
     tabindex="0"
     role="button"
     aria-label="Upload chapter pages or archive"
+    i18n-aria-label="@@upload.pages.dropZone"
     (keydown.enter)="fileInput.click()"
     (keydown.space)="$event.preventDefault(); fileInput.click()"
   >
     <div class="drop-prompt">
       <span class="upload-icon" aria-hidden="true">📁</span>
-      <p class="primary-text">
+      <p class="primary-text" i18n="@@upload.pages.dropPrompt">
         <strong>Choose image files</strong> or a <strong>.ZIP / .CBZ</strong> archive
       </p>
-      <p class="muted secondary-text">Drag & drop chapter pages (JPEG, PNG, WebP) or click to browse</p>
+      <p class="muted secondary-text" i18n="@@upload.pages.dropHint">Drag & drop chapter pages (JPEG, PNG, WebP) or click to browse</p>
     </div>
   </div>
 
   @if (extracting()) {
     <div class="processing-banner" role="status">
       <span class="spinner" aria-hidden="true"></span>
-      <span>Extracting archive pages…</span>
+      <span i18n="@@upload.pages.extracting">Extracting archive pages…</span>
     </div>
   }
 
@@ -49,14 +50,14 @@
 
   @if (pages().length > 0) {
     <div class="pages-header">
-      <div class="pages-count">
-        {{ pages().length | i18nPlural: pagesPlural }} loaded
+      <div class="pages-count" i18n="@@upload.pages.loadedCount">
+        {pages().length, plural, =1 {1 page loaded} other {{{ pages().length }} pages loaded}}
       </div>
       <div class="pages-actions">
-        <button type="button" class="btn btn-sm" (click)="sortNaturally()">
+        <button type="button" class="btn btn-sm" (click)="sortNaturally()" i18n="@@upload.pages.sort">
           Sort Numerically
         </button>
-        <button type="button" class="btn btn-sm btn-danger-outline" (click)="clearAll()">
+        <button type="button" class="btn btn-sm btn-danger-outline" (click)="clearAll()" i18n="@@upload.pages.clearAll">
           Clear All
         </button>
       </div>
@@ -73,7 +74,7 @@
         >
           <div class="thumbnail-wrapper">
             <!-- eslint-disable-next-line @angular-eslint/template/prefer-ngsrc -- blob: preview of a local file, nothing to optimize -->
-            <img [src]="page.previewUrl" [alt]="`Page ${$index + 1}`" class="page-thumbnail" loading="lazy" />
+            <img [src]="page.previewUrl" alt="Page {{ $index + 1 }}" i18n-alt="@@upload.pages.thumbnailAlt" class="page-thumbnail" loading="lazy" />
             <span class="page-badge">#{{ $index + 1 }}</span>
             <div class="page-overlay-actions">
               <button
@@ -82,7 +83,9 @@
                 [disabled]="$first"
                 (click)="move($index, $index - 1); $event.stopPropagation()"
                 title="Move left"
+                i18n-title="@@upload.pages.moveLeft"
                 aria-label="Move left"
+                i18n-aria-label="@@upload.pages.moveLeft"
               >
                 ◀
               </button>
@@ -92,7 +95,9 @@
                 [disabled]="$last"
                 (click)="move($index, $index + 1); $event.stopPropagation()"
                 title="Move right"
+                i18n-title="@@upload.pages.moveRight"
                 aria-label="Move right"
+                i18n-aria-label="@@upload.pages.moveRight"
               >
                 ▶
               </button>
@@ -101,7 +106,9 @@
                 class="icon-btn btn-delete"
                 (click)="remove($index); $event.stopPropagation()"
                 title="Delete page"
+                i18n-title="@@upload.pages.delete"
                 aria-label="Delete page"
+                i18n-aria-label="@@upload.pages.delete"
               >
                 ✕
               </button>
@@ -114,7 +121,7 @@
             }
           </div>
           <label class="page-description">
-            <span>Description <span class="sr-only">of page {{ $index + 1 }}</span>(for screen readers)</span>
+            <span i18n="@@upload.pages.description">Description <span class="sr-only">of page {{ $index + 1 }}</span>(for screen readers)</span>
             <textarea rows="2" maxlength="500" [value]="page.description ?? ''" (input)="describe($index, $event)"></textarea>
           </label>
         </li>

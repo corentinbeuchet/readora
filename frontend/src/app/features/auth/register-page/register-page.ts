@@ -44,28 +44,38 @@ export class RegisterPage {
 
   protected readonly model = signal<RegisterModel>({ email: '', username: '', password: '', confirmPassword: '' });
   protected readonly registerForm = form(this.model, (path) => {
-    required(path.email, { message: 'Email is required' });
-    email(path.email, { message: 'Enter a valid email address' });
+    required(path.email, { message: $localize`:@@auth.register.emailRequired:Email is required` });
+    email(path.email, { message: $localize`:@@auth.register.emailInvalid:Enter a valid email address` });
 
-    required(path.username, { message: 'Username is required' });
-    minLength(path.username, USERNAME_MIN_LENGTH, { message: `Username must be at least ${USERNAME_MIN_LENGTH} characters` });
-    maxLength(path.username, USERNAME_MAX_LENGTH, { message: `Username must be at most ${USERNAME_MAX_LENGTH} characters` });
-    pattern(path.username, USERNAME_PATTERN, { message: 'Only letters, digits, "_", "." and "-" are allowed' });
+    required(path.username, { message: $localize`:@@auth.register.usernameRequired:Username is required` });
+    minLength(path.username, USERNAME_MIN_LENGTH, {
+      message: $localize`:@@auth.register.usernameMin:Username must be at least ${USERNAME_MIN_LENGTH}:min: characters`
+    });
+    maxLength(path.username, USERNAME_MAX_LENGTH, {
+      message: $localize`:@@auth.register.usernameMax:Username must be at most ${USERNAME_MAX_LENGTH}:max: characters`
+    });
+    pattern(path.username, USERNAME_PATTERN, {
+      message: $localize`:@@auth.register.usernamePattern:Only letters, digits, "_", "." and "-" are allowed`
+    });
 
-    required(path.password, { message: 'Password is required' });
-    minLength(path.password, PASSWORD_MIN_LENGTH, { message: `Password must be at least ${PASSWORD_MIN_LENGTH} characters` });
-    maxLength(path.password, PASSWORD_MAX_LENGTH, { message: `Password must be at most ${PASSWORD_MAX_LENGTH} characters` });
+    required(path.password, { message: $localize`:@@auth.register.passwordRequired:Password is required` });
+    minLength(path.password, PASSWORD_MIN_LENGTH, {
+      message: $localize`:@@auth.register.passwordMin:Password must be at least ${PASSWORD_MIN_LENGTH}:min: characters`
+    });
+    maxLength(path.password, PASSWORD_MAX_LENGTH, {
+      message: $localize`:@@auth.register.passwordMax:Password must be at most ${PASSWORD_MAX_LENGTH}:max: characters`
+    });
 
-    required(path.confirmPassword, { message: 'Please confirm your password' });
+    required(path.confirmPassword, { message: $localize`:@@auth.register.confirmRequired:Please confirm your password` });
     validate(path.confirmPassword, ({ value, valueOf }) =>
-      value() === valueOf(path.password) ? undefined : { kind: 'passwordMismatch', message: 'Passwords do not match' }
+      value() === valueOf(path.password) ? undefined : { kind: 'passwordMismatch', message: $localize`:@@auth.register.mismatch:Passwords do not match` }
     );
   });
 
-  protected readonly registering = asyncAction('Could not create your account');
+  protected readonly registering = asyncAction($localize`:@@auth.register.error:Could not create your account`);
 
   constructor() {
-    this.seo.private_('Create an account');
+    this.seo.private_($localize`:@@auth.register.seoTitle:Create an account`);
   }
 
   protected async onSubmit(event: Event): Promise<void> {

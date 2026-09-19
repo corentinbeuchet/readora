@@ -18,13 +18,17 @@ export type ProfileTab = 'overview' | 'bookmarks' | 'subscription';
 })
 export class ProfilePage {
   protected readonly auth = inject(AuthStore);
+  protected readonly avatarAlt = computed(() => {
+    const user = this.auth.user();
+    return $localize`:@@profile.page.avatarAlt:${user?.displayName || user?.username}:name: avatar`;
+  });
   protected readonly permissions = computed(() => (this.auth.user()?.permissions ?? []).join(', '));
   private readonly seo = inject(SeoService);
   protected readonly selectedTab = model<ProfileTab>('overview');
   protected readonly tabList = viewChild<TabList>(TabList);
 
   constructor() {
-    this.seo.private_('My profile');
+    this.seo.private_($localize`:@@profile.page.seoTitle:My profile`);
     afterNextRender(() => {
       this.tabList()?.open(this.selectedTab() ?? 'overview');
     });

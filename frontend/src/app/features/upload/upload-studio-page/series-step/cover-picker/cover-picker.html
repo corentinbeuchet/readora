@@ -1,10 +1,10 @@
 <div class="cover-uploader-section" role="group" aria-labelledby="cover-image-label">
-  <span id="cover-image-label" class="group-label">Cover Image</span>
+  <span id="cover-image-label" class="group-label" i18n="@@upload.cover.label">Cover Image</span>
   @if (previewUrl()) {
     <div class="cover-preview-card">
       <!-- eslint-disable-next-line @angular-eslint/template/prefer-ngsrc -- blob: preview of a local file, nothing to optimize -->
-      <img [src]="previewUrl()" alt="Cover preview" class="cover-img" />
-      <button type="button" class="btn btn-danger-outline btn-sm remove-cover-btn" (click)="removed.emit()">
+      <img [src]="previewUrl()" alt="Cover preview" i18n-alt="@@upload.cover.previewAlt" class="cover-img" />
+      <button type="button" class="btn btn-danger-outline btn-sm remove-cover-btn" (click)="removed.emit()" i18n="@@upload.cover.change">
         Change Cover
       </button>
     </div>
@@ -29,10 +29,11 @@
       tabindex="0"
       role="button"
       aria-label="Upload cover image"
+      i18n-aria-label="@@upload.cover.dropZone"
     >
       <span class="cover-icon" aria-hidden="true">🖼️</span>
-      <p><strong>Upload Cover</strong></p>
-      <p class="muted small">Drag & drop or browse (JPEG, PNG, WebP)</p>
+      <p><strong i18n="@@upload.cover.upload">Upload Cover</strong></p>
+      <p class="muted small" i18n="@@upload.cover.hint">Drag & drop or browse (JPEG, PNG, WebP)</p>
     </div>
   }
 </div>

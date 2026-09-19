@@ -12,5 +12,5 @@ export class ReviewStep {
   protected readonly wizard = inject(UploadWizard);
   protected readonly flow = inject(PublishFlow);
 
-  protected readonly genres = computed(() => this.wizard.draft().genres.join(', ') || 'None');
+  protected readonly genres = computed(() => this.wizard.draft().genres.join(', ') || $localize`:@@upload.review.noGenres:None`);
 }

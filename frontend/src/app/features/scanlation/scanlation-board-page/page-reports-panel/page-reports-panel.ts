@@ -22,7 +22,7 @@ export class PageReportsPanel {
   protected readonly reports = this.api.openResource(this.projectId);
   protected readonly labels = PAGE_REPORT_REASON_LABELS;
   /** "Mark fixed": `busyKey` is the report being resolved. */
-  protected readonly action = asyncAction('Could not mark the report as fixed.');
+  protected readonly action = asyncAction($localize`:@@scanlation.reports.markFixedError:Could not mark the report as fixed.`);
 
   protected async markFixed(report: PageReport): Promise<void> {
     await this.action.run(

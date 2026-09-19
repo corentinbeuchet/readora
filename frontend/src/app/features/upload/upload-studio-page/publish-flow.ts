@@ -9,8 +9,7 @@ import { PageUploadItem } from './file-utils';
 import { UploadService } from './upload.service';
 import { UploadWizard, parseChapterNumber } from './upload-wizard';
 
-const NO_PROJECT_ERROR =
-  'No scanlation project exists for this series yet. Create one from the Scanlation workspace, then publish again.';
+const NO_PROJECT_ERROR = $localize`:@@upload.publish.noProject:No scanlation project exists for this series yet. Create one from the Scanlation workspace, then publish again.`;
 
 /** A failure whose message is written for the user (as opposed to an unexpected exception). */
 class UploadFlowError extends Error {}
@@ -41,7 +40,7 @@ export class PublishFlow {
     const wizard = this.wizard;
     const chapterNumber = parseChapterNumber(wizard.draft().chapterNumber);
     if (!wizard.seriesValid() || !wizard.pagesValid() || chapterNumber === null) {
-      wizard.showMessage('Please complete all required fields before publishing.');
+      wizard.showMessage($localize`:@@upload.publish.incomplete:Please complete all required fields before publishing.`);
       return;
     }
 
@@ -53,19 +52,19 @@ export class PublishFlow {
 
       const pending = wizard.pages().filter((p) => p.status !== 'done').length;
       this.progress.set(40);
-      this.statusText.set(`Uploading ${pending} chapter pages…`);
+      this.statusText.set($localize`:@@upload.publish.uploadingPages:Uploading ${pending}:count: chapter pages…`);
       const uploaded = await firstValueFrom(
         this.uploads.uploadPagesBatch(wizard.pages(), `scans/${work.id}/c${chapterNumber}`, 3, (completed, total, item) => {
           wizard.pages.update((pages) => pages.map((p) => (p.id === item.id ? item : p)));
           this.progress.set(40 + Math.floor((completed / total) * 45));
-          this.statusText.set(`Uploaded ${completed}/${total} pages…`);
+          this.statusText.set($localize`:@@upload.publish.uploadedPages:Uploaded ${completed}:completed:/${total}:total: pages…`);
         })
       );
       const failed = uploaded.filter((p) => p.status !== 'done');
       if (failed.length > 0) {
+        const reason = failed[0].error ?? $localize`:@@upload.publish.uploadFailedReason:upload failed`;
         wizard.showMessage(
-          `${failed.length} of ${uploaded.length} pages failed to upload (${failed[0].error ?? 'upload failed'}). ` +
-            'Publish again to retry only the failed pages.'
+          $localize`:@@upload.publish.pagesFailed:${failed.length}:failed: of ${uploaded.length}:total: pages failed to upload (${reason}:reason:). Publish again to retry only the failed pages.`
         );
         return;
       }
@@ -78,11 +77,11 @@ export class PublishFlow {
       }
 
       this.progress.set(100);
-      this.statusText.set('Upload completed successfully!');
+      this.statusText.set($localize`:@@upload.publish.done:Upload completed successfully!`);
       wizard.step.set('success');
     } catch (err: unknown) {
       wizard.showMessage(
-        err instanceof UploadFlowError ? err.message : apiErrorMessage(err, 'An unexpected error occurred during upload. Please try again.')
+        err instanceof UploadFlowError ? err.message : apiErrorMessage(err, $localize`:@@upload.publish.unexpectedError:An unexpected error occurred during upload. Please try again.`)
       );
     } finally {
       this.submitting.set(false);
@@ -108,12 +107,12 @@ export class PublishFlow {
     }
     const cover = this.wizard.cover();
     if (cover && !this.uploadedCoverUrl) {
-      this.statusText.set('Uploading cover image…');
+      this.statusText.set($localize`:@@upload.publish.uploadingCover:Uploading cover image…`);
       this.uploadedCoverUrl = (await firstValueFrom(this.uploads.uploadCover(cover.file))).cdnUrl;
     }
 
     this.progress.set(20);
-    this.statusText.set('Creating series in catalog…');
+    this.statusText.set($localize`:@@upload.publish.creatingSeries:Creating series in catalog…`);
     const draft = this.wizard.draft();
     const work = await firstValueFrom(
       this.catalogApi.createWork({
@@ -132,7 +131,7 @@ export class PublishFlow {
   }
 
   private async publishDirect(work: Work, pages: PageUploadItem[], chapterNumber: string): Promise<void> {
-    this.statusText.set('Publishing chapter directly to catalog…');
+    this.statusText.set($localize`:@@upload.publish.publishingDirect:Publishing chapter directly to catalog…`);
     const payload: DirectPublishChapterPayload['pages'] = pages.map((p) => ({
       pageNumber: p.pageNumber,
       storageKey: p.storageKey ?? '',
@@ -149,7 +148,7 @@ export class PublishFlow {
   }
 
   private async createScanlationTask(work: Work, pages: PageUploadItem[], chapterNumber: string): Promise<void> {
-    this.statusText.set('Attaching RAW package to scanlation workspace…');
+    this.statusText.set($localize`:@@upload.publish.attachingRaw:Attaching RAW package to scanlation workspace…`);
     // Errors propagate: a failed lookup must be reported, not treated as "no project".
     const projects = await firstValueFrom(this.catalogApi.listProjects(work.id));
     const projectId = projects[0]?.id;

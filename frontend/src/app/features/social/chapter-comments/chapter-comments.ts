@@ -59,7 +59,7 @@ export class ChapterComments {
 
   protected readonly comments = this.commentsApi.forChapterResource(this.chapterId);
   protected readonly replyTo = signal<ChapterComment | null>(null);
-  protected readonly posting = asyncAction('Could not post your comment');
+  protected readonly posting = asyncAction($localize`:@@social.comments.postError:Could not post your comment`);
   protected readonly canWrite = computed(() => this.auth.can('COMMENT_WRITE'));
   protected readonly canUpvote = computed(() => this.auth.can('COMMENT_UPVOTE'));
   protected readonly canReport = computed(() => this.auth.can('COMMENT_REPORT'));
@@ -85,9 +85,11 @@ export class ChapterComments {
 
   protected readonly model = signal<CommentModel>({ content: '', pageReference: null, isSpoiler: false });
   protected readonly commentForm = form(this.model, (path) => {
-    required(path.content, { message: 'Write something before posting' });
-    maxLength(path.content, COMMENT_MAX_LENGTH, { message: `Comments are limited to ${COMMENT_MAX_LENGTH} characters` });
-    min(path.pageReference, 1, { message: 'Page must be 1 or more' });
+    required(path.content, { message: $localize`:@@social.comments.required:Write something before posting` });
+    maxLength(path.content, COMMENT_MAX_LENGTH, {
+      message: $localize`:@@social.comments.maxLength:Comments are limited to ${COMMENT_MAX_LENGTH}:max: characters`
+    });
+    min(path.pageReference, 1, { message: $localize`:@@social.comments.minPage:Page must be 1 or more` });
   });
 
   protected startReport(comment: ChapterComment): void {
@@ -97,7 +99,7 @@ export class ChapterComments {
 
   protected onReported(): void {
     this.reporting.set(null);
-    this.reportConfirmation.set('Thanks! A moderator will look at it.');
+    this.reportConfirmation.set($localize`:@@social.comments.reported:Thanks! A moderator will look at it.`);
   }
 
   protected startReply(comment: ChapterComment): void {

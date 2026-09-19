@@ -32,15 +32,15 @@ export class LoginPage {
 
   protected readonly model = signal<LoginModel>({ email: '', password: '' });
   protected readonly loginForm = form(this.model, (path) => {
-    required(path.email, { message: 'Email is required' });
-    email(path.email, { message: 'Enter a valid email address' });
-    required(path.password, { message: 'Password is required' });
+    required(path.email, { message: $localize`:@@auth.login.emailRequired:Email is required` });
+    email(path.email, { message: $localize`:@@auth.login.emailInvalid:Enter a valid email address` });
+    required(path.password, { message: $localize`:@@auth.login.passwordRequired:Password is required` });
   });
 
-  protected readonly signingIn = asyncAction('Invalid email or password');
+  protected readonly signingIn = asyncAction($localize`:@@auth.login.error:Invalid email or password`);
 
   constructor() {
-    this.seo.private_('Log in');
+    this.seo.private_($localize`:@@auth.login.seoTitle:Log in`);
   }
 
   protected async onSubmit(event: Event): Promise<void> {

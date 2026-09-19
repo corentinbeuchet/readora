@@ -1,41 +1,45 @@
 <section class="page">
   @if (team.isLoading()) {
-    <p class="muted" role="status">Loading the team…</p>
+    <p class="muted" role="status" i18n="@@community.team.loading">Loading the team…</p>
   } @else if (team.error()) {
-    <app-load-error [error]="team.error()" notFound="This team could not be found." (retry)="team.reload()">
-      Could not load the team.
-      <a actions routerLink="/works" class="btn btn-link">Browse the catalog</a>
+    <app-load-error [error]="team.error()" notFound="This team could not be found." i18n-notFound="@@community.team.notFound" (retry)="team.reload()">
+      <ng-container i18n="@@community.team.loadError">Could not load the team.</ng-container>
+      <a actions routerLink="/works" class="btn btn-link" i18n="@@community.team.browse">Browse the catalog</a>
     </app-load-error>
   } @else if (team.hasValue() && team.value(); as t) {
     <header class="profile-header">
       <h1>{{ t.name }}</h1>
-      <p class="muted">
+      <p class="muted" i18n="@@community.team.summary">
         Translates <a [routerLink]="['/works', t.series.id]">{{ t.series.title }}</a>
-        · {{ followers() | i18nPlural: followersPlural }}
+        · {followers(), plural, =1 {1 follower} other {{{ followers() }} followers}}
       </p>
       <button *appHasPermission="'LIBRARY_USE'" type="button" class="btn" [class.btn-primary]="!following()"
               [attr.aria-pressed]="following()" [disabled]="follow.busy()" (click)="toggleFollow()">
-        {{ following() ? 'Following' : 'Follow' }}
+        @if (following()) {
+          <ng-container i18n="@@community.team.following">Following</ng-container>
+        } @else {
+          <ng-container i18n="@@community.team.follow">Follow</ng-container>
+        }
       </button>
       @if (follow.error(); as message) {
         <p class="form-error" role="alert">{{ message }}</p>
       }
     </header>
 
-    <h2>Members</h2>
+    <h2 i18n="@@community.team.members">Members</h2>
     <ul class="plain-list">
       @for (member of members(); track member.username) {
         <li><a [routerLink]="['/u', member.username]">{{ member.username }}</a> <span class="muted">· {{ member.roles }}</span></li>
       }
     </ul>
 
-    <h2>Latest chapters</h2>
+    <h2 i18n="@@community.team.latest">Latest chapters</h2>
     @if (t.latestChapters.length === 0) {
-      <p class="muted">No chapters published yet.</p>
+      <p class="muted" i18n="@@community.team.latestNone">No chapters published yet.</p>
     } @else {
       <ul class="plain-list">
         @for (chapter of t.latestChapters; track chapter.id) {
-          <li><a [routerLink]="['/read', chapter.id]">Chapter {{ chapter.chapterNumber }}</a> <span class="muted">{{ chapter.title }}</span></li>
+          <li><a [routerLink]="['/read', chapter.id]" i18n="@@community.team.chapter">Chapter {{ chapter.chapterNumber }}</a> <span class="muted">{{ chapter.title }}</span></li>
         }
       </ul>
     }

@@ -1,34 +1,34 @@
 <label class="field setting">
-  <span>Page size</span>
+  <span i18n="@@reader.settings.pageSize">Page size</span>
   <select #fit (change)="setFit(fit.value)">
-    <option value="WIDTH" [selected]="prefs.fit() === 'WIDTH'">Fit width</option>
-    <option value="HEIGHT" [selected]="prefs.fit() === 'HEIGHT'">Fit height</option>
-    <option value="ORIGINAL" [selected]="prefs.fit() === 'ORIGINAL'">Original size</option>
+    <option value="WIDTH" [selected]="prefs.fit() === 'WIDTH'" i18n="@@reader.settings.fitWidth">Fit width</option>
+    <option value="HEIGHT" [selected]="prefs.fit() === 'HEIGHT'" i18n="@@reader.settings.fitHeight">Fit height</option>
+    <option value="ORIGINAL" [selected]="prefs.fit() === 'ORIGINAL'" i18n="@@reader.settings.originalSize">Original size</option>
   </select>
 </label>
 <label class="field setting">
-  <span>Background</span>
+  <span i18n="@@reader.settings.background">Background</span>
   <select #background (change)="setBackground(background.value)">
-    <option value="BLACK" [selected]="prefs.background() === 'BLACK'">Black</option>
-    <option value="GRAY" [selected]="prefs.background() === 'GRAY'">Gray</option>
-    <option value="WHITE" [selected]="prefs.background() === 'WHITE'">White</option>
+    <option value="BLACK" [selected]="prefs.background() === 'BLACK'" i18n="@@reader.settings.black">Black</option>
+    <option value="GRAY" [selected]="prefs.background() === 'GRAY'" i18n="@@reader.settings.gray">Gray</option>
+    <option value="WHITE" [selected]="prefs.background() === 'WHITE'" i18n="@@reader.settings.white">White</option>
   </select>
 </label>
 <label class="field setting">
-  <span>Auto-scroll speed</span>
+  <span i18n="@@reader.settings.autoScrollSpeed">Auto-scroll speed</span>
   <select #speed (change)="setAutoScrollSpeed(speed.value)">
-    <option value="SLOW" [selected]="prefs.autoScrollSpeed() === 'SLOW'">Slow</option>
-    <option value="MEDIUM" [selected]="prefs.autoScrollSpeed() === 'MEDIUM'">Medium</option>
-    <option value="FAST" [selected]="prefs.autoScrollSpeed() === 'FAST'">Fast</option>
+    <option value="SLOW" [selected]="prefs.autoScrollSpeed() === 'SLOW'" i18n="@@reader.settings.slow">Slow</option>
+    <option value="MEDIUM" [selected]="prefs.autoScrollSpeed() === 'MEDIUM'" i18n="@@reader.settings.medium">Medium</option>
+    <option value="FAST" [selected]="prefs.autoScrollSpeed() === 'FAST'" i18n="@@reader.settings.fast">Fast</option>
   </select>
 </label>
 @if (state.canShowDoublePage()) {
   <label class="checkbox setting">
     <input #double type="checkbox" [checked]="prefs.doublePage()" (change)="prefs.setDoublePage(double.checked)" />
-    Double page (two pages side by side)
+    <ng-container i18n="@@reader.settings.doublePage">Double page (two pages side by side)</ng-container>
   </label>
 }
 <label class="checkbox setting">
   <input #lite type="checkbox" [checked]="prefs.dataSaver()" (change)="prefs.setDataSaver(lite.checked)" />
-  Data saver (lighter, lower-quality images)
+  <ng-container i18n="@@reader.settings.dataSaver">Data saver (lighter, lower-quality images)</ng-container>
 </label>

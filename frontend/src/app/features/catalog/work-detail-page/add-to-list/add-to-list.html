@@ -1,10 +1,10 @@
 @if (mine.hasValue()) {
   @if (mine.value().length === 0) {
-    <p class="muted add-to-list">Make <a routerLink="/lists">a list</a> to collect series you recommend.</p>
+    <p class="muted add-to-list" i18n="@@catalog.addToList.noList">Make <a routerLink="/lists">a list</a> to collect series you recommend.</p>
   } @else {
     <form class="add-to-list" (submit)="add($event)">
       <label class="field">
-        <span>Add to a list</span>
+        <span i18n="@@catalog.addToList.list">Add to a list</span>
         <select (change)="selected.set(value($event))">
           @for (list of mine.value(); track list.id) {
             <option [value]="list.id">{{ list.title }}</option>
@@ -12,10 +12,10 @@
         </select>
       </label>
       <label class="field">
-        <span>Note (optional)</span>
+        <span i18n="@@catalog.addToList.note">Note (optional)</span>
         <input type="text" maxlength="300" [value]="note()" (input)="note.set(value($event))" />
       </label>
-      <button type="submit" class="btn" [disabled]="adding.busy()">Add</button>
+      <button type="submit" class="btn" [disabled]="adding.busy()" i18n="@@catalog.addToList.submit">Add</button>
       <p class="muted" role="status">{{ message() }}</p>
       @if (adding.error(); as message) {
         <p class="form-error" role="alert">{{ message }}</p>

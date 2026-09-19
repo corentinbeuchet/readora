@@ -1,24 +1,28 @@
 <section class="page-narrow">
   @if (outcome() === 'success') {
     <div class="card">
-      <h1>Thank you!</h1>
+      <h1 i18n="@@subscription.checkout.thanks">Thank you!</h1>
       @if (isPremium()) {
-        <p class="form-success" role="status">Your Premium subscription is active. Bookmarks are now enabled.</p>
-        <a routerLink="/profile" class="btn btn-primary">Go to my profile</a>
+        <p class="form-success" role="status" i18n="@@subscription.checkout.active">Your Premium subscription is active. Bookmarks are now enabled.</p>
+        <a routerLink="/profile" class="btn btn-primary" i18n="@@subscription.checkout.goToProfile">Go to my profile</a>
       } @else {
-        <p class="muted" role="status">
+        <p class="muted" role="status" i18n="@@subscription.checkout.confirming">
           We're confirming your payment with Stripe. This usually takes a few seconds.
         </p>
         <button type="button" class="btn btn-primary" (click)="syncSession()" [disabled]="refreshing()">
-          {{ refreshing() ? 'Checking…' : 'Check again' }}
+          @if (refreshing()) {
+            <ng-container i18n="@@subscription.checkout.checking">Checking…</ng-container>
+          } @else {
+            <ng-container i18n="@@subscription.checkout.checkAgain">Check again</ng-container>
+          }
         </button>
       }
     </div>
   } @else {
     <div class="card">
-      <h1>Checkout cancelled</h1>
-      <p class="muted">No charge was made. You can subscribe whenever you're ready.</p>
-      <a routerLink="/subscription" class="btn">Back to plans</a>
+      <h1 i18n="@@subscription.checkout.cancelled">Checkout cancelled</h1>
+      <p class="muted" i18n="@@subscription.checkout.noCharge">No charge was made. You can subscribe whenever you're ready.</p>
+      <a routerLink="/subscription" class="btn" i18n="@@subscription.checkout.backToPlans">Back to plans</a>
     </div>
   }
 </section>

@@ -5,10 +5,10 @@ export type { UploadStep } from '@app/features/upload/upload-studio-page/upload-
 type WizardStep = Exclude<UploadStep, 'success'>;
 
 const STEPS: { key: WizardStep; label: string }[] = [
-  { key: 'manga', label: 'Manga Details' },
-  { key: 'chapter', label: 'Chapter Setup' },
-  { key: 'pages', label: 'Page Uploader' },
-  { key: 'review', label: 'Review & Publish' }
+  { key: 'manga', label: $localize`:@@upload.steps.manga:Manga Details` },
+  { key: 'chapter', label: $localize`:@@upload.steps.chapter:Chapter Setup` },
+  { key: 'pages', label: $localize`:@@upload.steps.pages:Page Uploader` },
+  { key: 'review', label: $localize`:@@upload.steps.review:Review & Publish` }
 ];
 
 /** Step indicator of the upload wizard; a step is reachable once all previous steps are valid. */

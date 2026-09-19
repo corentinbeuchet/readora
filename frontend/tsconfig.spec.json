@@ -2,6 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist/out-tsc/spec",
+    "resolveJsonModule": true,
     "types": [
       "vitest/globals",
       "@angular/localize"

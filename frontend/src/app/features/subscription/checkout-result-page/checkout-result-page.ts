@@ -26,7 +26,7 @@ export class CheckoutResultPage {
   protected readonly isPremium = this.auth.isPremium;
 
   constructor() {
-    inject(SeoService).private_('Checkout');
+    inject(SeoService).private_($localize`:@@subscription.checkout.seoTitle:Checkout`);
     void this.syncSession();
   }
 

@@ -1,54 +1,54 @@
 <section class="page">
   <header class="catalog-header">
     <div class="catalog-title-group">
-      <h1>Catalog</h1>
-      <p class="muted">Browse manga, manhwa, manhua and comics published by scanlation teams.</p>
+      <h1 i18n="@@catalog.works.heading">Catalog</h1>
+      <p class="muted" i18n="@@catalog.works.intro">Browse manga, manhwa, manhua and comics published by scanlation teams.</p>
     </div>
     <ng-container *appHasPermission="'WORK_CREATE'">
-      <a routerLink="/upload" class="btn btn-primary upload-cta">+ Upload Series</a>
+      <a routerLink="/upload" class="btn btn-primary upload-cta" i18n="@@catalog.works.upload">+ Upload Series</a>
     </ng-container>
   </header>
 
-  <section class="catalog-filters" aria-label="Filter the catalog">
+  <section class="catalog-filters" aria-label="Filter the catalog" i18n-aria-label="@@catalog.works.filters.label">
     <div class="facet-row">
       <label class="field facet">
-        <span>Type</span>
+        <span i18n="@@catalog.works.filters.type">Type</span>
         <select (change)="setFacet('type', $event)">
-          <option value="" [selected]="!query().type">Any type</option>
+          <option value="" [selected]="!query().type" i18n="@@catalog.works.filters.anyType">Any type</option>
           @for (option of workTypes; track option) {
             <option [value]="option" [selected]="query().type === option">{{ option }}</option>
           }
         </select>
       </label>
       <label class="field facet">
-        <span>Status</span>
+        <span i18n="@@catalog.works.filters.status">Status</span>
         <select (change)="setFacet('status', $event)">
-          <option value="" [selected]="!query().status">Any status</option>
+          <option value="" [selected]="!query().status" i18n="@@catalog.works.filters.anyStatus">Any status</option>
           @for (option of workStatuses; track option) {
             <option [value]="option" [selected]="query().status === option">{{ option }}</option>
           }
         </select>
       </label>
       <label class="field facet">
-        <span>Audience</span>
+        <span i18n="@@catalog.works.filters.audience">Audience</span>
         <select (change)="setFacet('demographic', $event)">
-          <option value="" [selected]="!query().demographic">Any audience</option>
+          <option value="" [selected]="!query().demographic" i18n="@@catalog.works.filters.anyAudience">Any audience</option>
           @for (option of demographics; track option) {
             <option [value]="option" [selected]="query().demographic === option">{{ option }}</option>
           }
         </select>
       </label>
-      <button type="button" class="btn surprise" (click)="surpriseMe()">🎲 Surprise me</button>
+      <button type="button" class="btn surprise" (click)="surpriseMe()" i18n="@@catalog.works.surprise">🎲 Surprise me</button>
       @if (hasFilters()) {
-        <button type="button" class="btn btn-link clear-filters" (click)="clearFilters()">Clear all filters</button>
+        <button type="button" class="btn btn-link clear-filters" (click)="clearFilters()" i18n="@@catalog.works.filters.clear">Clear all filters</button>
       }
       <p class="muted surprise-message" role="status">{{ surprise.error() }}</p>
     </div>
 
     @if (genres.hasValue() && genres.value().length > 0) {
       <fieldset class="genre-filter">
-        <legend>Genres</legend>
-        <p class="muted genre-hint" id="genre-hint">Click a genre once to want it, twice to exclude it, a third time to clear it.</p>
+        <legend i18n="@@catalog.works.genres.legend">Genres</legend>
+        <p class="muted genre-hint" id="genre-hint" i18n="@@catalog.works.genres.hint">Click a genre once to want it, twice to exclude it, a third time to clear it.</p>
         <ul class="genre-chips">
           @for (chip of genreChips(); track chip.genre) {
             <li>
@@ -72,23 +72,23 @@
 
     @if (query().text; as text) {
       <p class="search-summary">
-        Results for “{{ text }}”
-        <button type="button" class="btn btn-link" (click)="clearText()">Clear search</button>
+        <ng-container i18n="@@catalog.works.search.results">Results for “{{ text }}”</ng-container>
+        <button type="button" class="btn btn-link" (click)="clearText()" i18n="@@catalog.works.search.clear">Clear search</button>
       </p>
     }
   </section>
 
   @if (works.isLoading()) {
-    <p class="muted" role="status">Loading works…</p>
+    <p class="muted" role="status" i18n="@@catalog.works.loading">Loading works…</p>
   } @else if (works.error()) {
-    <app-load-error (retry)="reload()">Could not load the catalog.</app-load-error>
+    <app-load-error (retry)="reload()"><ng-container i18n="@@catalog.works.loadError">Could not load the catalog.</ng-container></app-load-error>
   } @else if (works.value(); as workList) {
     @if (workList.items.length === 0) {
       <p class="muted" role="status">
         @if (hasFilters()) {
-          No series match these filters.
+          <ng-container i18n="@@catalog.works.noMatch">No series match these filters.</ng-container>
         } @else {
-          No works have been published yet.
+          <ng-container i18n="@@catalog.works.empty">No works have been published yet.</ng-container>
         }
       </p>
     } @else {
@@ -97,7 +97,7 @@
           <li class="work-card">
             <a [routerLink]="['/works', work.id]" class="work-link">
               <!-- Lazy by default; the first cover is the LCP candidate. -->
-              <app-work-cover class="work-cover" [src]="work.coverImageUrl" [alt]="`Cover of ${work.title}`" width="200" height="280" [priority]="$first" />
+              <app-work-cover class="work-cover" [src]="work.coverImageUrl" alt="Cover of {{ work.title }}" i18n-alt="@@catalog.works.coverAlt" width="200" height="280" [priority]="$first" />
               <h2 class="work-title">{{ work.title }}</h2>
               @if (work.author) {
                 <p class="work-author muted">{{ work.author }}</p>
@@ -111,10 +111,10 @@
         }
       </ul>
 
-      <nav class="pager" aria-label="Catalog pagination">
-        <button type="button" class="btn" (click)="previous()" [disabled]="!hasPrevious()">&larr; Previous</button>
-        <span class="muted">Page {{ workList.page + 1 }} / {{ workList.totalPages || 1 }}</span>
-        <button type="button" class="btn" (click)="next()" [disabled]="!hasNext()">Next &rarr;</button>
+      <nav class="pager" aria-label="Catalog pagination" i18n-aria-label="@@catalog.works.pager.label">
+        <button type="button" class="btn" (click)="previous()" [disabled]="!hasPrevious()" i18n="@@catalog.works.pager.previous">&larr; Previous</button>
+        <span class="muted" i18n="@@catalog.works.pager.page">Page {{ workList.page + 1 }} / {{ workList.totalPages || 1 }}</span>
+        <button type="button" class="btn" (click)="next()" [disabled]="!hasNext()" i18n="@@catalog.works.pager.next">Next &rarr;</button>
       </nav>
     }
   }

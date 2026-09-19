@@ -1,6 +1,6 @@
 <section class="page">
-  <h1>Choose your plan</h1>
-  <p class="muted">Reading is always free. Premium unlocks bookmarks and synced reading progress.</p>
+  <h1 i18n="@@subscription.plans.title">Choose your plan</h1>
+  <p class="muted" i18n="@@subscription.plans.intro">Reading is always free. Premium unlocks bookmarks and synced reading progress.</p>
 
   @if (error(); as message) {
     <p class="form-error" role="alert">{{ message }}</p>
@@ -8,23 +8,23 @@
 
   <div class="plans">
     <article class="card plan" [class.plan-current]="!isPremium()">
-      <h2>Free</h2>
-      <p class="price">€0<span class="muted">/month</span></p>
+      <h2 i18n="@@subscription.plans.free">Free</h2>
+      <p class="price">{{ 0 | currency: 'EUR' : 'symbol' : '1.0-2' }}<span class="muted" i18n="@@subscription.plans.perMonth">/month</span></p>
       <ul>
         @for (feature of freeFeatures; track feature) {
           <li>{{ feature }}</li>
         }
       </ul>
       @if (!auth.isAuthenticated()) {
-        <a routerLink="/register" class="btn">Create a free account</a>
+        <a routerLink="/register" class="btn" i18n="@@subscription.plans.createAccount">Create a free account</a>
       } @else if (!isPremium()) {
-        <span class="badge">Current plan</span>
+        <span class="badge" i18n="@@subscription.plans.currentPlan">Current plan</span>
       }
     </article>
 
     <article class="card plan plan-premium" [class.plan-current]="isPremium()">
-      <h2>Premium <span class="badge badge-premium">Popular</span></h2>
-      <p class="price">€4.99<span class="muted">/month</span></p>
+      <h2 i18n="@@subscription.plans.premium">Premium <span class="badge badge-premium">Popular</span></h2>
+      <p class="price">{{ 4.99 | currency: 'EUR' : 'symbol' : '1.0-2' }}<span class="muted" i18n="@@subscription.plans.perMonth">/month</span></p>
       <ul>
         @for (feature of premiumFeatures; track feature) {
           <li>{{ feature }}</li>
@@ -32,24 +32,32 @@
       </ul>
 
       @if (isPremium()) {
-        <span class="badge badge-premium">Current plan</span>
+        <span class="badge badge-premium" i18n="@@subscription.plans.currentPlan">Current plan</span>
         @if (subscription()?.currentPeriodEnd; as periodEnd) {
           @if (subscription()?.cancelAtPeriodEnd) {
-            <p class="muted" role="status">Cancelled — Premium ends {{ periodEnd | date: 'mediumDate' }}</p>
+            <p class="muted" role="status" i18n="@@subscription.plans.cancelled">Cancelled — Premium ends {{ periodEnd | date: 'mediumDate' }}</p>
           } @else {
-            <p class="muted">Renews {{ periodEnd | date: 'mediumDate' }}</p>
+            <p class="muted" i18n="@@subscription.plans.renews">Renews {{ periodEnd | date: 'mediumDate' }}</p>
           }
         }
         @if (canCancel()) {
           <button type="button" class="btn btn-danger" (click)="cancel()" [disabled]="busy() !== null">
-            {{ busy() === 'cancel' ? 'Cancelling…' : 'Cancel subscription' }}
+            @if (busy() === 'cancel') {
+              <ng-container i18n="@@subscription.plans.cancelling">Cancelling…</ng-container>
+            } @else {
+              <ng-container i18n="@@subscription.plans.cancel">Cancel subscription</ng-container>
+            }
           </button>
         }
       } @else {
         <button type="button" class="btn btn-primary btn-subscribe" (click)="subscribe()" [disabled]="busy() !== null">
-          {{ busy() === 'checkout' ? 'Redirecting to Stripe…' : 'Subscribe with Stripe' }}
+          @if (busy() === 'checkout') {
+            <ng-container i18n="@@subscription.plans.redirecting">Redirecting to Stripe…</ng-container>
+          } @else {
+            <ng-container i18n="@@subscription.plans.subscribe">Subscribe with Stripe</ng-container>
+          }
         </button>
-        <p class="muted small">Secure payment by Stripe. Cancel anytime.</p>
+        <p class="muted small" i18n="@@subscription.plans.secure">Secure payment by Stripe. Cancel anytime.</p>
       }
     </article>
   </div>

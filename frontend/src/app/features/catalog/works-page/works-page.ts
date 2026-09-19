@@ -18,7 +18,11 @@ export const DEMOGRAPHICS: readonly Demographic[] = ['SHOUNEN', 'SHOUJO', 'SEINE
 
 export type GenreState = 'wanted' | 'excluded' | 'off';
 
-const GENRE_STATE_LABEL: Record<GenreState, string> = { wanted: 'wanted', excluded: 'excluded', off: 'not filtered' };
+const GENRE_STATE_LABEL: Record<GenreState, (genre: string) => string> = {
+  wanted: (genre) => $localize`:@@catalog.works.genres.wanted:${genre}:genre:: wanted`,
+  excluded: (genre) => $localize`:@@catalog.works.genres.excluded:${genre}:genre:: excluded`,
+  off: (genre) => $localize`:@@catalog.works.genres.off:${genre}:genre:: not filtered`
+};
 
 /** A query parameter bound by the router: absent, once, or repeated. */
 type ParamValue = string | string[] | undefined;
@@ -85,8 +89,8 @@ export class WorksPage {
 
   constructor() {
     this.seo.update({
-      title: 'Catalog — manga, manhwa & comics',
-      description: 'Browse every manga, manhwa, manhua and comic published on Readora by scanlation teams.',
+      title: $localize`:@@catalog.works.seoTitle:Catalog — manga, manhwa & comics`,
+      description: $localize`:@@catalog.works.seoDescription:Browse every manga, manhwa, manhua and comic published on Readora by scanlation teams.`,
       path: '/works'
     });
   }
@@ -96,7 +100,7 @@ export class WorksPage {
     const query = this.query();
     return (this.genres.hasValue() ? this.genres.value() : []).map((genre) => {
       const state: GenreState = query.genres?.includes(genre) ? 'wanted' : query.excludedGenres?.includes(genre) ? 'excluded' : 'off';
-      return { genre, state, label: `${genre}: ${GENRE_STATE_LABEL[state]}`, mark: state === 'wanted' ? '+' : state === 'excluded' ? '−' : '' };
+      return { genre, state, label: GENRE_STATE_LABEL[state](genre), mark: state === 'wanted' ? '+' : state === 'excluded' ? '−' : '' };
     });
   });
 
@@ -121,7 +125,7 @@ export class WorksPage {
     if (work) {
       void this.router.navigate(['/works', work.id]);
     } else if (work === null) {
-      this.surprise.fail('No series match these filters.');
+      this.surprise.fail($localize`:@@catalog.works.surpriseNoMatch:No series match these filters.`);
     }
   }
 

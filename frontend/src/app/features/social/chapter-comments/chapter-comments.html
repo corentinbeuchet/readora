@@ -1,11 +1,11 @@
 <section class="chapter-comments" aria-labelledby="comments-heading">
   @let count = comments.hasValue() ? ` (${comments.value().length})` : '';
-  <h2 id="comments-heading" class="comments-heading">Community Discussion{{ count }}</h2>
+  <h2 id="comments-heading" class="comments-heading" i18n="@@social.comments.heading">Community Discussion{{ count }}</h2>
 
   @if (comments.isLoading()) {
-    <p class="muted" role="status">Loading comments…</p>
+    <p class="muted" role="status" i18n="@@social.comments.loading">Loading comments…</p>
   } @else if (comments.error()) {
-    <app-load-error (retry)="comments.reload()">Could not load comments.</app-load-error>
+    <app-load-error (retry)="comments.reload()" i18n="@@social.comments.loadError">Could not load comments.</app-load-error>
   } @else {
     <app-comment-tree [highlightId]="highlightId()"
       [comments]="comments.value()"
@@ -27,8 +27,8 @@
     <form class="form card compose" (submit)="onSubmit($event)" novalidate>
       @if (replyTo(); as parent) {
         <p class="reply-banner">
-          Replying to <strong>{{ parent.authorUsername }}</strong>
-          <button type="button" class="btn btn-link" (click)="cancelReply()">Cancel</button>
+          <ng-container i18n="@@social.comments.replyingTo">Replying to <strong>{{ parent.authorUsername }}</strong></ng-container>
+          <button type="button" class="btn btn-link" (click)="cancelReply()" i18n="@@social.comments.cancelReply">Cancel</button>
         </p>
       }
       @if (posting.error(); as error) {
@@ -36,7 +36,13 @@
       }
 
       <div class="field">
-        <label for="comment-content">{{ replyTo() ? 'Your reply' : 'Add a comment' }}</label>
+        <label for="comment-content">
+          @if (replyTo()) {
+            <ng-container i18n="@@social.comments.yourReply">Your reply</ng-container>
+          } @else {
+            <ng-container i18n="@@social.comments.addComment">Add a comment</ng-container>
+          }
+        </label>
         <textarea id="comment-content" [formField]="commentForm.content"
                   [appAriaInvalid]="commentForm.content" aria-describedby="comment-content-error"></textarea>
         <app-field-errors id="comment-content-error" [field]="commentForm.content" />
@@ -45,7 +51,7 @@
       <div class="compose-options">
         @if (!replyTo()) {
           <div class="field field-inline">
-            <label for="comment-page">Page (optional)</label>
+            <label for="comment-page" i18n="@@social.comments.page">Page (optional)</label>
             <input id="comment-page" type="number" [formField]="commentForm.pageReference"
                    [appAriaInvalid]="commentForm.pageReference" aria-describedby="comment-page-error" />
             <app-field-errors id="comment-page-error" [field]="commentForm.pageReference" />
@@ -53,17 +59,23 @@
         }
         <label class="checkbox" for="comment-spoiler">
           <input id="comment-spoiler" type="checkbox" [formField]="commentForm.isSpoiler" />
-          Contains spoilers
+          <ng-container i18n="@@social.comments.spoiler">Contains spoilers</ng-container>
         </label>
       </div>
 
       <button type="submit" class="btn btn-primary" [disabled]="posting.busy()">
-        {{ posting.busy() ? 'Posting…' : replyTo() ? 'Post reply' : 'Post comment' }}
+        @if (posting.busy()) {
+          <ng-container i18n="@@social.comments.posting">Posting…</ng-container>
+        } @else if (replyTo()) {
+          <ng-container i18n="@@social.comments.postReply">Post reply</ng-container>
+        } @else {
+          <ng-container i18n="@@social.comments.postComment">Post comment</ng-container>
+        }
       </button>
     </form>
   </ng-container>
   <ng-template #loginHint>
-    <p class="muted compose-hint">
+    <p class="muted compose-hint" i18n="@@social.comments.loginHint">
       <a routerLink="/login">Log in</a> or <a routerLink="/register">create an account</a> to join the discussion.
     </p>
   </ng-template>

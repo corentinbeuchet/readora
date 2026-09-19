@@ -22,9 +22,9 @@ export interface CommentUpvote {
 export type CommentReportReason = 'UNMARKED_SPOILER' | 'HARASSMENT' | 'SPAM';
 
 export const COMMENT_REPORT_REASON_LABELS: Record<CommentReportReason, string> = {
-  UNMARKED_SPOILER: 'Unmarked spoiler',
-  HARASSMENT: 'Harassment or abuse',
-  SPAM: 'Spam or scam'
+  UNMARKED_SPOILER: $localize`:@@commentReport.reason.unmarkedSpoiler:Unmarked spoiler`,
+  HARASSMENT: $localize`:@@commentReport.reason.harassment:Harassment or abuse`,
+  SPAM: $localize`:@@commentReport.reason.spam:Spam or scam`
 };
 
 export interface ModerationItem {

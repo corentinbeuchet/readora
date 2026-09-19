@@ -200,7 +200,9 @@ export class ReaderState {
     return {
       pageNumber: page.pageNumber,
       src,
-      alt: page.description ? `Page ${page.pageNumber}: ${page.description}` : `Page ${page.pageNumber}`,
+      alt: page.description
+        ? $localize`:@@reader.page.altDescribed:Page ${page.pageNumber}:page:: ${page.description}:description:`
+        : $localize`:@@reader.page.alt:Page ${page.pageNumber}:page:`,
       width: page.width || DEFAULT_PAGE_SIZE.width,
       height: page.height || DEFAULT_PAGE_SIZE.height
     };

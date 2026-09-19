@@ -92,5 +92,18 @@
         <option value="dark" [selected]="theme.preference() === 'dark'" i18n="@@shell.theme.dark">Dark</option>
       </select>
     </label>
+    <nav class="language-picker" aria-label="Language" i18n-aria-label="@@shell.language.label">
+      <ul>
+        @for (language of languages(); track language.code) {
+          <li>
+            @if (language.current) {
+              <span aria-current="true" [attr.lang]="language.code">{{ language.label }}</span>
+            } @else {
+              <a [href]="language.href" [attr.lang]="language.code" [attr.hreflang]="language.code">{{ language.label }}</a>
+            }
+          </li>
+        }
+      </ul>
+    </nav>
   </footer>
 </div>

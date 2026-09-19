@@ -25,7 +25,7 @@ export class PublicProfilePage {
     effect(() => {
       const loaded = this.profile.hasValue() ? this.profile.value() : undefined;
       if (loaded) {
-        this.seo.update({ title: `${loaded.displayName} (@${loaded.username})`, description: `${loaded.displayName} on Readora.`, path: `/u/${loaded.username}` });
+        this.seo.update({ title: `${loaded.displayName} (@${loaded.username})`, description: $localize`:@@community.profile.seoDescription:${loaded.displayName}:name: on Readora.`, path: `/u/${loaded.username}` });
       }
     });
   }

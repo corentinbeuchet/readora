@@ -1,13 +1,13 @@
 <section class="page">
-  <h1>Reading history</h1>
+  <h1 i18n="@@library.history.heading">Reading history</h1>
 
   @if (history.isLoading()) {
-    <p class="muted" role="status">Loading your history…</p>
+    <p class="muted" role="status" i18n="@@library.history.loading">Loading your history…</p>
   } @else if (history.error()) {
-    <app-load-error (retry)="reload()">Could not load your reading history.</app-load-error>
+    <app-load-error (retry)="reload()"><ng-container i18n="@@library.history.loadError">Could not load your reading history.</ng-container></app-load-error>
   } @else if (history.hasValue() && history.value().length === 0) {
-    <p class="muted">You haven't read anything yet.</p>
-    <a routerLink="/works" class="btn btn-primary">Browse the catalog</a>
+    <p class="muted" i18n="@@library.history.empty">You haven't read anything yet.</p>
+    <a routerLink="/works" class="btn btn-primary" i18n="@@library.history.browse">Browse the catalog</a>
   } @else if (history.hasValue()) {
     <ol class="history-list">
       @for (item of history.value(); track item.work.id) {
@@ -16,9 +16,9 @@
           <div class="history-body">
             <h2 class="history-title"><a [routerLink]="['/works', item.work.id]">{{ item.work.title }}</a></h2>
             <p class="muted">
-              Chapter {{ item.lastRead.chapterNumber }}
+              <ng-container i18n="@@library.history.chapter">Chapter {{ item.lastRead.chapterNumber }}</ng-container>
               @if (item.lastRead.finished) {
-                (finished)
+                <ng-container i18n="@@library.history.finished">(finished)</ng-container>
               }
               · {{ item.lastRead.readAt | date: 'medium' }}
             </p>
@@ -26,7 +26,8 @@
           <a
             class="btn btn-primary"
             [routerLink]="['/read', item.lastRead.chapterId]"
-            [attr.aria-label]="`Continue ${item.work.title}, chapter ${item.lastRead.chapterNumber}`"
+            [attr.aria-label]="continueLabels().get(item.work.id)"
+            i18n="@@library.history.continue"
           >Continue</a>
         </li>
       }

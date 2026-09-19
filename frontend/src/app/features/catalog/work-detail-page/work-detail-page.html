@@ -1,14 +1,14 @@
 <section class="page">
   @if (work.isLoading()) {
-    <p class="muted" role="status">Loading…</p>
+    <p class="muted" role="status" i18n="@@catalog.work.loading">Loading…</p>
   } @else if (work.error()) {
-    <app-load-error [error]="work.error()" notFound="This series doesn't exist." (retry)="reload()">
-      This series could not be loaded.
-      <a actions routerLink="/works" class="btn btn-link">Back to catalog</a>
+    <app-load-error [error]="work.error()" notFound="This series doesn't exist." i18n-notFound="@@catalog.work.notFound" (retry)="reload()">
+      <ng-container i18n="@@catalog.work.loadError">This series could not be loaded.</ng-container>
+      <a actions routerLink="/works" class="btn btn-link" i18n="@@catalog.work.backToCatalog">Back to catalog</a>
     </app-load-error>
   } @else if (work.value(); as w) {
     <article class="work-detail">
-      <app-work-cover class="work-cover" [src]="w.coverImageUrl" [alt]="`Cover of ${w.title}`" width="240" height="336" priority />
+      <app-work-cover class="work-cover" [src]="w.coverImageUrl" alt="Cover of {{ w.title }}" i18n-alt="@@catalog.work.coverAlt" width="240" height="336" priority />
       <div class="work-body">
         <h1>{{ w.title }}</h1>
         <p class="work-meta">
@@ -23,18 +23,18 @@
         <div class="work-actions">
           @if (bookmark(); as bm) {
             @if (bm.lastReadChapterId) {
-              <a [routerLink]="['/read', bm.lastReadChapterId]" [queryParams]="{ page: bm.lastReadPageIndex }" class="btn btn-primary">Continue reading (page {{ bm.lastReadPageIndex }})</a>
+              <a [routerLink]="['/read', bm.lastReadChapterId]" [queryParams]="{ page: bm.lastReadPageIndex }" class="btn btn-primary" i18n="@@catalog.work.continueBookmark">Continue reading (page {{ bm.lastReadPageIndex }})</a>
             }
           } @else if (continueChapter(); as next) {
-            <a [routerLink]="['/read', next.id]" class="btn btn-primary">Continue with chapter {{ next.chapterNumber }}</a>
+            <a [routerLink]="['/read', next.id]" class="btn btn-primary" i18n="@@catalog.work.continueChapter">Continue with chapter {{ next.chapterNumber }}</a>
           } @else if (firstChapterId(); as first) {
-            <a [routerLink]="['/read', first]" class="btn btn-primary">Start reading</a>
+            <a [routerLink]="['/read', first]" class="btn btn-primary" i18n="@@catalog.work.startReading">Start reading</a>
           }
 
           <ng-container *appHasPermission="'LIBRARY_USE'">
             @if (libraryStatus(); as status) {
               <label class="field library-status">
-                <span>In my library</span>
+                <span i18n="@@catalog.work.libraryStatus">In my library</span>
                 <select [disabled]="library.busy()" (change)="changeLibraryStatus($event)">
                   @for (option of statuses; track option) {
                     <option [value]="option" [selected]="status === option">{{ statusLabels[option] }}</option>
@@ -43,11 +43,11 @@
               </label>
               <label class="checkbox">
                 <input type="checkbox" [checked]="libraryNotify()" [disabled]="library.busy()" (change)="toggleNotifications($event)" />
-                Notify me of new chapters
+                <ng-container i18n="@@catalog.work.notify">Notify me of new chapters</ng-container>
               </label>
-              <button type="button" class="btn btn-link" [disabled]="library.busy()" (click)="removeFromLibrary()">Remove from library</button>
+              <button type="button" class="btn btn-link" [disabled]="library.busy()" (click)="removeFromLibrary()" i18n="@@catalog.work.removeFromLibrary">Remove from library</button>
             } @else {
-              <button type="button" class="btn" [disabled]="library.busy()" (click)="addToLibrary()">+ Add to library</button>
+              <button type="button" class="btn" [disabled]="library.busy()" (click)="addToLibrary()" i18n="@@catalog.work.addToLibrary">+ Add to library</button>
             }
           </ng-container>
         </div>
@@ -59,13 +59,13 @@
     </article>
 
     <section id="chapters" class="chapters" aria-labelledby="chapters-heading">
-      <h2 id="chapters-heading">Chapters</h2>
+      <h2 id="chapters-heading" i18n="@@catalog.work.chapters.heading">Chapters</h2>
       @if (chapters.isLoading()) {
-        <p class="muted" role="status">Loading chapters…</p>
+        <p class="muted" role="status" i18n="@@catalog.work.chapters.loading">Loading chapters…</p>
       } @else if (chapters.error()) {
-        <app-load-error (retry)="chapters.reload()">The chapter list could not be loaded.</app-load-error>
+        <app-load-error (retry)="chapters.reload()"><ng-container i18n="@@catalog.work.chapters.loadError">The chapter list could not be loaded.</ng-container></app-load-error>
       } @else if (!chapters.value() || chapters.value().length === 0) {
-        <p class="muted">No chapters have been published yet.</p>
+        <p class="muted" i18n="@@catalog.work.chapters.empty">No chapters have been published yet.</p>
       } @else {
         <ol class="chapter-list">
           @for (row of chapterRows(); track row.chapter.id) {
@@ -74,24 +74,24 @@
             @let next = row.next;
             <li class="chapter-row">
               <a [routerLink]="['/read', chapter.id]" class="chapter-link" [class.chapter-read]="read" [class.chapter-next]="next">
-                <span class="chapter-number">Ch. {{ chapter.chapterNumber }}</span>
+                <span class="chapter-number" i18n="@@catalog.work.chapters.number">Ch. {{ chapter.chapterNumber }}</span>
                 <span class="chapter-title">
                   {{ chapter.title }}
                   @if (read) {
-                    <span class="chapter-state">✓ Read</span>
+                    <span class="chapter-state" i18n="@@catalog.work.chapters.read">✓ Read</span>
                   } @else if (next) {
-                    <span class="chapter-state chapter-state-next">Next up</span>
+                    <span class="chapter-state chapter-state-next" i18n="@@catalog.work.chapters.nextUp">Next up</span>
                   }
                 </span>
                 <span class="muted chapter-info">
-                  {{ chapter.pageCount }} pages
+                  <ng-container i18n="@@catalog.work.chapters.pages">{chapter.pageCount, plural, =1 {1 page} other {{{ chapter.pageCount }} pages}}</ng-container>
                   @if (chapter.publishedAt) {
                     · {{ chapter.publishedAt | date: 'mediumDate' }}
                   }
                 </span>
               </a>
               @if (row.canMarkPrevious) {
-                <button type="button" class="btn btn-sm btn-link mark-previous" [disabled]="library.busy()" (click)="markPreviousAsRead(chapter.id)">
+                <button type="button" class="btn btn-sm btn-link mark-previous" [disabled]="library.busy()" (click)="markPreviousAsRead(chapter.id)" i18n="@@catalog.work.chapters.markPrevious">
                   Mark all previous as read<span class="sr-only"> (before chapter {{ chapter.chapterNumber }})</span>
                 </button>
               }
@@ -105,7 +105,7 @@
     @defer (on viewport; hydrate on viewport) {
       <app-work-ratings [workId]="w.id" />
     } @placeholder {
-      <p class="muted">Ratings and reviews</p>
+      <p class="muted" i18n="@@catalog.work.ratingsPlaceholder">Ratings and reviews</p>
     }
   }
 </section>

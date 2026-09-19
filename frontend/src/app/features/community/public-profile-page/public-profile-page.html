@@ -1,15 +1,15 @@
 <section class="page">
   @if (profile.isLoading()) {
-    <p class="muted" role="status">Loading the profile…</p>
+    <p class="muted" role="status" i18n="@@community.profile.loading">Loading the profile…</p>
   } @else if (profile.error()) {
-    <app-load-error [error]="profile.error()" notFound="This reader could not be found." (retry)="profile.reload()">
-      Could not load the profile.
-      <a actions routerLink="/works" class="btn btn-link">Browse the catalog</a>
+    <app-load-error [error]="profile.error()" notFound="This reader could not be found." i18n-notFound="@@community.profile.notFound" (retry)="profile.reload()">
+      <ng-container i18n="@@community.profile.loadError">Could not load the profile.</ng-container>
+      <a actions routerLink="/works" class="btn btn-link" i18n="@@community.profile.browse">Browse the catalog</a>
     </app-load-error>
   } @else if (profile.hasValue() && profile.value(); as p) {
     <header class="profile-header">
       <h1>{{ p.displayName }}</h1>
-      <p class="muted">@{{ p.username }} · reading on Readora since {{ p.joinedAt | date: 'longDate' }}</p>
+      <p class="muted" i18n="@@community.profile.since">@{{ p.username }} · reading on Readora since {{ p.joinedAt | date: 'longDate' }}</p>
       @if (p.bio) {
         <p>{{ p.bio }}</p>
       }
@@ -17,18 +17,18 @@
 
     <dl class="stats">
       <div class="stat">
-        <dt>Chapters read</dt>
+        <dt i18n="@@community.profile.chaptersRead">Chapters read</dt>
         <dd>{{ p.chaptersRead }}</dd>
       </div>
       <div class="stat">
-        <dt>Favourite genres</dt>
+        <dt i18n="@@community.profile.favouriteGenres">Favourite genres</dt>
         <dd>{{ favouriteGenres() }}</dd>
       </div>
     </dl>
 
-    <h2>Completed series</h2>
+    <h2 i18n="@@community.profile.completed">Completed series</h2>
     @if (p.completedSeries.length === 0) {
-      <p class="muted">None yet.</p>
+      <p class="muted" i18n="@@community.profile.completedNone">None yet.</p>
     } @else {
       <ul class="plain-list">
         @for (work of p.completedSeries; track work.id) {

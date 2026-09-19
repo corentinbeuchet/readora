@@ -29,13 +29,17 @@ export class ListsPage {
   protected readonly creating = asyncAction();
   protected readonly model = signal({ title: '', description: '' });
   protected readonly newListForm = form(this.model, (path) => {
-    required(path.title, { message: 'Give your list a title' });
+    required(path.title, { message: $localize`:@@lists.page.new.titleRequired:Give your list a title` });
     maxLength(path.title, 100);
     maxLength(path.description, 500);
   });
 
   constructor() {
-    inject(SeoService).update({ title: 'Lists — curated by readers', description: 'Reading lists shared by the Readora community.', path: '/lists' });
+    inject(SeoService).update({
+      title: $localize`:@@lists.page.seoTitle:Lists — curated by readers`,
+      description: $localize`:@@lists.page.seoDescription:Reading lists shared by the Readora community.`,
+      path: '/lists'
+    });
   }
 
   /** Creates an empty private list, then opens it for editing. */

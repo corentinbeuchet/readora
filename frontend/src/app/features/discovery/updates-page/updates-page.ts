@@ -26,11 +26,21 @@ export class UpdatesPage {
   protected readonly mine = computed(() => this.feed() === 'mine' && this.canFilter());
   protected readonly pageIndex = computed(() => Math.max(0, Math.trunc(Number(this.page())) || 0));
   protected readonly releases = this.discovery.latestResource(this.mine, this.pageIndex);
+  /** Accessible name of each row's "Read now" link, by chapter id. */
+  protected readonly readNowLabels = computed(
+    () =>
+      new Map(
+        (this.releases.hasValue() ? this.releases.value() : []).map((release) => [
+          release.chapterId,
+          $localize`:@@discovery.updates.readNow.label:Read now: ${release.work.title}:title:, chapter ${release.chapterNumber}:chapter:`
+        ])
+      )
+  );
 
   constructor() {
     inject(SeoService).update({
-      title: 'Latest updates',
-      description: 'The newest manga, manhwa and comic chapters on Readora.',
+      title: $localize`:@@discovery.updates.seoTitle:Latest updates`,
+      description: $localize`:@@discovery.updates.seoDescription:The newest manga, manhwa and comic chapters on Readora.`,
       path: '/updates'
     });
   }

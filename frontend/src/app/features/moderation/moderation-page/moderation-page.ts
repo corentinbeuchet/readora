@@ -23,7 +23,7 @@ export class ModerationPage {
   protected readonly action = asyncAction();
 
   constructor() {
-    inject(SeoService).private_('Moderation');
+    inject(SeoService).private_($localize`:@@moderation.page.seoTitle:Moderation`);
   }
 
   protected hide(item: ModerationItem): Promise<void> {

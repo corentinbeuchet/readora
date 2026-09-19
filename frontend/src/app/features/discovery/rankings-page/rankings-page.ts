@@ -4,24 +4,23 @@ import { DiscoveryApi } from '@app/core/api/discovery-api';
 import { RankingPeriod } from '@app/core/models/discovery';
 import { SeoService } from '@app/core/seo/seo.service';
 import { LoadError } from '@app/shared/ui/load-error';
-import { DecimalPipe, I18nPluralPipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 
 const PERIODS: { key: RankingPeriod; label: string }[] = [
-  { key: 'TODAY', label: 'Today' },
-  { key: 'WEEK', label: 'This week' },
-  { key: 'MONTH', label: 'This month' },
-  { key: 'ALL', label: 'All time' }
+  { key: 'TODAY', label: $localize`:@@discovery.rankings.periods.today:Today` },
+  { key: 'WEEK', label: $localize`:@@discovery.rankings.periods.week:This week` },
+  { key: 'MONTH', label: $localize`:@@discovery.rankings.periods.month:This month` },
+  { key: 'ALL', label: $localize`:@@discovery.rankings.periods.all:All time` }
 ];
 
 /** Rankings (US-08): popular by period, and top rated. */
 @Component({
   selector: 'app-rankings-page',
-  imports: [I18nPluralPipe, DecimalPipe, LoadError, RouterLink],
+  imports: [DecimalPipe, LoadError, RouterLink],
   templateUrl: './rankings-page.html',
   styleUrl: './rankings-page.scss'
 })
 export class RankingsPage {
-  protected readonly ratingsPlural = { '=1': '1 rating', other: '# ratings' };
   private readonly discovery = inject(DiscoveryApi);
   protected readonly periods = PERIODS;
 
@@ -38,8 +37,8 @@ export class RankingsPage {
 
   constructor() {
     inject(SeoService).update({
-      title: 'Rankings — popular and top rated',
-      description: 'The most read and best rated manga, manhwa and comics on Readora.',
+      title: $localize`:@@discovery.rankings.seoTitle:Rankings — popular and top rated`,
+      description: $localize`:@@discovery.rankings.seoDescription:The most read and best rated manga, manhwa and comics on Readora.`,
       path: '/rankings'
     });
   }

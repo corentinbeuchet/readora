@@ -37,7 +37,7 @@ export class LibraryPage {
   protected readonly action = asyncAction();
 
   constructor() {
-    inject(SeoService).private_('My library');
+    inject(SeoService).private_($localize`:@@library.page.seoTitle:My library`);
   }
 
   protected async changeStatus(item: LibraryItem, event: Event): Promise<void> {
@@ -58,7 +58,7 @@ export class LibraryPage {
   protected async exportLibrary(format: 'csv' | 'json'): Promise<void> {
     await this.action.run(
       async () => this.saveFile(await firstValueFrom(this.communityApi.exportLibrary(format)), `readora-library.${format}`),
-      { key: 'export', fallback: 'Could not export your library. Please try again.' }
+      { key: 'export', fallback: $localize`:@@library.page.exportError:Could not export your library. Please try again.` }
     );
   }
 
@@ -84,7 +84,7 @@ export class LibraryPage {
         await action();
         this.items.reload();
       },
-      { key: item.work.id, fallback: `Could not update “${item.work.title}”. Please try again.` }
+      { key: item.work.id, fallback: $localize`:@@library.page.updateError:Could not update “${item.work.title}:title:”. Please try again.` }
     );
   }
 }

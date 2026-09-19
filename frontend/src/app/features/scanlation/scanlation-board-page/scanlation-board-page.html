@@ -1,23 +1,29 @@
 <div class="kanban-container">
   @if (project.isLoading()) {
-    <p class="muted" role="status">Loading project…</p>
+    <p class="muted" role="status" i18n="@@scanlation.board.loading">Loading project…</p>
   } @else if (project.error()) {
     <div class="card" role="alert">
-      <h1>Project unavailable</h1>
-      <p class="muted">You may not be a member of this project, or it does not exist.</p>
-      <button type="button" class="btn" (click)="reload()">Retry</button>
-      <a routerLink="/" class="btn btn-primary">Back to home</a>
+      <h1 i18n="@@scanlation.board.unavailable.title">Project unavailable</h1>
+      <p class="muted" i18n="@@scanlation.board.unavailable.text">You may not be a member of this project, or it does not exist.</p>
+      <button type="button" class="btn" (click)="reload()" i18n="@@scanlation.board.retry">Retry</button>
+      <a routerLink="/" class="btn btn-primary" i18n="@@scanlation.board.backHome">Back to home</a>
     </div>
   } @else {
     <header class="kanban-header">
       <div class="header-info">
-        <h1>{{ currentProject()?.name || 'Scanlation Workspace' }}</h1>
+        <h1>
+          @if (currentProject()?.name; as name) {
+            {{ name }}
+          } @else {
+            <ng-container i18n="@@scanlation.board.defaultTitle">Scanlation Workspace</ng-container>
+          }
+        </h1>
         @if (currentProject(); as p) {
-          <p class="muted">{{ p.members.length }} members · {{ p.tasks.length }} tasks</p>
+          <p class="muted"><ng-container i18n="@@scanlation.board.memberCount">{p.members.length, plural, =1 {1 member} other {{{ p.members.length }} members}}</ng-container> · <ng-container i18n="@@scanlation.board.taskCount">{p.tasks.length, plural, =1 {1 task} other {{{ p.tasks.length }} tasks}}</ng-container></p>
         }
       </div>
       <div class="header-actions">
-        <a *appHasPermission="'WORK_CREATE'" routerLink="/upload" class="btn btn-primary btn-upload">
+        <a *appHasPermission="'WORK_CREATE'" routerLink="/upload" class="btn btn-primary btn-upload" i18n="@@scanlation.board.uploadStudio">
           + Upload Studio
         </a>
       </div>
@@ -40,30 +46,36 @@
               @let task = row.task;
               <article class="task-card" [class.task-mine]="row.mine">
                 <div class="task-card-header">
-                  <strong>Chapter {{ task.chapterNumber }}</strong>
+                  <strong i18n="@@scanlation.board.task.chapter">Chapter {{ task.chapterNumber }}</strong>
                   <span class="status-pill" [class.status-in-progress]="task.status === 'IN_PROGRESS'" [class.status-completed]="task.status === 'COMPLETED'">{{ task.status }}</span>
                 </div>
-                <p class="task-meta">Pages: {{ task.pageCount }}</p>
+                <p class="task-meta" i18n="@@scanlation.board.task.pages">Pages: {{ task.pageCount }}</p>
                 @if (task.assigneeId) {
-                  <p class="task-assignee">Assigned: {{ row.mine ? 'you' : task.assigneeId }}</p>
+                  <p class="task-assignee">
+                    @if (row.mine) {
+                      <ng-container i18n="@@scanlation.board.task.assignedYou">Assigned: you</ng-container>
+                    } @else {
+                      <ng-container i18n="@@scanlation.board.task.assignedTo">Assigned: {{ task.assigneeId }}</ng-container>
+                    }
+                  </p>
                 }
 
                 <div class="task-actions">
                   @if (row.canClaim) {
                     <button *appHasPermission="'TASK_CLAIM'" type="button" class="btn btn-claim"
-                            (click)="claim(task)" [disabled]="action.busyKey() === task.id">
+                            (click)="claim(task)" [disabled]="action.busyKey() === task.id" i18n="@@scanlation.board.claim">
                       Claim
                     </button>
                   }
                   @if (row.canSubmit) {
                     <button *appHasPermission="'TASK_SUBMIT'" type="button" class="btn btn-submit"
-                            (click)="openSubmit(task)" [disabled]="action.busyKey() === task.id">
+                            (click)="openSubmit(task)" [disabled]="action.busyKey() === task.id" i18n="@@scanlation.board.submitWork">
                       Submit work
                     </button>
                   }
                   @if (row.canPublish) {
                     <button *appHasPermission="'CHAPTER_PUBLISH'" type="button" class="btn btn-primary btn-publish"
-                            (click)="publish(task)" [disabled]="action.busyKey() === task.id">
+                            (click)="publish(task)" [disabled]="action.busyKey() === task.id" i18n="@@scanlation.board.publish">
                       Publish
                     </button>
                   }
@@ -82,33 +94,37 @@
       @defer (on immediate) {
         <app-dialog labelledBy="submit-title" width="480px" (closed)="closeSubmit()">
           <form class="form submit-dialog" (submit)="onSubmitWork($event)" novalidate>
-            <h2 id="submit-title">Submit work for chapter {{ task.chapterNumber }}</h2>
-            <p class="muted">Stage: {{ task.stage }}</p>
+            <h2 id="submit-title" i18n="@@scanlation.submit.title">Submit work for chapter {{ task.chapterNumber }}</h2>
+            <p class="muted" i18n="@@scanlation.submit.stage">Stage: {{ task.stage }}</p>
 
             <div class="field">
-              <label for="submit-asset-url">Asset package URL</label>
+              <label for="submit-asset-url" i18n="@@scanlation.submit.assetUrl">Asset package URL</label>
               <input id="submit-asset-url" type="url" [formField]="submitForm.assetUrl"
                      [appAriaInvalid]="submitForm.assetUrl" aria-describedby="submit-asset-url-error" />
               <app-field-errors id="submit-asset-url-error" [field]="submitForm.assetUrl" />
             </div>
 
             <div class="field">
-              <label for="submit-page-count">Page count</label>
+              <label for="submit-page-count" i18n="@@scanlation.submit.pageCount">Page count</label>
               <input id="submit-page-count" type="number" [formField]="submitForm.pageCount"
                      [appAriaInvalid]="submitForm.pageCount" aria-describedby="submit-page-count-error" />
               <app-field-errors id="submit-page-count-error" [field]="submitForm.pageCount" />
             </div>
 
             <div class="dialog-actions">
-              <button type="button" class="btn" (click)="closeSubmit()">Cancel</button>
+              <button type="button" class="btn" (click)="closeSubmit()" i18n="@@scanlation.submit.cancel">Cancel</button>
               <button type="submit" class="btn btn-primary" [disabled]="action.busyKey() === task.id">
-                {{ action.busyKey() === task.id ? 'Submitting…' : 'Submit & advance' }}
+                @if (action.busyKey() === task.id) {
+                  <ng-container i18n="@@scanlation.submit.submitting">Submitting…</ng-container>
+                } @else {
+                  <ng-container i18n="@@scanlation.submit.submit">Submit & advance</ng-container>
+                }
               </button>
             </div>
           </form>
         </app-dialog>
       } @loading {
-        <p class="muted" role="status">Opening…</p>
+        <p class="muted" role="status" i18n="@@scanlation.submit.opening">Opening…</p>
       }
     }
 

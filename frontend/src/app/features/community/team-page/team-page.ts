@@ -6,17 +6,15 @@ import { HasPermissionDirective } from '@app/core/auth/has-permission.directive'
 import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
 import { LoadError } from '@app/shared/ui/load-error';
-import { I18nPluralPipe } from '@angular/common';
 
 /** A scanlation team's page (US-12): members, series, latest chapters, follow. */
 @Component({
   selector: 'app-team-page',
-  imports: [I18nPluralPipe, LoadError, RouterLink, HasPermissionDirective],
+  imports: [LoadError, RouterLink, HasPermissionDirective],
   templateUrl: './team-page.html',
   styleUrl: './team-page.scss'
 })
 export class TeamPage {
-  protected readonly followersPlural = { '=1': '1 follower', other: '# followers' };
   private readonly api = inject(CommunityApi);
   private readonly seo = inject(SeoService);
 
@@ -35,7 +33,11 @@ export class TeamPage {
     effect(() => {
       const loaded = this.team.hasValue() ? this.team.value() : undefined;
       if (loaded) {
-        this.seo.update({ title: `${loaded.name} — scanlation team`, description: `${loaded.name} translates ${loaded.series.title}.`, path: `/teams/${loaded.id}` });
+        this.seo.update({
+          title: $localize`:@@community.team.seoTitle:${loaded.name}:name: — scanlation team`,
+          description: $localize`:@@community.team.seoDescription:${loaded.name}:name: translates ${loaded.series.title}:series:.`,
+          path: `/teams/${loaded.id}`
+        });
       }
     });
   }

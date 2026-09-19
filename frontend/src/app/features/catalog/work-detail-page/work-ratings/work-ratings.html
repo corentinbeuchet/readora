@@ -1,16 +1,16 @@
 <section class="ratings" aria-labelledby="ratings-heading">
-  <h2 id="ratings-heading">Ratings &amp; reviews</h2>
+  <h2 id="ratings-heading" i18n="@@catalog.ratings.heading">Ratings &amp; reviews</h2>
 
   @if (summary.error()) {
-    <app-load-error (retry)="summary.reload()">Could not load the ratings.</app-load-error>
+    <app-load-error (retry)="summary.reload()"><ng-container i18n="@@catalog.ratings.loadError">Could not load the ratings.</ng-container></app-load-error>
   }
   <p class="rating-summary">
     @if (summary.hasValue() && summary.value().count > 0) {
       <span class="score" aria-hidden="true">★</span>
       <strong>{{ summary.value().average | number: '1.1-1' }}</strong>
-      <span class="muted">/ 10 from {{ summary.value().count | i18nPlural: ratingsPlural }}</span>
+      <span class="muted" i18n="@@catalog.ratings.outOfTen">/ 10 from {summary.value().count, plural, =1 {1 rating} other {{{ summary.value().count }} ratings}}</span>
     } @else {
-      <span class="muted">No ratings yet.</span>
+      <span class="muted" i18n="@@catalog.ratings.none">No ratings yet.</span>
     }
   </p>
 
@@ -20,7 +20,7 @@
 
   <ng-container *appHasPermission="'RATE_WORK'">
     <fieldset class="my-rating" [disabled]="action.busy()">
-      <legend>Your rating</legend>
+      <legend i18n="@@catalog.ratings.yours">Your rating</legend>
       <div class="score-options">
         @for (score of scores; track score) {
           <label class="score-option" [class.selected]="myScore() === score">
@@ -32,49 +32,55 @@
     </fieldset>
 
     @if (!reviewOpen()) {
-      <button type="button" class="btn" (click)="reviewOpen.set(true)">{{ hasReview() ? 'Edit my review' : 'Write a review' }}</button>
+      <button type="button" class="btn" (click)="reviewOpen.set(true)">
+        @if (hasReview()) {
+          <ng-container i18n="@@catalog.ratings.editReview">Edit my review</ng-container>
+        } @else {
+          <ng-container i18n="@@catalog.ratings.writeReview">Write a review</ng-container>
+        }
+      </button>
     } @else {
       <form class="card form review-form" (submit)="sendReview($event)" novalidate>
         <div class="field">
-          <label for="review-liked">What you liked</label>
+          <label for="review-liked" i18n="@@catalog.ratings.form.liked">What you liked</label>
           <textarea id="review-liked" rows="3" [formField]="reviewForm.liked"></textarea>
         </div>
         <div class="field">
-          <label for="review-disliked">What you didn't like</label>
+          <label for="review-disliked" i18n="@@catalog.ratings.form.disliked">What you didn't like</label>
           <textarea id="review-disliked" rows="3" [formField]="reviewForm.disliked"></textarea>
         </div>
         <div class="field">
-          <label for="review-verdict">Verdict</label>
+          <label for="review-verdict" i18n="@@catalog.ratings.form.verdict">Verdict</label>
           <textarea id="review-verdict" rows="3" [formField]="reviewForm.verdict"
                     [appAriaInvalid]="reviewForm.verdict" aria-describedby="review-verdict-error"></textarea>
           <app-field-errors id="review-verdict-error" [field]="reviewForm.verdict" />
         </div>
         <div class="form-actions">
-          <button type="button" class="btn" (click)="reviewOpen.set(false)">Cancel</button>
-          <button type="submit" class="btn btn-primary" [disabled]="action.busy()">Publish review</button>
+          <button type="button" class="btn" (click)="reviewOpen.set(false)" i18n="@@catalog.ratings.form.cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="action.busy()" i18n="@@catalog.ratings.form.publish">Publish review</button>
         </div>
       </form>
     }
   </ng-container>
 
   @if (reviews.error()) {
-    <app-load-error (retry)="reviews.reload()">Could not load the reviews.</app-load-error>
+    <app-load-error (retry)="reviews.reload()"><ng-container i18n="@@catalog.ratings.reviewsLoadError">Could not load the reviews.</ng-container></app-load-error>
   } @else if (reviews.hasValue() && reviews.value().length > 0) {
     <ul class="review-list">
       @for (review of reviews.value(); track review.id) {
         <li class="card review">
           <p class="review-header"><strong>{{ review.authorUsername }}</strong> · {{ review.score }}/10</p>
           @if (review.liked) {
-            <p><span class="review-label">Liked:</span> {{ review.liked }}</p>
+            <p><span class="review-label" i18n="@@catalog.ratings.review.liked">Liked:</span> {{ review.liked }}</p>
           }
           @if (review.disliked) {
-            <p><span class="review-label">Didn't like:</span> {{ review.disliked }}</p>
+            <p><span class="review-label" i18n="@@catalog.ratings.review.disliked">Didn't like:</span> {{ review.disliked }}</p>
           }
-          <p><span class="review-label">Verdict:</span> {{ review.verdict }}</p>
+          <p><span class="review-label" i18n="@@catalog.ratings.review.verdict">Verdict:</span> {{ review.verdict }}</p>
           <p class="review-footer muted">
-            {{ review.helpfulVotes }} found this helpful
+            <ng-container i18n="@@catalog.ratings.review.helpfulCount">{review.helpfulVotes, plural, other {{{ review.helpfulVotes }} found this helpful}}</ng-container>
             @if (review.authorId !== myUserId()) {
-              <button *appHasPermission="'RATE_WORK'" type="button" class="btn btn-link" [disabled]="action.busy()" (click)="markHelpful(review)">
+              <button *appHasPermission="'RATE_WORK'" type="button" class="btn btn-link" [disabled]="action.busy()" (click)="markHelpful(review)" i18n="@@catalog.ratings.review.helpful">
                 Helpful<span class="sr-only">: review by {{ review.authorUsername }}</span>
               </button>
             }

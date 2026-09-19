@@ -37,7 +37,7 @@ export class ScanlationBoardPage {
   protected readonly project = this.scanlationApi.projectResource(this.projectId);
   protected readonly currentProject = computed(() => (this.project.hasValue() ? (this.project.value() ?? null) : null));
   /** Claim / submit / publish: `busyKey` is the task being changed. */
-  protected readonly action = asyncAction('The action could not be completed');
+  protected readonly action = asyncAction($localize`:@@scanlation.board.actionError:The action could not be completed`);
   protected readonly submitTarget = signal<WorkflowTask | null>(null);
 
   protected readonly currentUserId = computed(() => this.auth.user()?.id ?? null);
@@ -62,13 +62,13 @@ export class ScanlationBoardPage {
 
   protected readonly submitModel = signal<SubmitModel>({ assetUrl: '', pageCount: 1 });
   protected readonly submitForm = form(this.submitModel, (path) => {
-    required(path.assetUrl, { message: 'Asset package URL is required' });
-    pattern(path.assetUrl, /^https?:\/\/\S+$/, { message: 'Must be an http(s) URL' });
-    min(path.pageCount, 1, { message: 'Page count must be at least 1' });
+    required(path.assetUrl, { message: $localize`:@@scanlation.submit.assetUrl.required:Asset package URL is required` });
+    pattern(path.assetUrl, /^https?:\/\/\S+$/, { message: $localize`:@@scanlation.submit.assetUrl.pattern:Must be an http(s) URL` });
+    min(path.pageCount, 1, { message: $localize`:@@scanlation.submit.pageCount.min:Page count must be at least 1` });
   });
 
   constructor() {
-    this.seo.private_('Scanlation workspace');
+    this.seo.private_($localize`:@@scanlation.board.seoTitle:Scanlation workspace`);
   }
 
   protected async claim(task: WorkflowTask): Promise<void> {

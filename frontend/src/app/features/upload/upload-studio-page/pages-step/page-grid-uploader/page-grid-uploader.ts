@@ -1,5 +1,4 @@
 import { Component, DestroyRef, inject, model, signal } from '@angular/core';
-import { I18nPluralPipe } from '@angular/common';
 import {
   ArchiveError,
   DEFAULT_ARCHIVE_LIMITS,
@@ -35,13 +34,11 @@ function newId(): string {
  */
 @Component({
   selector: 'app-page-grid-uploader',
-  imports: [I18nPluralPipe],
   templateUrl: './page-grid-uploader.html',
   styleUrl: './page-grid-uploader.scss'
 })
 export class PageGridUploader {
   readonly pages = model<PageUploadItem[]>([]);
-  protected readonly pagesPlural = { '=1': '1 page', other: '# pages' };
   protected readonly isDragging = signal(false);
   protected readonly extracting = signal(false);
   /** Problems with the last dropped/selected files, shown to the user (role="alert"). */
@@ -94,14 +91,16 @@ export class PageGridUploader {
         try {
           imagesToAdd.push(...(await extractArchiveImages(file, limits)));
         } catch (e) {
-          problems.push(e instanceof ArchiveError ? e.message : `"${file.name}" could not be unpacked.`);
+          problems.push(e instanceof ArchiveError ? e.message : $localize`:@@upload.pages.unpackFailed:"${file.name}:name:" could not be unpacked.`);
         } finally {
           this.extracting.set(false);
         }
       } else if (!isImageFile(file)) {
-        problems.push(`"${file.name}" was skipped: only images and .zip/.cbz archives are accepted.`);
+        problems.push($localize`:@@upload.pages.unsupported:"${file.name}:name:" was skipped: only images and .zip/.cbz archives are accepted.`);
       } else if (file.size > limits.maxEntryBytes) {
-        problems.push(`"${file.name}" was skipped: pages must be at most ${Math.round(limits.maxEntryBytes / (1024 * 1024))} MB.`);
+        problems.push(
+          $localize`:@@upload.pages.tooLarge:"${file.name}:name:" was skipped: pages must be at most ${Math.round(limits.maxEntryBytes / (1024 * 1024))}:maxMb: MB.`
+        );
       } else {
         imagesToAdd.push(file);
       }
@@ -109,7 +108,9 @@ export class PageGridUploader {
 
     const room = limits.maxImageEntries - this.pages().length;
     if (imagesToAdd.length > room) {
-      problems.push(`A chapter can have at most ${limits.maxImageEntries} pages: ${imagesToAdd.length - Math.max(0, room)} pages were not added.`);
+      problems.push(
+        $localize`:@@upload.pages.tooMany:A chapter can have at most ${limits.maxImageEntries}:max: pages: ${imagesToAdd.length - Math.max(0, room)}:skipped: pages were not added.`
+      );
       imagesToAdd.splice(Math.max(0, room));
     }
     this.problems.set(problems);

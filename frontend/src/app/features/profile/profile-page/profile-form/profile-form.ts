@@ -28,10 +28,10 @@ export class ProfileForm {
 
   protected readonly model = signal<ProfileModel>({ displayName: '', bio: '', avatarUrl: '' });
   protected readonly profileForm = form(this.model, (path) => {
-    required(path.displayName, { message: 'Display name is required' });
-    maxLength(path.displayName, 100, { message: 'Display name must be at most 100 characters' });
-    maxLength(path.bio, 1000, { message: 'Bio must be at most 1000 characters' });
-    pattern(path.avatarUrl, /^(https?:\/\/\S+)?$/, { message: 'Avatar must be an http(s) URL' });
+    required(path.displayName, { message: $localize`:@@profile.form.displayNameRequired:Display name is required` });
+    maxLength(path.displayName, 100, { message: $localize`:@@profile.form.displayNameMax:Display name must be at most 100 characters` });
+    maxLength(path.bio, 1000, { message: $localize`:@@profile.form.bioMax:Bio must be at most 1000 characters` });
+    pattern(path.avatarUrl, /^(https?:\/\/\S+)?$/, { message: $localize`:@@profile.form.avatarPattern:Avatar must be an http(s) URL` });
   });
 
   protected readonly status = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -69,7 +69,7 @@ export class ProfileForm {
         this.saved.emit(updated);
         this.status.set('saved');
       } catch (error) {
-        this.errorMessage.set(apiErrorMessage(error, 'Could not save your profile'));
+        this.errorMessage.set(apiErrorMessage(error, $localize`:@@profile.form.saveError:Could not save your profile`));
         this.status.set('error');
       }
     });

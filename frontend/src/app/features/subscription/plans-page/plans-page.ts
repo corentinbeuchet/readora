@@ -1,5 +1,5 @@
 import { Component, DOCUMENT, computed, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { SubscriptionsApi } from '@app/core/api/subscriptions-api';
@@ -8,13 +8,17 @@ import { canCancelSubscription } from '@app/core/models/identity';
 import { SeoService } from '@app/core/seo/seo.service';
 import { apiErrorMessage } from '@app/core/api/api-client';
 
-export const PREMIUM_FEATURES = [
-  'Bookmarks & reading progress synced across devices',
-  'Continue reading from your profile',
-  'Support the scanlation teams you love'
-] as const;
+export const PREMIUM_FEATURES: readonly string[] = [
+  $localize`:@@subscription.plans.premiumBookmarks:Bookmarks & reading progress synced across devices`,
+  $localize`:@@subscription.plans.premiumContinue:Continue reading from your profile`,
+  $localize`:@@subscription.plans.premiumSupport:Support the scanlation teams you love`
+];
 
-export const FREE_FEATURES = ['Read every published chapter', 'Comment and reply', 'Upvote the best comments'] as const;
+export const FREE_FEATURES: readonly string[] = [
+  $localize`:@@subscription.plans.freeRead:Read every published chapter`,
+  $localize`:@@subscription.plans.freeComment:Comment and reply`,
+  $localize`:@@subscription.plans.freeUpvote:Upvote the best comments`
+];
 
 /** Hosts the checkout redirect may point to (Stripe Checkout). Anything else is refused. */
 export const TRUSTED_CHECKOUT_HOSTS: readonly string[] = ['checkout.stripe.com'];
@@ -31,7 +35,7 @@ export function isTrustedCheckoutUrl(url: string): boolean {
 
 @Component({
   selector: 'app-plans-page',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, CurrencyPipe],
   templateUrl: './plans-page.html',
   styleUrl: './plans-page.scss'
 })
@@ -52,8 +56,8 @@ export class PlansPage {
 
   constructor() {
     this.seo.update({
-      title: 'Plans — Free & Premium',
-      description: 'Reading is always free on Readora. Go Premium for bookmarks and synced reading progress.',
+      title: $localize`:@@subscription.plans.seoTitle:Plans — Free & Premium`,
+      description: $localize`:@@subscription.plans.seoDescription:Reading is always free on Readora. Go Premium for bookmarks and synced reading progress.`,
       path: '/subscription',
       noindex: true
     });
@@ -70,19 +74,21 @@ export class PlansPage {
       const session = await firstValueFrom(this.subscriptionsApi.checkout('PREMIUM'));
       if (!isTrustedCheckoutUrl(session.url)) {
         // Never follow an unexpected external redirect (compromised/misconfigured API, open redirect).
-        this.error.set('Could not start the checkout: unexpected payment page. Please contact support.');
+        this.error.set($localize`:@@subscription.plans.untrustedCheckout:Could not start the checkout: unexpected payment page. Please contact support.`);
         this.busy.set(null);
         return;
       }
       this.redirectTo(session.url);
     } catch (error) {
-      this.error.set(apiErrorMessage(error, 'Could not start the checkout'));
+      this.error.set(apiErrorMessage(error, $localize`:@@subscription.plans.checkoutError:Could not start the checkout`));
       this.busy.set(null);
     }
   }
 
   protected async cancel(): Promise<void> {
-    if (!this.document.defaultView?.confirm('Cancel your Premium subscription? You keep Premium until the end of the current period.')) {
+    if (!this.document.defaultView?.confirm(
+        $localize`:@@subscription.plans.confirmCancel:Cancel your Premium subscription? You keep Premium until the end of the current period.`
+      )) {
       return;
     }
     this.error.set(null);
@@ -91,7 +97,7 @@ export class PlansPage {
       await firstValueFrom(this.subscriptionsApi.cancel());
       await firstValueFrom(this.auth.refresh());
     } catch (error) {
-      this.error.set(apiErrorMessage(error, 'Could not cancel the subscription'));
+      this.error.set(apiErrorMessage(error, $localize`:@@subscription.plans.cancelError:Could not cancel the subscription`));
     } finally {
       this.busy.set(null);
     }

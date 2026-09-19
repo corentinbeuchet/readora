@@ -1,14 +1,14 @@
 <section class="page">
   <header class="library-header">
-    <h1>My library</h1>
+    <h1 i18n="@@library.page.heading">My library</h1>
     <div class="export">
-      <button type="button" class="btn btn-sm" (click)="exportLibrary('csv')">Download CSV</button>
-      <button type="button" class="btn btn-sm" (click)="exportLibrary('json')">Download JSON</button>
+      <button type="button" class="btn btn-sm" (click)="exportLibrary('csv')" i18n="@@library.page.exportCsv">Download CSV</button>
+      <button type="button" class="btn btn-sm" (click)="exportLibrary('json')" i18n="@@library.page.exportJson">Download JSON</button>
     </div>
   </header>
 
-  <nav class="status-tabs" aria-label="Filter by reading status">
-    <a routerLink="/library" [queryParams]="{}" class="tab" [class.active]="!selected()" [attr.aria-current]="!selected() ? 'page' : null">All</a>
+  <nav class="status-tabs" aria-label="Filter by reading status" i18n-aria-label="@@library.page.tabs.label">
+    <a routerLink="/library" [queryParams]="{}" class="tab" [class.active]="!selected()" [attr.aria-current]="!selected() ? 'page' : null" i18n="@@library.page.tabs.all">All</a>
     @for (option of statuses; track option) {
       <a
         routerLink="/library"
@@ -25,18 +25,18 @@
   }
 
   @if (items.isLoading()) {
-    <p class="muted" role="status">Loading your library…</p>
+    <p class="muted" role="status" i18n="@@library.page.loading">Loading your library…</p>
   } @else if (items.error()) {
-    <app-load-error (retry)="reload()">Could not load your library.</app-load-error>
+    <app-load-error (retry)="reload()"><ng-container i18n="@@library.page.loadError">Could not load your library.</ng-container></app-load-error>
   } @else if (items.hasValue() && items.value().length === 0) {
     <p class="muted">
       @if (selected(); as current) {
-        Nothing marked “{{ labels[current] }}” yet.
+        <ng-container i18n="@@library.page.emptyStatus">Nothing marked “{{ labels[current] }}” yet.</ng-container>
       } @else {
-        Your library is empty. Open a series and choose “Add to library”.
+        <ng-container i18n="@@library.page.empty">Your library is empty. Open a series and choose “Add to library”.</ng-container>
       }
     </p>
-    <a routerLink="/works" class="btn btn-primary">Browse the catalog</a>
+    <a routerLink="/works" class="btn btn-primary" i18n="@@library.page.browse">Browse the catalog</a>
   } @else if (items.hasValue()) {
     <ul class="library-list">
       @for (item of items.value(); track item.work.id) {
@@ -48,14 +48,14 @@
             <h2 class="library-title">
               <a [routerLink]="['/works', item.work.id]">{{ item.work.title }}</a>
               @if (item.newChapters > 0) {
-                <span class="badge badge-new">{{ item.newChapters }} new<span class="sr-only"> chapters</span></span>
+                <span class="badge badge-new" i18n="@@library.page.newChapters">{item.newChapters, plural, other {{{ item.newChapters }} new<span class="sr-only"> chapters</span>}}</span>
               }
             </h2>
             <p class="muted">{{ item.work.type }} · {{ item.work.status }}</p>
           </div>
           <div class="library-actions">
             <label class="field status-field">
-              <span class="sr-only">Reading status of {{ item.work.title }}</span>
+              <span class="sr-only" i18n="@@library.page.statusLabel">Reading status of {{ item.work.title }}</span>
               <select [disabled]="action.busyKey() === item.work.id" (change)="changeStatus(item, $event)">
                 @for (option of statuses; track option) {
                   <option [value]="option" [selected]="item.status === option">{{ labels[option] }}</option>
@@ -65,9 +65,9 @@
             <label class="checkbox notify-toggle">
               <input type="checkbox" [checked]="item.newChapterNotifications" [disabled]="action.busyKey() === item.work.id"
                      (change)="toggleNotifications(item, $event)" />
-              New chapter alerts<span class="sr-only"> for {{ item.work.title }}</span>
+              <ng-container i18n="@@library.page.notify">New chapter alerts<span class="sr-only"> for {{ item.work.title }}</span></ng-container>
             </label>
-            <button type="button" class="btn btn-danger-outline btn-sm" [disabled]="action.busyKey() === item.work.id" (click)="remove(item)">
+            <button type="button" class="btn btn-danger-outline btn-sm" [disabled]="action.busyKey() === item.work.id" (click)="remove(item)" i18n="@@library.page.remove">
               Remove<span class="sr-only"> {{ item.work.title }}</span>
             </button>
           </div>

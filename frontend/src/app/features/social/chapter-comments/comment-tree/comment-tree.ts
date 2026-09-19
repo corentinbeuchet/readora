@@ -31,7 +31,11 @@ export class CommentTree {
   /** Each comment with whether its spoiler is still hidden (computed once, not per template call). */
   protected readonly rows = computed(() => {
     const revealed = this.revealedSpoilers();
-    return this.comments().map((comment) => ({ comment, hidden: comment.isSpoiler && !revealed.has(comment.id) }));
+    return this.comments().map((comment) => ({
+      comment,
+      hidden: comment.isSpoiler && !revealed.has(comment.id),
+      upvoteLabel: $localize`:@@social.commentTree.upvoteLabel:Upvote, ${comment.upvotes}:votes: votes`
+    }));
   });
 
   protected revealSpoiler(commentId: string): void {

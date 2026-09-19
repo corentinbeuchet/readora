@@ -28,8 +28,8 @@ export class UploadStudioPage {
 
   constructor() {
     inject(SeoService).update({
-      title: 'Upload Studio — Readora',
-      description: 'Create manga series, upload chapter pages, and publish directly or via scanlation pipeline.',
+      title: $localize`:@@upload.studio.seoTitle:Upload Studio — Readora`,
+      description: $localize`:@@upload.studio.seoDescription:Create manga series, upload chapter pages, and publish directly or via scanlation pipeline.`,
       path: '/upload'
     });
   }

@@ -1,36 +1,36 @@
 <section class="page">
-  <h1>Moderation</h1>
-  <p class="muted">Reported comments, oldest first. Hiding removes the comment for everyone and closes its reports.</p>
+  <h1 i18n="@@moderation.page.title">Moderation</h1>
+  <p class="muted" i18n="@@moderation.page.intro">Reported comments, oldest first. Hiding removes the comment for everyone and closes its reports.</p>
 
   @if (action.error(); as message) {
     <p class="form-error" role="alert">{{ message }}</p>
   }
 
   @if (queue.isLoading()) {
-    <p class="muted" role="status">Loading reports…</p>
+    <p class="muted" role="status" i18n="@@moderation.page.loading">Loading reports…</p>
   } @else if (queue.error()) {
-    <app-load-error (retry)="queue.reload()">Could not load the reports.</app-load-error>
+    <app-load-error (retry)="queue.reload()" i18n="@@moderation.page.loadError">Could not load the reports.</app-load-error>
   } @else if (queue.hasValue() && queue.value().length === 0) {
-    <p class="muted">No open reports. 🎉</p>
+    <p class="muted" i18n="@@moderation.page.empty">No open reports. 🎉</p>
   } @else if (queue.hasValue()) {
     <ul class="queue">
       @for (item of queue.value(); track item.reportId) {
         <li class="card queue-item">
           <p class="queue-meta">
             <span class="badge">{{ labels[item.reason] }}</span>
-            <span class="muted">reported {{ item.reportedAt | date: 'medium' }} · comment by <strong>{{ item.authorUsername }}</strong></span>
+            <span class="muted" i18n="@@moderation.page.reportedMeta">reported {{ item.reportedAt | date: 'medium' }} · comment by <strong>{{ item.authorUsername }}</strong></span>
             @if (item.spoiler) {
-              <span class="badge">marked spoiler</span>
+              <span class="badge" i18n="@@moderation.page.markedSpoiler">marked spoiler</span>
             }
           </p>
           <blockquote class="queue-content">{{ item.content }}</blockquote>
           <div class="queue-actions">
-            <a class="btn btn-sm" [routerLink]="['/read', item.chapterId]" [queryParams]="{ comment: item.commentId }">See in context</a>
+            <a class="btn btn-sm" [routerLink]="['/read', item.chapterId]" [queryParams]="{ comment: item.commentId }" i18n="@@moderation.page.seeInContext">See in context</a>
             <button type="button" class="btn btn-sm btn-danger" [disabled]="action.busyKey() === item.reportId" (click)="hide(item)">
-              Hide comment<span class="sr-only"> by {{ item.authorUsername }}</span>
+              <ng-container i18n="@@moderation.page.hide">Hide comment<span class="sr-only"> by {{ item.authorUsername }}</span></ng-container>
             </button>
             <button type="button" class="btn btn-sm" [disabled]="action.busyKey() === item.reportId" (click)="dismiss(item)">
-              Dismiss report<span class="sr-only"> on the comment by {{ item.authorUsername }}</span>
+              <ng-container i18n="@@moderation.page.dismiss">Dismiss report<span class="sr-only"> on the comment by {{ item.authorUsername }}</span></ng-container>
             </button>
           </div>
         </li>

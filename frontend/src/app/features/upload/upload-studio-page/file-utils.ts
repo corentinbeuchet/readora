@@ -91,7 +91,12 @@ export class ArchiveError extends Error {
 }
 
 function formatMb(bytes: number): string {
-  return `${Math.round(bytes / MB)} MB`;
+  return $localize`:@@upload.archive.megabytes:${Math.round(bytes / MB)}:size: MB`;
+}
+
+/** `"name" is larger than N MB once unpacked.` */
+function tooLargeUnpacked(name: string, maxBytes: number): ArchiveError {
+  return new ArchiveError($localize`:@@upload.archive.tooLargeUnpacked:"${name}:name:" is larger than ${formatMb(maxBytes)}:size: once unpacked.`);
 }
 
 /** Size recorded in the central directory (JSZip keeps it on the private `_data`). May lie. */
@@ -115,7 +120,7 @@ function readEntryBounded(entry: JSZip.JSZipObject, maxBytes: number): Promise<U
         if (total > maxBytes) {
           failed = true;
           stream.pause();
-          reject(new ArchiveError(`"${entry.name}" is larger than ${formatMb(maxBytes)} once unpacked.`));
+          reject(tooLargeUnpacked(entry.name, maxBytes));
           return;
         }
         chunks.push(chunk);
@@ -123,7 +128,7 @@ function readEntryBounded(entry: JSZip.JSZipObject, maxBytes: number): Promise<U
       .on('error', (err) => {
         if (!failed) {
           failed = true;
-          reject(new ArchiveError(`"${entry.name}" could not be unpacked (${err.message}).`));
+          reject(new ArchiveError($localize`:@@upload.archive.unpackFailed:"${entry.name}:name:" could not be unpacked (${err.message}:reason:).`));
         }
       })
       .on('end', () => {
@@ -149,14 +154,16 @@ function readEntryBounded(entry: JSZip.JSZipObject, maxBytes: number): Promise<U
  */
 export async function extractArchiveImages(archive: File, limits: ArchiveLimits = DEFAULT_ARCHIVE_LIMITS): Promise<File[]> {
   if (archive.size > limits.maxArchiveBytes) {
-    throw new ArchiveError(`"${archive.name}" is larger than ${formatMb(limits.maxArchiveBytes)}. Split the chapter into smaller archives.`);
+    throw new ArchiveError(
+      $localize`:@@upload.archive.tooLarge:"${archive.name}:name:" is larger than ${formatMb(limits.maxArchiveBytes)}:size:. Split the chapter into smaller archives.`
+    );
   }
 
   let loadedZip: JSZip;
   try {
     loadedZip = await new JSZip().loadAsync(archive);
   } catch {
-    throw new ArchiveError(`"${archive.name}" is not a valid ZIP/CBZ archive.`);
+    throw new ArchiveError($localize`:@@upload.archive.invalid:"${archive.name}:name:" is not a valid ZIP/CBZ archive.`);
   }
 
   const imageEntries: { name: string; zipEntry: JSZip.JSZipObject }[] = [];
@@ -172,23 +179,23 @@ export async function extractArchiveImages(archive: File, limits: ArchiveLimits 
 
   if (totalEntries > limits.maxTotalEntries || imageEntries.length > limits.maxImageEntries) {
     throw new ArchiveError(
-      `"${archive.name}" has too many files (at most ${limits.maxImageEntries} pages per chapter).`
+      $localize`:@@upload.archive.tooManyFiles:"${archive.name}:name:" has too many files (at most ${limits.maxImageEntries}:max: pages per chapter).`
     );
   }
   if (imageEntries.length === 0) {
-    throw new ArchiveError(`"${archive.name}" does not contain any JPEG, PNG, WebP, GIF or AVIF image.`);
+    throw new ArchiveError($localize`:@@upload.archive.noImages:"${archive.name}:name:" does not contain any JPEG, PNG, WebP, GIF or AVIF image.`);
   }
 
   let declaredTotal = 0;
   for (const { zipEntry } of imageEntries) {
     const size = declaredSize(zipEntry);
     if (size > limits.maxEntryBytes) {
-      throw new ArchiveError(`"${zipEntry.name}" is larger than ${formatMb(limits.maxEntryBytes)} once unpacked.`);
+      throw tooLargeUnpacked(zipEntry.name, limits.maxEntryBytes);
     }
     declaredTotal += size;
   }
   if (declaredTotal > limits.maxTotalUncompressedBytes) {
-    throw new ArchiveError(`"${archive.name}" is larger than ${formatMb(limits.maxTotalUncompressedBytes)} once unpacked.`);
+    throw tooLargeUnpacked(archive.name, limits.maxTotalUncompressedBytes);
   }
 
   imageEntries.sort((a, b) => naturalCompare(a.name, b.name));
@@ -199,7 +206,7 @@ export async function extractArchiveImages(archive: File, limits: ArchiveLimits 
     const remaining = limits.maxTotalUncompressedBytes - inflatedTotal;
     const bytes = await readEntryBounded(entry.zipEntry, Math.min(limits.maxEntryBytes, remaining)).catch((err: unknown) => {
       if (err instanceof ArchiveError && remaining < limits.maxEntryBytes) {
-        throw new ArchiveError(`"${archive.name}" is larger than ${formatMb(limits.maxTotalUncompressedBytes)} once unpacked.`);
+        throw tooLargeUnpacked(archive.name, limits.maxTotalUncompressedBytes);
       }
       throw err;
     });

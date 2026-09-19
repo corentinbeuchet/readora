@@ -32,13 +32,13 @@
     }
   </div>
   <!-- Buttons sit on the side the page turns to: in right-to-left reading "Next" is on the left. -->
-  <nav class="paged-nav" aria-label="Page navigation">
+  <nav class="paged-nav" aria-label="Page navigation" i18n-aria-label="@@reader.paged.nav">
     @if (state.direction() === 'RTL') {
-      <button type="button" (click)="state.nextPage()" [disabled]="state.isLastPage()" class="btn btn-next">&larr; Next</button>
-      <button type="button" (click)="state.previousPage()" [disabled]="state.isFirstPage()" class="btn btn-prev">Prev &rarr;</button>
+      <button type="button" (click)="state.nextPage()" [disabled]="state.isLastPage()" class="btn btn-next" i18n="@@reader.paged.nextRtl">&larr; Next</button>
+      <button type="button" (click)="state.previousPage()" [disabled]="state.isFirstPage()" class="btn btn-prev" i18n="@@reader.paged.prevRtl">Prev &rarr;</button>
     } @else {
-      <button type="button" (click)="state.previousPage()" [disabled]="state.isFirstPage()" class="btn btn-prev">&larr; Prev</button>
-      <button type="button" (click)="state.nextPage()" [disabled]="state.isLastPage()" class="btn btn-next">Next &rarr;</button>
+      <button type="button" (click)="state.previousPage()" [disabled]="state.isFirstPage()" class="btn btn-prev" i18n="@@reader.paged.prev">&larr; Prev</button>
+      <button type="button" (click)="state.nextPage()" [disabled]="state.isLastPage()" class="btn btn-next" i18n="@@reader.paged.next">Next &rarr;</button>
     }
   </nav>
 </div>

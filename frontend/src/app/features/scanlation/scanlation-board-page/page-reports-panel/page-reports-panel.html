@@ -1,6 +1,6 @@
 <section class="page-reports" aria-labelledby="page-reports-title">
   <h2 id="page-reports-title">
-    Reported pages
+    <ng-container i18n="@@scanlation.reports.title">Reported pages</ng-container>
     @if (reports.hasValue() && reports.value().length > 0) {
       <span class="count-badge">{{ reports.value().length }}</span>
     }
@@ -11,22 +11,22 @@
   }
 
   @if (reports.isLoading()) {
-    <p class="muted" role="status">Loading reports…</p>
+    <p class="muted" role="status" i18n="@@scanlation.reports.loading">Loading reports…</p>
   } @else if (reports.error()) {
-    <app-load-error (retry)="reports.reload()">Could not load the reported pages.</app-load-error>
+    <app-load-error (retry)="reports.reload()" i18n="@@scanlation.reports.loadError">Could not load the reported pages.</app-load-error>
   } @else if (reports.hasValue() && reports.value().length === 0) {
-    <p class="muted">No broken pages reported. 🎉</p>
+    <p class="muted" i18n="@@scanlation.reports.empty">No broken pages reported. 🎉</p>
   } @else if (reports.hasValue()) {
     <ul class="report-list">
       @for (report of reports.value(); track report.id) {
         <li class="card report-item">
           <div>
-            <strong>Chapter {{ report.chapterNumber }} · page {{ report.pageNumber }}</strong>
+            <strong i18n="@@scanlation.reports.item">Chapter {{ report.chapterNumber }} · page {{ report.pageNumber }}</strong>
             <p class="muted">{{ labels[report.reason] }} · {{ report.createdAt | date: 'medium' }}</p>
           </div>
           <div class="report-actions">
-            <a class="btn btn-sm" [routerLink]="['/read', report.chapterId]" [queryParams]="{ page: report.pageNumber }">Open page</a>
-            <button type="button" class="btn btn-sm btn-primary" [disabled]="action.busyKey() === report.id" (click)="markFixed(report)">
+            <a class="btn btn-sm" [routerLink]="['/read', report.chapterId]" [queryParams]="{ page: report.pageNumber }" i18n="@@scanlation.reports.openPage">Open page</a>
+            <button type="button" class="btn btn-sm btn-primary" [disabled]="action.busyKey() === report.id" (click)="markFixed(report)" i18n="@@scanlation.reports.markFixed">
               Mark fixed<span class="sr-only">: chapter {{ report.chapterNumber }}, page {{ report.pageNumber }}</span>
             </button>
           </div>

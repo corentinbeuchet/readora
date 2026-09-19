@@ -1,4 +1,4 @@
-import { Component, DOCUMENT, ElementRef, Injector, afterNextRender, inject, signal, viewChild } from '@angular/core';
+import { Component, DOCUMENT, ElementRef, Injector, LOCALE_ID, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
@@ -6,6 +6,7 @@ import { Menu, MenuContent, MenuItem, MenuTrigger } from '@angular/aria/menu';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { LayoutStore } from '@app/core/layout/layout-store';
 import { ThemeStore, toThemePreference } from '@app/core/theme/theme-store';
+import { SITE_LOCALES, localizedPath, siteLocale } from '@app/core/i18n/site-locales';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { Omnisearch } from './omnisearch/omnisearch';
 import { NotificationBell } from './notification-bell/notification-bell';
@@ -28,6 +29,7 @@ export class Shell {
   protected readonly layout = inject(LayoutStore);
   protected readonly theme = inject(ThemeStore);
   private readonly router = inject(Router);
+  private readonly locale = siteLocale(inject(LOCALE_ID));
   protected readonly year = new Date().getFullYear();
 
   /** Small screens: whether the primary navigation disclosure is open (always shown from the lg breakpoint). */
@@ -35,6 +37,12 @@ export class Shell {
   private readonly navToggle = viewChild.required<ElementRef<HTMLButtonElement>>('navToggle');
   private readonly document = inject(DOCUMENT);
   private readonly injector = inject(Injector);
+  /** The page shown (with its query), to open the same page in another language. */
+  private readonly url = signal(this.router.url);
+  /** Language switcher: each language is its own build, so the links are full page loads, not router links. */
+  protected readonly languages = computed(() =>
+    SITE_LOCALES.map((language) => ({ ...language, current: language.code === this.locale.code, href: localizedPath(language, this.url()) }))
+  );
   /** Path of the page shown (no query or fragment); `null` before the first navigation. */
   private currentPath: string | null = null;
 
@@ -46,6 +54,7 @@ export class Shell {
       )
       .subscribe((event) => {
         this.navOpen.set(false);
+        this.url.set(event.urlAfterRedirects);
         const path = event.urlAfterRedirects.split(/[?#]/)[0];
         const previous = this.currentPath;
         this.currentPath = path;

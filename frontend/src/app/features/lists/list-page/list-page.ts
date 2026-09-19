@@ -46,7 +46,7 @@ export class ListPage {
       const loaded = this.current();
       if (loaded) {
         untracked(() =>
-          this.seo.update({ title: `${loaded.title} — a list by ${loaded.ownerUsername}`, description: loaded.description || loaded.title, path: `/lists/${loaded.id}` })
+          this.seo.update({ title: $localize`:@@lists.list.seoTitle:${loaded.title}:title: — a list by ${loaded.ownerUsername}:owner:`, description: loaded.description || loaded.title, path: `/lists/${loaded.id}` })
         );
       }
     });
@@ -89,7 +89,7 @@ export class ListPage {
     const id = this.listId();
     if (!draft || !id) return;
     if (!draft.title.trim()) {
-      this.action.fail('Give your list a title');
+      this.action.fail($localize`:@@lists.list.titleRequired:Give your list a title`);
       return;
     }
     await this.action.run(async () => {
@@ -103,7 +103,7 @@ export class ListPage {
       );
       this.list.set(saved);
       this.draft.set(null);
-      this.message.set(saved.published ? 'Saved. Your list is public.' : 'Saved. Your list is private.');
+      this.message.set(saved.published ? $localize`:@@lists.list.savedPublic:Saved. Your list is public.` : $localize`:@@lists.list.savedPrivate:Saved. Your list is private.`);
     });
   }
 

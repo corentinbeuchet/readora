@@ -1,40 +1,44 @@
 @let draft = wizard.draft();
 <div class="card wizard-card">
-  <h2>4. Review & Confirmation</h2>
-  <p class="muted">Please double check your series metadata and chapter details before proceeding.</p>
+  <h2 i18n="@@upload.review.title">4. Review & Confirmation</h2>
+  <p class="muted" i18n="@@upload.review.intro">Please double check your series metadata and chapter details before proceeding.</p>
 
   <div class="review-grid">
     <dl class="review-summary">
       <div class="review-item">
-        <dt class="label">Series Title:</dt>
+        <dt class="label" i18n="@@upload.review.seriesTitle">Series Title:</dt>
         <dd class="value strong">{{ draft.title }}</dd>
       </div>
       <div class="review-item">
-        <dt class="label">Format & Status:</dt>
+        <dt class="label" i18n="@@upload.review.formatStatus">Format & Status:</dt>
         <dd class="value">{{ draft.type }} &bull; {{ draft.status }}</dd>
       </div>
       <div class="review-item">
-        <dt class="label">Genres:</dt>
+        <dt class="label" i18n="@@upload.review.genres">Genres:</dt>
         <dd class="value">{{ genres() }}</dd>
       </div>
       <div class="review-item">
-        <dt class="label">Chapter:</dt>
+        <dt class="label" i18n="@@upload.review.chapterLabel">Chapter:</dt>
         <dd class="value">
-          Chapter {{ draft.chapterNumber }}
+          <ng-container i18n="@@upload.review.chapter">Chapter {{ draft.chapterNumber }}</ng-container>
           @if (draft.chapterTitle) {
             — {{ draft.chapterTitle }}
           }
         </dd>
       </div>
       <div class="review-item">
-        <dt class="label">Total Pages:</dt>
-        <dd class="value strong">{{ wizard.pages().length }} pages</dd>
+        <dt class="label" i18n="@@upload.review.totalPages">Total Pages:</dt>
+        <dd class="value strong" i18n="@@upload.review.pageCount">{wizard.pages().length, plural, =1 {1 page} other {{{ wizard.pages().length }} pages}}</dd>
       </div>
       <div class="review-item">
-        <dt class="label">Pipeline:</dt>
+        <dt class="label" i18n="@@upload.review.pipeline">Pipeline:</dt>
         <dd class="value">
           <span class="badge" [class.badge-premium]="draft.publishingMode === 'DIRECT'">
-            {{ draft.publishingMode === 'DIRECT' ? 'Direct Catalog Release' : 'Scanlation Workspace Task' }}
+            @if (draft.publishingMode === 'DIRECT') {
+              <ng-container i18n="@@upload.review.pipeline.direct">Direct Catalog Release</ng-container>
+            } @else {
+              <ng-container i18n="@@upload.review.pipeline.scanlation">Scanlation Workspace Task</ng-container>
+            }
           </span>
         </dd>
       </div>
@@ -43,13 +47,13 @@
     @if (wizard.cover(); as cover) {
       <div class="review-cover-preview">
         <!-- eslint-disable-next-line @angular-eslint/template/prefer-ngsrc -- blob: preview of a local file, nothing to optimize -->
-        <img [src]="cover.previewUrl" alt="Cover" class="cover-thumb" />
+        <img [src]="cover.previewUrl" alt="Cover" i18n-alt="@@upload.review.coverAlt" class="cover-thumb" />
       </div>
     }
   </div>
 
   @if (flow.createdWork(); as work) {
-    <p class="muted retry-hint">
+    <p class="muted retry-hint" i18n="@@upload.review.retryHint">
       The series "{{ work.title }}" was already created: publishing again reuses it and only uploads the pages
       that are not uploaded yet.
     </p>
@@ -57,7 +61,7 @@
 
   @if (flow.submitting()) {
     <div class="upload-progress-container">
-      <div class="progress-bar-track" role="progressbar" aria-label="Upload progress" aria-valuemin="0" aria-valuemax="100"
+      <div class="progress-bar-track" role="progressbar" aria-label="Upload progress" i18n-aria-label="@@upload.review.progress" aria-valuemin="0" aria-valuemax="100"
            [attr.aria-valuenow]="flow.progress()" [attr.aria-valuetext]="`${flow.statusText()} (${flow.progress()}%)`">
         <div class="progress-bar-fill" [style.width.%]="flow.progress()"></div>
       </div>
@@ -66,13 +70,13 @@
   }
 
   <div class="wizard-actions">
-    <button type="button" class="btn" [disabled]="flow.submitting()" (click)="wizard.goTo('pages')">&larr; Back</button>
+    <button type="button" class="btn" [disabled]="flow.submitting()" (click)="wizard.goTo('pages')" i18n="@@upload.review.back">&larr; Back</button>
     <button type="button" class="btn btn-primary btn-publish" [disabled]="flow.submitting()" (click)="flow.publish()">
       @if (flow.submitting()) {
         <span class="spinner" aria-hidden="true"></span>
-        Publishing…
+        <ng-container i18n="@@upload.review.publishing">Publishing…</ng-container>
       } @else {
-        Publish Series & Chapter &rarr;
+        <ng-container i18n="@@upload.review.publish">Publish Series & Chapter &rarr;</ng-container>
       }
     </button>
   </div>
