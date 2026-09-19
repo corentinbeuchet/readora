@@ -14,9 +14,12 @@ const PUBLISHER = {
 
 export const PASSWORD = 'Sup3rSecret!';
 
-/** A unique suffix so parallel runs and re-runs never collide on emails, usernames or titles. */
+/**
+ * A unique suffix so parallel workers, retries and re-runs never collide on emails, usernames or titles. Call it
+ * inside the test (not at describe scope), so a retry gets fresh data. Letters, digits and `_` only (usernames).
+ */
 export function uniqueSuffix(): string {
-  return `${Date.now()}${Math.floor(Math.random() * 1000)}`;
+  return `${Date.now().toString(36)}_${crypto.randomUUID().slice(0, 8)}`;
 }
 
 /** Signs up a fresh reader through the UI and waits for the profile page. Returns the username. */

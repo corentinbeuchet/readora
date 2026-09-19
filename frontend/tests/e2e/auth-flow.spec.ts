@@ -6,13 +6,13 @@ import { PASSWORD, uniqueSuffix } from './support/helpers';
  * Run locally with `docker compose up -d` (backend on :8080) and `npm start` (frontend on :4200).
  */
 test.describe('Authentication flow', () => {
-  // This journey checks the register form itself, so it does not use the signUp() helper.
-  const suffix = uniqueSuffix();
-  const email = `e2e_${suffix}@readora.test`;
-  const username = `e2e_${suffix}`;
-  const password = PASSWORD;
-
   test('register → profile visible → logout → login → session survives reload', async ({ page }) => {
+    // This journey checks the register form itself, so it does not use the signUp() helper.
+    const suffix = uniqueSuffix();
+    const email = `e2e_${suffix}@readora.test`;
+    const username = `e2e_${suffix}`;
+    const password = PASSWORD;
+
     await page.goto('/register');
     await expect(page.getByRole('heading', { name: 'Create your account' })).toBeVisible();
 

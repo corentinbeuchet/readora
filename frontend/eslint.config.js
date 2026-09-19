@@ -167,6 +167,8 @@ module.exports = defineConfig([
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-non-null-assertion": "off",
+      // An un-awaited action or assertion races the next step: the classic source of flaky tests.
+      "@typescript-eslint/no-floating-promises": "error",
       // A focused test must never be committed (it silently skips the rest of the suite).
       "no-restricted-properties": [
         "error",

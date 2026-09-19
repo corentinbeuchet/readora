@@ -8,7 +8,9 @@ export default defineConfig({
   },
   fullyParallel: true,
   forbidOnly: !!process.env['CI'],
+  // Retries on CI collect a trace, but a test that only passes on retry still fails the run: flakes get fixed, not hidden.
   retries: process.env['CI'] ? 2 : 0,
+  failOnFlakyTests: !!process.env['CI'],
   workers: process.env['CI'] ? 1 : undefined,
   outputDir: 'test-results',
   reporter: [
