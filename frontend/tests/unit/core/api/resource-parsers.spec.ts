@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpResourceRef } from '@angular/common/http';
 import { signal } from '@angular/core';
-import { HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { ApiError, parseEnvelope } from '@app/core/api/api-client';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { CommentsApi } from '@app/core/api/comments-api';
@@ -8,6 +9,7 @@ import { API, fail, ok, provideHttpTesting, resourcesStable } from '../../test-u
 
 describe('httpResource envelope parsing', () => {
   let http: HttpTestingController;
+  let resource: HttpResourceRef<unknown>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({ providers: [...provideHttpTesting()] });
@@ -17,29 +19,66 @@ describe('httpResource envelope parsing', () => {
   afterEach(() => http.verify());
 
   it('parseEnvelope returns data, and throws ApiError for success:false or a non-envelope body', () => {
-    expect(parseEnvelope<number[]>(ok([1]))).toEqual([1]);
-    expect(() => parseEnvelope(fail('Quota exceeded'))).toThrow(ApiError);
-    expect(() => parseEnvelope(fail('Quota exceeded'))).toThrow('Quota exceeded');
-    expect(() => parseEnvelope('<html>proxy error</html>')).toThrow('Unexpected response from the server');
+    thenParsingGives(ok([1]), [1]);
+    thenParsingThrowsAnApiError(fail('Quota exceeded'));
+    thenParsingThrows(fail('Quota exceeded'), 'Quota exceeded');
+    thenParsingThrows('<html>proxy error</html>', 'Unexpected response from the server');
   });
 
   it('a list resource surfaces success:false as an error instead of an empty list', async () => {
-    const comments = TestBed.runInInjectionContext(() => TestBed.inject(CommentsApi).forChapterResource(signal('chap-1')));
-    TestBed.tick();
-    http.expectOne(`${API}/comments/chapter/chap-1`).flush(fail('Comments are disabled'));
-    await resourcesStable();
+    givenIWatchTheCommentsOfChapter('chap-1');
 
-    expect(comments.error()).toBeInstanceOf(ApiError);
-    expect(comments.error()?.message).toBe('Comments are disabled');
-    expect(comments.hasValue()).toBe(false);
+    await whenTheServerAnswers(`${API}/comments/chapter/chap-1`, fail('Comments are disabled'));
+
+    thenTheResourceErrorIsAnApiError();
+    thenTheResourceErrorSays('Comments are disabled');
+    thenTheResourceHasNoValue();
   });
 
   it('the paged works resource surfaces success:false as an error instead of an empty page', async () => {
-    const works = TestBed.runInInjectionContext(() => TestBed.inject(CatalogApi).worksResource(signal({ page: 0, size: 20 })));
-    TestBed.tick();
-    http.expectOne((r) => r.url === `${API}/works`).flush(fail('Catalog unavailable'));
-    await resourcesStable();
+    givenIBrowseTheWorks({ page: 0, size: 20 });
 
-    expect(works.error()?.message).toBe('Catalog unavailable');
+    await whenTheServerAnswers(`${API}/works`, fail('Catalog unavailable'));
+
+    thenTheResourceErrorSays('Catalog unavailable');
   });
+
+  function givenIWatchTheCommentsOfChapter(chapterId: string): void {
+    resource = TestBed.runInInjectionContext(() => TestBed.inject(CommentsApi).forChapterResource(signal(chapterId)));
+    TestBed.tick();
+  }
+
+  function givenIBrowseTheWorks(query: { page: number; size: number }): void {
+    resource = TestBed.runInInjectionContext(() => TestBed.inject(CatalogApi).worksResource(signal(query)));
+    TestBed.tick();
+  }
+
+  async function whenTheServerAnswers(url: string, body: Parameters<TestRequest['flush']>[0]): Promise<void> {
+    http.expectOne((r) => r.url === url).flush(body);
+    await resourcesStable();
+  }
+
+  function thenParsingGives(body: unknown, data: unknown): void {
+    expect(parseEnvelope(body)).toEqual(data);
+  }
+
+  function thenParsingThrowsAnApiError(body: unknown): void {
+    expect(() => parseEnvelope(body)).toThrow(ApiError);
+  }
+
+  function thenParsingThrows(body: unknown, message: string): void {
+    expect(() => parseEnvelope(body)).toThrow(message);
+  }
+
+  function thenTheResourceErrorIsAnApiError(): void {
+    expect(resource.error()).toBeInstanceOf(ApiError);
+  }
+
+  function thenTheResourceErrorSays(message: string): void {
+    expect(resource.error()?.message).toBe(message);
+  }
+
+  function thenTheResourceHasNoValue(): void {
+    expect(resource.hasValue()).toBe(false);
+  }
 });

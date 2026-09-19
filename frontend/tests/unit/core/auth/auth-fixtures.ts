@@ -1,7 +1,8 @@
+import { TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { firstValueFrom } from 'rxjs';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { ApiResponse, AuthResponse, UserProfile } from '@app/core/models/readora.models';
+import { ApiResponse, AuthResponse, Permission, UserProfile } from '@app/core/models/readora.models';
 import { API } from '../../test-utils';
 
 /** Establishes a full session (token + user) in the store by replaying a fake login. */
@@ -9,6 +10,11 @@ export async function signIn(store: AuthStore, http: HttpTestingController, user
   const login = firstValueFrom(store.login({ email: user.email, password: 'Sup3rSecret!' }));
   http.expectOne(`${API}/auth/login`).flush(mockAuthResponse({ user }));
   await login;
+}
+
+/** Given step shared by the specs: a signed-in user holding exactly `permissions` (TestBed's store and HTTP mock). */
+export async function givenIAmSignedInWith(permissions: Permission[]): Promise<void> {
+  await signIn(TestBed.inject(AuthStore), TestBed.inject(HttpTestingController), mockUser({ permissions }));
 }
 
 export function mockUser(overrides: Partial<UserProfile> = {}): UserProfile {

@@ -1,43 +1,82 @@
-import { test, expect } from '@playwright/test';
+import { Page } from '@playwright/test';
+import { test as base, expect } from './support/fixtures';
 import { signUp } from './support/helpers';
+
+const test = base.extend<{
+  /** A second, independent browser session (its own context: cookies and storage are not shared with `page`). */
+  otherSession: Page;
+}>({
+  otherSession: async ({ browser }, use) => {
+    const context = await browser.newContext();
+    await use(await context.newPage());
+    await context.close();
+  }
+});
 
 test.describe('Scanlation Collaborative Multi-Role Pipeline Suite', () => {
   test('the scanlation workspace is protected: anonymous users go to login', async ({ page }) => {
-    await page.goto('/scanlation');
-    await expect(page).toHaveURL(/\/login\?returnUrl=%2Fscanlation/);
-    await expect(page.getByRole('heading', { name: 'Log in' })).toBeVisible();
+    await whenIVisit(page, '/scanlation');
+
+    await thenIAmOn(page, /\/login\?returnUrl=%2Fscanlation/);
+    await thenICanSeeTheHeading(page, 'Log in');
   });
 
   test('a plain reader is forbidden from the workspace and sees no Scanlation menu entry', async ({ page }) => {
-    await signUp(page, 'reader');
+    await givenIAmSignedUpAs(page, 'reader');
 
-    await expect(page.getByRole('link', { name: 'Scanlation' })).toHaveCount(0);
+    await thenThereIsNoScanlationLink(page);
 
-    await page.goto('/scanlation/00000000-0000-0000-0000-000000000000');
-    await expect(page).toHaveURL(/\/forbidden/);
-    await expect(page.getByRole('heading', { name: 'Access denied' })).toBeVisible();
+    await whenIVisit(page, '/scanlation/00000000-0000-0000-0000-000000000000');
+
+    await thenIAmOn(page, /\/forbidden/);
+    await thenICanSeeTheHeading(page, 'Access denied');
   });
 
-  test('two collaborators have isolated sessions (one browser context each)', async ({ browser }) => {
-    // Multi-role work happens in parallel sessions: signing in one must never leak into another.
-    const cleanerContext = await browser.newContext();
-    const translatorContext = await browser.newContext();
-    try {
-      const cleaner = await cleanerContext.newPage();
-      const cleanerName = await signUp(cleaner, 'cleaner');
-      await expect(cleaner.getByRole('heading', { level: 1 })).toContainText(cleanerName);
+  test('two collaborators have isolated sessions (one browser context each)', async ({ page, otherSession }) => {
+    const cleanerName = await givenIAmSignedUpAs(page, 'cleaner');
 
-      const translator = await translatorContext.newPage();
-      await translator.goto('/profile');
-      await expect(translator).toHaveURL(/\/login\?returnUrl=%2Fprofile/);
-      await expect(translator.getByRole('link', { name: 'Log in' })).toBeVisible();
+    await thenMyProfileIsShownFor(page, cleanerName);
 
-      // The first session is unaffected by the second context.
-      await cleaner.reload();
-      await expect(cleaner.getByRole('heading', { level: 1 })).toContainText(cleanerName);
-    } finally {
-      await cleanerContext.close();
-      await translatorContext.close();
-    }
+    await whenIVisit(otherSession, '/profile');
+
+    await thenIAmOn(otherSession, /\/login\?returnUrl=%2Fprofile/);
+    await thenICanLogIn(otherSession);
+
+    await whenIReload(page);
+
+    await thenMyProfileIsShownFor(page, cleanerName);
   });
 });
+
+/** Signs up a fresh account named `<prefix>_…` and returns its username. */
+async function givenIAmSignedUpAs(page: Page, prefix: string): Promise<string> {
+  return signUp(page, prefix);
+}
+
+async function whenIVisit(page: Page, url: string): Promise<void> {
+  await page.goto(url);
+}
+
+async function whenIReload(page: Page): Promise<void> {
+  await page.reload();
+}
+
+async function thenIAmOn(page: Page, url: string | RegExp): Promise<void> {
+  await expect(page).toHaveURL(url);
+}
+
+async function thenICanSeeTheHeading(page: Page, name: string): Promise<void> {
+  await expect(page.getByRole('heading', { name })).toBeVisible();
+}
+
+async function thenThereIsNoScanlationLink(page: Page): Promise<void> {
+  await expect(page.getByRole('link', { name: 'Scanlation' })).toHaveCount(0);
+}
+
+async function thenMyProfileIsShownFor(page: Page, username: string): Promise<void> {
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(username);
+}
+
+async function thenICanLogIn(page: Page): Promise<void> {
+  await expect(page.getByRole('link', { name: 'Log in' })).toBeVisible();
+}

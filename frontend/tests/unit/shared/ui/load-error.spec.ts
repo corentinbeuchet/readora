@@ -1,5 +1,5 @@
 import { Component, signal } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LoadError } from '@app/shared/ui/load-error';
 
@@ -13,24 +13,65 @@ import { LoadError } from '@app/shared/ui/load-error';
   `
 })
 class Host {
-  readonly error = signal<unknown>(new HttpErrorResponse({ status: 503 }));
+  readonly error = signal<unknown>(null);
   retries = 0;
 }
 
 describe('LoadError', () => {
-  it('offers Retry for a failure, but says "not found" (no Retry) for a 404', () => {
-    const fixture = TestBed.createComponent(Host);
-    fixture.detectChanges();
-    const alert: HTMLElement = fixture.nativeElement.querySelector('app-load-error');
-    expect(alert.getAttribute('role')).toBe('alert');
-    expect(alert.textContent).toContain('Could not load the team.');
-    alert.querySelector('button')!.click();
-    expect(fixture.componentInstance.retries).toBe(1);
+  let fixture: ComponentFixture<Host>;
 
-    fixture.componentInstance.error.set(new HttpErrorResponse({ status: 404 }));
-    fixture.detectChanges();
-    expect(alert.textContent).toContain('This team could not be found.');
-    expect(alert.querySelector('button')).toBeNull();
-    expect(alert.querySelector('a')!.getAttribute('href')).toBe('/works');
+  it('offers Retry for a failure, but says "not found" (no Retry) for a 404', () => {
+    givenTheLoadFailedWith(503);
+
+    thenTheErrorIsAnAlert();
+    thenISee('Could not load the team.');
+
+    whenIRetry();
+
+    thenARetryWasAsked(1);
+
+    whenTheLoadFailsWith(404);
+
+    thenISee('This team could not be found.');
+    thenICannotRetry();
+    thenTheExtraLinkGoesTo('/works');
   });
+
+  function givenTheLoadFailedWith(status: number): void {
+    fixture = TestBed.createComponent(Host);
+    whenTheLoadFailsWith(status);
+  }
+
+  function whenTheLoadFailsWith(status: number): void {
+    fixture.componentInstance.error.set(new HttpErrorResponse({ status }));
+    fixture.detectChanges();
+  }
+
+  function whenIRetry(): void {
+    alert().querySelector('button')!.click();
+  }
+
+  function thenTheErrorIsAnAlert(): void {
+    expect(alert().getAttribute('role')).toBe('alert');
+  }
+
+  function thenISee(text: string): void {
+    expect(alert().textContent).toContain(text);
+  }
+
+  function thenARetryWasAsked(times: number): void {
+    expect(fixture.componentInstance.retries).toBe(times);
+  }
+
+  function thenICannotRetry(): void {
+    expect(alert().querySelector('button')).toBeNull();
+  }
+
+  function thenTheExtraLinkGoesTo(href: string): void {
+    expect(alert().querySelector('a')!.getAttribute('href')).toBe(href);
+  }
+
+  function alert(): HTMLElement {
+    return (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('app-load-error')!;
+  }
 });

@@ -3,11 +3,11 @@ import { DOCUMENT } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { DEFAULT_DESCRIPTION, SeoService } from '@app/core/seo/seo.service';
 
+type PageMeta = Parameters<SeoService['update']>[0];
+
 describe('SeoService', () => {
   let seo: SeoService;
   let doc: Document;
-
-  const meta = (selector: string): string | null => doc.head.querySelector<HTMLMetaElement>(`meta[${selector}]`)?.getAttribute('content') ?? null;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
@@ -17,39 +17,96 @@ describe('SeoService', () => {
   });
 
   it('sets title, description, Open Graph, Twitter and canonical for a public page', () => {
-    seo.update({ title: 'Berserk (MANGA)', description: 'Dark fantasy', path: '/works/abc', image: 'https://cdn.readora.com/berserk.webp', type: 'article' });
+    whenIDescribeThePage({ title: 'Berserk (MANGA)', description: 'Dark fantasy', path: '/works/abc', image: 'https://cdn.readora.com/berserk.webp', type: 'article' });
 
-    expect(TestBed.inject(Title).getTitle()).toBe('Berserk (MANGA) · Readora');
-    expect(meta('name="description"')).toBe('Dark fantasy');
-    expect(meta('name="robots"')).toBe('index, follow');
-    expect(meta('property="og:title"')).toBe('Berserk (MANGA) · Readora');
-    expect(meta('property="og:type"')).toBe('article');
-    expect(meta('property="og:url"')).toBe(`${seo.siteUrl}/works/abc`);
-    expect(meta('property="og:image"')).toBe('https://cdn.readora.com/berserk.webp');
-    expect(meta('name="twitter:card"')).toBe('summary_large_image');
-    expect(doc.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(`${seo.siteUrl}/works/abc`);
+    thenTheTitleIs('Berserk (MANGA) · Readora');
+    thenTheMetaTagIs('description', 'Dark fantasy');
+    thenTheMetaTagIs('robots', 'index, follow');
+    thenTheMetaTagIs('og:title', 'Berserk (MANGA) · Readora');
+    thenTheMetaTagIs('og:type', 'article');
+    thenTheMetaTagPointsToTheSite('og:url', '/works/abc');
+    thenTheMetaTagIs('og:image', 'https://cdn.readora.com/berserk.webp');
+    thenTheMetaTagIs('twitter:card', 'summary_large_image');
+    thenTheCanonicalLinkPointsToTheSite('/works/abc');
   });
 
   it('uses defaults, keeps the site name once and updates tags in place', () => {
-    seo.update({ title: 'Catalog', path: '/works' });
-    expect(meta('name="description"')).toBe(DEFAULT_DESCRIPTION);
-    expect(doc.head.querySelectorAll('meta[name="description"]').length).toBe(1);
+    whenIDescribeThePage({ title: 'Catalog', path: '/works' });
 
-    seo.update({ title: 'Readora — read manga, manhwa & comics', path: '/' });
-    expect(TestBed.inject(Title).getTitle()).toBe('Readora — read manga, manhwa & comics');
-    expect(doc.head.querySelectorAll('meta[property="og:title"]').length).toBe(1);
+    thenTheMetaTagIs('description', DEFAULT_DESCRIPTION);
+    thenThereIsOneMetaTag('description');
+
+    whenIDescribeThePage({ title: 'Readora — read manga, manhwa & comics', path: '/' });
+
+    thenTheTitleIs('Readora — read manga, manhwa & comics');
+    thenThereIsOneMetaTag('og:title');
   });
 
   it('marks private pages noindex and drops the canonical link', () => {
-    seo.update({ title: 'Catalog', path: '/works' });
-    seo.private_('My profile');
+    givenIAmOnAPublicPage({ title: 'Catalog', path: '/works' });
 
-    expect(TestBed.inject(Title).getTitle()).toBe('My profile · Readora');
-    expect(meta('name="robots"')).toBe('noindex, nofollow');
-    expect(doc.head.querySelector('link[rel="canonical"]')).toBeNull();
+    whenIMarkThePagePrivate('My profile');
 
-    seo.notFound();
-    expect(TestBed.inject(Title).getTitle()).toBe('Page not found · Readora');
-    expect(meta('name="robots"')).toBe('noindex, nofollow');
+    thenTheTitleIs('My profile · Readora');
+    thenTheMetaTagIs('robots', 'noindex, nofollow');
+    thenThereIsNoCanonicalLink();
+
+    whenIShowNotFound();
+
+    thenTheTitleIs('Page not found · Readora');
+    thenTheMetaTagIs('robots', 'noindex, nofollow');
   });
+
+  function givenIAmOnAPublicPage(page: PageMeta): void {
+    seo.update(page);
+  }
+
+  function whenIDescribeThePage(page: PageMeta): void {
+    seo.update(page);
+  }
+
+  function whenIMarkThePagePrivate(title: string): void {
+    seo.private_(title);
+  }
+
+  function whenIShowNotFound(): void {
+    seo.notFound();
+  }
+
+  function thenTheTitleIs(title: string): void {
+    expect(TestBed.inject(Title).getTitle()).toBe(title);
+  }
+
+  function thenTheMetaTagIs(name: string, content: string): void {
+    expect(metaTag(name)?.getAttribute('content') ?? null).toBe(content);
+  }
+
+  function thenTheMetaTagPointsToTheSite(name: string, path: string): void {
+    thenTheMetaTagIs(name, `${seo.siteUrl}${path}`);
+  }
+
+  function thenThereIsOneMetaTag(name: string): void {
+    expect(doc.head.querySelectorAll(metaSelector(name)).length).toBe(1);
+  }
+
+  function thenTheCanonicalLinkPointsToTheSite(path: string): void {
+    expect(canonicalLink()?.getAttribute('href')).toBe(`${seo.siteUrl}${path}`);
+  }
+
+  function thenThereIsNoCanonicalLink(): void {
+    expect(canonicalLink()).toBeNull();
+  }
+
+  /** Open Graph tags use `property`, the others `name`. */
+  function metaSelector(name: string): string {
+    return name.startsWith('og:') ? `meta[property="${name}"]` : `meta[name="${name}"]`;
+  }
+
+  function metaTag(name: string): HTMLMetaElement | null {
+    return doc.head.querySelector<HTMLMetaElement>(metaSelector(name));
+  }
+
+  function canonicalLink(): HTMLLinkElement | null {
+    return doc.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  }
 });

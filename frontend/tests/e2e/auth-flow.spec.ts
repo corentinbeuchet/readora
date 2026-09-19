@@ -1,5 +1,12 @@
-import { test, expect } from '@playwright/test';
+import { Page } from '@playwright/test';
+import { test, expect } from './support/fixtures';
 import { PASSWORD, uniqueSuffix } from './support/helpers';
+
+interface Account {
+  email: string;
+  username: string;
+  password: string;
+}
 
 /**
  * Full authentication journey against a running stack (frontend + backend).
@@ -8,67 +15,156 @@ import { PASSWORD, uniqueSuffix } from './support/helpers';
 test.describe('Authentication flow', () => {
   test('register → profile visible → logout → login → session survives reload', async ({ page }) => {
     // This journey checks the register form itself, so it does not use the signUp() helper.
-    const suffix = uniqueSuffix();
-    const email = `e2e_${suffix}@readora.test`;
-    const username = `e2e_${suffix}`;
-    const password = PASSWORD;
+    const me = givenIAmANewVisitor();
 
-    await page.goto('/register');
-    await expect(page.getByRole('heading', { name: 'Create your account' })).toBeVisible();
+    await whenIVisit(page, '/register');
 
-    // Client-side validation (Signal Forms) blocks an empty submit.
-    await page.getByRole('button', { name: 'Sign up' }).click();
-    await expect(page.getByText('Email is required')).toBeVisible();
+    await thenICanSeeTheHeading(page, 'Create your account');
 
-    await page.getByLabel('Email').fill(email);
-    await page.getByLabel('Username').fill(username);
-    await page.getByLabel('Password', { exact: true }).fill(password);
-    await page.getByLabel('Confirm password').fill('does-not-match');
-    await expect(page.getByText('Passwords do not match')).toBeVisible();
-    await page.getByLabel('Confirm password').fill(password);
-    await page.getByRole('button', { name: 'Sign up' }).click();
+    await whenISubmitTheSignUpForm(page);
 
-    // Redirected to the profile, header shows the account menu.
-    await expect(page).toHaveURL(/\/profile$/);
-    await expect(page.getByRole('heading', { level: 1 })).toContainText(username);
-    await expect(page.getByRole('tab', { name: 'Overview' })).toBeVisible();
-    await expect(page.getByLabel('Display name')).toHaveValue(username);
+    await thenISeeTheText(page, 'Email is required');
 
-    // A plain reader has no Scanlation entry in the primary navigation and no bookmarks yet.
-    await expect(page.getByRole('link', { name: 'Scanlation' })).toHaveCount(0);
-    await page.getByRole('tab', { name: 'Bookmarks' }).click();
-    await expect(page.getByText('Bookmarks are a Premium feature')).toBeVisible();
+    await whenIFillTheSignUpForm(page, me, { confirmation: 'does-not-match' });
 
-    // Session survives a reload thanks to the HttpOnly refresh cookie.
-    await page.reload();
-    await expect(page.getByRole('heading', { level: 1 })).toContainText(username);
+    await thenISeeTheText(page, 'Passwords do not match');
 
-    // Logout clears the session and protects /profile again.
-    await page.getByRole('button', { name: 'Account menu' }).click();
-    await page.getByRole('menuitem', { name: 'Log out' }).click();
-    await expect(page.getByRole('link', { name: 'Log in' })).toBeVisible();
-    await page.goto('/profile');
-    await expect(page).toHaveURL(/\/login\?returnUrl=%2Fprofile/);
+    await whenIConfirmThePassword(page, me.password);
+    await whenISubmitTheSignUpForm(page);
 
-    // Login with the wrong password shows the API error, the right one redirects to returnUrl.
-    await page.getByLabel('Email').fill(email);
-    await page.getByLabel('Password').fill('wrong-password');
-    await page.getByRole('button', { name: 'Log in' }).click();
-    await expect(page.getByRole('alert')).toContainText(/Invalid email or password/i);
+    await thenIAmOn(page, /\/profile$/);
+    await thenMyProfileIsShownFor(page, me.username);
+    await thenICanSeeTheTab(page, 'Overview');
+    await thenMyDisplayNameIs(page, me.username);
+    await thenThereIsNoScanlationLink(page);
 
-    await page.getByLabel('Password').fill(password);
-    await page.getByRole('button', { name: 'Log in' }).click();
-    await expect(page).toHaveURL(/\/profile$/);
-    await expect(page.getByRole('heading', { level: 1 })).toContainText(username);
+    await whenIOpenTheTab(page, 'Bookmarks');
+
+    await thenISeeTheText(page, 'Bookmarks are a Premium feature');
+
+    await whenIReload(page);
+
+    await thenMyProfileIsShownFor(page, me.username);
+
+    await whenILogOut(page);
+
+    await thenICanLogIn(page);
+
+    await whenIVisit(page, '/profile');
+
+    await thenIAmOn(page, /\/login\?returnUrl=%2Fprofile/);
+
+    await whenILogIn(page, { email: me.email, password: 'wrong-password' });
+
+    await thenISeeTheAlert(page, /Invalid email or password/i);
+
+    await whenIRetryWithThePassword(page, me.password);
+
+    await thenIAmOn(page, /\/profile$/);
+    await thenMyProfileIsShownFor(page, me.username);
   });
 
   test('anonymous visitors are redirected away from guarded routes', async ({ page }) => {
-    await page.goto('/scanlation/00000000-0000-0000-0000-000000000000');
-    await expect(page).toHaveURL(/\/login\?returnUrl=/);
+    await whenIVisit(page, '/scanlation/00000000-0000-0000-0000-000000000000');
 
-    await page.goto('/subscription');
-    await expect(page.getByRole('heading', { name: 'Choose your plan' })).toBeVisible();
-    await page.getByRole('button', { name: 'Subscribe with Stripe' }).click();
-    await expect(page).toHaveURL(/\/login\?returnUrl=%2Fsubscription/);
+    await thenIAmOn(page, /\/login\?returnUrl=/);
+
+    await whenIVisit(page, '/subscription');
+
+    await thenICanSeeTheHeading(page, 'Choose your plan');
+
+    await whenIClickTheButton(page, 'Subscribe with Stripe');
+
+    await thenIAmOn(page, /\/login\?returnUrl=%2Fsubscription/);
   });
 });
+
+/** Credentials nobody has registered yet (called inside the test, so a retry gets fresh ones). */
+function givenIAmANewVisitor(): Account {
+  const suffix = uniqueSuffix();
+  return { email: `e2e_${suffix}@readora.test`, username: `e2e_${suffix}`, password: PASSWORD };
+}
+
+async function whenIVisit(page: Page, url: string): Promise<void> {
+  await page.goto(url);
+}
+
+async function whenIReload(page: Page): Promise<void> {
+  await page.reload();
+}
+
+async function whenIClickTheButton(page: Page, name: string): Promise<void> {
+  await page.getByRole('button', { name }).click();
+}
+
+async function whenISubmitTheSignUpForm(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Sign up' }).click();
+}
+
+async function whenIFillTheSignUpForm(page: Page, account: Account, typed: { confirmation: string }): Promise<void> {
+  await page.getByLabel('Email').fill(account.email);
+  await page.getByLabel('Username').fill(account.username);
+  await page.getByLabel('Password', { exact: true }).fill(account.password);
+  await page.getByLabel('Confirm password').fill(typed.confirmation);
+}
+
+async function whenIConfirmThePassword(page: Page, password: string): Promise<void> {
+  await page.getByLabel('Confirm password').fill(password);
+}
+
+async function whenIOpenTheTab(page: Page, name: string): Promise<void> {
+  await page.getByRole('tab', { name }).click();
+}
+
+async function whenILogOut(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Account menu' }).click();
+  await page.getByRole('menuitem', { name: 'Log out' }).click();
+}
+
+async function whenILogIn(page: Page, credentials: { email: string; password: string }): Promise<void> {
+  await page.getByLabel('Email').fill(credentials.email);
+  await page.getByLabel('Password').fill(credentials.password);
+  await page.getByRole('button', { name: 'Log in' }).click();
+}
+
+async function whenIRetryWithThePassword(page: Page, password: string): Promise<void> {
+  await page.getByLabel('Password').fill(password);
+  await page.getByRole('button', { name: 'Log in' }).click();
+}
+
+async function thenIAmOn(page: Page, url: string | RegExp): Promise<void> {
+  await expect(page).toHaveURL(url);
+}
+
+async function thenICanSeeTheHeading(page: Page, name: string): Promise<void> {
+  await expect(page.getByRole('heading', { name })).toBeVisible();
+}
+
+async function thenISeeTheText(page: Page, text: string): Promise<void> {
+  await expect(page.getByText(text)).toBeVisible();
+}
+
+async function thenISeeTheAlert(page: Page, text: string | RegExp): Promise<void> {
+  await expect(page.getByRole('alert')).toContainText(text);
+}
+
+async function thenMyProfileIsShownFor(page: Page, username: string): Promise<void> {
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(username);
+}
+
+async function thenICanSeeTheTab(page: Page, name: string): Promise<void> {
+  await expect(page.getByRole('tab', { name })).toBeVisible();
+}
+
+async function thenMyDisplayNameIs(page: Page, displayName: string): Promise<void> {
+  await expect(page.getByLabel('Display name')).toHaveValue(displayName);
+}
+
+/** A plain reader has no Scanlation entry in the primary navigation. */
+async function thenThereIsNoScanlationLink(page: Page): Promise<void> {
+  await expect(page.getByRole('link', { name: 'Scanlation' })).toHaveCount(0);
+}
+
+async function thenICanLogIn(page: Page): Promise<void> {
+  await expect(page.getByRole('link', { name: 'Log in' })).toBeVisible();
+}

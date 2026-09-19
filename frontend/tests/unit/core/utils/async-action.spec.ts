@@ -1,39 +1,100 @@
 import { ApiError } from '@app/core/api/api-client';
-import { asyncAction } from '@app/core/utils/async-action';
+import { AsyncAction, asyncAction } from '@app/core/utils/async-action';
 
 describe('asyncAction', () => {
-  it('is busy (with its key) while running, and returns the result', async () => {
-    const action = asyncAction();
-    let release!: (value: number) => void;
-    const running = action.run(() => new Promise<number>((resolve) => (release = resolve)), { key: 'row-2' });
-    expect(action.busy()).toBe(true);
-    expect(action.busyKey()).toBe('row-2');
+  let action: AsyncAction;
+  let running: Promise<unknown>;
+  let finishTask: (value: number) => void;
+  let result: unknown;
 
-    release(42);
-    expect(await running).toBe(42);
-    expect(action.busy()).toBe(false);
-    expect(action.busyKey()).toBeNull();
-    expect(action.error()).toBeNull();
+  it('is busy (with its key) while running, and returns the result', async () => {
+    givenAnAction();
+
+    whenIStartATask({ key: 'row-2' });
+
+    thenTheActionIsBusy();
+    thenTheBusyKeyIs('row-2');
+
+    await whenTheTaskFinishesWith(42);
+
+    thenTheRunReturned(42);
+    thenTheActionIsIdle();
+    thenTheBusyKeyIs(null);
+    thenTheErrorIs(null);
   });
 
   it("turns a failure into the API's message, or the fallback, without throwing", async () => {
-    const action = asyncAction('Could not save.');
-    expect(await action.run(() => Promise.reject(new ApiError(409, 'Title already exists')))).toBeUndefined();
-    expect(action.error()).toBe('Title already exists');
+    givenAnAction({ fallback: 'Could not save.' });
 
-    await action.run(() => Promise.reject(new Error('boom')));
-    expect(action.error()).toBe('Could not save.');
+    await whenATaskFailsWith(new ApiError(409, 'Title already exists'));
 
-    await action.run(() => Promise.reject(new Error('boom')), { fallback: 'Could not vote.' });
-    expect(action.error()).toBe('Could not vote.');
-    expect(action.busy()).toBe(false);
+    thenTheRunReturned(undefined);
+    thenTheErrorIs('Title already exists');
+
+    await whenATaskFailsWith(new Error('boom'));
+
+    thenTheErrorIs('Could not save.');
+
+    await whenATaskFailsWith(new Error('boom'), { fallback: 'Could not vote.' });
+
+    thenTheErrorIs('Could not vote.');
+    thenTheActionIsIdle();
   });
 
   it('clears the previous error when a new action starts', async () => {
-    const action = asyncAction();
-    action.fail('Rate the series first.');
-    expect(action.error()).toBe('Rate the series first.');
-    await action.run(async () => undefined);
-    expect(action.error()).toBeNull();
+    givenAnAction();
+
+    whenTheActionIsMarkedFailed('Rate the series first.');
+
+    thenTheErrorIs('Rate the series first.');
+
+    await whenATaskSucceeds();
+
+    thenTheErrorIs(null);
   });
+
+  function givenAnAction(options: { fallback?: string } = {}): void {
+    action = asyncAction(options.fallback);
+  }
+
+  function whenIStartATask(options: { key: string }): void {
+    running = action.run(() => new Promise<number>((resolve) => (finishTask = resolve)), options);
+  }
+
+  async function whenTheTaskFinishesWith(value: number): Promise<void> {
+    finishTask(value);
+    result = await running;
+  }
+
+  async function whenATaskFailsWith(error: Error, options: { fallback?: string } = {}): Promise<void> {
+    result = await action.run(() => Promise.reject(error), options);
+  }
+
+  async function whenATaskSucceeds(): Promise<void> {
+    result = await action.run(async () => undefined);
+  }
+
+  function whenTheActionIsMarkedFailed(message: string): void {
+    action.fail(message);
+  }
+
+  function thenTheRunReturned(value: unknown): void {
+    expect(result).toBe(value);
+  }
+
+  function thenTheActionIsBusy(): void {
+    expect(action.busy()).toBe(true);
+  }
+
+  function thenTheActionIsIdle(): void {
+    expect(action.busy()).toBe(false);
+  }
+
+  function thenTheBusyKeyIs(key: string | null): void {
+    expect(action.busyKey()).toBe(key);
+  }
+
+  function thenTheErrorIs(message: string | null): void {
+    expect(action.error()).toBe(message);
+  }
 });

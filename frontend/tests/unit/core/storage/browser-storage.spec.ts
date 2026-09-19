@@ -2,47 +2,95 @@ import { DOCUMENT } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserStorage } from '@app/core/storage/browser-storage';
 
-function withDocument(defaultView: unknown): BrowserStorage {
-  TestBed.configureTestingModule({ providers: [{ provide: DOCUMENT, useValue: { defaultView } }] });
-  return TestBed.inject(BrowserStorage);
-}
-
 describe('BrowserStorage', () => {
-  it('stores JSON in localStorage', () => {
-    const values = new Map<string, string>();
-    const storage = withDocument({
-      localStorage: { getItem: (k: string) => values.get(k) ?? null, setItem: (k: string, v: string) => values.set(k, v) }
-    });
+  let storage: BrowserStorage;
+  let localValues: Map<string, string>;
+  let writeError: unknown;
 
-    storage.write('k', { a: 1 });
-    expect(values.get('k')).toBe('{"a":1}');
-    expect(storage.read('k')).toEqual({ a: 1 });
+  it('stores JSON in localStorage', () => {
+    givenAWorkingLocalStorage();
+
+    whenIWrite('k', { a: 1 });
+
+    thenLocalStorageHolds('k', '{"a":1}');
+    thenReadingGives('k', { a: 1 });
   });
 
   it('works without a window (server rendering): reads nothing, drops writes', () => {
-    const storage = withDocument(null);
-    storage.write('k', 1);
-    expect(storage.read('k')).toBeNull();
+    givenThereIsNoWindow();
+
+    whenIWrite('k', 1);
+
+    thenReadingGives('k', null);
   });
 
   it('survives blocked storage, a full quota and unreadable JSON', () => {
-    const blocked = withDocument({
+    givenLocalStorageIsBlocked();
+
+    thenReadingGives('k', null);
+
+    givenLocalStorageIsFullAndHolds('{not json');
+
+    whenIWrite('k', 1);
+
+    thenTheWriteDidNotThrow();
+    thenReadingGives('k', null);
+  });
+
+  function givenAWorkingLocalStorage(): void {
+    localValues = new Map<string, string>();
+    givenTheWindowIs({
+      localStorage: { getItem: (k: string) => localValues.get(k) ?? null, setItem: (k: string, v: string) => localValues.set(k, v) }
+    });
+  }
+
+  function givenThereIsNoWindow(): void {
+    givenTheWindowIs(null);
+  }
+
+  function givenLocalStorageIsBlocked(): void {
+    givenTheWindowIs({
       get localStorage(): Storage {
         throw new DOMException('blocked', 'SecurityError');
       }
     });
-    expect(blocked.read('k')).toBeNull();
+  }
 
+  function givenLocalStorageIsFullAndHolds(raw: string): void {
     TestBed.resetTestingModule();
-    const full = withDocument({
+    givenTheWindowIs({
       localStorage: {
-        getItem: () => '{not json',
+        getItem: () => raw,
         setItem: () => {
           throw new DOMException('full', 'QuotaExceededError');
         }
       }
     });
-    expect(() => full.write('k', 1)).not.toThrow();
-    expect(full.read('k')).toBeNull();
-  });
+  }
+
+  function givenTheWindowIs(defaultView: unknown): void {
+    TestBed.configureTestingModule({ providers: [{ provide: DOCUMENT, useValue: { defaultView } }] });
+    storage = TestBed.inject(BrowserStorage);
+  }
+
+  function whenIWrite(key: string, value: unknown): void {
+    writeError = undefined;
+    try {
+      storage.write(key, value);
+    } catch (error) {
+      writeError = error;
+    }
+  }
+
+  function thenLocalStorageHolds(key: string, raw: string): void {
+    expect(localValues.get(key)).toBe(raw);
+  }
+
+  function thenReadingGives(key: string, value: unknown): void {
+    expect(storage.read(key)).toEqual(value);
+  }
+
+  function thenTheWriteDidNotThrow(): void {
+    expect(writeError).toBeUndefined();
+  }
 });

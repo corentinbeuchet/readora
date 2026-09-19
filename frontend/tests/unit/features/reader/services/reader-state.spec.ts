@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { ReaderState } from '@app/features/reader/services/reader-state';
-import { ReaderPreferencesStore } from '@app/features/reader/services/reader-preferences-store';
+import { ReaderPreferencesStore, ReadingDirection, SeriesLayout, ViewMode } from '@app/features/reader/services/reader-preferences-store';
 import { BrowserStorage } from '@app/core/storage/browser-storage';
 import { Chapter } from '@app/core/models/readora.models';
 import { MemoryStorage } from '../../../test-utils';
@@ -11,94 +11,221 @@ const CHAPTER: Chapter = { id: 'chap-1', workId: 'work-1', chapterNumber: '1', t
 
 describe('ReaderState (derived reader state)', () => {
   let state: ReaderState;
-  const chapter = signal<Chapter | null>(null);
-  const start = signal<number | null>(null);
+  const shownChapter = signal<Chapter | null>(null);
+  const startIndex = signal<number | null>(null);
 
   beforeEach(() => {
     TestBed.configureTestingModule({ providers: [ReaderState, { provide: BrowserStorage, useClass: MemoryStorage }] });
     state = TestBed.inject(ReaderState);
-    chapter.set(null);
-    start.set(null);
-    state.connect(chapter, start);
+    shownChapter.set(null);
+    startIndex.set(null);
+    state.connect(shownChapter, startIndex);
   });
 
   it('is empty until a chapter is shown', () => {
-    expect(state.currentChapter()).toBeNull();
-    expect(state.currentPageIndex()).toBe(0);
-    expect(state.viewMode()).toBe('VERTICAL');
-    expect(state.totalPages()).toBe(0);
-    expect(state.currentPage()).toBeNull();
+    thenNoChapterIsShown();
+    thenIAmOnPageIndex(0);
+    thenTheViewModeIs('VERTICAL');
+    thenTheTotalPagesIs(0);
+    thenThereIsNoCurrentPage();
   });
 
   it('opens a chapter on its first page, or on ?page (clamped), and resets for the next chapter', () => {
-    chapter.set(CHAPTER);
-    expect(state.currentPage()?.pageNumber).toBe(1);
-    expect(state.isFirstPage()).toBe(true);
-    expect(state.isLastPage()).toBe(false);
+    whenTheChapterIsShown(CHAPTER);
 
-    state.nextPage();
-    state.nextPage();
-    expect(state.currentPageIndex()).toBe(2);
-    expect(state.isLastPage()).toBe(true);
-    state.nextPage();
-    expect(state.currentPageIndex()).toBe(2);
-    state.previousPage();
-    expect(state.currentPageIndex()).toBe(1);
+    thenTheCurrentPageIs(1);
+    thenIAmOnTheFirstPage();
+    thenIAmNotOnTheLastPage();
 
-    chapter.set({ ...CHAPTER, id: 'chap-2' });
-    expect(state.currentPageIndex()).toBe(0);
+    whenIGoToTheNextPage();
+    whenIGoToTheNextPage();
 
-    start.set(99);
-    expect(state.currentPageIndex()).toBe(2);
+    thenIAmOnPageIndex(2);
+    thenIAmOnTheLastPage();
+
+    whenIGoToTheNextPage();
+
+    thenIAmOnPageIndex(2);
+
+    whenIGoToThePreviousPage();
+
+    thenIAmOnPageIndex(1);
+
+    whenTheChapterIsShown({ ...CHAPTER, id: 'chap-2' });
+
+    thenIAmOnPageIndex(0);
+
+    whenTheStartIndexBecomes(99);
+
+    thenIAmOnPageIndex(2);
   });
 
   it('keeps the page when the same chapter is reloaded', () => {
-    chapter.set(CHAPTER);
-    state.nextPage();
-    chapter.set({ ...CHAPTER });
-    expect(state.currentPageIndex()).toBe(1);
+    givenTheChapterIsShown(CHAPTER);
+    givenIWentToTheNextPage();
+
+    whenTheChapterIsShown({ ...CHAPTER });
+
+    thenIAmOnPageIndex(1);
   });
 
   it("uses the series' saved layout only after hydration, and the reader's switch until the next chapter", () => {
-    TestBed.inject(ReaderPreferencesStore).saveLayout('work-1', { mode: 'PAGED', direction: 'RTL' });
-    chapter.set(CHAPTER);
-    expect(state.viewMode()).toBe('VERTICAL');
+    givenTheSeriesLayoutIsSaved('work-1', { mode: 'PAGED', direction: 'RTL' });
 
-    state.markHydrated();
-    expect(state.viewMode()).toBe('PAGED');
-    expect(state.direction()).toBe('RTL');
+    whenTheChapterIsShown(CHAPTER);
 
-    state.setViewMode('VERTICAL');
-    expect(state.viewMode()).toBe('VERTICAL');
+    thenTheViewModeIs('VERTICAL');
+
+    whenThePageIsHydrated();
+
+    thenTheViewModeIs('PAGED');
+    thenTheDirectionIs('RTL');
+
+    whenIChooseTheViewMode('VERTICAL');
+
+    thenTheViewModeIs('VERTICAL');
   });
 
   it('clamps the zoom level', () => {
-    state.setZoom(250);
-    expect(state.zoomLevel()).toBe(200);
-    state.setZoom(30);
-    expect(state.zoomLevel()).toBe(50);
+    whenISetTheZoomTo(250);
+
+    thenTheZoomIs(200);
+
+    whenISetTheZoomTo(30);
+
+    thenTheZoomIs(50);
   });
 
   it('double page: cover alone, then pairs; only in paged mode on a wide screen', () => {
-    TestBed.inject(ReaderPreferencesStore).setDoublePage(true);
-    chapter.set({ ...CHAPTER, pages: pages(5) });
-    start.set(3); // page 4
-    state.setViewMode('PAGED');
-    expect(state.doublePage()).toBe(false);
+    givenDoublePageIsOn();
+    givenTheChapterIsShown({ ...CHAPTER, pages: pages(5) }, { startIndex: 3 });
 
-    state.setWideScreen(true);
-    expect(state.currentSpread().map((p) => p.pageNumber)).toEqual([4, 5]);
-    expect(state.isLastPage()).toBe(true);
-    state.previousPage();
-    expect(state.currentSpread().map((p) => p.pageNumber)).toEqual([2, 3]);
-    state.previousPage();
-    expect(state.currentSpread().map((p) => p.pageNumber)).toEqual([1]);
-    expect(state.isFirstPage()).toBe(true);
-    state.nextPage();
-    expect(state.currentSpread().map((p) => p.pageNumber)).toEqual([2, 3]);
+    whenIChooseTheViewMode('PAGED');
 
-    state.setViewMode('VERTICAL');
-    expect(state.doublePage()).toBe(false);
-    expect(state.currentSpread().map((p) => p.pageNumber)).toEqual([2]);
+    thenDoublePageIsNotActive();
+
+    whenTheScreenBecomesWide();
+
+    thenTheSpreadShowsPages([4, 5]);
+    thenIAmOnTheLastPage();
+
+    whenIGoToThePreviousPage();
+
+    thenTheSpreadShowsPages([2, 3]);
+
+    whenIGoToThePreviousPage();
+
+    thenTheSpreadShowsPages([1]);
+    thenIAmOnTheFirstPage();
+
+    whenIGoToTheNextPage();
+
+    thenTheSpreadShowsPages([2, 3]);
+
+    whenIChooseTheViewMode('VERTICAL');
+
+    thenDoublePageIsNotActive();
+    thenTheSpreadShowsPages([2]);
   });
+
+  function givenTheChapterIsShown(chapter: Chapter, options: { startIndex?: number } = {}): void {
+    shownChapter.set(chapter);
+    startIndex.set(options.startIndex ?? null);
+  }
+
+  function givenIWentToTheNextPage(): void {
+    state.nextPage();
+  }
+
+  function givenTheSeriesLayoutIsSaved(workId: string, layout: SeriesLayout): void {
+    TestBed.inject(ReaderPreferencesStore).saveLayout(workId, layout);
+  }
+
+  function givenDoublePageIsOn(): void {
+    TestBed.inject(ReaderPreferencesStore).setDoublePage(true);
+  }
+
+  function whenTheChapterIsShown(chapter: Chapter): void {
+    shownChapter.set(chapter);
+  }
+
+  function whenTheStartIndexBecomes(index: number): void {
+    startIndex.set(index);
+  }
+
+  function whenIGoToTheNextPage(): void {
+    state.nextPage();
+  }
+
+  function whenIGoToThePreviousPage(): void {
+    state.previousPage();
+  }
+
+  function whenThePageIsHydrated(): void {
+    state.markHydrated();
+  }
+
+  function whenIChooseTheViewMode(mode: ViewMode): void {
+    state.setViewMode(mode);
+  }
+
+  function whenISetTheZoomTo(percent: number): void {
+    state.setZoom(percent);
+  }
+
+  function whenTheScreenBecomesWide(): void {
+    state.setWideScreen(true);
+  }
+
+  function thenNoChapterIsShown(): void {
+    expect(state.currentChapter()).toBeNull();
+  }
+
+  function thenIAmOnPageIndex(index: number): void {
+    expect(state.currentPageIndex()).toBe(index);
+  }
+
+  function thenTheViewModeIs(mode: ViewMode): void {
+    expect(state.viewMode()).toBe(mode);
+  }
+
+  function thenTheDirectionIs(direction: ReadingDirection): void {
+    expect(state.direction()).toBe(direction);
+  }
+
+  function thenTheTotalPagesIs(total: number): void {
+    expect(state.totalPages()).toBe(total);
+  }
+
+  function thenThereIsNoCurrentPage(): void {
+    expect(state.currentPage()).toBeNull();
+  }
+
+  function thenTheCurrentPageIs(pageNumber: number): void {
+    expect(state.currentPage()?.pageNumber).toBe(pageNumber);
+  }
+
+  function thenIAmOnTheFirstPage(): void {
+    expect(state.isFirstPage()).toBe(true);
+  }
+
+  function thenIAmOnTheLastPage(): void {
+    expect(state.isLastPage()).toBe(true);
+  }
+
+  function thenIAmNotOnTheLastPage(): void {
+    expect(state.isLastPage()).toBe(false);
+  }
+
+  function thenTheZoomIs(percent: number): void {
+    expect(state.zoomLevel()).toBe(percent);
+  }
+
+  function thenDoublePageIsNotActive(): void {
+    expect(state.doublePage()).toBe(false);
+  }
+
+  function thenTheSpreadShowsPages(pageNumbers: number[]): void {
+    expect(state.currentSpread().map((p) => p.pageNumber)).toEqual(pageNumbers);
+  }
 });

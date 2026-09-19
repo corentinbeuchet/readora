@@ -1,12 +1,11 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
-import { firstValueFrom } from 'rxjs';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { Permission } from '@app/core/models/readora.models';
-import { mockAuthResponse, mockUser } from './auth-fixtures';
-import { API, provideHttpTesting } from '../../test-utils';
+import { givenIAmSignedInWith, mockUser } from './auth-fixtures';
+import { provideHttpTesting } from '../../test-utils';
 
 @Component({
   imports: [HasPermissionDirective],
@@ -19,6 +18,9 @@ import { API, provideHttpTesting } from '../../test-utils';
   `
 })
 class HostComponent {}
+
+/** What each gated element of `HostComponent` is, by its class. */
+type Gated = 'publish' | 'any' | 'save' | 'upsell';
 
 describe('HasPermissionDirective', () => {
   let fixture: ComponentFixture<HostComponent>;
@@ -37,41 +39,64 @@ describe('HasPermissionDirective', () => {
 
   afterEach(() => http.verify());
 
-  async function loginWith(permissions: Permission[]): Promise<void> {
-    const login = firstValueFrom(store.login({ email: 'a@b.io', password: 'Sup3rSecret!' }));
-    http.expectOne(`${API}/auth/login`).flush(mockAuthResponse({ user: mockUser({ permissions }) }));
-    await login;
-  }
-
-  const q = (selector: string) => fixture.nativeElement.querySelector(selector);
-
   it('hides gated content for anonymous users and renders the else template', () => {
-    fixture.detectChanges();
-    expect(q('.publish')).toBeNull();
-    expect(q('.any')).toBeNull();
-    expect(q('.save')).toBeNull();
-    expect(q('.upsell')).not.toBeNull();
+    whenTheHostRenders();
+
+    thenIDoNotSee('publish');
+    thenIDoNotSee('any');
+    thenIDoNotSee('save');
+    thenISee('upsell');
   });
 
   it('hides Publish for a plain reader, shows it for a scanlator, and reacts to store changes', async () => {
-    await loginWith(['COMMENT_WRITE', 'COMMENT_UPVOTE']);
-    fixture.detectChanges();
-    expect(q('.publish')).toBeNull();
+    await givenIAmSignedInWith(['COMMENT_WRITE', 'COMMENT_UPVOTE']);
 
-    store.setUser(mockUser({ permissions: ['CHAPTER_PUBLISH', 'TASK_SUBMIT'] }));
-    fixture.detectChanges();
-    expect(q('.publish')).not.toBeNull();
-    expect(q('.any')).not.toBeNull();
+    whenTheHostRenders();
 
-    store.clearSession();
-    fixture.detectChanges();
-    expect(q('.publish')).toBeNull();
+    thenIDoNotSee('publish');
+
+    whenMyPermissionsBecome(['CHAPTER_PUBLISH', 'TASK_SUBMIT']);
+
+    thenISee('publish');
+    thenISee('any');
+
+    whenMySessionIsCleared();
+
+    thenIDoNotSee('publish');
   });
 
   it('swaps else template for the real content once BOOKMARK_WRITE is granted', async () => {
-    await loginWith(['BOOKMARK_WRITE']);
-    fixture.detectChanges();
-    expect(q('.save')).not.toBeNull();
-    expect(q('.upsell')).toBeNull();
+    await givenIAmSignedInWith(['BOOKMARK_WRITE']);
+
+    whenTheHostRenders();
+
+    thenISee('save');
+    thenIDoNotSee('upsell');
   });
+
+  function whenTheHostRenders(): void {
+    fixture.detectChanges();
+  }
+
+  function whenMyPermissionsBecome(permissions: Permission[]): void {
+    store.setUser(mockUser({ permissions }));
+    fixture.detectChanges();
+  }
+
+  function whenMySessionIsCleared(): void {
+    store.clearSession();
+    fixture.detectChanges();
+  }
+
+  function thenISee(element: Gated): void {
+    expect(gated(element)).not.toBeNull();
+  }
+
+  function thenIDoNotSee(element: Gated): void {
+    expect(gated(element)).toBeNull();
+  }
+
+  function gated(element: Gated): HTMLElement | null {
+    return (fixture.nativeElement as HTMLElement).querySelector(`.${element}`);
+  }
 });
