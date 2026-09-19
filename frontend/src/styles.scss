@@ -1,5 +1,6 @@
 /* Global Styles */
 @use "tokens";
+@use "fonts";
 
 * {
   box-sizing: border-box;
@@ -8,7 +9,9 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--ff-sans);
+  font-stretch: var(--wdth-text);
+  line-height: var(--lh-text);
   background-color: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
@@ -61,6 +64,15 @@ h1,
 h2,
 h3 {
   text-wrap: balance;
+  line-height: var(--lh-tight);
+}
+
+/* The display voice: page and section headings. */
+h1,
+h2 {
+  font-stretch: var(--wdth-display);
+  font-weight: var(--fw-black);
+  letter-spacing: -0.01em;
 }
 
 /* Anchor jumps and focused elements stay clear of the sticky header and the phone tab bar (WCAG 2.4.11). */

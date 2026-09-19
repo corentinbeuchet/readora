@@ -46,6 +46,7 @@
     "@angular/localize": "^22.1.6",
     "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^10.0.1",
+    "@fontsource-variable/archivo": "^5.3.0",
     "@playwright/test": "^1.63.0",
     "@types/node": "^24.13.4",
     "angular-eslint": "22.5.0",

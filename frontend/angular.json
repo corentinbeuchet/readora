@@ -29,6 +29,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "archivo-latin{,-ext}-wdth-normal.woff2",
+                "input": "node_modules/@fontsource-variable/archivo/files",
+                "output": "fonts"
               }
             ],
             "styles": [
