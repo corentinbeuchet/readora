@@ -1,6 +1,6 @@
 import { DOCUMENT, Service, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
-import { environment } from '../../../environments/environment';
+import { SITE_URL } from '../config/urls';
 
 export interface PageMeta {
   /** Page title without the site suffix. */
@@ -28,7 +28,7 @@ export class SeoService {
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
   private readonly document = inject(DOCUMENT);
-  readonly siteUrl = environment.siteUrl.replace(/\/+$/, '');
+  readonly siteUrl = inject(SITE_URL);
 
   /** Applies the full set of tags for a page. */
   update(page: PageMeta): void {

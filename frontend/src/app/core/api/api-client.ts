@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
 import { Observable, OperatorFunction, catchError, map, of, throwError } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { API_BASE_URL } from '../config/urls';
 import { ApiResponse } from '../models/readora.models';
 
 /** Normalised error raised by every API client. */
@@ -43,7 +43,7 @@ export interface RequestOptions {
 @Service()
 export class ApiClient {
   private readonly http = inject(HttpClient);
-  readonly baseUrl = environment.apiUrl.replace(/\/+$/, '');
+  readonly baseUrl = inject(API_BASE_URL);
 
   url(path: string): string {
     return `${this.baseUrl}${path.startsWith('/') ? path : `/${path}`}`;

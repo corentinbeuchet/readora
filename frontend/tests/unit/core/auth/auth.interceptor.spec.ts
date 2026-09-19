@@ -4,6 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { firstValueFrom } from 'rxjs';
 import { authInterceptor } from '@app/core/auth/auth.interceptor';
 import { AuthStore } from '@app/core/auth/auth-store';
+import { API_BASE_URL } from '@app/core/config/urls';
 import { environment } from '../../../../src/environments/environment';
 import { mockAuthResponse } from './auth-fixtures';
 
@@ -134,5 +135,24 @@ describe('authInterceptor', () => {
     await expect(result).rejects.toMatchObject({ status: 403 });
     backend.expectNone(`${API}/auth/refresh`);
     expect(store.isAuthenticated()).toBe(true);
+  });
+});
+
+describe('authInterceptor with another API_BASE_URL', () => {
+  it('treats the configured base URL as the API (and the default one as foreign)', () => {
+    const base = 'https://api.example.test/v9';
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(withInterceptors([authInterceptor])), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: base }]
+    });
+    const http = TestBed.inject(HttpClient);
+    const backend = TestBed.inject(HttpTestingController);
+
+    http.get(`${base}/auth/me`).subscribe();
+    backend.expectOne(`${base}/auth/me`).flush({});
+    http.get(`${API}/auth/me`).subscribe();
+    const foreign = backend.expectOne(`${API}/auth/me`);
+    expect(foreign.request.withCredentials).toBe(false);
+    foreign.flush({});
+    backend.verify();
   });
 });

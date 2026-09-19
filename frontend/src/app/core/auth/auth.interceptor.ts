@@ -1,26 +1,18 @@
 import { HttpErrorResponse, HttpHandlerFn, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, of, switchMap, throwError } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { API_BASE_URL } from '../config/urls';
 import { AuthStore } from './auth-store';
 
-const API_BASE = environment.apiUrl.replace(/\/+$/, '');
-const AUTH_PATH = `${API_BASE}/auth/`;
-const REFRESH_URL = `${API_BASE}/auth/refresh`;
-const LOGIN_URL = `${API_BASE}/auth/login`;
-const REGISTER_URL = `${API_BASE}/auth/register`;
-const LOGOUT_URL = `${API_BASE}/auth/logout`;
+/** Auth endpoints that must not trigger a refresh-and-retry on 401. */
+const CREDENTIAL_ENDPOINTS = ['refresh', 'login', 'register', 'logout'];
 
-function isApiRequest(req: HttpRequest<unknown>): boolean {
-  return req.url.startsWith(API_BASE);
+function isCredentialEndpoint(url: string, apiBase: string): boolean {
+  return CREDENTIAL_ENDPOINTS.some((endpoint) => url.startsWith(`${apiBase}/auth/${endpoint}`));
 }
 
-function isCredentialEndpoint(url: string): boolean {
-  return url.startsWith(REFRESH_URL) || url.startsWith(LOGIN_URL) || url.startsWith(REGISTER_URL) || url.startsWith(LOGOUT_URL);
-}
-
-function withAuth(req: HttpRequest<unknown>, token: string | null): HttpRequest<unknown> {
-  const withCredentials = req.withCredentials || req.url.startsWith(AUTH_PATH);
+function withAuth(req: HttpRequest<unknown>, token: string | null, apiBase: string): HttpRequest<unknown> {
+  const withCredentials = req.withCredentials || req.url.startsWith(`${apiBase}/auth/`);
   if (token && !req.headers.has('Authorization')) {
     return req.clone({ withCredentials, setHeaders: { Authorization: `Bearer ${token}` } });
   }
@@ -37,23 +29,24 @@ function withAuth(req: HttpRequest<unknown>, token: string | null): HttpRequest<
  * propagate untouched and never log the user out.
  */
 export const authInterceptor: HttpInterceptorFn = (req, next: HttpHandlerFn) => {
-  if (!isApiRequest(req)) {
+  const apiBase = inject(API_BASE_URL);
+  if (!req.url.startsWith(apiBase)) {
     return next(req);
   }
 
   const store = inject(AuthStore);
-  const authedReq = withAuth(req, store.accessToken());
+  const authedReq = withAuth(req, store.accessToken(), apiBase);
 
   return next(authedReq).pipe(
     catchError((error: unknown) => {
       const isUnauthorized = error instanceof HttpErrorResponse && error.status === 401;
-      if (!isUnauthorized || isCredentialEndpoint(req.url)) {
+      if (!isUnauthorized || isCredentialEndpoint(req.url, apiBase)) {
         return throwError(() => error);
       }
 
       const refreshed = store.refresh().pipe(catchError(() => of(null)));
       return refreshed.pipe(
-        switchMap((session) => (session ? next(withAuth(req, session.accessToken)) : throwError(() => error)))
+        switchMap((session) => (session ? next(withAuth(req, session.accessToken, apiBase)) : throwError(() => error)))
       );
     })
   );
