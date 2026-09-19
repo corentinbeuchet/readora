@@ -161,5 +161,5 @@ async function thenMyDisplayNameIs(page: Page, displayName: string): Promise<voi
 }
 
 async function thenICanLogIn(page: Page): Promise<void> {
-  await expect(page.getByRole('link', { name: 'Log in' })).toBeVisible();
+  await expect(page.getByRole('banner').getByRole('link', { name: 'Log in' })).toBeVisible();
 }

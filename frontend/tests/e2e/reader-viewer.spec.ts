@@ -3,12 +3,25 @@ import { test, expect } from './support/fixtures';
 
 /** Model for e2e tests: fixtures create the data, given/when/then methods drive and check the page (frontend-e2e-tests skill). */
 test.describe('Reader Experience & Viewer Suite', () => {
-  test('home shows the catalog and the public layout', async ({ page }) => {
+  test('home shows the public layout, the weekly ranking and the latest updates', async ({ page, publishedChapter }) => {
+    await givenAChapterWasPublished(publishedChapter);
+
     await whenIVisit(page, '/');
 
     await thenICanSeeTheSiteHeader(page);
-    await thenICanSeeTheHeading(page, 'Catalog');
+    await thenICanSeeTheHeading(page, 'Read manga, manhwa and comics');
+    await thenICanSeeTheHeading(page, 'Most read this week');
+    await thenICanSeeTheHeading(page, 'Latest updates');
     await thenICanLogIn(page);
+  });
+
+  test('the catalog is one tap from the home page', async ({ page }) => {
+    await whenIVisit(page, '/');
+
+    await whenIChooseInTheNavigation(page, 'Browse');
+
+    await thenIAmOn(page, /\/works$/);
+    await thenICanSeeTheHeading(page, 'Catalog');
   });
 
   test('legacy /read redirects to the catalog', async ({ page }) => {
@@ -55,6 +68,15 @@ async function whenIChooseTheReadingMode(page: Page, mode: 'Vertical' | 'Paged')
   await page.getByRole('button', { name: mode }).click();
 }
 
+/** The fixture published it: the latest updates of the home page have at least this chapter. */
+async function givenAChapterWasPublished(chapter: { chapterId: string }): Promise<void> {
+  expect(chapter.chapterId).toBeTruthy();
+}
+
+async function whenIChooseInTheNavigation(page: Page, name: string): Promise<void> {
+  await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name }).click();
+}
+
 /** The primary navigation is always shown: in the header on a computer, as a tab bar on a phone. */
 async function thenICanSeeTheSiteHeader(page: Page): Promise<void> {
   await expect(page.getByRole('link', { name: 'Readora home' })).toBeVisible();
@@ -66,7 +88,7 @@ async function thenICanSeeTheHeading(page: Page, name: string): Promise<void> {
 }
 
 async function thenICanLogIn(page: Page): Promise<void> {
-  await expect(page.getByRole('link', { name: 'Log in' })).toBeVisible();
+  await expect(page.getByRole('banner').getByRole('link', { name: 'Log in' })).toBeVisible();
 }
 
 async function thenIAmOn(page: Page, url: string | RegExp): Promise<void> {

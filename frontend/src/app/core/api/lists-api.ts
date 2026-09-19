@@ -25,8 +25,12 @@ export class ListsApi {
     return this.api.post<{ upvotes: number }>(`/lists/${listId}/upvote`).pipe(map((r) => r.upvotes));
   }
 
-  topResource(): HttpResourceRef<ReadingList[]> {
-    return httpResource<ReadingList[]>(() => this.api.url('/lists'), { parse: (raw) => parseEnvelope<ReadingList[]>(raw) ?? [], defaultValue: [] });
+  /** Most upvoted public lists; idle while `enabled` is given and false. */
+  topResource(enabled?: Signal<boolean>): HttpResourceRef<ReadingList[]> {
+    return httpResource<ReadingList[]>(() => (enabled?.() === false ? undefined : this.api.url('/lists')), {
+      parse: (raw) => parseEnvelope<ReadingList[]>(raw) ?? [],
+      defaultValue: []
+    });
   }
 
   mineResource(enabled: Signal<boolean>): HttpResourceRef<ReadingList[]> {

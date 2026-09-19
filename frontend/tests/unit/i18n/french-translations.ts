@@ -5,6 +5,7 @@ import common from '../../../src/locale/fr/common.json';
 import community from '../../../src/locale/fr/community.json';
 import discovery from '../../../src/locale/fr/discovery.json';
 import errors from '../../../src/locale/fr/errors.json';
+import home from '../../../src/locale/fr/home.json';
 import labels from '../../../src/locale/fr/labels.json';
 import layout from '../../../src/locale/fr/layout.json';
 import library from '../../../src/locale/fr/library.json';
@@ -25,6 +26,7 @@ export const FRENCH: Record<string, string> = Object.assign(
   community.translations,
   discovery.translations,
   errors.translations,
+  home.translations,
   labels.translations,
   layout.translations,
   library.translations,

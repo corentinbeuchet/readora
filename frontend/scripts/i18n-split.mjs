@@ -48,6 +48,7 @@ const FILE_OF_PREFIX = {
   catalog: 'catalog',
   community: 'community',
   discovery: 'discovery',
+  home: 'home',
   library: 'library',
   lists: 'lists',
   moderation: 'moderation',

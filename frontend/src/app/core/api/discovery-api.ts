@@ -11,9 +11,10 @@ import { catalogParams } from './catalog-api';
 export class DiscoveryApi {
   private readonly api = inject(ApiClient);
 
-  latestResource(mine: Signal<boolean>, page: Signal<number>): HttpResourceRef<Release[]> {
+  /** Latest chapters, of every series or of the reader's library (`mine`); idle while `enabled` is given and false. */
+  latestResource(mine: Signal<boolean>, page: Signal<number>, enabled?: Signal<boolean>): HttpResourceRef<Release[]> {
     return httpResource<Release[]>(
-      () => ({ url: this.api.url('/updates'), params: { mine: mine(), page: page() } }),
+      () => (enabled?.() === false ? undefined : { url: this.api.url('/updates'), params: { mine: mine(), page: page() } }),
       { parse: (raw) => parseEnvelope<Release[]>(raw) ?? [], defaultValue: [] }
     );
   }

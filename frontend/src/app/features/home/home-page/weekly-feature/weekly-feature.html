@@ -1,0 +1,62 @@
+<section class="weekly" aria-labelledby="weekly-heading">
+  <div class="weekly-head">
+    <h2 id="weekly-heading" i18n="@@home.weekly.heading">Most read this week</h2>
+    <a class="full-ranking" routerLink="/rankings" i18n="@@home.weekly.fullRanking">Full ranking</a>
+  </div>
+
+  @if (pending()) {
+    <div class="feature" role="status">
+      <span class="sr-only" i18n="@@home.weekly.loading">Loading this week's ranking…</span>
+      <span class="skeleton feature-cover" aria-hidden="true"></span>
+      <span class="feature-body" aria-hidden="true">
+        <span class="skeleton line title-line"></span>
+        <span class="skeleton line"></span>
+        <span class="skeleton line short"></span>
+      </span>
+    </div>
+  } @else if (error()) {
+    <app-load-error (retry)="retry.emit()"><ng-container i18n="@@home.weekly.error">This week's ranking could not be loaded.</ng-container></app-load-error>
+  } @else {
+    @if (first(); as top) {
+      <div class="layout">
+        <article class="feature">
+          <app-work-cover class="feature-cover" [src]="top.work.coverImageUrl" width="240" height="336" priority />
+          <div class="feature-body">
+            <p class="feature-rank"><span class="sr-only" i18n="@@home.weekly.rank">Rank</span> 1</p>
+            <h3 class="feature-title"><a [routerLink]="['/works', top.work.id]">{{ top.work.title }}</a></h3>
+            @if (top.work.author; as author) {
+              <p class="muted" i18n="@@home.weekly.by">by {{ author }}</p>
+            }
+            <p class="feature-badges">
+              <span class="badge">{{ typeLabels[top.work.type] }}</span>
+              <span class="badge">{{ statusLabels[top.work.status] }}</span>
+            </p>
+            @if (genres().length > 0) {
+              <ul class="feature-genres" aria-label="Genres" i18n-aria-label="@@home.weekly.genres">
+                @for (genre of genres(); track genre) {
+                  <li><a class="tab tab-sm" routerLink="/works" [queryParams]="{ genre: genre }">{{ genre }}</a></li>
+                }
+              </ul>
+            }
+          </div>
+        </article>
+
+        @if (others().length > 0) {
+          <ol class="others work-rows" start="2">
+            @for (entry of others(); track entry.work.id) {
+              <li><app-work-card [work]="entry.work" variant="row" [rank]="entry.rank" /></li>
+            }
+          </ol>
+        }
+      </div>
+    } @else {
+      <div class="feature feature-empty">
+        <span class="skeleton feature-cover" aria-hidden="true"></span>
+        <div class="feature-body">
+          <p i18n="@@home.weekly.empty">Nobody has read anything this week yet. The whole catalog is waiting.</p>
+          <a routerLink="/works" class="btn btn-primary" i18n="@@home.weekly.browse">Browse the catalog</a>
+        </div>
+      </div>
+    }
+  }
+</section>

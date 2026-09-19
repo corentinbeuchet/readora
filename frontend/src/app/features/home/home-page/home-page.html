@@ -1,0 +1,106 @@
+<div class="page home">
+  <header class="masthead">
+    <h1 i18n="@@home.page.title">Read manga, manhwa and comics</h1>
+    <p class="muted" i18n="@@home.page.intro">Translated chapter by chapter by scanlation teams. Free to read, no account needed.</p>
+  </header>
+
+  <!-- Signed-in readers start from what they were reading. The slot keeps its room while the history loads. -->
+  <div class="continue-slot" [class.pending]="historyPending()">
+    @if (readingHistory().length > 0) {
+      <app-continue-reading [history]="readingHistory()" />
+    }
+  </div>
+
+  <app-weekly-feature [ranking]="weeklyRanking()" [pending]="weeklyPending()" [error]="weekly.error()" (retry)="weekly.reload()" />
+
+  @if (unreadReleases().length > 0) {
+    <app-rail heading="New in your library" i18n-heading="@@home.mine.heading" seeAll="/updates" [seeAllParams]="{ feed: 'mine' }">
+      @for (release of unreadReleases(); track release.chapterId) {
+        <li class="rail-item">
+          <app-work-card [work]="release.work">
+            <p cardMeta class="muted release-line" i18n="@@home.release.chapter">Chapter {{ release.chapterNumber }}</p>
+            <span cardActions><a class="btn btn-primary btn-sm" [routerLink]="['/read', release.chapterId]" i18n="@@home.release.read">Read</a></span>
+          </app-work-card>
+        </li>
+      }
+    </app-rail>
+  }
+
+  @if (latestPending()) {
+    <section aria-labelledby="latest-loading">
+      <app-section-header heading="Latest updates" i18n-heading="@@home.latest.heading" headingId="latest-loading" />
+      <app-work-card-skeleton variant="rail" count="7" i18n="@@home.latest.loading">Loading the latest chapters…</app-work-card-skeleton>
+    </section>
+  } @else if (latest.error()) {
+    <section aria-labelledby="latest-error">
+      <app-section-header heading="Latest updates" i18n-heading="@@home.latest.heading" headingId="latest-error" />
+      <app-load-error (retry)="latest.reload()"><ng-container i18n="@@home.latest.error">The latest chapters could not be loaded.</ng-container></app-load-error>
+    </section>
+  } @else if (latestReleases().length > 0) {
+    <app-rail heading="Latest updates" i18n-heading="@@home.latest.heading" seeAll="/updates">
+      @for (release of latestReleases(); track release.chapterId) {
+        <li class="rail-item">
+          <app-work-card [work]="release.work">
+            <p cardMeta class="muted release-line"><ng-container i18n="@@home.release.chapter">Chapter {{ release.chapterNumber }}</ng-container><br />{{ release.publishedAt | timeAgo }}</p>
+          </app-work-card>
+        </li>
+      }
+    </app-rail>
+  }
+
+  @if (topRatedPending()) {
+    <section aria-labelledby="top-rated-loading">
+      <app-section-header heading="Top rated" i18n-heading="@@home.topRated.heading" headingId="top-rated-loading" />
+      <app-work-card-skeleton variant="rail" count="7" i18n="@@home.topRated.loading">Loading the top rated series…</app-work-card-skeleton>
+    </section>
+  } @else if (topRated.error()) {
+    <section aria-labelledby="top-rated-error">
+      <app-section-header heading="Top rated" i18n-heading="@@home.topRated.heading" headingId="top-rated-error" />
+      <app-load-error (retry)="topRated.reload()"><ng-container i18n="@@home.topRated.error">The top rated series could not be loaded.</ng-container></app-load-error>
+    </section>
+  } @else if (topRatedSeries().length > 0) {
+    <app-rail heading="Top rated" i18n-heading="@@home.topRated.heading" seeAll="/rankings">
+      @for (entry of topRatedSeries(); track entry.work.id) {
+        <li class="rail-item">
+          <app-work-card [work]="entry.work">
+            <p cardMeta class="score"><app-icon name="star" filled /><span class="sr-only" i18n="@@home.topRated.score">Average rating:</span> {{ entry.score | number: '1.1-1' }}</p>
+          </app-work-card>
+        </li>
+      }
+    </app-rail>
+  }
+
+  <!-- After the first sections, never before: a visitor sees what Readora is before being asked anything. -->
+  @if (!auth.isAuthenticated() && !auth.restoring()) {
+    <app-signup-prompt />
+  }
+
+  @if (listsPending()) {
+    <section aria-labelledby="lists-loading">
+      <app-section-header heading="Reading lists from the community" i18n-heading="@@home.lists.heading" headingId="lists-loading" />
+      <app-work-card-skeleton variant="row" count="3" i18n="@@home.lists.loading">Loading the reading lists…</app-work-card-skeleton>
+    </section>
+  } @else if (lists.error()) {
+    <section aria-labelledby="lists-error">
+      <app-section-header heading="Reading lists from the community" i18n-heading="@@home.lists.heading" headingId="lists-error" />
+      <app-load-error (retry)="lists.reload()"><ng-container i18n="@@home.lists.error">The reading lists could not be loaded.</ng-container></app-load-error>
+    </section>
+  } @else if (topLists().length > 0) {
+    <app-rail heading="Reading lists from the community" i18n-heading="@@home.lists.heading" seeAll="/lists">
+      @for (list of topLists(); track list.id) {
+        <li class="rail-item rail-item-wide"><app-list-card [list]="list" /></li>
+      }
+    </app-rail>
+  }
+
+  @if (genres.hasValue() && genres.value().length > 0) {
+    <section aria-labelledby="genres-heading">
+      <app-section-header heading="Browse by genre" i18n-heading="@@home.genres.heading" headingId="genres-heading" seeAll="/works" />
+      <ul class="genre-links">
+        @for (genre of genres.value(); track genre) {
+          <li><a class="tab" routerLink="/works" [queryParams]="{ genre: genre }">{{ genre }}</a></li>
+        }
+      </ul>
+    </section>
+  }
+</div>

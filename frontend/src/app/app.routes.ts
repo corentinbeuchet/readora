@@ -10,7 +10,7 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    loadComponent: () => import('@app/features/catalog/works-page/works-page').then((m) => m.WorksPage)
+    loadComponent: () => import('@app/features/home/home-page/home-page').then((m) => m.HomePage)
   },
   {
     path: 'works',

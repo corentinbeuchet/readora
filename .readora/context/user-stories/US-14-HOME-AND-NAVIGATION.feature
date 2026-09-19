@@ -28,3 +28,27 @@ Feature: Home and navigation
     Then it offers "Scanlation workspace" and "Upload Studio"
     But the navigation does not
     And the account menu of reader "Camille" has no team tools
+
+  @ui @must
+  Scenario: A visitor sees what is read this week
+    When a visitor opens the home page
+    Then the most read series of the week is featured with its cover
+    And the next four follow as a numbered list with a link to the full ranking
+
+  @ui @must
+  Scenario: I can continue reading from the home page
+    Given reader "Camille" last read chapter 12 of "Solo Leveling" without finishing it
+    When she opens the home page
+    Then "Continue reading" offers "Solo Leveling" with a link straight to chapter 12
+
+  @ui @should
+  Scenario: New chapters of my library are on the home page
+    Given a new chapter of a series in the library of reader "Camille" is out
+    When she opens the home page
+    Then "New in your library" shows that chapter with a link to read it
+
+  @ui @should
+  Scenario: A visitor is invited to create an account after seeing the content
+    When a visitor opens the home page
+    Then a prompt to create a free account comes after the first sections, not before them
+    And a signed-in reader does not see it

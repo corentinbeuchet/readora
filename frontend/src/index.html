@@ -20,6 +20,8 @@
       if (theme === 'light' || (theme === 'system' && matchMedia('(prefers-color-scheme: light)').matches)) {
         document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f7f7f5');
       }
+      // A returning reader (AuthStore's hint, not a secret): the home page keeps room for "Continue reading".
+      if (JSON.parse(localStorage.getItem('readora.has-session')) === true) document.documentElement.setAttribute('data-has-session', '');
     } catch (e) {}
   </script>
   <meta name="robots" content="index, follow">

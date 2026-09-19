@@ -1,0 +1,16 @@
+<app-rail heading="Continue reading" i18n-heading="@@home.continue.heading" seeAll="/history">
+  @for (item of recent(); track item.work.id) {
+    <li class="rail-item rail-item-wide">
+      <app-work-card [work]="item.work" variant="row">
+        <p cardMeta class="muted chapter" i18n="@@home.continue.chapter">Chapter {{ item.lastRead.chapterNumber }}</p>
+        <span cardActions>
+          @if (item.lastRead.finished) {
+            <a class="btn btn-sm" [routerLink]="['/works', item.work.id]" fragment="chapters" i18n="@@home.continue.next">Next chapter</a>
+          } @else {
+            <a class="btn btn-primary btn-sm" [routerLink]="['/read', item.lastRead.chapterId]" i18n="@@home.continue.resume">Continue</a>
+          }
+        </span>
+      </app-work-card>
+    </li>
+  }
+</app-rail>

@@ -1,0 +1,48 @@
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.masthead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-inline-size: var(--measure);
+}
+
+// A returning reader (index.html sets data-has-session before the first paint) gets the room of "Continue reading"
+// reserved until the history answers, so the ranking below does not jump. Visitors reserve nothing.
+.continue-slot:empty {
+  display: none;
+}
+
+:host-context([data-has-session]) .continue-slot.pending {
+  display: block;
+  min-block-size: 11rem;
+}
+
+.release-line {
+  font-size: var(--fs-sm);
+  line-height: var(--lh-snug);
+}
+
+.score {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+
+  app-icon {
+    color: var(--star);
+  }
+}
+
+.genre-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  list-style: none;
+}

@@ -11,6 +11,16 @@
     "form.maxLength": "Must be at most {$max} characters",
     "form.pattern": "Invalid format",
     "form.invalid": "Invalid value",
-    "loadError.retry": "Retry"
+    "listCard.by": "by {$INTERPOLATION}",
+    "listCard.seriesCount": "{VAR_PLURAL, plural, =1 {1 series} other {{INTERPOLATION} series}}",
+    "listCard.upvotes": "Upvotes:",
+    "listCard.public": "Public",
+    "listCard.private": "Private",
+    "loadError.retry": "Retry",
+    "rail.back": "Scroll back: {$heading}",
+    "rail.forward": "Scroll forward: {$heading}",
+    "sectionHeader.seeAll": "See all",
+    "workCard.rank": "Rank",
+    "workCard.newChapters": "{VAR_PLURAL, plural, =1 {1 new{START_TAG_SPAN} chapter{CLOSE_TAG_SPAN}} other {{INTERPOLATION} new{START_TAG_SPAN} chapters{CLOSE_TAG_SPAN}}}"
   }
 }

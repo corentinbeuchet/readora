@@ -11,7 +11,7 @@
     <a class="title" [routerLink]="['/works', work().id]">{{ work().title }}</a>
     <p class="badges">
       @if (newChapters() > 0) {
-        <span class="badge badge-new" i18n="@@workCard.newChapters">{newChapters(), plural, =1 {1 new} other {{{ newChapters() }} new}}<span class="sr-only"> chapters</span></span>
+        <span class="badge badge-new" i18n="@@workCard.newChapters">{newChapters(), plural, =1 {1 new<span class="sr-only"> chapter</span>} other {{{ newChapters() }} new<span class="sr-only"> chapters</span>}}</span>
       }
       <span class="badge">{{ typeLabel() }}</span>
       @if (newChapters() === 0) {

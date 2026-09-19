@@ -172,6 +172,7 @@
               "src/locale/fr/community.json",
               "src/locale/fr/discovery.json",
               "src/locale/fr/errors.json",
+              "src/locale/fr/home.json",
               "src/locale/fr/labels.json",
               "src/locale/fr/layout.json",
               "src/locale/fr/library.json",

@@ -1,0 +1,167 @@
+@use 'breakpoints' as bp;
+
+:host {
+  display: block;
+}
+
+.weekly-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-4);
+  margin-block-end: var(--space-3);
+
+  h2 {
+    margin-inline-end: auto;
+  }
+}
+
+.full-ranking {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 1.75rem;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.layout {
+  display: grid;
+  gap: var(--space-4);
+
+  @include bp.from(lg) {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    // The feature is as tall as the list beside it.
+    align-items: stretch;
+  }
+}
+
+// The feature: cover on a screentone panel, text beside it on a plain surface (never text on the dots).
+.feature {
+  position: relative;
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--screentone), var(--surface);
+  block-size: 100%;
+
+  @include bp.from(md) {
+    gap: var(--space-5);
+    padding: var(--space-5);
+  }
+}
+
+.feature-cover {
+  flex: none;
+  inline-size: 7rem;
+  aspect-ratio: 5 / 7;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--elev-2);
+
+  @include bp.from(sm) {
+    inline-size: 10rem;
+  }
+
+  @include bp.from(md) {
+    inline-size: 13rem;
+  }
+
+  @include bp.from(lg) {
+    inline-size: auto;
+    block-size: 100%;
+    max-block-size: 30rem;
+    align-self: center;
+  }
+}
+
+.feature-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+  flex: 1;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  align-self: stretch;
+}
+
+.feature-rank {
+  font-size: var(--fs-2xl);
+  font-stretch: var(--wdth-display);
+  font-weight: var(--fw-black);
+  line-height: 1;
+  color: var(--accent);
+}
+
+.feature-title {
+  font-size: var(--fs-h1);
+  font-stretch: var(--wdth-display);
+  font-weight: var(--fw-black);
+  line-height: var(--lh-tight);
+  overflow-wrap: anywhere;
+
+  a {
+    color: var(--text);
+    text-decoration: none;
+
+    // The whole feature is the target of its one main link.
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-lg);
+    }
+
+    &:hover {
+      color: var(--accent);
+    }
+
+    &:focus-visible {
+      outline: none;
+
+      &::after {
+        outline: 2px solid var(--focus-ring);
+        outline-offset: 2px;
+      }
+    }
+  }
+}
+
+.feature-badges,
+.feature-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  list-style: none;
+}
+
+// Genre links sit above the stretched title link.
+.feature-genres {
+  position: relative;
+  z-index: 1;
+  margin-block-start: auto;
+}
+
+.line {
+  block-size: 1rem;
+  inline-size: 80%;
+
+  &.title-line {
+    block-size: 2rem;
+  }
+
+  &.short {
+    inline-size: 45%;
+  }
+}
+
+.feature-empty .btn {
+  margin-block-start: var(--space-2);
+}
