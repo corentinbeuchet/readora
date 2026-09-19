@@ -40,6 +40,9 @@ series; teams take chapters from RAW to published). Monorepo:
 - One API envelope: backend `ApiResponse.ok/error` ↔ frontend `ApiClient` unwraps it into typed values / `ApiError`.
 - Permission names are shared vocabulary: backend `Role` / `SubscriptionPlan` enum permission sets and `@PreAuthorize`,
   frontend route `data: { permission }` + `permissionGuard` and `*appHasPermission`. Rename in both places or neither.
+  Roles today: `READER`, `MODERATOR` (reader + `COMMENT_MODERATE`), `SCANLATOR`, `ADMIN` (everything); the `PREMIUM`
+  plan adds `BOOKMARK_*`. Free signed-in features (library, history, lists, follows, notifications, export) share
+  `LIBRARY_USE`; add a new permission only when a role or plan must be able to lack it.
 - Authorization is enforced on the server for every write, including resource ownership/membership. UI gating is cosmetic.
 - No default secrets anywhere (yml fallbacks, `@DefaultValue`, env files). Missing secret = startup failure.
 - Decisions are recorded where they're read: the commit's `Why:` for the change, and the matching `AGENTS.md` when

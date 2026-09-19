@@ -27,9 +27,11 @@
 ## Application services
 - **Events:** `aggregate.pollDomainEvents()` on the aggregate you mutated, **never** on the object returned by `repository.save(...)`
   (adapters rebuild it via `toDomain`, so it has no events).
-  No event has a consumer yet: `SpringEventPublisherAdapter` only logs them. When a feature needs one (notifications,
-  read models), listen with `@TransactionalEventListener(phase = AFTER_COMMIT)` in infrastructure so rolled-back use
-  cases never trigger side effects.
+  Side effects listen in infrastructure with `@TransactionalEventListener(phase = AFTER_COMMIT, fallbackExecution = true)`
+  (model: `infrastructure/event/NotificationEventListener`), so rolled-back use cases never trigger them. The listener
+  calls a `port.in` use case inside a **new** transaction (`TransactionTemplate` with `PROPAGATION_REQUIRES_NEW`):
+  after commit, a plain `REQUIRED` joins the finished transaction and its writes are never committed. It catches and
+  logs failures at WARN; a failed side effect never fails the publisher.
 - Don't keep speculative code: no unused ports/methods/marker types. Out-ports have no no-op `default` methods; the
   exception is a `default` that derives from other port methods (e.g. `ChapterRepositoryPort.findPublishedByWorkId`).
 - Every `port.in` bean that touches persistence is wrapped with `UseCaseTransactions.transactional(...)` in
@@ -68,6 +70,11 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 - `GlobalExceptionHandler`: never put `ex.getMessage()` of unexpected exceptions in the response; map framework exceptions
   (unreadable body, type mismatch, no resource, size exceeded, data integrity) to 4xx.
 - Storage keys/paths are built by the server, never taken raw from the client; reject `..`.
+- Public reads are `permitAll` GET matchers in `SecurityConfig`. When a public prefix has a private sub-path
+  (`/api/v1/lists/mine` under `/api/v1/lists/*`), declare its `authenticated()` matcher **first**, or anonymous
+  callers get 403 instead of 401.
+- Jackson 3 rejects a request missing a **primitive** component (`boolean`, `int`) with 400. Use a primitive only for
+  fields the client must always send; optional flags are `@Nullable Boolean` with a default in the controller.
 
 ## Integrations
 - Vendor SDK types never leave infrastructure — translate to the port's records (model: `StripePaymentAdapter` → `PaymentEvent`).
