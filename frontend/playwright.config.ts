@@ -1,5 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const DEPLOYED_URL = process.env['PLAYWRIGHT_BASE_URL'];
+/** The French build (US-13): /fr/ when deployed; locally `npm run start:fr` serves it at the root of :4201. */
+const FRENCH_URL = DEPLOYED_URL ? `${DEPLOYED_URL.replace(/\/+$/, '')}/fr/` : 'http://localhost:4201/';
+const FRENCH_SPECS = /i18n-fr\.spec\.ts/;
+
 export default defineConfig({
   testDir: './tests/e2e',
   timeout: 30 * 1000,
@@ -18,15 +23,23 @@ export default defineConfig({
     ['list']
   ],
   use: {
-    baseURL: process.env['PLAYWRIGHT_BASE_URL'] || 'http://localhost:4200',
+    baseURL: DEPLOYED_URL || 'http://localhost:4200',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure'
   },
+  // The French specs run once, in their own project; every other project runs the rest.
+  testIgnore: FRENCH_SPECS,
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] }
+    },
+    {
+      name: 'chromium-fr',
+      testIgnore: [],
+      testMatch: FRENCH_SPECS,
+      use: { ...devices['Desktop Chrome'], baseURL: FRENCH_URL, locale: 'fr-FR' }
     },
     {
       name: 'firefox',
@@ -46,12 +59,10 @@ export default defineConfig({
     }
   ],
   // Against a deployed environment (PLAYWRIGHT_BASE_URL, e.g. `npm run e2e:staging`) no local server is started.
-  webServer: process.env['PLAYWRIGHT_BASE_URL']
+  webServer: DEPLOYED_URL
     ? undefined
-    : {
-        command: 'npm run start',
-        url: 'http://localhost:4200',
-        reuseExistingServer: true,
-        timeout: 120 * 1000
-      }
+    : [
+        { command: 'npm run start', url: 'http://localhost:4200', reuseExistingServer: true, timeout: 120 * 1000 },
+        { command: 'npm run start:fr', url: 'http://localhost:4201', reuseExistingServer: true, timeout: 120 * 1000 }
+      ]
 });
