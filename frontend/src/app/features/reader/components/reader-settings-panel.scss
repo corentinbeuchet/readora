@@ -1,0 +1,20 @@
+:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  width: 100%;
+  max-width: 900px;
+  padding: 1rem;
+  margin-top: 0.5rem;
+  background: var(--surface-2);
+  border-radius: 0.5rem;
+}
+
+:host([hidden]) {
+  display: none;
+}
+
+.setting {
+  margin: 0;
+}

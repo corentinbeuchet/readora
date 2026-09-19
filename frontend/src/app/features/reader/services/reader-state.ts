@@ -4,6 +4,20 @@ import { ReaderPreferencesStore, ReadingDirection, SeriesLayout, ViewMode } from
 
 export type { ViewMode };
 
+/** Pages downloaded ahead of the current one in paged mode. */
+export const PRELOADED_PAGES = 2;
+/** Used when the API has no dimensions for a page (typical manga page ratio 2:3). */
+const DEFAULT_PAGE_SIZE = { width: 800, height: 1200 };
+
+/** What a page component renders: `src` is `null` when the page has no image URL (fallback image). */
+export interface PageView {
+  pageNumber: number;
+  src: string | null;
+  alt: string;
+  width: number;
+  height: number;
+}
+
 /** Layout before hydration (and of the prerendered HTML): saved layouts live in the browser. */
 const INITIAL_LAYOUT: SeriesLayout = { mode: 'VERTICAL', direction: 'LTR' };
 
@@ -81,6 +95,35 @@ export class ReaderState {
     return pages.slice(start, start === 0 ? 1 : start + 2);
   });
 
+  /** Paged mode reads right to left: arrows, swipes, click zones and the progress bar are mirrored. */
+  readonly rightToLeft = computed(() => this._viewMode() === 'PAGED' && this._direction() === 'RTL');
+  readonly progressPercent = computed(() => {
+    const total = this.totalPages();
+    return total === 0 ? 0 : Math.round(((this.currentPageIndex() + 1) / total) * 100);
+  });
+
+  /**
+   * Lighter copies with "Data saver" on, for pages that have one. Only after hydration, like the saved layouts: the
+   * prerendered HTML uses the full images.
+   */
+  private readonly useLiteImages = computed(() => this._hydrated() && this.prefs.dataSaver());
+  /** Every page of the chapter, ready to render (vertical mode). */
+  readonly pageViews = computed(() => (this.currentChapter()?.pages ?? []).map((page) => this.view(page)));
+  /** Pages on screen in display order: in right-to-left reading the first page of a spread is on the right. */
+  readonly spreadViews = computed(() => {
+    const views = this.currentSpread().map((page) => this.view(page));
+    return this._direction() === 'RTL' ? views.reverse() : views;
+  });
+  /** Next pages to preload in paged mode (vertical mode lets the browser lazy-load as the reader scrolls). */
+  readonly upcomingPageViews = computed(() => {
+    const pages = this.currentChapter()?.pages ?? [];
+    if (this._viewMode() !== 'PAGED') {
+      return [];
+    }
+    const from = this.currentPageIndex() + 1;
+    return pages.slice(from, from + PRELOADED_PAGES).filter((page) => !!page.cdnUrl).map((page) => this.view(page));
+  });
+
   readonly isFirstPage = computed(() => this.currentPageIndex() === 0);
   readonly isLastPage = computed(() => {
     const total = this.totalPages();
@@ -114,6 +157,18 @@ export class ReaderState {
     this._direction.set(direction);
   }
 
+  /** The reader picked a mode: used now and remembered for this series. */
+  chooseViewMode(mode: ViewMode): void {
+    this._viewMode.set(mode);
+    this.rememberLayout();
+  }
+
+  /** The reader picked a paged-mode direction: used now and remembered for this series. */
+  chooseDirection(direction: ReadingDirection): void {
+    this._direction.set(direction);
+    this.rememberLayout();
+  }
+
   setZoom(percent: number): void {
     this._zoomLevel.set(Math.max(50, Math.min(200, percent)));
   }
@@ -130,6 +185,25 @@ export class ReaderState {
     }
     const start = this.currentPageIndex();
     this.index.set(this.doublePage() ? (start === 0 ? 1 : start + 2) : start + 1);
+  }
+
+  private rememberLayout(): void {
+    const chapter = this.currentChapter();
+    if (chapter) {
+      this.prefs.saveLayout(chapter.workId, { mode: this._viewMode(), direction: this._direction() });
+    }
+  }
+
+  /** Screen readers read the uploader's description when there is one (US-07). */
+  private view(page: PageAsset): PageView {
+    const src = page.cdnUrl ? (this.useLiteImages() && page.liteCdnUrl ? page.liteCdnUrl : page.cdnUrl) : null;
+    return {
+      pageNumber: page.pageNumber,
+      src,
+      alt: page.description ? `Page ${page.pageNumber}: ${page.description}` : `Page ${page.pageNumber}`,
+      width: page.width || DEFAULT_PAGE_SIZE.width,
+      height: page.height || DEFAULT_PAGE_SIZE.height
+    };
   }
 
   previousPage(): void {

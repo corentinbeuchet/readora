@@ -1,0 +1,42 @@
+<div class="paged-flow">
+  <!-- Swipe to turn pages on touch screens (the buttons below are the accessible equivalent). -->
+  <div class="page-stage" [class.spread]="state.doublePage()" (pointerdown)="onPointerDown($event)" (pointerup)="onPointerUp($event)">
+    <!-- Keyed by page number: each page gets a fresh <img>. NgOptimizedImage forbids changing
+         width/height on an existing image (NG02953), and pages have different sizes. -->
+    @for (page of state.spreadViews(); track page.pageNumber) {
+      @if (page.src; as src) {
+        <img
+          [ngSrc]="src"
+          [width]="page.width"
+          [height]="page.height"
+          priority
+          [alt]="page.alt"
+          (error)="handlePageError($event, fallbackPage)"
+          class="page-image active-page"
+        />
+      } @else {
+        <img [src]="fallbackPage" [alt]="page.alt" class="page-image active-page" width="800" height="1200" />
+      }
+    }
+    <!-- Click the left or right third to turn the page: a mouse shortcut for the buttons below, so hidden
+         from assistive tech and not a tab stop. -->
+    <button type="button" class="turn-zone turn-zone-left" tabindex="-1" aria-hidden="true" (click)="turnFromSide('left')"></button>
+    <button type="button" class="turn-zone turn-zone-right" tabindex="-1" aria-hidden="true" (click)="turnFromSide('right')"></button>
+  </div>
+  <!-- The next pages download while the current one is read, so turning is instant (hidden images still load). -->
+  <div class="preload" hidden>
+    @for (page of state.upcomingPageViews(); track page.pageNumber) {
+      <img class="preloaded-page" [src]="page.src" alt="" decoding="async" />
+    }
+  </div>
+  <!-- Buttons sit on the side the page turns to: in right-to-left reading "Next" is on the left. -->
+  <nav class="paged-nav" aria-label="Page navigation">
+    @if (state.direction() === 'RTL') {
+      <button type="button" (click)="state.nextPage()" [disabled]="state.isLastPage()" class="btn btn-next">&larr; Next</button>
+      <button type="button" (click)="state.previousPage()" [disabled]="state.isFirstPage()" class="btn btn-prev">Prev &rarr;</button>
+    } @else {
+      <button type="button" (click)="state.previousPage()" [disabled]="state.isFirstPage()" class="btn btn-prev">&larr; Prev</button>
+      <button type="button" (click)="state.nextPage()" [disabled]="state.isLastPage()" class="btn btn-next">Next &rarr;</button>
+    }
+  </nav>
+</div>

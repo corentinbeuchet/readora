@@ -1,0 +1,81 @@
+<div class="viewer-container" [class.bg-black]="prefs.background() === 'BLACK'" [class.bg-gray]="prefs.background() === 'GRAY'"
+     [class.bg-white]="prefs.background() === 'WHITE'">
+  @if (chapter.isLoading()) {
+    <p class="muted viewer-status" role="status">Loading chapter…</p>
+  } @else if (chapter.error()) {
+    <div class="card viewer-status" role="alert">
+      <h1>Chapter unavailable</h1>
+      <p class="muted">This chapter could not be loaded. It may have been unpublished or the link is wrong.</p>
+      <button type="button" class="btn" (click)="chapter.reload()">Retry</button>
+      <a routerLink="/works" class="btn btn-primary">Browse the catalog</a>
+    </div>
+  } @else {
+    <!-- Controls stay focusable while hidden in zen mode: focusing one shows them again. -->
+    <div class="reader-controls" [class.controls-hidden]="controlsHidden()" (focusin)="revealControls()">
+      <app-reader-toolbar
+        [zen]="zen()"
+        [settingsOpen]="settingsOpen()"
+        [chaptersOpen]="chaptersOpen()"
+        (zenToggled)="setZen($event)"
+        (settingsToggled)="toggleSettings()"
+        (chaptersToggled)="toggleChapters()"
+        (reportRequested)="openReport()"
+      />
+      <app-reader-settings-panel id="reader-settings" role="region" aria-label="Reader settings" [hidden]="!settingsOpen()" />
+      <app-reader-chapter-list
+        id="reader-chapters"
+        role="region"
+        aria-label="Chapters"
+        [hidden]="!chaptersOpen()"
+        [open]="chaptersOpen()"
+        [workId]="state.currentChapter()?.workId"
+        [currentChapterId]="state.currentChapter()?.id"
+        (chosen)="chaptersOpen.set(false)"
+      />
+      <app-page-progress (jumped)="jumpToPage($event)" />
+
+      <p class="sync-hint muted">
+        <ng-container *appHasPermission="'BOOKMARK_WRITE'; else upsell">
+          @switch (tracker.syncStatus()) {
+            @case ('saving') { Saving progress… }
+            @case ('saved') { Progress saved }
+            @case ('error') { Could not save progress }
+            @default { Progress is saved automatically }
+          }
+        </ng-container>
+        <ng-template #upsell>
+          <a routerLink="/subscription">Go Premium</a> to save your reading progress.
+        </ng-template>
+      </p>
+      <p class="report-confirmation" role="status">{{ reportConfirmation() }}</p>
+    </div>
+
+    @if (state.currentChapter(); as current) {
+      @if (reportingPage(); as page) {
+        <!-- Dialog code is only loaded when a reader opens it. -->
+        @defer (on immediate) {
+          <app-report-page-dialog [chapterId]="current.id" [pageNumber]="page" (closed)="reportingPage.set(null)" (reported)="onReported($event)" />
+        }
+      }
+    }
+
+    <div class="viewer-body" [style.transform]="'scale(' + state.zoomLevel() / 100 + ')'">
+      @if (state.viewMode() === 'VERTICAL') {
+        <app-vertical-flow />
+      } @else {
+        <app-paged-flow />
+      }
+    </div>
+
+    @if (state.currentChapter(); as current) {
+      <app-chapter-end />
+
+      <!-- Below the pages: load the comments code and data only when the reader gets there. -->
+      @defer (on viewport; when !!comment()) {
+        <app-chapter-comments [chapterId]="current.id" [highlightId]="comment()" />
+      } @placeholder {
+        <p class="muted comments-placeholder">Comments load when you scroll here.</p>
+      }
+    }
+  }
+</div>

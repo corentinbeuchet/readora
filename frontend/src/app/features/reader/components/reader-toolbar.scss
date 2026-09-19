@@ -1,0 +1,53 @@
+:host {
+  display: block;
+  width: 100%;
+  max-width: 900px;
+}
+
+.viewer-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--surface-2);
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+}
+
+.chapter-title {
+  font-size: 1.1rem;
+  margin-bottom: 0.2rem;
+}
+
+.series-link {
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
+.viewer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.viewer-actions [ngToolbarWidgetGroup] {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.viewer-actions button {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--muted);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 0.25rem;
+  cursor: pointer;
+
+  // Same colours as .btn-primary (contrast checked there).
+  &.active {
+    background: var(--accent-strong);
+    border-color: var(--accent-strong);
+    color: #082f49;
+  }
+}

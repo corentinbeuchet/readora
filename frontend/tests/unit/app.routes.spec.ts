@@ -1,7 +1,7 @@
 import { routes } from '@app/app.routes';
 import { serverRoutes } from '@app/app.routes.server';
 import { PrerenderFallback, RenderMode } from '@angular/ssr';
-import { ChapterViewer } from '@app/features/reader/components/chapter-viewer';
+import { ReaderPage } from '@app/features/reader/reader-page';
 import { KanbanBoard } from '@app/features/scanlation/components/kanban-board';
 
 describe('app routes', () => {
@@ -16,7 +16,7 @@ describe('app routes', () => {
 
   it('resolve the reader and the scanlation board lazily', async () => {
     const load = (path: string) => (routes.find((r) => r.path === path)!.loadComponent as () => Promise<unknown>)();
-    expect(await load('read/:chapterId')).toBe(ChapterViewer);
+    expect(await load('read/:chapterId')).toBe(ReaderPage);
     expect(await load('scanlation')).toBe(KanbanBoard);
     expect(await load('scanlation/:projectId')).toBe(KanbanBoard);
   });

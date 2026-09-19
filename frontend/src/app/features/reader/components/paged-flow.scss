@@ -1,0 +1,84 @@
+:host {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.page-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+.paged-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 2rem 0;
+}
+
+.paged-nav {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.page-stage {
+  position: relative;
+  touch-action: pan-y pinch-zoom;
+
+  &.spread {
+    display: flex;
+    justify-content: center;
+
+    .page-image {
+      width: 50%;
+    }
+  }
+}
+
+.turn-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 33%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.turn-zone-left {
+  left: 0;
+}
+
+.turn-zone-right {
+  right: 0;
+}
+
+// Page size (reader setting), set as a class on the flow's host element.
+:host(.fit-width) .page-image {
+  width: 100%;
+  height: auto;
+}
+
+// Whole page visible on screen.
+:host(.fit-height) .page-image {
+  width: auto;
+  max-width: 100%;
+  height: calc(100vh - 2rem);
+  object-fit: contain;
+}
+
+:host(.fit-original) {
+  .paged-flow {
+    max-width: none;
+  }
+
+  .page-image {
+    width: auto;
+    max-width: none;
+    height: auto;
+  }
+}

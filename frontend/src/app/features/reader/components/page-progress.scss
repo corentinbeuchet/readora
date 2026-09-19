@@ -1,0 +1,22 @@
+:host {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.page-progress {
+  flex: 1;
+  accent-color: var(--accent);
+  height: 0.35rem;
+  cursor: pointer;
+}
+
+.progress-percent {
+  font-size: 0.8rem;
+  color: var(--muted);
+  min-width: 2.5rem;
+  text-align: right;
+}

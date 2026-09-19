@@ -1,0 +1,34 @@
+<label class="field setting">
+  <span>Page size</span>
+  <select #fit (change)="setFit(fit.value)">
+    <option value="WIDTH" [selected]="prefs.fit() === 'WIDTH'">Fit width</option>
+    <option value="HEIGHT" [selected]="prefs.fit() === 'HEIGHT'">Fit height</option>
+    <option value="ORIGINAL" [selected]="prefs.fit() === 'ORIGINAL'">Original size</option>
+  </select>
+</label>
+<label class="field setting">
+  <span>Background</span>
+  <select #background (change)="setBackground(background.value)">
+    <option value="BLACK" [selected]="prefs.background() === 'BLACK'">Black</option>
+    <option value="GRAY" [selected]="prefs.background() === 'GRAY'">Gray</option>
+    <option value="WHITE" [selected]="prefs.background() === 'WHITE'">White</option>
+  </select>
+</label>
+<label class="field setting">
+  <span>Auto-scroll speed</span>
+  <select #speed (change)="setAutoScrollSpeed(speed.value)">
+    <option value="SLOW" [selected]="prefs.autoScrollSpeed() === 'SLOW'">Slow</option>
+    <option value="MEDIUM" [selected]="prefs.autoScrollSpeed() === 'MEDIUM'">Medium</option>
+    <option value="FAST" [selected]="prefs.autoScrollSpeed() === 'FAST'">Fast</option>
+  </select>
+</label>
+@if (state.canShowDoublePage()) {
+  <label class="checkbox setting">
+    <input #double type="checkbox" [checked]="prefs.doublePage()" (change)="prefs.setDoublePage(double.checked)" />
+    Double page (two pages side by side)
+  </label>
+}
+<label class="checkbox setting">
+  <input #lite type="checkbox" [checked]="prefs.dataSaver()" (change)="prefs.setDataSaver(lite.checked)" />
+  Data saver (lighter, lower-quality images)
+</label>

@@ -1,0 +1,25 @@
+@if (open()) {
+  @if (chapters.isLoading()) {
+    <p class="muted" role="status">Loading chapters…</p>
+  } @else if (chapters.error()) {
+    <p class="form-error" role="alert">
+      The chapter list could not be loaded.
+      <button type="button" class="btn btn-link" (click)="chapters.reload()">Retry</button>
+    </p>
+  } @else {
+    <ol class="reader-chapter-list">
+      @for (row of rows(); track row.chapter.id) {
+        <li>
+          <a [routerLink]="['/read', row.chapter.id]" [class.current]="row.current" [class.read]="row.read"
+             [attr.aria-current]="row.current ? 'page' : null" (click)="chosen.emit()">
+            <span class="reader-chapter-number">Ch. {{ row.chapter.chapterNumber }}</span>
+            <span class="reader-chapter-title">{{ row.chapter.title }}</span>
+            @if (row.read) {
+              <span class="reader-chapter-state">✓ Read</span>
+            }
+          </a>
+        </li>
+      }
+    </ol>
+  }
+}

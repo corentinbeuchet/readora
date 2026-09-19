@@ -1,0 +1,14 @@
+<label class="sr-only" for="page-jump">Go to page</label>
+<input
+  #slider
+  id="page-jump"
+  class="page-progress"
+  type="range"
+  min="1"
+  [max]="state.totalPages() || 1"
+  [value]="state.currentPageIndex() + 1"
+  [attr.dir]="state.rightToLeft() ? 'rtl' : 'ltr'"
+  [attr.aria-valuetext]="'Page ' + (state.currentPageIndex() + 1) + ' of ' + state.totalPages()"
+  (input)="jump(slider.value)"
+/>
+<span class="progress-percent" aria-hidden="true">{{ state.progressPercent() }}%</span>

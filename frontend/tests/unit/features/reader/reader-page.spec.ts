@@ -3,15 +3,15 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
 import { By } from '@angular/platform-browser';
-import { ChapterViewer, PROGRESS_SYNC_DEBOUNCE_MS, ZEN_CONTROLS_HIDE_MS } from '@app/features/reader/components/chapter-viewer';
+import { PROGRESS_SYNC_DEBOUNCE_MS, ReaderPage, ZEN_CONTROLS_HIDE_MS } from '@app/features/reader/reader-page';
 import { ReaderState } from '@app/features/reader/services/reader-state';
 import { ReaderPreferencesStore } from '@app/features/reader/services/reader-preferences-store';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { LayoutStore } from '@app/core/layout/layout-store';
 import { Chapter } from '@app/core/models/readora.models';
-import { environment } from '../../../../../src/environments/environment';
-import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
-import { settle } from '../../../test-utils';
+import { environment } from '../../../../src/environments/environment';
+import { mockUser, signIn } from '../../core/auth/auth-fixtures';
+import { settle } from '../../test-utils';
 
 const API = environment.apiUrl;
 
@@ -59,8 +59,8 @@ class FakeIntersectionObserver {
   }
 }
 
-describe('ChapterViewer (API-driven)', () => {
-  let fixture: ComponentFixture<ChapterViewer>;
+describe('ReaderPage (API-driven)', () => {
+  let fixture: ComponentFixture<ReaderPage>;
   let stateService: ReaderState;
   let http: HttpTestingController;
   let store: AuthStore;
@@ -69,14 +69,14 @@ describe('ChapterViewer (API-driven)', () => {
     FakeIntersectionObserver.instances = [];
     vi.stubGlobal('IntersectionObserver', FakeIntersectionObserver);
     await TestBed.configureTestingModule({
-      imports: [ChapterViewer],
+      imports: [ReaderPage],
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
       deferBlockBehavior: DeferBlockBehavior.Manual
     }).compileComponents();
 
     http = TestBed.inject(HttpTestingController);
     store = TestBed.inject(AuthStore);
-    fixture = TestBed.createComponent(ChapterViewer);
+    fixture = TestBed.createComponent(ReaderPage);
     stateService = fixture.debugElement.injector.get(ReaderState);
   });
 
@@ -85,7 +85,8 @@ describe('ChapterViewer (API-driven)', () => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
     // Reaching the last page loads the chapter's top comments (own test below).
-    http.match((r) => r.url.endsWith('/top')).forEach((r) => r.flush({ success: true, data: [], error: null }));
+    // Opening another chapter cancels the previous chapter's request.
+    http.match((r) => r.url.endsWith('/top')).filter((r) => !r.cancelled).forEach((r) => r.flush({ success: true, data: [], error: null }));
     http.verify();
   });
 
@@ -342,7 +343,7 @@ describe('ChapterViewer (API-driven)', () => {
     expect(stateService.currentChapter()?.id).toBe(MOCK_CHAPTER.id);
     fixture.destroy();
 
-    const next = TestBed.createComponent(ChapterViewer);
+    const next = TestBed.createComponent(ReaderPage);
     const nextState = next.debugElement.injector.get(ReaderState);
     expect(nextState).not.toBe(stateService);
     expect(nextState.currentChapter()).toBeNull();
@@ -649,7 +650,7 @@ describe('ChapterViewer (API-driven)', () => {
     const settings = openSettings();
     expect(settings.hidden).toBe(false);
     expect(toolbarButton('Settings').getAttribute('aria-expanded')).toBe('true');
-    const body = (): HTMLElement => fixture.nativeElement.querySelector('.viewer-body');
+    const body = (): HTMLElement => fixture.nativeElement.querySelector('app-vertical-flow, app-paged-flow');
     expect(body().classList).toContain('fit-width');
 
     choose('Page size', 'HEIGHT');
@@ -660,6 +661,15 @@ describe('ChapterViewer (API-driven)', () => {
     // Kept for the next chapters.
     await loadChapter(undefined, { ...MOCK_CHAPTER, id: 'chap-11-uuid' });
     expect(body().classList).toContain('fit-original');
+  });
+
+  it('closes the settings with Escape and gives focus back to the Settings button', async () => {
+    await loadChapter();
+    const settings = openSettings();
+    expect(settings.hidden).toBe(false);
+    press('Escape');
+    expect(settings.hidden).toBe(true);
+    expect(document.activeElement).toBe(toolbarButton('Settings'));
   });
 
   it('Changing the background colour', async () => {

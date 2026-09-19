@@ -1,0 +1,59 @@
+:host {
+  display: block;
+  width: 100%;
+  max-width: 900px;
+}
+
+.chapter-end {
+  margin: 1rem 0 2rem;
+  padding: 1.25rem;
+  text-align: center;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+}
+
+.chapter-end-title {
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.chapter-end-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.top-comments {
+  margin: 0 0 2rem;
+
+  h2 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+.top-comment {
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+
+  p {
+    margin-top: 0.25rem;
+    white-space: pre-line;
+  }
+}
+
+.top-comment-author {
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
