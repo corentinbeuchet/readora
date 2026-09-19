@@ -55,6 +55,9 @@ class PostgresLocalSeedTest {
     @Autowired
     private ScanlationProjectRepositoryAdapter projects;
 
+    @Autowired
+    private com.readora.infrastructure.persistence.adapter.RatingRepositoryAdapter ratings;
+
     @Test
     @DisplayName("The local seed applies on PostgreSQL and its accounts and demo team load through the adapters")
     void seedAppliesOnPostgres() {
@@ -62,6 +65,8 @@ class PostgresLocalSeedTest {
         assertThat(premium.can(Permission.BOOKMARK_WRITE)).isTrue();
         assertThat(users.findByEmail(Email.of("admin@readora.local")).orElseThrow().can(Permission.USER_MANAGE)).isTrue();
         assertThat(users.findByEmail(Email.of("quality@readora.local")).orElseThrow().can(Permission.CHAPTER_PUBLISH)).isTrue();
+        assertThat(users.findByEmail(Email.of("moderator@readora.local")).orElseThrow().can(Permission.COMMENT_MODERATE)).isTrue();
+        assertThat(ratings.findTopRated(5, 10)).hasSize(2);
 
         ScanlationProject team = projects.findById(ProjectId.of(UUID.fromString("00000000-0000-4000-9000-000000000101"))).orElseThrow();
         assertThat(team.getMembers()).hasSize(6);

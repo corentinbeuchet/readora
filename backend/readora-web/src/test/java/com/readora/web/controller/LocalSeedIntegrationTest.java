@@ -35,6 +35,7 @@ class LocalSeedIntegrationTest extends AuthTestSupport {
             "reader,      COMMENT_WRITE,   BOOKMARK_WRITE",
             "premium,     BOOKMARK_WRITE,  TASK_CLAIM",
             "admin,       USER_MANAGE,     NONE",
+            "moderator,   COMMENT_MODERATE, USER_MANAGE",
             "leader,      TASK_CLAIM,      USER_MANAGE",
             "cleaner,     TASK_CLAIM,      USER_MANAGE",
             "translator,  TASK_SUBMIT,     USER_MANAGE",
@@ -77,6 +78,17 @@ class LocalSeedIntegrationTest extends AuthTestSupport {
         mockMvc.perform(get("/api/v1/works").param("q", "miura"))
                 .andExpect(jsonPath("$.data.items[0].title").value("Berserk"))
                 .andExpect(jsonPath("$.data.items[0].demographic").value("SEINEN"));
+    }
+
+    @Test
+    @DisplayName("Seeded ratings put two series in the Top rated ranking (5 ratings each), with one written review")
+    void seededRatingsFillTopRated() throws Exception {
+        mockMvc.perform(get("/api/v1/rankings/top-rated"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].work.title").value("Berserk"))
+                .andExpect(jsonPath("$.data[1].work.title").value("Solo Leveling"));
+        mockMvc.perform(get("/api/v1/works/00000000-0000-4000-9000-000000000014/reviews"))
+                .andExpect(jsonPath("$.data[0].verdict").value("A dark masterpiece; the art alone is worth it."));
     }
 
     private String loginAs(String username) throws Exception {

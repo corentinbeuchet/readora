@@ -2,7 +2,8 @@
 -- LOCAL/DEV ONLY - loaded only with the `local` Spring profile (application-local.yml).
 -- Never enabled in staging/production (ProductionSecretsGuard refuses `production` + `local`).
 --
--- One account per platform role + a demo work whose scanlation team has one member per team role.
+-- One account per platform role + a demo work whose scanlation team has one member per team role,
+-- and a few ratings so "Top rated" (at least 5 ratings per series) has something to show.
 -- Every account: email <username>@readora.local, password `readora-dev`.
 --
 -- Repeatable migration: re-applied whenever this file changes. Every insert is guarded by WHERE NOT EXISTS
@@ -24,6 +25,8 @@ FROM (
            'Local Premium', 'Premium reader: bookmarks enabled (seed)', 'READER'
     UNION ALL SELECT '00000000-0000-4000-8000-000000000003', 'admin@readora.local', 'admin',
            'Local Admin', 'Administrator (seed)', 'ADMIN,READER'
+    UNION ALL SELECT '00000000-0000-4000-8000-000000000004', 'moderator@readora.local', 'moderator',
+           'Local Moderator', 'Comment moderator (seed)', 'MODERATOR,READER'
     UNION ALL SELECT '00000000-0000-4000-8000-000000000011', 'leader@readora.local', 'leader',
            'Team Leader', 'Scanlation team leader (seed)', 'READER,SCANLATOR'
     UNION ALL SELECT '00000000-0000-4000-8000-000000000012', 'cleaner@readora.local', 'cleaner',
@@ -146,3 +149,25 @@ FROM (
 WHERE EXISTS (SELECT 1 FROM scanlation_projects p WHERE p.id = CAST('00000000-0000-4000-9000-000000000101' AS UUID))
   AND NOT EXISTS (SELECT 1 FROM workflow_tasks w
                   WHERE w.id = t.id OR (w.project_id = CAST('00000000-0000-4000-9000-000000000101' AS UUID) AND w.chapter_number = t.chapter_number));
+
+-- ------------------------------------------------------------------------------
+-- US-09 ratings on the US-04 series: 5 each, so both reach the "Top rated" ranking; one written review.
+-- ------------------------------------------------------------------------------
+INSERT INTO work_ratings (id, user_id, work_id, score, liked, disliked, verdict, rated_at, updated_at)
+SELECT CAST(v.id AS UUID), v.user_id, CAST(v.work_id AS UUID), v.score, NULL, NULL, v.verdict, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM (
+    SELECT '00000000-0000-4000-a000-000000000001' AS id, '00000000-0000-4000-8000-000000000001' AS user_id,
+           '00000000-0000-4000-9000-000000000014' AS work_id, 10 AS score,
+           'A dark masterpiece; the art alone is worth it.' AS verdict
+    UNION ALL SELECT '00000000-0000-4000-a000-000000000002', '00000000-0000-4000-8000-000000000002', '00000000-0000-4000-9000-000000000014', 9, NULL
+    UNION ALL SELECT '00000000-0000-4000-a000-000000000003', '00000000-0000-4000-8000-000000000013', '00000000-0000-4000-9000-000000000014', 10, NULL
+    UNION ALL SELECT '00000000-0000-4000-a000-000000000004', '00000000-0000-4000-8000-000000000014', '00000000-0000-4000-9000-000000000014', 9, NULL
+    UNION ALL SELECT '00000000-0000-4000-a000-000000000005', '00000000-0000-4000-8000-000000000015', '00000000-0000-4000-9000-000000000014', 8, NULL
+    UNION ALL SELECT '00000000-0000-4000-a000-000000000011', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-9000-000000000011', 8, NULL
+    UNION ALL SELECT '00000000-0000-4000-a000-000000000012', '00000000-0000-4000-8000-000000000002', '00000000-0000-4000-9000-000000000011', 9, NULL
+    UNION ALL SELECT '00000000-0000-4000-a000-000000000013', '00000000-0000-4000-8000-000000000003', '00000000-0000-4000-9000-000000000011', 7, NULL
+    UNION ALL SELECT '00000000-0000-4000-a000-000000000014', '00000000-0000-4000-8000-000000000011', '00000000-0000-4000-9000-000000000011', 8, NULL
+    UNION ALL SELECT '00000000-0000-4000-a000-000000000015', '00000000-0000-4000-8000-000000000012', '00000000-0000-4000-9000-000000000011', 9, NULL
+) v
+WHERE EXISTS (SELECT 1 FROM works w WHERE w.id = CAST(v.work_id AS UUID))
+  AND NOT EXISTS (SELECT 1 FROM work_ratings r WHERE r.id = CAST(v.id AS UUID) OR (r.user_id = v.user_id AND r.work_id = CAST(v.work_id AS UUID)));

@@ -23,7 +23,8 @@ series; teams take chapters from RAW to published). Monorepo:
   also rebuilds and restarts the backend whenever a backend source or pom changes.
 - Dev seed accounts (Spring profile `local`: on in docker-compose; elsewhere add `local` to the active profiles,
   e.g. `--spring.profiles.active=local`). Password for all: `readora-dev`. Emails `<username>@readora.local`:
-  `reader` (free), `premium` (PREMIUM until 2099), `admin`, and the "Readora Demo Team" scanlators `leader`, `cleaner`,
+  `reader` (free), `premium` (PREMIUM until 2099), `admin`, `moderator` (comment moderation queue at `/moderation`),
+  and the "Readora Demo Team" scanlators `leader`, `cleaner`,
   `translator`, `typesetter`, `proofreader`, `quality` (QC) with one open task per stage (chapters 1–5; QC can publish ch. 5).
   The catalog also has four US-04 series (Solo Leveling, Omniscient Reader, Horimiya, Berserk; no chapters) to try
   search and filters.
