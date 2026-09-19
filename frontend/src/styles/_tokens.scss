@@ -1,26 +1,33 @@
-// Design tokens: the only place colours, font sizes and weights are defined. Components read them with var(--…).
-// Emitted once through `@use 'tokens'` in styles.scss.
+// Design tokens: the only place colours, sizes, weights, spacing, radii, elevation and motion are defined. Components
+// read them with var(--…). Emitted once through `@use 'tokens'` in styles.scss.
+// After changing a colour: node .claude/skills/frontend-visual-design/scripts/contrast.mjs (WCAG AA in both themes).
 
 :root {
-  /* Follows the device setting; ThemeStore pins one with data-theme. Each colour is light-dark(<light>, <dark>). */
+  /* ThemeStore pins a theme with data-theme (dark unless the reader chose otherwise). Each colour is light-dark(<light>, <dark>). */
   color-scheme: light dark;
 
-  --bg: light-dark(#f8fafc, #0b1120);
-  --surface: light-dark(#ffffff, #0f172a);
-  --surface-2: light-dark(#e2e8f0, #1e293b);
-  --border: light-dark(#cbd5e1, #1e293b);
-  --text: light-dark(#0f172a, #f8fafc);
-  --muted: light-dark(#475569, #94a3b8);
-  --accent: light-dark(#0369a1, #38bdf8);
-  --accent-strong: light-dark(#075985, #0ea5e9);
+  /* Ink and paper: true-neutral greys, so cover art is the colour on the page. Surfaces separate by tone, not shadow. */
+  --bg: light-dark(#f7f7f5, #0e0e10);
+  --surface: light-dark(#ffffff, #161618);
+  --surface-2: light-dark(#ececea, #212124);
+  --surface-3: light-dark(#dfdfdc, #2c2c30);
+  --border: light-dark(#d6d6d2, #2c2c30);
+  /* Outlines that must be seen to use a control (3:1 on every surface). */
+  --border-strong: light-dark(#7c7c77, #7c7c85);
+  --text: light-dark(#18181b, #f4f4f5);
+  --muted: light-dark(#57575c, #a3a3ab);
+  /* The one accent (persimmon): --accent for text, links and outlines, --accent-strong for filled controls. */
+  --accent: light-dark(#a83f00, #ff8a3d);
+  --accent-strong: light-dark(#c2410c, #ff7a1f);
   --danger: light-dark(#b91c1c, #f87171);
   --success: light-dark(#166534, #4ade80);
   --violet: light-dark(#6d28d9, #a78bfa);
   /* Text on filled accent / danger / success backgrounds (contrast AA). */
-  --on-accent: light-dark(#ffffff, #082f49);
+  --on-accent: light-dark(#ffffff, #1a0d05);
   --on-danger: light-dark(#ffffff, #1f0707);
   --on-success: light-dark(#ffffff, #052e16);
   --star: light-dark(#854d0e, #facc15);
+  --focus-ring: var(--accent);
   /* Tints of the colours above (backgrounds, borders); they follow the theme with their base colour. */
   --accent-tint: color-mix(in srgb, var(--accent) 8%, transparent);
   --accent-soft: color-mix(in srgb, var(--accent) 15%, transparent);
@@ -29,12 +36,18 @@
   --danger-line: color-mix(in srgb, var(--danger) 30%, transparent);
   --success-soft: color-mix(in srgb, var(--success) 10%, transparent);
   --success-line: color-mix(in srgb, var(--success) 30%, transparent);
-  /* Elevation: popovers, menus and raised cards. */
-  --shadow-color: light-dark(rgb(15 23 42 / 0.15), rgb(0 0 0 / 0.4));
-  --shadow-popover: 0 10px 30px var(--shadow-color);
-  --shadow-card: 0 4px 12px var(--shadow-color);
+  /* Screentone, the manga halftone: hero backdrop, skeletons and empty states. Never put text straight on it. */
+  --screentone-dot: color-mix(in srgb, var(--text) 8%, transparent);
+  --screentone: radial-gradient(circle at center, var(--screentone-dot) 1.25px, transparent 1.75px) 0 0 / 7px 7px;
+  /* Elevation: tone first (--surface-2/3); shadows only for what floats above the page. */
+  --shadow-color: light-dark(rgb(24 24 27 / 0.14), rgb(0 0 0 / 0.5));
+  --elev-1: 0 1px 2px var(--shadow-color);
+  --elev-2: 0 4px 12px var(--shadow-color);
+  --elev-3: 0 10px 30px var(--shadow-color);
+  --shadow-popover: var(--elev-3);
+  --shadow-card: var(--elev-2);
   /* Dims the page behind a dialog. */
-  --scrim: light-dark(rgb(15 23 42 / 0.45), rgb(2 6 23 / 0.7));
+  --scrim: light-dark(rgb(24 24 27 / 0.45), rgb(0 0 0 / 0.7));
   /* On top of artwork (covers, page thumbnails): dark in every theme, with light text. */
   --overlay: rgb(0 0 0 / 0.75);
   --overlay-strong: rgb(0 0 0 / 0.85);
@@ -45,10 +58,41 @@
   --reader-gray: #3f3f46;
   --reader-white: #fff;
   --reader-page-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5);
-  --radius: 10px;
 
-  /* Fluid sizes (rem term keeps them growing with the user's zoom). */
+  /* Radius by role: covers and thumbnails (a book corner), controls and cards, sheets and dialogs, chips and pills. */
+  --radius-sm: 4px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+  --radius: var(--radius-md);
+
+  /* Spacing scale (4px base). --space-page is the fluid side padding of a page. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
   --space-page: clamp(1rem, 0.6rem + 2vw, 2rem);
+  /* Widths: the page column, and the longest comfortable line of prose. */
+  --page-max: 1240px;
+  --measure: 68ch;
+  /* Fixed chrome: reserved by the layout so content and focus are never hidden under it. */
+  --tabbar-h: 3.75rem;
+
+  /* Motion answers an action; nothing moves on its own. The global reduced-motion rule neutralises both. */
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Layers, lowest to highest. */
+  --z-header: 40;
+  --z-tabbar: 40;
+  --z-popover: 50;
+  --z-dialog: 60;
+  --z-skip: 100;
 
   /* Type scale: pick the nearest step, never a raw size. */
   --fs-xs: 0.75rem; /* badges, counters, fine print */

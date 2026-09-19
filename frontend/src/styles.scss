@@ -53,6 +53,21 @@ h2 {
   font-size: var(--fs-h2);
 }
 
+h3 {
+  font-size: var(--fs-md);
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+/* Anchor jumps and focused elements stay clear of the sticky header and the phone tab bar (WCAG 2.4.11). */
+html {
+  scroll-padding-block: var(--space-7) calc(var(--tabbar-h) + var(--space-4));
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -67,7 +82,7 @@ h2 {
 
 /* Layout helpers */
 .page {
-  max-width: 1100px;
+  max-width: var(--page-max);
   margin: 0 auto;
   padding: 2rem var(--space-page);
 }
@@ -95,17 +110,22 @@ h2 {
   align-items: center;
   gap: 0.4rem;
   padding: 0.55rem 1rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--surface-2);
   background: var(--surface-2);
   color: var(--text);
   font-weight: var(--fw-semibold);
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 
   &:hover:not(:disabled) {
-    border-color: var(--accent);
+    background: var(--surface-3);
+    border-color: var(--surface-3);
+  }
+
+  &:active:not(:disabled) {
+    border-color: var(--border-strong);
   }
 
   &:disabled {
@@ -114,7 +134,7 @@ h2 {
   }
 
   &:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
   }
 }
@@ -126,7 +146,22 @@ h2 {
 
   &:hover:not(:disabled) {
     background: var(--accent);
+    border-color: var(--accent);
   }
+}
+
+/* Quiet button: no fill until hovered (header actions, rail arrows). */
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* Square button holding only an <app-icon>; give it an aria-label. */
+.btn-icon {
+  padding: var(--space-2);
+  justify-content: center;
+  min-inline-size: 2.5rem;
+  min-block-size: 2.5rem;
 }
 
 .btn-danger {
@@ -171,6 +206,18 @@ h2 {
   border: none;
   color: var(--accent);
   padding: 0;
+
+  &:hover:not(:disabled) {
+    background: none;
+    text-decoration: underline;
+  }
+}
+
+/* Placeholder shown while content loads: a static screentone block (nothing animates). Size it where it is used. */
+.skeleton {
+  display: block;
+  border-radius: var(--radius-sm);
+  background: var(--screentone), var(--surface-2);
 }
 
 /* Forms (Signal Forms + native inputs) */
@@ -196,8 +243,8 @@ h2 {
   textarea,
   select {
     padding: 0.6rem 0.75rem;
-    border-radius: 8px;
-    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-strong);
     background: var(--bg);
     color: var(--text);
     font: inherit;
@@ -243,7 +290,7 @@ fieldset.field {
   color: var(--danger);
   background: var(--danger-soft);
   border: 1px solid var(--danger-line);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.6rem 0.75rem;
 }
 
@@ -266,7 +313,7 @@ fieldset.field {
   color: var(--success);
   background: var(--success-soft);
   border: 1px solid var(--success-line);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.6rem 0.75rem;
 }
 
@@ -293,7 +340,7 @@ fieldset.field {
 [ngTab],
 [ngToolbarWidget] {
   padding: 0.5rem 0.9rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid transparent;
   background: transparent;
   color: var(--muted);
@@ -318,7 +365,7 @@ fieldset.field {
 
 [ngMenu] {
   position: absolute;
-  z-index: 50;
+  z-index: var(--z-popover);
   min-width: 12rem;
   display: flex;
   flex-direction: column;
@@ -350,14 +397,14 @@ fieldset.field {
 
 [ngTab][aria-selected="true"] {
   border-bottom: 2px solid var(--accent);
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 /* Badges */
 .badge {
   display: inline-block;
   padding: 0.15rem 0.55rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: var(--fs-xs);
   font-weight: var(--fw-bold);
   background: var(--surface-2);
@@ -413,7 +460,7 @@ fieldset.field {
 .tab {
   padding: 0.4rem 0.9rem;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   color: var(--muted);
   text-decoration: none;
 

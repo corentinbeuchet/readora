@@ -15,7 +15,7 @@
   background: var(--accent);
   color: var(--on-accent);
   border-radius: 8px;
-  z-index: 100;
+  z-index: var(--z-skip);
 
   &:focus {
     left: 0.5rem;
