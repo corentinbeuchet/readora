@@ -1,3 +1,4 @@
+import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { IMAGE_DECODE_CONCURRENCY, PageGridUploader } from '@app/features/upload/components/page-grid-uploader';
 import { PageUploadItem, mapWithConcurrency } from '@app/core/upload/file-utils';
@@ -24,9 +25,29 @@ class FakeImage {
   }
 }
 
+/** Binds the uploader like the upload studio does: `[(pages)]` is its public API. */
+@Component({ imports: [PageGridUploader], template: `<app-page-grid-uploader [(pages)]="pages" />` })
+class Host {
+  readonly pages = signal<PageUploadItem[]>([]);
+}
+
+/** Selects files through the uploader's file input, as the user does. */
+function choose(fixture: ComponentFixture<unknown>, files: File[]): void {
+  const input = (fixture.nativeElement as HTMLElement).querySelector('app-page-grid-uploader input[type="file"]') as HTMLInputElement;
+  Object.defineProperty(input, 'files', { value: files, configurable: true });
+  input.dispatchEvent(new Event('change'));
+}
+
+async function settleDecodes(fixture: ComponentFixture<unknown>): Promise<void> {
+  for (let i = 0; i < 20; i++) {
+    await Promise.resolve();
+  }
+  fixture.detectChanges();
+}
+
 describe('PageGridUploader', () => {
-  let fixture: ComponentFixture<PageGridUploader>;
-  let component: PageGridUploader;
+  let fixture: ComponentFixture<Host>;
+  let host: Host;
   let created: string[];
   let revoked: string[];
 
@@ -44,11 +65,16 @@ describe('PageGridUploader', () => {
     });
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation((url: string) => void revoked.push(url));
 
-    await TestBed.configureTestingModule({ imports: [PageGridUploader] }).compileComponents();
-    fixture = TestBed.createComponent(PageGridUploader);
-    component = fixture.componentInstance;
+    await TestBed.configureTestingModule({ imports: [Host] }).compileComponents();
+    fixture = TestBed.createComponent(Host);
+    host = fixture.componentInstance;
     fixture.detectChanges();
   });
+
+  async function add(files: File[]): Promise<void> {
+    choose(fixture, files);
+    await settleDecodes(fixture);
+  }
 
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -59,10 +85,9 @@ describe('PageGridUploader', () => {
   const deleteButtons = (): HTMLButtonElement[] => Array.from(fixture.nativeElement.querySelectorAll('button[aria-label="Delete page"]'));
 
   it('decodes dimensions with bounded concurrency, reusing one preview URL per page', async () => {
-    await component.handleFiles(images(10));
-    fixture.detectChanges();
+    await add(images(10));
 
-    const pages = component.pages();
+    const pages = host.pages();
     expect(pages.length).toBe(10);
     expect(pages.map((p) => p.pageNumber)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     expect(pages.every((p) => p.width === 800 && p.height === 1200)).toBe(true);
@@ -75,23 +100,21 @@ describe('PageGridUploader', () => {
   });
 
   it('revokes the preview URL of a removed page and renumbers without mutating', async () => {
-    await component.handleFiles(images(3));
-    fixture.detectChanges();
-    const before = component.pages();
+    await add(images(3));
+    const before = host.pages();
     const third: PageUploadItem = before[2];
 
     deleteButtons()[1].click();
     fixture.detectChanges();
 
     expect(revoked).toEqual([before[1].previewUrl]);
-    expect(component.pages().map((p) => [p.file.name, p.pageNumber])).toEqual([['p1.png', 1], ['p3.png', 2]]);
+    expect(host.pages().map((p) => [p.file.name, p.pageNumber])).toEqual([['p1.png', 1], ['p3.png', 2]]);
     expect(third.pageNumber).toBe(3);
   });
 
   it('keeps an optional description per page for screen readers (US-07)', async () => {
-    await component.handleFiles(images(2));
-    fixture.detectChanges();
-    const before = component.pages();
+    await add(images(2));
+    const before = host.pages();
     const field: HTMLTextAreaElement = fixture.nativeElement.querySelectorAll('.page-description textarea')[1];
     expect(fixture.nativeElement.querySelectorAll('.page-description')[1].textContent).toContain('Description of page 2');
 
@@ -99,27 +122,26 @@ describe('PageGridUploader', () => {
     field.dispatchEvent(new Event('input'));
     fixture.detectChanges();
 
-    expect(component.pages().map((p) => p.description)).toEqual([undefined, 'A storm over the city']);
+    expect(host.pages().map((p) => p.description)).toEqual([undefined, 'A storm over the city']);
     expect(before[1].description).toBeUndefined();
   });
 
   it('revokes every preview URL on "Clear All"', async () => {
-    await component.handleFiles(images(3));
-    fixture.detectChanges();
-    const urls = component.pages().map((p) => p.previewUrl);
+    await add(images(3));
+    const urls = host.pages().map((p) => p.previewUrl);
 
     const clear = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find((b) => b.textContent?.includes('Clear All'))!;
     clear.click();
     fixture.detectChanges();
 
-    expect(component.pages()).toEqual([]);
+    expect(host.pages()).toEqual([]);
     expect(revoked).toEqual(urls);
   });
 
   it('revokes previews that finish decoding after the component is destroyed', async () => {
-    const pending = component.handleFiles(images(2));
+    choose(fixture, images(2));
     fixture.destroy();
-    await pending;
+    await settleDecodes(fixture);
 
     expect(revoked.sort()).toEqual([...created].sort());
   });
@@ -149,15 +171,16 @@ describe('mapWithConcurrency', () => {
 
 describe('PageGridUploader error reporting', () => {
   it('tells the user which files were rejected and why', async () => {
-    await TestBed.configureTestingModule({ imports: [PageGridUploader] }).compileComponents();
-    const fixture = TestBed.createComponent(PageGridUploader);
+    await TestBed.configureTestingModule({ imports: [Host] }).compileComponents();
+    const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
 
-    await fixture.componentInstance.handleFiles([
+    choose(fixture, [
       new File(['x'], 'notes.txt', { type: 'text/plain' }),
       new File(['not a zip'], 'broken.cbz', { type: 'application/zip' }),
     ]);
-    fixture.detectChanges();
+    await fixture.whenStable();
+    await settleDecodes(fixture);
 
     const alert: HTMLElement = fixture.nativeElement.querySelector('[role="alert"]');
     expect(alert.textContent).toContain('"notes.txt" was skipped');
