@@ -25,11 +25,7 @@
       @for (release of releases.value(); track release.chapterId) {
         <li class="card release" [class.release-read]="release.read">
           <a [routerLink]="['/works', release.work.id]" class="release-cover-link" [attr.aria-label]="release.work.title">
-            @if (release.work.coverImageUrl) {
-              <img class="release-cover" [ngSrc]="release.work.coverImageUrl" alt="" width="48" height="67" (error)="handleCoverError($event, fallbackCover)" />
-            } @else {
-              <img class="release-cover" [src]="fallbackCover" alt="" width="48" height="67" />
-            }
+            <app-work-cover class="release-cover" [src]="release.work.coverImageUrl" width="48" height="67" />
           </a>
           <div class="release-body">
             <h2 class="release-title"><a [routerLink]="['/works', release.work.id]">{{ release.work.title }}</a></h2>

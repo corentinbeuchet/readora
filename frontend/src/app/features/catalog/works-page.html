@@ -97,20 +97,8 @@
         @for (work of workList.items; track work.id; let first = $first) {
           <li class="work-card">
             <a [routerLink]="['/works', work.id]" class="work-link">
-              @if (work.coverImageUrl) {
-                <!-- NgOptimizedImage: lazy by default, the first cover is the LCP candidate. -->
-                <img
-                  class="work-cover"
-                  [ngSrc]="work.coverImageUrl"
-                  [alt]="'Cover of ' + work.title"
-                  (error)="handleCoverError($event, fallbackCover)"
-                  width="200"
-                  height="280"
-                  [priority]="first"
-                />
-              } @else {
-                <img class="work-cover" [src]="fallbackCover" [alt]="'Cover of ' + work.title" width="200" height="280" />
-              }
+              <!-- Lazy by default; the first cover is the LCP candidate. -->
+              <app-work-cover class="work-cover" [src]="work.coverImageUrl" [alt]="'Cover of ' + work.title" width="200" height="280" [priority]="first" />
               <h2 class="work-title">{{ work.title }}</h2>
               @if (work.author) {
                 <p class="work-author muted">{{ work.author }}</p>

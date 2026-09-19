@@ -1,5 +1,4 @@
 import { Component, DOCUMENT, computed, inject, input } from '@angular/core';
-import { NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { CommunityApi } from '@app/core/api/community-api';
@@ -7,16 +6,16 @@ import { LibraryApi } from '@app/core/api/library-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { LibraryItem, READING_STATUS_LABELS, ReadingStatus } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
-import { FALLBACK_COVER_IMAGE, onImageError } from '@app/core/utils/image-utils';
 import { asyncAction } from '@app/core/utils/async-action';
 import { LoadError } from '@app/shared/ui/load-error';
+import { WorkCover } from '@app/shared/ui/work-cover';
 
 const STATUSES = Object.keys(READING_STATUS_LABELS) as ReadingStatus[];
 
 /** "My library" (US-05): the series I follow, by reading status, with new-chapter badges (US-07). */
 @Component({
   selector: 'app-library-page',
-  imports: [LoadError, RouterLink, NgOptimizedImage],
+  imports: [WorkCover, LoadError, RouterLink],
   templateUrl: './library-page.html',
   styleUrl: './library-page.scss'
 })
@@ -25,8 +24,6 @@ export class LibraryPage {
   private readonly communityApi = inject(CommunityApi);
   private readonly document = inject(DOCUMENT);
   private readonly auth = inject(AuthStore);
-  protected readonly fallbackCover = FALLBACK_COVER_IMAGE;
-  protected readonly handleCoverError = onImageError;
   protected readonly statuses = STATUSES;
   protected readonly labels = READING_STATUS_LABELS;
 

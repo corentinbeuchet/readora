@@ -42,11 +42,7 @@
       @for (item of items.value(); track item.work.id) {
         <li class="card library-item">
           <a [routerLink]="['/works', item.work.id]" class="library-cover-link" [attr.aria-label]="item.work.title">
-            @if (item.work.coverImageUrl) {
-              <img class="library-cover" [ngSrc]="item.work.coverImageUrl" alt="" width="60" height="84" (error)="handleCoverError($event, fallbackCover)" />
-            } @else {
-              <img class="library-cover" [src]="fallbackCover" alt="" width="60" height="84" />
-            }
+            <app-work-cover class="library-cover" [src]="item.work.coverImageUrl" width="60" height="84" />
           </a>
           <div class="library-body">
             <h2 class="library-title">

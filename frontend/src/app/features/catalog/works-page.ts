@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { NgOptimizedImage } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { CatalogApi } from '@app/core/api/catalog-api';
@@ -7,9 +6,9 @@ import { DiscoveryApi } from '@app/core/api/discovery-api';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { CatalogQuery, Demographic, WorkStatus, WorkType } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
-import { FALLBACK_COVER_IMAGE, onImageError } from '@app/core/utils/image-utils';
 import { asyncAction } from '@app/core/utils/async-action';
 import { LoadError } from '@app/shared/ui/load-error';
+import { WorkCover } from '@app/shared/ui/work-cover';
 
 const PAGE_SIZE = 24;
 
@@ -39,7 +38,7 @@ function oneOf<T extends string>(allowed: readonly T[], value: string | undefine
  */
 @Component({
   selector: 'app-works-page',
-  imports: [LoadError, RouterLink, NgOptimizedImage, HasPermissionDirective],
+  imports: [WorkCover, LoadError, RouterLink, HasPermissionDirective],
   templateUrl: './works-page.html',
   styleUrl: './works-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -50,8 +49,6 @@ export class WorksPage {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly seo = inject(SeoService);
-  protected readonly fallbackCover = FALLBACK_COVER_IMAGE;
-  protected readonly handleCoverError = onImageError;
   protected readonly workTypes = WORK_TYPES;
   protected readonly workStatuses = WORK_STATUSES;
   protected readonly demographics = DEMOGRAPHICS;

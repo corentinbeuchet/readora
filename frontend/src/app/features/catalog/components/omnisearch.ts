@@ -1,11 +1,10 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { NgOptimizedImage } from '@angular/common';
 import { Router } from '@angular/router';
 import { Observable, catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { WorkSummary } from '@app/core/models/readora.models';
-import { FALLBACK_COVER_IMAGE } from '@app/core/utils/image-utils';
+import { WorkCover } from '@app/shared/ui/work-cover';
 
 export const SUGGEST_DEBOUNCE_MS = 250;
 const MIN_QUERY_LENGTH = 2;
@@ -26,7 +25,7 @@ let nextId = 0;
  */
 @Component({
   selector: 'app-omnisearch',
-  imports: [NgOptimizedImage],
+  imports: [WorkCover],
   templateUrl: './omnisearch.html',
   styleUrl: './omnisearch.scss'
 })
@@ -34,7 +33,6 @@ export class Omnisearch {
   private readonly catalogApi = inject(CatalogApi);
   private readonly router = inject(Router);
 
-  protected readonly fallbackCover = FALLBACK_COVER_IMAGE;
   protected readonly listboxId = `omnisearch-listbox-${nextId++}`;
   protected readonly text = signal('');
   protected readonly open = signal(false);

@@ -33,11 +33,7 @@
           (click)="openWork(work)"
           (keydown.enter)="openWork(work)"
         >
-          @if (work.coverImageUrl) {
-            <img class="omnisearch-cover" [ngSrc]="work.coverImageUrl" alt="" width="32" height="45" />
-          } @else {
-            <img class="omnisearch-cover" [src]="fallbackCover" alt="" width="32" height="45" />
-          }
+          <app-work-cover class="omnisearch-cover" [src]="work.coverImageUrl" width="32" height="45" />
           <span class="omnisearch-text">
             <span class="omnisearch-title">{{ work.title }}</span>
             <span class="omnisearch-meta muted">

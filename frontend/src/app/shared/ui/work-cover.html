@@ -1,0 +1,5 @@
+@if (src(); as url) {
+  <img [ngSrc]="url" [alt]="alt()" [width]="width()" [height]="height()" [priority]="priority()" (error)="handleError($event, fallback)" />
+} @else {
+  <img [src]="fallback" [alt]="alt()" [width]="width()" [height]="height()" />
+}

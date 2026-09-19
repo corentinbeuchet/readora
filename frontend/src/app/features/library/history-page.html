@@ -12,11 +12,7 @@
     <ol class="history-list">
       @for (item of history.value(); track item.work.id) {
         <li class="card history-item">
-          @if (item.work.coverImageUrl) {
-            <img class="history-cover" [ngSrc]="item.work.coverImageUrl" alt="" width="60" height="84" (error)="handleCoverError($event, fallbackCover)" />
-          } @else {
-            <img class="history-cover" [src]="fallbackCover" alt="" width="60" height="84" />
-          }
+          <app-work-cover class="history-cover" [src]="item.work.coverImageUrl" width="60" height="84" />
           <div class="history-body">
             <h2 class="history-title"><a [routerLink]="['/works', item.work.id]">{{ item.work.title }}</a></h2>
             <p class="muted">

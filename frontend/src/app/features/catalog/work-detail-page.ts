@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, signal } from '@angular/core';
-import { DatePipe, NgOptimizedImage } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { firstValueFrom } from 'rxjs';
@@ -13,12 +13,12 @@ import { WorkRatings } from './components/work-ratings';
 import { AddToList } from './components/add-to-list';
 import { READING_STATUS_LABELS, ReadingStatus } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
-import { FALLBACK_COVER_IMAGE, onImageError } from '@app/core/utils/image-utils';
 import { LoadError } from '@app/shared/ui/load-error';
+import { WorkCover } from '@app/shared/ui/work-cover';
 
 @Component({
   selector: 'app-work-detail-page',
-  imports: [LoadError, RouterLink, DatePipe, NgOptimizedImage, HasPermissionDirective, WorkRatings, AddToList],
+  imports: [WorkCover, LoadError, RouterLink, DatePipe, HasPermissionDirective, WorkRatings, AddToList],
   templateUrl: './work-detail-page.html',
   styleUrl: './work-detail-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -30,8 +30,6 @@ export class WorkDetailPage {
   private readonly readingApi = inject(ReadingApi);
   private readonly seo = inject(SeoService);
   protected readonly auth = inject(AuthStore);
-  protected readonly fallbackCover = FALLBACK_COVER_IMAGE;
-  protected readonly handleCoverError = onImageError;
 
   /** Bound from the `works/:workId` route. */
   readonly workId = input.required<string>();
