@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { test as base } from '@playwright/test';
 import { publishChapter } from './helpers';
 
@@ -8,9 +9,14 @@ import { publishChapter } from './helpers';
 export const test = base.extend<{
   /** A new series with one published two-page chapter, created through the API for this test only. */
   publishedChapter: Awaited<ReturnType<typeof publishChapter>>;
+  /** An axe scan of the current page against WCAG 2.0/2.1/2.2 A and AA (`await axe().analyze()`). */
+  axe: () => AxeBuilder;
 }>({
   publishedChapter: async ({ request }, use) => {
     await use(await publishChapter(request));
+  },
+  axe: async ({ page }, use) => {
+    await use(() => new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']));
   }
 });
 
