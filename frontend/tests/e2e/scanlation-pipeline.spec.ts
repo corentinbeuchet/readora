@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { signUp } from './support/helpers';
 
 test.describe('Scanlation Collaborative Multi-Role Pipeline Suite', () => {
   test('the scanlation workspace is protected: anonymous users go to login', async ({ page }) => {
@@ -8,14 +9,7 @@ test.describe('Scanlation Collaborative Multi-Role Pipeline Suite', () => {
   });
 
   test('a plain reader is forbidden from the workspace and sees no Scanlation menu entry', async ({ page }) => {
-    const suffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
-    await page.goto('/register');
-    await page.getByLabel('Email').fill(`reader_${suffix}@readora.test`);
-    await page.getByLabel('Username').fill(`reader_${suffix}`);
-    await page.getByLabel('Password', { exact: true }).fill('Sup3rSecret!');
-    await page.getByLabel('Confirm password').fill('Sup3rSecret!');
-    await page.getByRole('button', { name: 'Sign up' }).click();
-    await expect(page).toHaveURL(/\/profile$/);
+    await signUp(page, 'reader');
 
     await expect(page.getByRole('link', { name: 'Scanlation' })).toHaveCount(0);
 
@@ -26,19 +20,12 @@ test.describe('Scanlation Collaborative Multi-Role Pipeline Suite', () => {
 
   test('two collaborators have isolated sessions (one browser context each)', async ({ browser }) => {
     // Multi-role work happens in parallel sessions: signing in one must never leak into another.
-    const suffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
     const cleanerContext = await browser.newContext();
     const translatorContext = await browser.newContext();
     try {
       const cleaner = await cleanerContext.newPage();
-      await cleaner.goto('/register');
-      await cleaner.getByLabel('Email').fill(`cleaner_${suffix}@readora.test`);
-      await cleaner.getByLabel('Username').fill(`cleaner_${suffix}`);
-      await cleaner.getByLabel('Password', { exact: true }).fill('Sup3rSecret!');
-      await cleaner.getByLabel('Confirm password').fill('Sup3rSecret!');
-      await cleaner.getByRole('button', { name: 'Sign up' }).click();
-      await expect(cleaner).toHaveURL(/\/profile$/);
-      await expect(cleaner.getByRole('heading', { level: 1 })).toContainText(`cleaner_${suffix}`);
+      const cleanerName = await signUp(cleaner, 'cleaner');
+      await expect(cleaner.getByRole('heading', { level: 1 })).toContainText(cleanerName);
 
       const translator = await translatorContext.newPage();
       await translator.goto('/profile');
@@ -47,7 +34,7 @@ test.describe('Scanlation Collaborative Multi-Role Pipeline Suite', () => {
 
       // The first session is unaffected by the second context.
       await cleaner.reload();
-      await expect(cleaner.getByRole('heading', { level: 1 })).toContainText(`cleaner_${suffix}`);
+      await expect(cleaner.getByRole('heading', { level: 1 })).toContainText(cleanerName);
     } finally {
       await cleanerContext.close();
       await translatorContext.close();

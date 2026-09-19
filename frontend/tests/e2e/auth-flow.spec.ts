@@ -1,14 +1,16 @@
 import { test, expect } from '@playwright/test';
+import { PASSWORD, uniqueSuffix } from './support/helpers';
 
 /**
  * Full authentication journey against a running stack (frontend + backend).
  * Run locally with `docker compose up -d` (backend on :8080) and `npm start` (frontend on :4200).
  */
 test.describe('Authentication flow', () => {
-  const suffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
+  // This journey checks the register form itself, so it does not use the signUp() helper.
+  const suffix = uniqueSuffix();
   const email = `e2e_${suffix}@readora.test`;
   const username = `e2e_${suffix}`;
-  const password = 'Sup3rSecret!';
+  const password = PASSWORD;
 
   test('register → profile visible → logout → login → session survives reload', async ({ page }) => {
     await page.goto('/register');
