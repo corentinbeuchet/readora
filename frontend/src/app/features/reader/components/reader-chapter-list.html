@@ -2,10 +2,7 @@
   @if (chapters.isLoading()) {
     <p class="muted" role="status">Loading chapters…</p>
   } @else if (chapters.error()) {
-    <p class="form-error" role="alert">
-      The chapter list could not be loaded.
-      <button type="button" class="btn btn-link" (click)="chapters.reload()">Retry</button>
-    </p>
+    <app-load-error (retry)="chapters.reload()">The chapter list could not be loaded.</app-load-error>
   } @else {
     <ol class="reader-chapter-list">
       @for (row of rows(); track row.chapter.id) {

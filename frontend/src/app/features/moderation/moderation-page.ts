@@ -6,11 +6,12 @@ import { ModerationApi } from '@app/core/api/moderation-api';
 import { COMMENT_REPORT_REASON_LABELS, ModerationItem } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
+import { LoadError } from '@app/shared/ui/load-error';
 
 /** Moderation queue (US-11): reported comments, oldest first; hide the comment or dismiss the report. */
 @Component({
   selector: 'app-moderation-page',
-  imports: [RouterLink, DatePipe],
+  imports: [LoadError, RouterLink, DatePipe],
   templateUrl: './moderation-page.html',
   styleUrl: './moderation-page.scss'
 })

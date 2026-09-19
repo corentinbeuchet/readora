@@ -103,6 +103,11 @@ export function apiErrorMessage(error: unknown, fallback = 'Something went wrong
   return fallback;
 }
 
+/** A 404 from a write (`ApiError`) or from an `httpResource` read (`HttpErrorResponse`). */
+export function isNotFoundError(error: unknown): boolean {
+  return (error instanceof ApiError && error.isNotFound) || (error instanceof HttpErrorResponse && error.status === 404);
+}
+
 /**
  * `httpResource` parser for the API envelope: returns `data`, and throws an `ApiError` (so the
  * resource enters its error state) for `success: false` or a body that is not an envelope, instead

@@ -1,13 +1,11 @@
 <section class="ratings" aria-labelledby="ratings-heading">
   <h2 id="ratings-heading">Ratings &amp; reviews</h2>
 
+  @if (summary.error()) {
+    <app-load-error (retry)="summary.reload()">Could not load the ratings.</app-load-error>
+  }
   <p class="rating-summary">
-    @if (summary.error()) {
-      <span class="form-error" role="alert">
-        Could not load the ratings.
-        <button type="button" class="btn btn-link" (click)="summary.reload()">Retry</button>
-      </span>
-    } @else if (summary.hasValue() && summary.value().count > 0) {
+    @if (summary.hasValue() && summary.value().count > 0) {
       <span class="score" aria-hidden="true">★</span>
       <strong>{{ summary.value().average.toFixed(1) }}</strong>
       <span class="muted">/ 10 from {{ summary.value().count }} {{ summary.value().count === 1 ? 'rating' : 'ratings' }}</span>
@@ -60,10 +58,7 @@
   </ng-container>
 
   @if (reviews.error()) {
-    <p class="form-error" role="alert">
-      Could not load the reviews.
-      <button type="button" class="btn btn-link" (click)="reviews.reload()">Retry</button>
-    </p>
+    <app-load-error (retry)="reviews.reload()">Could not load the reviews.</app-load-error>
   } @else if (reviews.hasValue() && reviews.value().length > 0) {
     <ul class="review-list">
       @for (review of reviews.value(); track review.id) {

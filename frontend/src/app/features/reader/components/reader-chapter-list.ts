@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { ReadingApi } from '@app/core/api/reading-api';
 import { AuthStore } from '@app/core/auth/auth-store';
+import { LoadError } from '@app/shared/ui/load-error';
 
 /**
  * Chapter list inside the reader (US-07): every chapter of the series with the ones read marked. Its data loads the
@@ -10,7 +11,7 @@ import { AuthStore } from '@app/core/auth/auth-store';
  */
 @Component({
   selector: 'app-reader-chapter-list',
-  imports: [RouterLink],
+  imports: [LoadError, RouterLink],
   templateUrl: './reader-chapter-list.html',
   styleUrl: './reader-chapter-list.scss'
 })

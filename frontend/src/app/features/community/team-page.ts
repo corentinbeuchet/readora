@@ -5,11 +5,12 @@ import { CommunityApi } from '@app/core/api/community-api';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
+import { LoadError } from '@app/shared/ui/load-error';
 
 /** A scanlation team's page (US-12): members, series, latest chapters, follow. */
 @Component({
   selector: 'app-team-page',
-  imports: [RouterLink, HasPermissionDirective],
+  imports: [LoadError, RouterLink, HasPermissionDirective],
   templateUrl: './team-page.html',
   styleUrl: './community.scss'
 })

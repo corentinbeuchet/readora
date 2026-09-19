@@ -4,10 +4,7 @@
   @if (history.isLoading()) {
     <p class="muted" role="status">Loading your history…</p>
   } @else if (history.error()) {
-    <p class="form-error" role="alert">
-      Could not load your reading history.
-      <button type="button" class="btn btn-link" (click)="reload()">Retry</button>
-    </p>
+    <app-load-error (retry)="reload()">Could not load your reading history.</app-load-error>
   } @else if (history.hasValue() && history.value().length === 0) {
     <p class="muted">You haven't read anything yet.</p>
     <a routerLink="/works" class="btn btn-primary">Browse the catalog</a>

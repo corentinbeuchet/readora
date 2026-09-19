@@ -9,13 +9,14 @@ import { LibraryItem, READING_STATUS_LABELS, ReadingStatus } from '@app/core/mod
 import { SeoService } from '@app/core/seo/seo.service';
 import { FALLBACK_COVER_IMAGE, onImageError } from '@app/core/utils/image-utils';
 import { asyncAction } from '@app/core/utils/async-action';
+import { LoadError } from '@app/shared/ui/load-error';
 
 const STATUSES = Object.keys(READING_STATUS_LABELS) as ReadingStatus[];
 
 /** "My library" (US-05): the series I follow, by reading status, with new-chapter badges (US-07). */
 @Component({
   selector: 'app-library-page',
-  imports: [RouterLink, NgOptimizedImage],
+  imports: [LoadError, RouterLink, NgOptimizedImage],
   templateUrl: './library-page.html',
   styleUrl: './library-page.scss'
 })

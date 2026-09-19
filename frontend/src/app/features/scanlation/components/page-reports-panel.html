@@ -13,10 +13,7 @@
   @if (reports.isLoading()) {
     <p class="muted" role="status">Loading reports…</p>
   } @else if (reports.error()) {
-    <p class="form-error" role="alert">
-      Could not load the reported pages.
-      <button type="button" class="btn btn-link" (click)="reports.reload()">Retry</button>
-    </p>
+    <app-load-error (retry)="reports.reload()">Could not load the reported pages.</app-load-error>
   } @else if (reports.hasValue() && reports.value().length === 0) {
     <p class="muted">No broken pages reported. 🎉</p>
   } @else if (reports.hasValue()) {

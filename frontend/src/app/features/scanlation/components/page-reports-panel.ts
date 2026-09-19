@@ -5,11 +5,12 @@ import { firstValueFrom } from 'rxjs';
 import { PageReportsApi } from '@app/core/api/page-reports-api';
 import { PAGE_REPORT_REASON_LABELS, PageReport } from '@app/core/models/readora.models';
 import { asyncAction } from '@app/core/utils/async-action';
+import { LoadError } from '@app/shared/ui/load-error';
 
 /** Pages readers reported as broken on this project's chapters (US-06), with "Mark fixed". */
 @Component({
   selector: 'app-page-reports-panel',
-  imports: [RouterLink, DatePipe],
+  imports: [LoadError, RouterLink, DatePipe],
   templateUrl: './page-reports-panel.html',
   styleUrl: './page-reports-panel.scss'
 })

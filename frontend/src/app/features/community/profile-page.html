@@ -1,11 +1,11 @@
 <section class="page">
   @if (profile.isLoading()) {
     <p class="muted" role="status">Loading the profile…</p>
-  } @else if (notFound()) {
-    <p class="form-error" role="alert">
-      This reader could not be found.
-      <a routerLink="/works" class="btn btn-link">Browse the catalog</a>
-    </p>
+  } @else if (profile.error()) {
+    <app-load-error [error]="profile.error()" notFound="This reader could not be found." (retry)="profile.reload()">
+      Could not load the profile.
+      <a actions routerLink="/works" class="btn btn-link">Browse the catalog</a>
+    </app-load-error>
   } @else if (profile.hasValue() && profile.value(); as p) {
     <header class="profile-header">
       <h1>{{ p.displayName }}</h1>

@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { DiscoveryApi } from '@app/core/api/discovery-api';
 import { RankingPeriod } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
+import { LoadError } from '@app/shared/ui/load-error';
 
 const PERIODS: { key: RankingPeriod; label: string }[] = [
   { key: 'TODAY', label: 'Today' },
@@ -14,7 +15,7 @@ const PERIODS: { key: RankingPeriod; label: string }[] = [
 /** Rankings (US-08): popular by period, and top rated. */
 @Component({
   selector: 'app-rankings-page',
-  imports: [RouterLink],
+  imports: [LoadError, RouterLink],
   templateUrl: './rankings-page.html',
   styleUrl: './rankings-page.scss'
 })

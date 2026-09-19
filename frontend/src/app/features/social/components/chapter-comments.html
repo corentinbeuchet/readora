@@ -4,7 +4,7 @@
   @if (comments.isLoading()) {
     <p class="muted" role="status">Loading comments…</p>
   } @else if (comments.error()) {
-    <p class="form-error" role="alert">Could not load comments.</p>
+    <app-load-error (retry)="comments.reload()">Could not load comments.</app-load-error>
   } @else {
     <app-comment-tree [highlightId]="highlightId()"
       [comments]="comments.value()"

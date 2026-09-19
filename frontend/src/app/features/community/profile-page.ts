@@ -1,13 +1,14 @@
-import { Component, computed, effect, inject, input } from '@angular/core';
+import { Component, effect, inject, input } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CommunityApi } from '@app/core/api/community-api';
 import { SeoService } from '@app/core/seo/seo.service';
+import { LoadError } from '@app/shared/ui/load-error';
 
 /** A reader's public profile (US-12): chapters read, favourite genres, completed series. */
 @Component({
   selector: 'app-public-profile-page',
-  imports: [RouterLink, DatePipe],
+  imports: [LoadError, RouterLink, DatePipe],
   templateUrl: './profile-page.html',
   styleUrl: './community.scss'
 })
@@ -18,7 +19,6 @@ export class PublicProfilePage {
   readonly username = input<string>();
 
   protected readonly profile = inject(CommunityApi).profileResource(this.username);
-  protected readonly notFound = computed(() => !!this.profile.error());
 
   constructor() {
     effect(() => {

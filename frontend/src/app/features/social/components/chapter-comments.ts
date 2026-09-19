@@ -11,6 +11,7 @@ import { ReportCommentDialog } from './report-comment-dialog';
 import { asyncAction } from '@app/core/utils/async-action';
 import { FieldErrors } from '@app/shared/forms/field-errors';
 import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
+import { LoadError } from '@app/shared/ui/load-error';
 
 export const COMMENT_MAX_LENGTH = 2000;
 
@@ -44,7 +45,7 @@ interface CommentModel {
  */
 @Component({
   selector: 'app-chapter-comments',
-  imports: [FieldErrors, AriaInvalidDirective, RouterLink, FormField, HasPermissionDirective, CommentTree, ReportCommentDialog],
+  imports: [LoadError, FieldErrors, AriaInvalidDirective, RouterLink, FormField, HasPermissionDirective, CommentTree, ReportCommentDialog],
   templateUrl: './chapter-comments.html',
   styleUrl: './chapter-comments.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

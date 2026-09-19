@@ -11,10 +11,7 @@
   @if (releases.isLoading()) {
     <p class="muted" role="status">Loading the latest chapters…</p>
   } @else if (releases.error()) {
-    <p class="form-error" role="alert">
-      Could not load the latest chapters.
-      <button type="button" class="btn btn-link" (click)="releases.reload()">Retry</button>
-    </p>
+    <app-load-error (retry)="releases.reload()">Could not load the latest chapters.</app-load-error>
   } @else if (releases.hasValue() && releases.value().length === 0) {
     <p class="muted">
       @if (mine()) {

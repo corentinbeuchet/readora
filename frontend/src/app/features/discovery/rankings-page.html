@@ -22,10 +22,7 @@
   @if (current.isLoading()) {
     <p class="muted" role="status">Loading the ranking…</p>
   } @else if (current.error()) {
-    <p class="form-error" role="alert">
-      Could not load the ranking.
-      <button type="button" class="btn btn-link" (click)="current.reload()">Retry</button>
-    </p>
+    <app-load-error (retry)="current.reload()">Could not load the ranking.</app-load-error>
   } @else if (current.hasValue() && current.value().length === 0) {
     <p class="muted">Not enough activity yet for this ranking.</p>
   } @else if (current.hasValue()) {

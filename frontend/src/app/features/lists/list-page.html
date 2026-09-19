@@ -2,10 +2,10 @@
   @if (list.isLoading() && !current()) {
     <p class="muted" role="status">Loading the list…</p>
   } @else if (list.error()) {
-    <p class="form-error" role="alert">
-      This list doesn't exist or is private.
-      <a routerLink="/lists" class="btn btn-link">See public lists</a>
-    </p>
+    <app-load-error [error]="list.error()" notFound="This list doesn't exist or is private." (retry)="list.reload()">
+      Could not load the list.
+      <a actions routerLink="/lists" class="btn btn-link">See public lists</a>
+    </app-load-error>
   } @else if (current(); as l) {
     @if (draft(); as d) {
       <form class="card form" (submit)="$event.preventDefault(); save()" novalidate>

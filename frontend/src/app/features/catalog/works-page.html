@@ -82,10 +82,7 @@
   @if (works.isLoading()) {
     <p class="muted" role="status">Loading works…</p>
   } @else if (works.error()) {
-    <p class="form-error" role="alert">
-      Could not load the catalog.
-      <button type="button" class="btn btn-link" (click)="reload()">Retry</button>
-    </p>
+    <app-load-error (retry)="reload()">Could not load the catalog.</app-load-error>
   } @else if (works.value(); as workList) {
     @if (workList.items.length === 0) {
       <p class="muted" role="status">

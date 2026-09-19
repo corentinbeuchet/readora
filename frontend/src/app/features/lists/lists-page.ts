@@ -9,11 +9,12 @@ import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
 import { FieldErrors } from '@app/shared/forms/field-errors';
 import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
+import { LoadError } from '@app/shared/ui/load-error';
 
 /** Community lists (US-05): the most upvoted public lists, my lists, and a new-list form. */
 @Component({
   selector: 'app-lists-page',
-  imports: [FieldErrors, AriaInvalidDirective, RouterLink, FormField, HasPermissionDirective],
+  imports: [LoadError, FieldErrors, AriaInvalidDirective, RouterLink, FormField, HasPermissionDirective],
   templateUrl: './lists-page.html',
   styleUrl: './lists.scss'
 })

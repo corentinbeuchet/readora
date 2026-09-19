@@ -2,11 +2,10 @@
   @if (work.isLoading()) {
     <p class="muted" role="status">Loading…</p>
   } @else if (work.error()) {
-    <p class="form-error" role="alert">
-      This work could not be loaded.
-      <button type="button" class="btn btn-link" (click)="reload()">Retry</button>
-      <a routerLink="/works" class="btn btn-link">Back to catalog</a>
-    </p>
+    <app-load-error [error]="work.error()" notFound="This series doesn't exist." (retry)="reload()">
+      This series could not be loaded.
+      <a actions routerLink="/works" class="btn btn-link">Back to catalog</a>
+    </app-load-error>
   } @else if (work.value(); as w) {
     <article class="work-detail">
       @if (w.coverImageUrl) {
@@ -76,10 +75,7 @@
       @if (chapters.isLoading()) {
         <p class="muted" role="status">Loading chapters…</p>
       } @else if (chapters.error()) {
-        <p class="form-error" role="alert">
-          The chapter list could not be loaded.
-          <button type="button" class="btn btn-link" (click)="chapters.reload()">Retry</button>
-        </p>
+        <app-load-error (retry)="chapters.reload()">The chapter list could not be loaded.</app-load-error>
       } @else if (!chapters.value() || chapters.value().length === 0) {
         <p class="muted">No chapters have been published yet.</p>
       } @else {

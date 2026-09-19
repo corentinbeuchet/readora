@@ -9,10 +9,7 @@
   @if (queue.isLoading()) {
     <p class="muted" role="status">Loading reports…</p>
   } @else if (queue.error()) {
-    <p class="form-error" role="alert">
-      Could not load the reports.
-      <button type="button" class="btn btn-link" (click)="queue.reload()">Retry</button>
-    </p>
+    <app-load-error (retry)="queue.reload()">Could not load the reports.</app-load-error>
   } @else if (queue.hasValue() && queue.value().length === 0) {
     <p class="muted">No open reports. 🎉</p>
   } @else if (queue.hasValue()) {

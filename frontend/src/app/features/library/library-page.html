@@ -27,10 +27,7 @@
   @if (items.isLoading()) {
     <p class="muted" role="status">Loading your library…</p>
   } @else if (items.error()) {
-    <p class="form-error" role="alert">
-      Could not load your library.
-      <button type="button" class="btn btn-link" (click)="reload()">Retry</button>
-    </p>
+    <app-load-error (retry)="reload()">Could not load your library.</app-load-error>
   } @else if (items.hasValue() && items.value().length === 0) {
     <p class="muted">
       @if (selected(); as current) {

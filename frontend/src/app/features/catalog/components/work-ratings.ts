@@ -8,6 +8,7 @@ import { WorkReview } from '@app/core/models/readora.models';
 import { asyncAction } from '@app/core/utils/async-action';
 import { FieldErrors } from '@app/shared/forms/field-errors';
 import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
+import { LoadError } from '@app/shared/ui/load-error';
 
 const REVIEW_MAX = 2000;
 
@@ -20,7 +21,7 @@ interface ReviewModel {
 /** Rating summary, my 1–10 rating, my review and the community's reviews of a series (US-09). */
 @Component({
   selector: 'app-work-ratings',
-  imports: [FieldErrors, AriaInvalidDirective, FormField, HasPermissionDirective],
+  imports: [LoadError, FieldErrors, AriaInvalidDirective, FormField, HasPermissionDirective],
   templateUrl: './work-ratings.html',
   styleUrl: './work-ratings.scss'
 })

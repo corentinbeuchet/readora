@@ -38,10 +38,7 @@
   @if (top.isLoading()) {
     <p class="muted" role="status">Loading lists…</p>
   } @else if (top.error()) {
-    <p class="form-error" role="alert">
-      Could not load the lists.
-      <button type="button" class="btn btn-link" (click)="top.reload()">Retry</button>
-    </p>
+    <app-load-error (retry)="top.reload()">Could not load the lists.</app-load-error>
   } @else if (top.hasValue() && top.value().length === 0) {
     <p class="muted">No public lists yet.</p>
   } @else if (top.hasValue()) {

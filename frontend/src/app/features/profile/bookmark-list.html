@@ -7,10 +7,7 @@
 } @else if (bookmarks.isLoading()) {
   <p class="muted" role="status">Loading your bookmarks…</p>
 } @else if (bookmarks.error()) {
-  <p class="form-error" role="alert">
-    Could not load bookmarks.
-    <button type="button" class="btn btn-link" (click)="reload()">Retry</button>
-  </p>
+  <app-load-error (retry)="reload()">Could not load bookmarks.</app-load-error>
 } @else if (!bookmarks.value() || bookmarks.value().length === 0) {
   <p class="muted">You have no bookmarks yet. Start reading a chapter and your progress will be saved here.</p>
 } @else {

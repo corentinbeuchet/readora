@@ -3,10 +3,11 @@ import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { BookmarksApi } from '@app/core/api/bookmarks-api';
 import { AuthStore } from '@app/core/auth/auth-store';
+import { LoadError } from '@app/shared/ui/load-error';
 
 @Component({
   selector: 'app-bookmark-list',
-  imports: [RouterLink, DatePipe],
+  imports: [LoadError, RouterLink, DatePipe],
   templateUrl: './bookmark-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

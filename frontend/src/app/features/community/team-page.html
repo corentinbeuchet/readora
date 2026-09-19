@@ -2,10 +2,10 @@
   @if (team.isLoading()) {
     <p class="muted" role="status">Loading the team…</p>
   } @else if (team.error()) {
-    <p class="form-error" role="alert">
-      This team could not be found.
-      <a routerLink="/works" class="btn btn-link">Browse the catalog</a>
-    </p>
+    <app-load-error [error]="team.error()" notFound="This team could not be found." (retry)="team.reload()">
+      Could not load the team.
+      <a actions routerLink="/works" class="btn btn-link">Browse the catalog</a>
+    </app-load-error>
   } @else if (team.hasValue() && team.value(); as t) {
     <header class="profile-header">
       <h1>{{ t.name }}</h1>

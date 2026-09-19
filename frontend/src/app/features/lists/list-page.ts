@@ -6,6 +6,7 @@ import { AuthStore } from '@app/core/auth/auth-store';
 import { ReadingList } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
+import { LoadError } from '@app/shared/ui/load-error';
 
 interface Draft {
   title: string;
@@ -17,7 +18,7 @@ interface Draft {
 /** One list (US-05): readers see and upvote it; the owner edits it and decides when it is public. */
 @Component({
   selector: 'app-list-page',
-  imports: [RouterLink],
+  imports: [LoadError, RouterLink],
   templateUrl: './list-page.html',
   styleUrl: './lists.scss'
 })

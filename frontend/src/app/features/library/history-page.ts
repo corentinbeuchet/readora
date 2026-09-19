@@ -5,11 +5,12 @@ import { ReadingApi } from '@app/core/api/reading-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { SeoService } from '@app/core/seo/seo.service';
 import { FALLBACK_COVER_IMAGE, onImageError } from '@app/core/utils/image-utils';
+import { LoadError } from '@app/shared/ui/load-error';
 
 /** Reading history (US-07): the series I read most recently, each with a "Continue" button. */
 @Component({
   selector: 'app-history-page',
-  imports: [RouterLink, NgOptimizedImage, DatePipe],
+  imports: [LoadError, RouterLink, NgOptimizedImage, DatePipe],
   templateUrl: './history-page.html',
   styleUrl: './history-page.scss'
 })

@@ -6,11 +6,12 @@ import { AuthStore } from '@app/core/auth/auth-store';
 import { SeoService } from '@app/core/seo/seo.service';
 import { FALLBACK_COVER_IMAGE, onImageError } from '@app/core/utils/image-utils';
 import { timeAgo } from '@app/core/utils/time-ago';
+import { LoadError } from '@app/shared/ui/load-error';
 
 /** Latest updates (US-08): newest chapters, optionally only my library and followed teams. */
 @Component({
   selector: 'app-updates-page',
-  imports: [RouterLink, NgOptimizedImage],
+  imports: [LoadError, RouterLink, NgOptimizedImage],
   templateUrl: './updates-page.html',
   styleUrl: './updates-page.scss'
 })

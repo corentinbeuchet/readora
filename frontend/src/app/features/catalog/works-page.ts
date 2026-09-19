@@ -9,6 +9,7 @@ import { CatalogQuery, Demographic, WorkStatus, WorkType } from '@app/core/model
 import { SeoService } from '@app/core/seo/seo.service';
 import { FALLBACK_COVER_IMAGE, onImageError } from '@app/core/utils/image-utils';
 import { asyncAction } from '@app/core/utils/async-action';
+import { LoadError } from '@app/shared/ui/load-error';
 
 const PAGE_SIZE = 24;
 
@@ -38,7 +39,7 @@ function oneOf<T extends string>(allowed: readonly T[], value: string | undefine
  */
 @Component({
   selector: 'app-works-page',
-  imports: [RouterLink, NgOptimizedImage, HasPermissionDirective],
+  imports: [LoadError, RouterLink, NgOptimizedImage, HasPermissionDirective],
   templateUrl: './works-page.html',
   styleUrl: './works-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
