@@ -36,6 +36,7 @@
       @if (auth.restoring()) {
         <span class="muted">…</span>
       } @else if (auth.isAuthenticated()) {
+        <app-notification-bell *appHasPermission="'LIBRARY_USE'" />
         <button
           type="button"
           class="btn user-trigger"

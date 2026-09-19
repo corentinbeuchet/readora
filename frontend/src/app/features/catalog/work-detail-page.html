@@ -54,6 +54,10 @@
                   }
                 </select>
               </label>
+              <label class="checkbox">
+                <input type="checkbox" [checked]="libraryNotify()" [disabled]="librarySaving()" (change)="toggleNotifications($event)" />
+                Notify me of new chapters
+              </label>
               <button type="button" class="btn btn-link" [disabled]="librarySaving()" (click)="removeFromLibrary()">Remove from library</button>
             } @else {
               <button type="button" class="btn" [disabled]="librarySaving()" (click)="addToLibrary()">+ Add to library</button>

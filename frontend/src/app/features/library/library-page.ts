@@ -44,6 +44,11 @@ export class LibraryPage {
     await this.run(item, () => firstValueFrom(this.libraryApi.save(item.work.id, status)));
   }
 
+  protected async toggleNotifications(item: LibraryItem, event: Event): Promise<void> {
+    const enabled = (event.target as HTMLInputElement).checked;
+    await this.run(item, () => firstValueFrom(this.libraryApi.setNotifications(item.work.id, enabled)));
+  }
+
   protected async remove(item: LibraryItem): Promise<void> {
     await this.run(item, () => firstValueFrom(this.libraryApi.remove(item.work.id)));
   }

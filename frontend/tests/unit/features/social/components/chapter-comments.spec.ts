@@ -180,4 +180,17 @@ describe('ChapterComments', () => {
     expect(insertInThread(thread, c('z', 1)).map((x) => x.id)).toEqual(['a', 'a1', 'a1x', 'b', 'z']);
     expect(insertInThread(thread, c('orphan', 2, 'gone')).map((x) => x.id)).toEqual(['a', 'a1', 'a1x', 'b', 'orphan']);
   });
+
+  it('highlights and scrolls to the comment a notification points to', async () => {
+    const scrolled = vi.fn();
+    Element.prototype.scrollIntoView = scrolled;
+    fixture.componentRef.setInput('highlightId', 'c1');
+    await render();
+
+    const node: HTMLElement = fixture.nativeElement.querySelector('#comment-c1');
+    expect(node.classList).toContain('comment-highlight');
+    expect(fixture.nativeElement.querySelector('#comment-c2').classList).not.toContain('comment-highlight');
+    expect(scrolled).toHaveBeenCalledTimes(1);
+  });
 });
+

@@ -101,6 +101,8 @@ export class ChapterViewer {
   readonly chapterId = input<string | undefined>(undefined);
   /** Bound from the `?page=N` query param (1-based), e.g. from "Continue reading". */
   readonly page = input<string | number | undefined>(undefined);
+  /** Bound from `?comment=`: a notification points at this comment, so the thread loads right away. */
+  readonly comment = input<string | undefined>(undefined);
 
   private readonly pageWrappers = viewChildren<ElementRef<HTMLElement>>('pageWrapper');
 

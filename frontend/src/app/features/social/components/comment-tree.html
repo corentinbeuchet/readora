@@ -3,7 +3,8 @@
 
   <div class="comment-list">
     @for (comment of comments(); track comment.id) {
-      <div class="comment-node" [style.margin-left.rem]="(comment.depth - 1) * 1.5">
+      <div class="comment-node" [attr.id]="'comment-' + comment.id" [class.comment-highlight]="comment.id === highlightId()"
+           [style.margin-left.rem]="(comment.depth - 1) * 1.5">
         <div class="comment-header">
           <span class="comment-author">{{ comment.authorUsername }}</span>
           @if (comment.pageReference) {

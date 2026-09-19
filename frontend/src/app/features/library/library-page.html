@@ -63,6 +63,11 @@
                 }
               </select>
             </label>
+            <label class="checkbox notify-toggle">
+              <input type="checkbox" [checked]="item.newChapterNotifications" [disabled]="busyWorkId() === item.work.id"
+                     (change)="toggleNotifications(item, $event)" />
+              New chapter alerts<span class="sr-only"> for {{ item.work.title }}</span>
+            </label>
             <button type="button" class="btn btn-danger-outline btn-sm" [disabled]="busyWorkId() === item.work.id" (click)="remove(item)">
               Remove<span class="sr-only"> {{ item.work.title }}</span>
             </button>

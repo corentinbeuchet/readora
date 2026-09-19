@@ -15,6 +15,8 @@ export class CommentTree {
   readonly canUpvote = input(true);
   /** Whether the current user may reply (`COMMENT_WRITE`). Defaults to true for presentational use. */
   readonly canReply = input(true);
+  /** Comment to highlight (from a notification link). */
+  readonly highlightId = input<string | undefined>(undefined);
   readonly upvote = output<string>();
   readonly reply = output<ChapterComment>();
 

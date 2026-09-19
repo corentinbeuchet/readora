@@ -1,0 +1,38 @@
+<div class="bell">
+  <button type="button" class="btn bell-trigger" [attr.aria-label]="label()" [attr.aria-expanded]="open()"
+          aria-controls="notification-panel" (click)="toggle()">
+    <span aria-hidden="true">🔔</span>
+    @if (store.unread() > 0) {
+      <span class="bell-count" aria-hidden="true">{{ store.unread() > 99 ? '99+' : store.unread() }}</span>
+    }
+  </button>
+
+  <section id="notification-panel" class="bell-panel" aria-label="Notifications" [hidden]="!open()">
+    <header class="bell-header">
+      <h2>Notifications</h2>
+      <button type="button" class="btn btn-link" (click)="markAllRead()" [disabled]="store.unread() === 0">Mark all as read</button>
+    </header>
+    @if (error(); as message) {
+      <p class="form-error" role="alert">{{ message }}</p>
+    }
+    @if (store.loadError()) {
+      <p class="form-error" role="alert">Could not load your notifications.</p>
+    } @else if (store.items().length === 0) {
+      <p class="muted">Nothing yet. Add series to your library to hear about new chapters.</p>
+    } @else {
+      <ul class="bell-list">
+        @for (item of store.items(); track item.id) {
+          <li [class.unread]="!item.read">
+            <a [href]="item.link" (click)="follow($event, item)">
+              <span class="bell-message">{{ item.message }}</span>
+              <span class="muted bell-time">{{ timeAgo(item.createdAt) }}</span>
+              @if (!item.read) {
+                <span class="sr-only">(unread)</span>
+              }
+            </a>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</div>

@@ -264,6 +264,7 @@ export interface LibraryEntry {
   status: ReadingStatus;
   addedAt: string;
   updatedAt: string;
+  newChapterNotifications: boolean;
 }
 
 export interface LibraryItem {
@@ -273,6 +274,23 @@ export interface LibraryItem {
   updatedAt: string;
   /** Chapters published since the reader last read this series. */
   newChapters: number;
+  /** Whether new chapters of this series are notified (US-10). */
+  newChapterNotifications: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Notifications (US-10)
+// ---------------------------------------------------------------------------
+
+/** Named so it doesn't clash with the DOM's `Notification`. */
+export interface ReaderNotification {
+  id: string;
+  type: 'NEW_CHAPTER' | 'COMMENT_REPLY';
+  message: string;
+  /** In-app path, possibly with a query string (`/read/{id}?comment={id}`). */
+  link: string;
+  createdAt: string;
+  read: boolean;
 }
 
 export interface ChapterRead {

@@ -6,7 +6,7 @@
   } @else if (comments.error()) {
     <p class="form-error" role="alert">Could not load comments.</p>
   } @else {
-    <app-comment-tree
+    <app-comment-tree [highlightId]="highlightId()"
       [comments]="comments.value()"
       [canUpvote]="canUpvote()"
       [canReply]="canWrite()"

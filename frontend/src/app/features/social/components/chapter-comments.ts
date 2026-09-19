@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DOCUMENT, afterRenderEffect, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormField, form, maxLength, min, required, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
@@ -51,6 +51,8 @@ export class ChapterComments {
   protected readonly auth = inject(AuthStore);
 
   readonly chapterId = input.required<string>();
+  /** Comment to highlight and scroll to (notification deep link). */
+  readonly highlightId = input<string | undefined>(undefined);
 
   protected readonly comments = this.commentsApi.forChapterResource(this.chapterId);
   protected readonly replyTo = signal<ChapterComment | null>(null);
@@ -58,6 +60,21 @@ export class ChapterComments {
   protected readonly submitting = signal(false);
   protected readonly canWrite = computed(() => this.auth.can('COMMENT_WRITE'));
   protected readonly canUpvote = computed(() => this.auth.can('COMMENT_UPVOTE'));
+  private readonly document = inject(DOCUMENT);
+  private scrolledTo: string | null = null;
+
+  constructor() {
+    // Once the linked comment is rendered, bring it into view (once per link).
+    afterRenderEffect(() => {
+      const id = this.highlightId();
+      const loaded = this.comments.hasValue() ? this.comments.value() : [];
+      if (!id || id === this.scrolledTo || !loaded.some((c) => c.id === id)) {
+        return;
+      }
+      this.scrolledTo = id;
+      this.document.getElementById(`comment-${id}`)?.scrollIntoView?.({ block: 'center' });
+    });
+  }
 
   protected readonly model = signal<CommentModel>({ content: '', pageReference: null, isSpoiler: false });
   protected readonly commentForm = form(this.model, (path) => {

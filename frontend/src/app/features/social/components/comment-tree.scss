@@ -38,3 +38,11 @@
   cursor: pointer;
   margin-right: 1rem;
 }
+
+// The comment a notification pointed to.
+.comment-highlight {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 6px;
+  background: rgb(56 189 248 / 0.08);
+}

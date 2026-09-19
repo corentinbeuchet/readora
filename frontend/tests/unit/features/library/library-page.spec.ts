@@ -17,7 +17,8 @@ const SOLO: LibraryItem = {
   status: 'READING',
   addedAt: '2026-09-01T00:00:00Z',
   updatedAt: '2026-09-02T00:00:00Z',
-  newChapters: 2
+  newChapters: 2,
+  newChapterNotifications: true
 };
 const OMNI: LibraryItem = { ...SOLO, work: { ...SOLO.work, id: 'w-2', title: 'Omniscient Reader' }, status: 'PLAN_TO_READ', newChapters: 0 };
 
@@ -120,5 +121,23 @@ describe('LibraryPage (US-05 My library)', () => {
     http.expectOne((r) => r.url === `${API}/library`).flush({ success: true, data: [SOLO], error: null });
     await settle();
     expect(el().querySelectorAll('.library-item')).toHaveLength(1);
+  });
+
+  it('turns new chapter alerts off for one series', async () => {
+    await open('/library', [SOLO]);
+
+    const toggle = el().querySelector<HTMLInputElement>('.notify-toggle input')!;
+    expect(toggle.checked).toBe(true);
+    toggle.checked = false;
+    toggle.dispatchEvent(new Event('change'));
+    const req = http.expectOne(`${API}/library/w-1/notifications`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ enabled: false });
+    req.flush({ success: true, data: { enabled: false }, error: null });
+    await settle();
+    http.expectOne((r) => r.url === `${API}/library`).flush({ success: true, data: [{ ...SOLO, newChapterNotifications: false }], error: null });
+    await settle();
+
+    expect(el().querySelector<HTMLInputElement>('.notify-toggle input')!.checked).toBe(false);
   });
 });

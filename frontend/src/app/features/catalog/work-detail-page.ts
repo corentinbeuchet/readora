@@ -54,6 +54,11 @@ export class WorkDetailPage {
     const items = this.libraryItems.hasValue() ? this.libraryItems.value() : [];
     return items.find((item) => item.work.id === this.workId())?.status ?? null;
   });
+  /** New-chapter notifications for this series (US-10); updated locally after a change. */
+  protected readonly libraryNotify = linkedSignal<boolean>(() => {
+    const items = this.libraryItems.hasValue() ? this.libraryItems.value() : [];
+    return items.find((item) => item.work.id === this.workId())?.newChapterNotifications ?? true;
+  });
   protected readonly librarySaving = signal(false);
   protected readonly libraryError = signal<string | null>(null);
 
@@ -97,6 +102,20 @@ export class WorkDetailPage {
   protected async changeLibraryStatus(event: Event): Promise<void> {
     const status = (event.target as HTMLSelectElement).value as ReadingStatus;
     await this.saveLibrary(() => firstValueFrom(this.libraryApi.save(this.workId(), status)).then((entry) => entry.status));
+  }
+
+  protected async toggleNotifications(event: Event): Promise<void> {
+    const enabled = (event.target as HTMLInputElement).checked;
+    this.librarySaving.set(true);
+    this.libraryError.set(null);
+    try {
+      await firstValueFrom(this.libraryApi.setNotifications(this.workId(), enabled));
+      this.libraryNotify.set(enabled);
+    } catch (error) {
+      this.libraryError.set(apiErrorMessage(error, 'Could not update your notifications. Please try again.'));
+    } finally {
+      this.librarySaving.set(false);
+    }
   }
 
   protected async removeFromLibrary(): Promise<void> {

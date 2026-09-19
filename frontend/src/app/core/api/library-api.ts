@@ -14,6 +14,11 @@ export class LibraryApi {
     return this.api.put<LibraryEntry>(`/library/${workId}`, status ? { status } : {});
   }
 
+  /** Turns new-chapter notifications for a series in my library on or off (US-10). */
+  setNotifications(workId: string, enabled: boolean): Observable<unknown> {
+    return this.api.put(`/library/${workId}/notifications`, { enabled });
+  }
+
   remove(workId: string): Observable<void> {
     return this.api.delete(`/library/${workId}`);
   }
