@@ -125,7 +125,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     Then his library shows a "2 new" badge on "Solo Leveling"
 
   # Inspired by: MangaDex
-  @should @wip
+  @should
   Scenario: Saving mobile data
     When "Kenji" turns on "Data saver"
     Then chapters load lighter, lower-quality images

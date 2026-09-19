@@ -38,6 +38,7 @@
         <stripe.version>33.4.2</stripe.version>
         <errorprone.version>2.50.0</errorprone.version>
         <nullaway.version>0.14.1</nullaway.version>
+        <twelvemonkeys.version>3.15.2</twelvemonkeys.version>
     </properties>
 
     <dependencyManagement>
@@ -95,6 +96,13 @@
                 <groupId>com.stripe</groupId>
                 <artifactId>stripe-java</artifactId>
                 <version>${stripe.version}</version>
+            </dependency>
+
+            <!-- ImageIO plugins: read WebP uploads to make data-saver copies (US-07) -->
+            <dependency>
+                <groupId>com.twelvemonkeys.imageio</groupId>
+                <artifactId>imageio-webp</artifactId>
+                <version>${twelvemonkeys.version}</version>
             </dependency>
 
             <!-- AWS S3 SDK -->

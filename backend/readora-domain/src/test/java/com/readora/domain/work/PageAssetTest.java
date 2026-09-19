@@ -12,17 +12,18 @@ class PageAssetTest {
     @Test
     @DisplayName("A page description is trimmed, blank means none, and it is limited to 500 characters")
     void descriptionIsNormalisedAndBounded() {
-        assertThat(new PageAsset(1, "p1.webp", null, 0, 0, "  Bam looks up  ").description()).isEqualTo("Bam looks up");
-        assertThat(new PageAsset(1, "p1.webp", null, 0, 0, "   ").description()).isNull();
-        assertThat(new PageAsset(1, "p1.webp", null, 0, 0, "x".repeat(500)).description()).hasSize(500);
-        assertThatThrownBy(() -> new PageAsset(1, "p1.webp", null, 0, 0, "x".repeat(501)))
+        assertThat(new PageAsset(1, "p1.webp", null, 0, 0, "  Bam looks up  ", null).description()).isEqualTo("Bam looks up");
+        assertThat(new PageAsset(1, "p1.webp", null, 0, 0, "   ", null).description()).isNull();
+        assertThat(new PageAsset(1, "p1.webp", null, 0, 0, "x".repeat(500), null).description()).hasSize(500);
+        assertThatThrownBy(() -> new PageAsset(1, "p1.webp", null, 0, 0, "x".repeat(501), null))
                 .isInstanceOf(DomainValidationException.class);
     }
 
     @Test
-    @DisplayName("Swapping the URL keeps the page's description")
+    @DisplayName("Swapping the URL keeps the page's description and data-saver copy")
     void withCdnUrlKeepsTheDescription() {
-        PageAsset page = new PageAsset(2, "p2.webp", null, 800, 1200, "A storm");
-        assertThat(page.withCdnUrl("https://cdn/p2.webp")).isEqualTo(new PageAsset(2, "p2.webp", "https://cdn/p2.webp", 800, 1200, "A storm"));
+        PageAsset page = new PageAsset(2, "p2.webp", null, 800, 1200, "A storm", "https://cdn/p2.lite.jpg");
+        assertThat(page.withCdnUrl("https://cdn/p2.webp"))
+                .isEqualTo(new PageAsset(2, "p2.webp", "https://cdn/p2.webp", 800, 1200, "A storm", "https://cdn/p2.lite.jpg"));
     }
 }

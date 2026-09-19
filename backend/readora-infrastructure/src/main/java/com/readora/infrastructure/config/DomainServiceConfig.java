@@ -149,8 +149,8 @@ public class DomainServiceConfig {
 
     /// No persistence involved, so no transaction (it would hold a DB connection during large uploads).
     @Bean
-    public ManageAssetsUseCase manageAssetsUseCase(StoragePort storagePort) {
-        return new AssetService(storagePort);
+    public ManageAssetsUseCase manageAssetsUseCase(StoragePort storagePort, ImageVariantPort imageVariantPort) {
+        return new AssetService(storagePort, imageVariantPort);
     }
 
     @Bean

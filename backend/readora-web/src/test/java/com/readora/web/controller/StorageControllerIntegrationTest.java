@@ -69,6 +69,7 @@ class StorageControllerIntegrationTest extends AuthTestSupport {
                 .andExpect(jsonPath("$.data.storageKey", containsString("covers/")))
                 .andExpect(jsonPath("$.data.storageKey", containsString("cover.png")))
                 .andExpect(jsonPath("$.data.cdnUrl", containsString("covers/")))
+                .andExpect(jsonPath("$.data.liteCdnUrl").doesNotExist())
                 .andReturn();
 
         String storageKey = json(result).path("data").path("storageKey").asString();
@@ -80,6 +81,36 @@ class StorageControllerIntegrationTest extends AuthTestSupport {
                     byte[] content = resultMatcher.getResponse().getContentAsByteArray();
                     org.assertj.core.api.Assertions.assertThat(new String(content)).isEqualTo("dummy image content");
                 });
+    }
+
+    @Test
+    @DisplayName("An uploaded page also gets a public 720 px JPEG copy for the data saver")
+    void uploadedPageGetsALiteCopy() throws Exception {
+        Session session = registerScanlator();
+        java.awt.image.BufferedImage image = new java.awt.image.BufferedImage(1440, 2000, java.awt.image.BufferedImage.TYPE_INT_RGB);
+        java.util.Random random = new java.util.Random(7);
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                image.setRGB(x, y, random.nextInt(0xFFFFFF));
+            }
+        }
+        java.io.ByteArrayOutputStream png = new java.io.ByteArrayOutputStream();
+        javax.imageio.ImageIO.write(image, "png", png);
+
+        var result = mockMvc.perform(multipart("/api/v1/storage/upload")
+                        .file(new MockMultipartFile("file", "p1.png", "image/png", png.toByteArray()))
+                        .param("folder", "scans/lite")
+                        .header("Authorization", session.bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.liteCdnUrl", endsWith(".lite.jpg")))
+                .andReturn();
+
+        String storageKey = json(result).path("data").path("storageKey").asString();
+        byte[] lite = mockMvc.perform(get("/api/v1/storage/assets/" + storageKey + ".lite.jpg"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        assertThat(lite.length).isLessThan(png.size());
+        assertThat(javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(lite)).getWidth()).isEqualTo(720);
     }
 
     @Test

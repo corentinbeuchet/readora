@@ -51,6 +51,12 @@
             <artifactId>s3</artifactId>
         </dependency>
 
+        <!-- WebP reading for data-saver copies of uploaded pages (JPEG/PNG/GIF are built into ImageIO) -->
+        <dependency>
+            <groupId>com.twelvemonkeys.imageio</groupId>
+            <artifactId>imageio-webp</artifactId>
+        </dependency>
+
         <!-- Password hashing (BCrypt) and JWT encoding (Nimbus JOSE) without the Security web auto-configuration -->
         <dependency>
             <groupId>org.springframework.security</groupId>

@@ -30,6 +30,9 @@ public class PageAssetJpaEntity {
     @Column(length = 500)
     private String description;
 
+    @Column(name = "lite_cdn_url", length = 1024)
+    private String liteCdnUrl;
+
     public PageAssetJpaEntity() {}
 
     public PageAssetJpaEntity(ChapterJpaEntity chapter, int pageNumber, String storageKey, String cdnUrl, int width, int height) {
@@ -54,4 +57,6 @@ public class PageAssetJpaEntity {
     public void setHeight(int height) { this.height = height; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public String getLiteCdnUrl() { return liteCdnUrl; }
+    public void setLiteCdnUrl(String liteCdnUrl) { this.liteCdnUrl = liteCdnUrl; }
 }

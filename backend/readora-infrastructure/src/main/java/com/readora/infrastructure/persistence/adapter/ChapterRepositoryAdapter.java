@@ -107,7 +107,7 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
         List<PageAsset> pages = entity.getPages() != null ?
                 entity.getPages().stream()
                         .map(p -> new PageAsset(p.getPageNumber(), p.getStorageKey(), p.getCdnUrl(), p.getWidth(), p.getHeight(),
-                                p.getDescription()))
+                                p.getDescription(), p.getLiteCdnUrl()))
                         .toList() : List.of();
 
         return new Chapter(
@@ -150,6 +150,7 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
     private static PageAssetJpaEntity newPageEntity(ChapterJpaEntity chapter, PageAsset page) {
         PageAssetJpaEntity entity = new PageAssetJpaEntity(chapter, page.pageNumber(), page.storageKey(), page.cdnUrl(), page.width(), page.height());
         entity.setDescription(page.description());
+        entity.setLiteCdnUrl(page.liteCdnUrl());
         return entity;
     }
 
@@ -159,5 +160,6 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
         entity.setWidth(page.width());
         entity.setHeight(page.height());
         entity.setDescription(page.description());
+        entity.setLiteCdnUrl(page.liteCdnUrl());
     }
 }

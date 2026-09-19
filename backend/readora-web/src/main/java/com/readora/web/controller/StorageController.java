@@ -43,7 +43,7 @@ public class StorageController {
             throw new DomainValidationException("The uploaded file could not be read");
         }
         var stored = assets.upload(folder, file.getOriginalFilename(), file.getContentType(), bytes);
-        return ResponseEntity.ok(ApiResponse.ok(new StorageUploadResponse(stored.storageKey(), stored.publicUrl())));
+        return ResponseEntity.ok(ApiResponse.ok(new StorageUploadResponse(stored.storageKey(), stored.publicUrl(), stored.litePublicUrl())));
     }
 
     @GetMapping("/assets/**")

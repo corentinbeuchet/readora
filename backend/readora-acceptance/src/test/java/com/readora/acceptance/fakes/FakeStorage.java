@@ -4,10 +4,14 @@ import com.readora.application.port.out.StoragePort;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
-/// Storage that only knows how to build CDN URLs (enough for the reader use cases).
+/// In-memory storage with fake CDN URLs.
 public class FakeStorage implements StoragePort {
+
+    private final Map<String, byte[]> objects = new ConcurrentHashMap<>();
 
     @Override
     public String generatePresignedUploadUrl(String objectKey, Duration validity) {
@@ -21,16 +25,21 @@ public class FakeStorage implements StoragePort {
 
     @Override
     public void storeAsset(String objectKey, byte[] data, @Nullable String contentType) {
-        throw new UnsupportedOperationException("not used by the reader scenarios");
+        objects.put(objectKey, data.clone());
     }
 
     @Override
     public Optional<byte[]> loadAsset(String objectKey) {
-        return Optional.empty();
+        return Optional.ofNullable(objects.get(objectKey)).map(byte[]::clone);
+    }
+
+    /// The object behind a URL built by [#getPublicCdnUrl(String)].
+    public Optional<byte[]> loadByUrl(String url) {
+        return loadAsset(url.replace("https://cdn.readora.com/", ""));
     }
 
     @Override
     public String getContentType(String objectKey) {
-        return "image/webp";
+        return objectKey.endsWith(".jpg") ? "image/jpeg" : "image/webp";
     }
 }

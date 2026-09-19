@@ -31,7 +31,11 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
+import com.readora.application.service.AssetService;
+
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.Optional;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
@@ -56,6 +60,9 @@ public class ReadingExperienceStepDefinitions {
     private List<HistoryItem> history = List.of();
     private final java.util.Map<String, ChapterId> lastChapterRead = new java.util.HashMap<>();
     private InMemoryCommentRepository comments;
+    private FakeStorage storage;
+    private AssetService assets;
+    private boolean dataSaver;
     private ReaderSocialService social;
     private List<ChapterComment> shownComments = List.of();
 
@@ -67,7 +74,11 @@ public class ReadingExperienceStepDefinitions {
         InMemoryChapterReadRepository reads = new InMemoryChapterReadRepository(chapters);
         reading = new ReadingTrackerService(reads, chapters, works, clock);
         library = new LibraryService(new InMemoryLibraryRepository(), works, reads, clock);
-        chapterReader = new ChapterReadingService(chapters, works, new FakeStorage());
+        storage = new FakeStorage();
+        chapterReader = new ChapterReadingService(chapters, works, storage);
+        // Stand-in for the ImageIO adapter (tested in infrastructure): a copy a quarter of the size.
+        assets = new AssetService(storage, image -> Optional.of(Arrays.copyOf(image, image.length / 4)));
+        dataSaver = false;
         comments = new InMemoryCommentRepository();
         social = new ReaderSocialService(comments, chapters, event -> { });
         lastChapterRead.clear();
@@ -225,6 +236,34 @@ public class ReadingExperienceStepDefinitions {
     public void theThreeMostUpvotedCommentsWithoutSpoilersAreShown() {
         assertThat(shownComments).extracting(ChapterComment::getUpvotes).containsExactly(5, 4, 3);
         assertThat(shownComments).noneMatch(ChapterComment::isSpoiler);
+    }
+
+    @When("{string} turns on {string}")
+    public void turnsOn(String name, String setting) {
+        assertThat(setting).isEqualTo("Data saver");
+        dataSaver = true;
+    }
+
+    /// A team uploads chapter 6 as usual; every page gets a lighter copy that the reader serves in data-saver mode.
+    @Then("chapters load lighter, lower-quality images")
+    public void chaptersLoadLighterImages() {
+        WorkId workId = works.byTitle("Solo Leveling").getId();
+        List<PageAsset> pages = IntStream.rangeClosed(1, 3).mapToObj(n -> {
+            var stored = assets.upload("scans/solo/6", "p" + n + ".webp", "image/webp", new byte[4000]);
+            return new PageAsset(n, stored.storageKey(), stored.publicUrl(), 800, 1200, null, stored.litePublicUrl());
+        }).toList();
+        Chapter six = new Chapter(ChapterId.generate(), workId, ChapterNumber.of("6"), "Chapter 6", ChapterStatus.PUBLISHED,
+                pages, null, START, START, START);
+        chapters.save(six);
+
+        List<PageAsset> read = chapterReader.readChapter(six.getId(), reader, "VERTICAL").chapter().getPages();
+        assertThat(dataSaver).isTrue();
+        assertThat(read).allSatisfy(page -> {
+            String lite = page.liteCdnUrl();
+            assertThat(lite).isNotNull().isNotEqualTo(page.cdnUrl());
+            assertThat(storage.loadByUrl(lite).orElseThrow().length)
+                    .isLessThan(storage.loadByUrl(page.cdnUrl()).orElseThrow().length);
+        });
     }
 
     private void read(String title, int number) {

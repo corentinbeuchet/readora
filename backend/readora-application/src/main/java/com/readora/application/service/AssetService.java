@@ -1,6 +1,7 @@
 package com.readora.application.service;
 
 import com.readora.application.port.in.ManageAssetsUseCase;
+import com.readora.application.port.out.ImageVariantPort;
 import com.readora.application.port.out.StoragePort;
 import com.readora.domain.common.DomainValidationException;
 import org.jspecify.annotations.Nullable;
@@ -28,10 +29,15 @@ public class AssetService implements ManageAssetsUseCase {
     );
     private static final Duration PRESIGNED_UPLOAD_VALIDITY = Duration.ofMinutes(15);
 
-    private final StoragePort storagePort;
+    /// Suffix of the data-saver copy stored next to an uploaded image (US-07).
+    static final String LITE_SUFFIX = ".lite.jpg";
 
-    public AssetService(StoragePort storagePort) {
+    private final StoragePort storagePort;
+    private final ImageVariantPort imageVariants;
+
+    public AssetService(StoragePort storagePort, ImageVariantPort imageVariants) {
         this.storagePort = Objects.requireNonNull(storagePort, "StoragePort cannot be null");
+        this.imageVariants = Objects.requireNonNull(imageVariants, "ImageVariantPort cannot be null");
     }
 
     @Override
@@ -44,7 +50,20 @@ public class AssetService implements ManageAssetsUseCase {
         }
         String storageKey = newStorageKey(folder, originalFilename);
         storagePort.storeAsset(storageKey, data, contentType);
-        return new StoredAsset(storageKey, storagePort.getPublicCdnUrl(storageKey));
+        String liteUrl = null;
+        if (isImage(contentType)) {
+            Optional<byte[]> lite = imageVariants.lightVersion(data);
+            if (lite.isPresent()) {
+                String liteKey = storageKey + LITE_SUFFIX;
+                storagePort.storeAsset(liteKey, lite.get(), "image/jpeg");
+                liteUrl = storagePort.getPublicCdnUrl(liteKey);
+            }
+        }
+        return new StoredAsset(storageKey, storagePort.getPublicCdnUrl(storageKey), liteUrl);
+    }
+
+    private static boolean isImage(@Nullable String contentType) {
+        return contentType != null && contentType.toLowerCase(Locale.ROOT).startsWith("image/");
     }
 
     @Override

@@ -9,13 +9,16 @@ import java.util.Objects;
 ///
 /// @param description what the page shows, written by the uploader for screen-reader users (US-07); blank is
 ///                    stored as `null`
+/// @param liteCdnUrl  a lighter copy for the reader's data saver (US-07); `null` for pages uploaded before it
+///                    existed or when the copy would not have been smaller
 public record PageAsset(
         int pageNumber,
         String storageKey,
         @Nullable String cdnUrl,
         int width,
         int height,
-        @Nullable String description
+        @Nullable String description,
+        @Nullable String liteCdnUrl
 ) implements Serializable {
     public static final int MAX_DESCRIPTION_LENGTH = 500;
 
@@ -31,7 +34,7 @@ public record PageAsset(
     }
 
     public PageAsset(int pageNumber, String storageKey, @Nullable String cdnUrl, int width, int height) {
-        this(pageNumber, storageKey, cdnUrl, width, height, null);
+        this(pageNumber, storageKey, cdnUrl, width, height, null, null);
     }
 
     public static PageAsset create(int pageNumber, String storageKey, @Nullable String cdnUrl) {
@@ -39,6 +42,6 @@ public record PageAsset(
     }
 
     public PageAsset withCdnUrl(String url) {
-        return new PageAsset(pageNumber, storageKey, url, width, height, description);
+        return new PageAsset(pageNumber, storageKey, url, width, height, description, liteCdnUrl);
     }
 }
