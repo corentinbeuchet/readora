@@ -61,7 +61,7 @@ export async function publishChapter(request: APIRequestContext): Promise<{ work
         multipart: { file: { name: `${pageNumber}.png`, mimeType: 'image/png', buffer: PAGE_PNG } }
       })
     );
-    pages.push({ pageNumber, storageKey: stored.storageKey, cdnUrl: stored.cdnUrl, width: 800, height: 1200 });
+    pages.push({ pageNumber, storageKey: stored.storageKey, cdnUrl: stored.cdnUrl, width: 1, height: 1 });
   }
   const chapter = await data<{ id: string }>(
     await request.post(`${API_URL}/works/${work.id}/chapters/direct`, { headers, data: { chapterNumber: '1', title: 'The beginning', pages } })
