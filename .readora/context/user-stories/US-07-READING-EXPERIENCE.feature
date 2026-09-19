@@ -139,7 +139,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     And chapter 50 is highlighted as the next one to read
 
   # Inspired by: MangaDex reader side panel (from docs/use-cases UC-08)
-  @should @ui @wip
+  @should @ui
   Scenario: Opening the chapter list inside the reader
     Given "Kenji" is reading chapter 5 of "Solo Leveling"
     When he opens the chapter list from the reader

@@ -1,7 +1,7 @@
 import { ComponentFixture, DeferBlockBehavior, DeferBlockState, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { ChapterViewer, PROGRESS_SYNC_DEBOUNCE_MS, ZEN_CONTROLS_HIDE_MS } from '@app/features/reader/components/chapter-viewer';
 import { ReaderState } from '@app/features/reader/services/reader-state';
@@ -488,6 +488,51 @@ describe('ChapterViewer (API-driven)', () => {
     await loadChapter(undefined, latest);
     await switchMode('Vertical');
     expect(fixture.nativeElement.querySelector('.chapter-end').textContent).toContain("You're up to date");
+  });
+
+  it('Opening the chapter list inside the reader', async () => {
+    await signIn(store, http, mockUser({ permissions: ['LIBRARY_USE'] }));
+    const five: Chapter = { ...MOCK_CHAPTER, id: 'c-5', chapterNumber: '5' };
+    await loadChapter(undefined, five);
+    http.match(`${API}/reading/chapters/c-5`).forEach((r) => r.flush({ success: true, data: null, error: null }));
+    expect((fixture.nativeElement.querySelector('#reader-chapters') as HTMLElement).hidden).toBe(true);
+    http.expectNone(`${API}/works/${MOCK_CHAPTER.workId}/chapters`);
+
+    const toggle = toolbarButton('Chapters');
+    toggle.click();
+    await settle(fixture);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    http.expectOne(`${API}/works/${MOCK_CHAPTER.workId}/chapters`).flush({
+      success: true,
+      data: [1, 2, 3, 4, 5].map((n) => ({ id: `c-${n}`, workId: MOCK_CHAPTER.workId, chapterNumber: `${n}`, title: `Chapter ${n}`, status: 'PUBLISHED', pageCount: 3 })),
+      error: null
+    });
+    http.expectOne(`${API}/reading/works/${MOCK_CHAPTER.workId}`).flush({
+      success: true,
+      data: { workId: MOCK_CHAPTER.workId, finishedChapterIds: ['c-1', 'c-2', 'c-3', 'c-4'], nextChapterId: 'c-5' },
+      error: null
+    });
+    await settle(fixture);
+
+    const links: HTMLAnchorElement[] = Array.from(fixture.nativeElement.querySelectorAll('.reader-chapter-list a'));
+    expect(links).toHaveLength(5);
+    expect(links.filter((a) => a.classList.contains('read')).map((a) => a.getAttribute('href'))).toEqual(['/read/c-1', '/read/c-2', '/read/c-3', '/read/c-4']);
+    expect(links[4].getAttribute('aria-current')).toBe('page');
+    expect(links[1].getAttribute('href')).toBe('/read/c-2');
+
+    // Escape closes the list and gives focus back to its button.
+    press('Escape');
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(toggle);
+
+    // Choosing chapter 2 closes the list and navigates inside the reader.
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    toggle.click();
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelectorAll('.reader-chapter-list a')[1] as HTMLAnchorElement).click();
+    fixture.detectChanges();
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(String(navigate.mock.calls[0][0])).toBe('/read/c-2');
   });
 
   it('Seeing the best comments at the end of a chapter', async () => {

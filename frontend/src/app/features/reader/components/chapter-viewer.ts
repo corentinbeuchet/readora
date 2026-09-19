@@ -12,6 +12,7 @@ import {
   input,
   signal,
   untracked,
+  viewChild,
   viewChildren
 } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
@@ -20,6 +21,7 @@ import { Toolbar, ToolbarWidget, ToolbarWidgetGroup } from '@angular/aria/toolba
 import { Subject, catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BookmarksApi } from '@app/core/api/bookmarks-api';
+import { CatalogApi } from '@app/core/api/catalog-api';
 import { ChaptersApi } from '@app/core/api/chapters-api';
 import { CommentsApi } from '@app/core/api/comments-api';
 import { ReadingApi } from '@app/core/api/reading-api';
@@ -134,6 +136,15 @@ export class ChapterViewer {
     return chapter.pages.slice(from, from + PRELOADED_PAGES).filter((page) => !!page.cdnUrl);
   });
   protected readonly settingsOpen = signal(false);
+  /** In-reader chapter list (US-07). Its data loads the first time it is opened for a series. */
+  protected readonly chaptersOpen = signal(false);
+  private readonly chaptersToggle = viewChild<ElementRef<HTMLButtonElement>>('chaptersToggle');
+  private readonly listedWorkId = signal<string | undefined>(undefined);
+  protected readonly workChapters = inject(CatalogApi).chaptersResource(this.listedWorkId);
+  private readonly listedProgress = this.readingApi.progressResource(this.listedWorkId, this.canTrackReading);
+  protected readonly finishedChapters = computed(
+    () => new Set(this.listedProgress.hasValue() ? (this.listedProgress.value()?.finishedChapterIds ?? []) : [])
+  );
   /** Page number being reported (US-06), `null` when the dialog is closed. */
   protected readonly reportingPage = signal<number | null>(null);
   protected readonly reportConfirmation = signal<string | null>(null);
@@ -362,6 +373,11 @@ export class ChapterViewer {
     if ((event.target as HTMLElement | null)?.closest?.('[role="dialog"]')) {
       return;
     }
+    if (event.key === 'Escape' && this.chaptersOpen() && !event.defaultPrevented) {
+      event.preventDefault();
+      this.closeChapters(true);
+      return;
+    }
     if (event.key === 'Escape' && this.zen() && !event.defaultPrevented) {
       this.setZen(false);
       return;
@@ -463,6 +479,23 @@ export class ChapterViewer {
     if (this.hideControlsTimer !== null) {
       clearTimeout(this.hideControlsTimer);
       this.hideControlsTimer = null;
+    }
+  }
+
+  protected toggleChapters(): void {
+    if (this.chaptersOpen()) {
+      this.closeChapters(false);
+      return;
+    }
+    this.listedWorkId.set(this.state.currentChapter()?.workId);
+    this.chaptersOpen.set(true);
+  }
+
+  /** @param returnFocus give focus back to the "Chapters" button (Escape), not when a chapter link was chosen */
+  protected closeChapters(returnFocus: boolean): void {
+    this.chaptersOpen.set(false);
+    if (returnFocus) {
+      this.chaptersToggle()?.nativeElement.focus();
     }
   }
 
