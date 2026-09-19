@@ -1,5 +1,7 @@
-import { Component, inject } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@angular/aria/menu';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { LayoutStore } from '@app/core/layout/layout-store';
@@ -16,13 +18,42 @@ import { NgOptimizedImage } from '@angular/common';
   selector: 'app-shell',
   imports: [NgOptimizedImage, RouterOutlet, RouterLink, RouterLinkActive, Menu, MenuItem, MenuTrigger, MenuContent, HasPermissionDirective, Omnisearch, NotificationBell],
   templateUrl: './shell.html',
-  styleUrl: './shell.scss'
+  styleUrl: './shell.scss',
+  // Escape anywhere closes the small-screen navigation (no-op when it is closed).
+  host: { '(keydown.escape)': 'closeNav({ returnFocus: true })' }
 })
 export class Shell {
   protected readonly auth = inject(AuthStore);
   protected readonly layout = inject(LayoutStore);
   private readonly router = inject(Router);
   protected readonly year = new Date().getFullYear();
+
+  /** Small screens: whether the primary navigation disclosure is open (always shown from the lg breakpoint). */
+  protected readonly navOpen = signal(false);
+  private readonly navToggle = viewChild.required<ElementRef<HTMLButtonElement>>('navToggle');
+
+  constructor() {
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntilDestroyed()
+      )
+      .subscribe(() => this.navOpen.set(false));
+  }
+
+  protected toggleNav(): void {
+    this.navOpen.update((open) => !open);
+  }
+
+  protected closeNav(options: { returnFocus: boolean }): void {
+    if (!this.navOpen()) {
+      return;
+    }
+    this.navOpen.set(false);
+    if (options.returnFocus) {
+      this.navToggle().nativeElement.focus();
+    }
+  }
 
   protected onUserMenuSelected(action: unknown): void {
     if (action === 'logout') {

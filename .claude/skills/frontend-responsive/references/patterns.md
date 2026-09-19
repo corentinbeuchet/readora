@@ -5,13 +5,12 @@ Phone < 768px · tablet 768–1023px (portrait) · tablet landscape / laptop 102
 `frontend/src/app/`.
 
 ## Header and navigation (`features/layout/shell/`)
-- Target:
-  - **Phone:** logo, search icon (expands to the combobox), notification bell, account and a menu button that opens
-    the primary nav as a disclosure (`aria-expanded`), or a bottom tab bar with 3–5 items and
-    `env(safe-area-inset-bottom)` padding.
-  - **Tablet and up:** today's single row.
-- Now: one non-wrapping flex row with no small-screen variant (F39). The nav list wraps, the rest gets squeezed.
-- Keep the skip link first and the bell visible at every size.
+- **Below `lg` (1024px):** row 1 = logo, account area (bell, account menu or Log in/Sign up), "Menu" button; the
+  primary nav opens under it as a disclosure (`aria-expanded`/`aria-controls="primary-nav"`, Escape closes and returns
+  focus, choosing a page closes it); the search takes a full-width row. Visibility is pure CSS
+  (`[class.nav-open]` + `bp.from(lg)`), so the prerendered HTML is right on every width.
+- **From `lg`:** one row (logo, nav, search 12rem, account); search widens to 18rem from `xl`.
+- Long display names truncate (`.user-name`); the skip link stays first; the bell stays visible at every size.
 
 ## Catalog grids (works, library, history, rankings, updates)
 - Cover grid: `repeat(auto-fill, minmax(min(100%, 9rem), 1fr))`, which gives 2 columns on phones and grows without

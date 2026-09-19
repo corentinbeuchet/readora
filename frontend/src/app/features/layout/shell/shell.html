@@ -6,8 +6,13 @@
       <span class="logo-text">Readora</span>
     </a>
 
+    <!-- Below the lg breakpoint the navigation is a disclosure (CSS decides visibility, so prerendered HTML is right). -->
+    <button #navToggle type="button" class="btn nav-toggle" aria-controls="primary-nav" [attr.aria-expanded]="navOpen()" (click)="toggleNav()">
+      <span aria-hidden="true">☰</span> Menu
+    </button>
+
     <!-- Site navigation is a list of links (not an ARIA menubar): native Tab/Enter, one navigation per activation. -->
-    <nav class="app-nav" aria-label="Primary">
+    <nav id="primary-nav" class="app-nav" [class.nav-open]="navOpen()" aria-label="Primary">
       <ul class="nav-list">
         <li>
           <a class="nav-link" routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page" [routerLinkActiveOptions]="{ exact: true }">Home</a>
@@ -50,7 +55,7 @@
           @if (auth.user()?.avatarUrl; as avatar) {
             <img class="avatar" [ngSrc]="avatar" alt="" width="24" height="24" />
           }
-          <span>{{ auth.user()?.displayName }}</span>
+          <span class="user-name">{{ auth.user()?.displayName }}</span>
           @if (auth.isPremium()) {
             <span class="badge badge-premium">Premium</span>
           }

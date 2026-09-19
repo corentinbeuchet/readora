@@ -75,6 +75,40 @@ describe('Shell primary navigation', () => {
     thenTheLayoutIsImmersive(false);
   });
 
+  it('on small screens the navigation is a disclosure opened by the Menu button', () => {
+    givenIAmOnTheSite();
+
+    thenTheNavigationIsOpen(false);
+
+    whenIPressTheMenuButton();
+
+    thenTheNavigationIsOpen(true);
+
+    whenIPressTheMenuButton();
+
+    thenTheNavigationIsOpen(false);
+  });
+
+  it('Escape closes the open navigation and gives focus back to the Menu button', () => {
+    givenIAmOnTheSite();
+    whenIPressTheMenuButton();
+
+    whenIPressEscapeInTheNavigation();
+
+    thenTheNavigationIsOpen(false);
+    thenTheMenuButtonHasFocus();
+  });
+
+  it('choosing a page closes the navigation', async () => {
+    givenIAmOnTheSite();
+    whenIPressTheMenuButton();
+
+    await whenIClickTheNavigationLink('Catalog');
+
+    thenIAmOn('/works');
+    thenTheNavigationIsOpen(false);
+  });
+
   function givenIAmOnTheSite(): void {
     fixture = TestBed.createComponent(Shell);
     fixture.detectChanges();
@@ -95,6 +129,25 @@ describe('Shell primary navigation', () => {
   function whenTheReaderSwitchesZenMode(on: boolean): void {
     TestBed.inject(LayoutStore).setImmersive(on);
     fixture.detectChanges();
+  }
+
+  function whenIPressTheMenuButton(): void {
+    menuButton().click();
+    fixture.detectChanges();
+  }
+
+  function whenIPressEscapeInTheNavigation(): void {
+    links()[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    fixture.detectChanges();
+  }
+
+  function thenTheNavigationIsOpen(open: boolean): void {
+    expect(menuButton().getAttribute('aria-expanded')).toBe(String(open));
+    expect(fixture.nativeElement.querySelector('#primary-nav').classList.contains('nav-open')).toBe(open);
+  }
+
+  function thenTheMenuButtonHasFocus(): void {
+    expect(document.activeElement).toBe(menuButton());
   }
 
   function thenThereIsNoMenubar(): void {
@@ -123,6 +176,10 @@ describe('Shell primary navigation', () => {
 
   function thenTheLayoutIsImmersive(immersive: boolean): void {
     expect(fixture.nativeElement.querySelector('.app-layout').classList.contains('immersive')).toBe(immersive);
+  }
+
+  function menuButton(): HTMLButtonElement {
+    return fixture.nativeElement.querySelector('button[aria-controls="primary-nav"]');
   }
 
   function links(): HTMLAnchorElement[] {

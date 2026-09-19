@@ -1,3 +1,5 @@
+@use 'breakpoints' as bp;
+
 .app-layout {
   min-height: 100vh;
   display: flex;
@@ -21,16 +23,29 @@
 
 .app-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 2rem;
-  padding: 0.85rem 2rem;
+  gap: 0.5rem 0.75rem;
+  padding: 0.75rem var(--space-page);
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   position: relative;
+
+  @include bp.from(lg) {
+    flex-wrap: nowrap;
+    gap: 1.25rem;
+  }
 }
 
+// Phone layout: row 1 = logo, account area, menu button; then the opened navigation and the search, full width.
+// From lg: one row in DOM order (logo, navigation, search, account).
 .logo {
   text-decoration: none;
+  margin-inline-end: auto;
+
+  @include bp.from(lg) {
+    margin-inline-end: 0;
+  }
 }
 
 .logo-text {
@@ -40,19 +55,44 @@
   letter-spacing: -0.05em;
 }
 
+.nav-toggle {
+  order: 2;
+
+  @include bp.from(lg) {
+    display: none;
+  }
+}
+
 .app-nav {
-  flex: 1;
+  display: none;
+  order: 3;
+  flex-basis: 100%;
+
+  &.nav-open {
+    display: block;
+  }
+
+  @include bp.from(lg) {
+    display: block;
+    order: 0;
+    flex: 1;
+  }
 }
 
 .nav-list {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 0.25rem;
   list-style: none;
+
+  @include bp.from(lg) {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
 }
 
 .nav-link {
-  display: inline-block;
+  display: block;
   padding: 0.5rem 0.9rem;
   border-radius: 8px;
   color: var(--muted);
@@ -68,6 +108,25 @@
     outline: 2px solid var(--accent);
     outline-offset: 1px;
   }
+
+  @include bp.from(lg) {
+    display: inline-block;
+    padding-inline: 0.7rem;
+  }
+}
+
+app-omnisearch {
+  order: 4;
+  flex: 1 1 100%;
+
+  @include bp.from(lg) {
+    order: 0;
+    flex: 0 1 12rem;
+  }
+
+  @include bp.from(xl) {
+    flex-basis: 18rem;
+  }
 }
 
 .user-area {
@@ -75,10 +134,24 @@
   align-items: center;
   gap: 0.5rem;
   position: relative;
+  order: 1;
+  min-width: 0;
+
+  @include bp.from(lg) {
+    order: 0;
+  }
 }
 
 .user-trigger {
   gap: 0.6rem;
+  min-width: 0;
+}
+
+.user-name {
+  max-inline-size: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .avatar {
@@ -97,7 +170,7 @@
 }
 
 .app-footer {
-  padding: 1.25rem 2rem;
+  padding: 1.25rem var(--space-page);
   border-top: 1px solid var(--border);
   font-size: 0.85rem;
 }
