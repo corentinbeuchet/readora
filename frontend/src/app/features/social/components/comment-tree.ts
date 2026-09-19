@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, output, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ChapterComment } from '@app/core/models/readora.models';
@@ -29,9 +29,11 @@ export class CommentTree {
   /** Ids of spoilers the reader chose to reveal. Hidden spoiler text is never rendered (nor prerendered). */
   protected readonly revealedSpoilers = signal<ReadonlySet<string>>(new Set());
 
-  protected isHidden(comment: ChapterComment): boolean {
-    return comment.isSpoiler && !this.revealedSpoilers().has(comment.id);
-  }
+  /** Each comment with whether its spoiler is still hidden (computed once, not per template call). */
+  protected readonly rows = computed(() => {
+    const revealed = this.revealedSpoilers();
+    return this.comments().map((comment) => ({ comment, hidden: comment.isSpoiler && !revealed.has(comment.id) }));
+  });
 
   protected revealSpoiler(commentId: string): void {
     this.revealedSpoilers.update((ids) => new Set(ids).add(commentId));

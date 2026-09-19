@@ -68,9 +68,10 @@
         <p class="muted">No chapters have been published yet.</p>
       } @else {
         <ol class="chapter-list">
-          @for (chapter of chapters.value(); track chapter.id; let i = $index) {
-            @let read = isFinished(chapter.id);
-            @let next = chapter.id === nextChapterId();
+          @for (row of chapterRows(); track row.chapter.id) {
+            @let chapter = row.chapter;
+            @let read = row.read;
+            @let next = row.next;
             <li class="chapter-row">
               <a [routerLink]="['/read', chapter.id]" class="chapter-link" [class.chapter-read]="read" [class.chapter-next]="next">
                 <span class="chapter-number">Ch. {{ chapter.chapterNumber }}</span>
@@ -89,7 +90,7 @@
                   }
                 </span>
               </a>
-              @if (!read && hasUnreadBefore(i)) {
+              @if (row.canMarkPrevious) {
                 <button type="button" class="btn btn-sm btn-link mark-previous" [disabled]="library.busy()" (click)="markPreviousAsRead(chapter.id)">
                   Mark all previous as read<span class="sr-only"> (before chapter {{ chapter.chapterNumber }})</span>
                 </button>

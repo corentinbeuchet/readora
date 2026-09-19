@@ -50,20 +50,19 @@
         <legend>Genres</legend>
         <p class="muted genre-hint" id="genre-hint">Click a genre once to want it, twice to exclude it, a third time to clear it.</p>
         <ul class="genre-chips">
-          @for (genre of genres.value(); track genre) {
-            @let state = genreState(genre);
+          @for (chip of genreChips(); track chip.genre) {
             <li>
               <button
                 type="button"
                 class="chip"
-                [class.chip-wanted]="state === 'wanted'"
-                [class.chip-excluded]="state === 'excluded'"
-                [attr.aria-label]="genreLabel(genre)"
+                [class.chip-wanted]="chip.state === 'wanted'"
+                [class.chip-excluded]="chip.state === 'excluded'"
+                [attr.aria-label]="chip.label"
                 aria-describedby="genre-hint"
-                (click)="cycleGenre(genre)"
+                (click)="cycleGenre(chip.genre, chip.state)"
               >
-                <span class="chip-mark" aria-hidden="true">{{ state === 'wanted' ? '+' : state === 'excluded' ? '−' : '' }}</span>
-                {{ genre }}
+                <span class="chip-mark" aria-hidden="true">{{ chip.mark }}</span>
+                {{ chip.genre }}
               </button>
             </li>
           }

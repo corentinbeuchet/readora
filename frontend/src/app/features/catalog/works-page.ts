@@ -92,20 +92,17 @@ export class WorksPage {
     });
   }
 
-  protected genreState(genre: string): GenreState {
+  /** One chip per genre with its filter state and accessible label (computed once, not per template call). */
+  protected readonly genreChips = computed(() => {
     const query = this.query();
-    if (query.genres?.includes(genre)) return 'wanted';
-    if (query.excludedGenres?.includes(genre)) return 'excluded';
-    return 'off';
-  }
-
-  protected genreLabel(genre: string): string {
-    return `${genre}: ${GENRE_STATE_LABEL[this.genreState(genre)]}`;
-  }
+    return (this.genres.hasValue() ? this.genres.value() : []).map((genre) => {
+      const state: GenreState = query.genres?.includes(genre) ? 'wanted' : query.excludedGenres?.includes(genre) ? 'excluded' : 'off';
+      return { genre, state, label: `${genre}: ${GENRE_STATE_LABEL[state]}`, mark: state === 'wanted' ? '+' : state === 'excluded' ? '−' : '' };
+    });
+  });
 
   /** Off → wanted → excluded → off. */
-  protected cycleGenre(genre: string): void {
-    const state = this.genreState(genre);
+  protected cycleGenre(genre: string, state: GenreState): void {
     const wanted = (this.query().genres ?? []).filter((g) => g !== genre);
     const excluded = (this.query().excludedGenres ?? []).filter((g) => g !== genre);
     if (state === 'off') wanted.push(genre);

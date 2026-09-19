@@ -64,6 +64,22 @@ export class WorkDetailPage {
 
   private readonly progress = this.readingApi.progressResource(this.workId, this.canUseLibrary);
   private readonly finished = computed(() => new Set(this.progress.hasValue() ? (this.progress.value()?.finishedChapterIds ?? []) : []));
+  /**
+   * One row per chapter with its read marks, computed in a single pass: "Mark all previous as read" is offered only
+   * on an unread chapter that has unread chapters before it (where it would change something).
+   */
+  protected readonly chapterRows = computed(() => {
+    const finished = this.finished();
+    const next = this.nextChapterId();
+    const canMark = this.canUseLibrary() && this.progress.hasValue();
+    let unreadBefore = false;
+    return (this.chapters.hasValue() ? this.chapters.value() : []).map((chapter) => {
+      const read = finished.has(chapter.id);
+      const row = { chapter, read, next: chapter.id === next, canMarkPrevious: canMark && !read && unreadBefore };
+      unreadBefore ||= !read;
+      return row;
+    });
+  });
   protected readonly nextChapterId = computed(() => (this.progress.hasValue() ? (this.progress.value()?.nextChapterId ?? null) : null));
   /** "Continue" for a free reader who already finished chapters here. */
   protected readonly continueChapter = computed(() => {
@@ -89,16 +105,6 @@ export class WorkDetailPage {
         });
       }
     });
-  }
-
-  protected isFinished(chapterId: string): boolean {
-    return this.finished().has(chapterId);
-  }
-
-  /** Offers "Mark all previous as read" only where it would change something. */
-  protected hasUnreadBefore(index: number): boolean {
-    if (!this.canUseLibrary() || !this.progress.hasValue() || !this.chapters.hasValue()) return false;
-    return this.chapters.value().slice(0, index).some((chapter) => !this.finished().has(chapter.id));
   }
 
   protected async markPreviousAsRead(chapterId: string): Promise<void> {

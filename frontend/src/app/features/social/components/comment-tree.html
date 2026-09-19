@@ -2,7 +2,8 @@
   <h3 class="comments-heading">Community Discussion ({{ comments().length }})</h3>
 
   <div class="comment-list">
-    @for (comment of comments(); track comment.id) {
+    @for (row of rows(); track row.comment.id) {
+      @let comment = row.comment;
       <div class="comment-node" [attr.id]="'comment-' + comment.id" [class.comment-highlight]="comment.id === highlightId()"
            [style.margin-left.rem]="(comment.depth - 1) * 1.5">
         <div class="comment-header">
@@ -13,7 +14,7 @@
           <span class="comment-date">{{ comment.createdAt | date:'short' }}</span>
         </div>
 
-        @if (isHidden(comment)) {
+        @if (row.hidden) {
           <!-- The spoiler text is not in the DOM (nor in prerendered HTML) until revealed. -->
           <p class="comment-content spoiler-placeholder muted">This comment contains spoilers.</p>
           <button type="button" (click)="revealSpoiler(comment.id)" class="btn-spoiler">
