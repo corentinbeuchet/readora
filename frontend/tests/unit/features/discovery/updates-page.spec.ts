@@ -19,10 +19,11 @@ function release(id: string, title: string, number: string, minutesAgo: number, 
   };
 }
 
-/** Given/When/Then model for routed-page tests (see the frontend-component-tests skill). */
+/** Model for routed-page tests: given/when/then methods (frontend-component-tests skill). */
 describe('UpdatesPage (US-08)', () => {
   let harness: RouterTestingHarness;
   let http: HttpTestingController;
+  let feedRequest: TestRequest;
 
   beforeEach(async () => {
     // "10 minutes ago" must not depend on how long the run takes.
@@ -38,65 +39,106 @@ describe('UpdatesPage (US-08)', () => {
     vi.useRealTimers();
   });
 
-  const el = (): HTMLElement => harness.routeNativeElement as HTMLElement;
-  const rows = (): HTMLElement[] => Array.from(el().querySelectorAll('.release'));
-
-  /** Opens `url` through the real router; returns the feed request, still unanswered, so the test decides the answer. */
-  async function givenUpdatesPageAt(url: string): Promise<TestRequest> {
-    harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl(url);
-    await settle(harness);
-    return http.expectOne((r) => r.url === `${API}/updates`);
-  }
-
-  async function whenFeedAnswers(request: TestRequest, releases: Release[]): Promise<void> {
-    request.flush(ok(releases));
-    await settle(harness);
-  }
-
   it('lists the newest chapters with their age and a Read now link; guests get no "My library" tab', async () => {
-    // Given
-    const feed = await givenUpdatesPageAt('/updates');
+    await givenIOpenTheUpdates('/updates');
 
-    // When
-    await whenFeedAnswers(feed, [release('op-180', 'One Piece', '180', 10), release('sl-6', 'Solo Leveling', '6', 120)]);
+    await whenTheFeedAnswers([release('op-180', 'One Piece', '180', 10), release('sl-6', 'Solo Leveling', '6', 120)]);
 
-    // Then
-    expect(feed.request.params.get('mine')).toBe('false');
-    expect(rows()[0].textContent).toContain('One Piece');
-    expect(rows()[0].textContent).toContain('10 minutes ago');
-    expect(rows()[0].querySelector<HTMLAnchorElement>('a.btn-primary')!.getAttribute('href')).toBe('/read/op-180');
-    expect(el().querySelector('.feed-tabs')).toBeNull();
+    thenTheFeedWasAskedFor({ mine: false });
+    thenReleaseShows(1, 'One Piece', '10 minutes ago');
+    thenReleaseLinksTo(1, '/read/op-180');
+    thenThereIsNoFeedChoice();
   });
 
   it('shows only my library with read badges when "My library" is chosen', async () => {
-    // Given
-    await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: ['LIBRARY_USE'] }));
-    const feed = await givenUpdatesPageAt('/updates?feed=mine');
+    await givenIAmSignedInWithALibrary();
+    await givenIOpenTheUpdates('/updates?feed=mine');
 
-    // When
-    await whenFeedAnswers(feed, [release('sl-6', 'Solo Leveling', '6', 5), release('sl-5', 'Solo Leveling', '5', 60, true)]);
+    await whenTheFeedAnswers([release('sl-6', 'Solo Leveling', '6', 5), release('sl-5', 'Solo Leveling', '5', 60, true)]);
 
-    // Then
-    expect(feed.request.params.get('mine')).toBe('true');
-    expect(el().querySelector('.tab[aria-current="page"]')!.textContent!.trim()).toBe('My library');
-    expect(rows()[1].classList).toContain('release-read');
-    expect(rows()[1].textContent).toContain('Read');
-    expect(rows()[0].querySelector('.badge')).toBeNull();
+    thenTheFeedWasAskedFor({ mine: true });
+    thenTheSelectedFeedIs('My library');
+    thenReleaseIsMarkedRead(2);
+    thenReleaseIsNotMarkedRead(1);
   });
 
   it('offers a retry when the feed fails', async () => {
-    // Given
-    const failing = await givenUpdatesPageAt('/updates');
-    failing.flush(fail('down'));
-    await settle(harness);
+    await givenIOpenTheUpdates('/updates');
+    await givenTheFeedFails();
 
-    // When
-    el().querySelector<HTMLButtonElement>('[role="alert"] button')!.click();
-    await settle(harness);
-    await whenFeedAnswers(http.expectOne((r) => r.url === `${API}/updates`), []);
+    await whenIRetry();
+    await whenTheFeedAnswers([]);
 
-    // Then
-    expect(el().textContent).toContain('No chapters have been published yet.');
+    thenICanSee('No chapters have been published yet.');
   });
+
+  async function givenIAmSignedInWithALibrary(): Promise<void> {
+    await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: ['LIBRARY_USE'] }));
+  }
+
+  /** Opens `url` through the real router; the feed request stays pending until a `whenTheFeed…` answers it. */
+  async function givenIOpenTheUpdates(url: string): Promise<void> {
+    harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl(url);
+    await settle(harness);
+    feedRequest = http.expectOne((r) => r.url === `${API}/updates`);
+  }
+
+  async function givenTheFeedFails(): Promise<void> {
+    feedRequest.flush(fail('down'));
+    await settle(harness);
+  }
+
+  async function whenTheFeedAnswers(releases: Release[]): Promise<void> {
+    feedRequest.flush(ok(releases));
+    await settle(harness);
+  }
+
+  async function whenIRetry(): Promise<void> {
+    page().querySelector<HTMLButtonElement>('[role="alert"] button')!.click();
+    await settle(harness);
+    feedRequest = http.expectOne((r) => r.url === `${API}/updates`);
+  }
+
+  function thenTheFeedWasAskedFor(filter: { mine: boolean }): void {
+    expect(feedRequest.request.params.get('mine')).toBe(String(filter.mine));
+  }
+
+  function thenReleaseShows(position: number, title: string, age: string): void {
+    expect(releaseRow(position).textContent).toContain(title);
+    expect(releaseRow(position).textContent).toContain(age);
+  }
+
+  function thenReleaseLinksTo(position: number, href: string): void {
+    expect(releaseRow(position).querySelector('a.btn-primary')!.getAttribute('href')).toBe(href);
+  }
+
+  function thenReleaseIsMarkedRead(position: number): void {
+    expect(releaseRow(position).classList).toContain('release-read');
+    expect(releaseRow(position).textContent).toContain('Read');
+  }
+
+  function thenReleaseIsNotMarkedRead(position: number): void {
+    expect(releaseRow(position).querySelector('.badge')).toBeNull();
+  }
+
+  function thenThereIsNoFeedChoice(): void {
+    expect(page().querySelector('.feed-tabs')).toBeNull();
+  }
+
+  function thenTheSelectedFeedIs(label: string): void {
+    expect(page().querySelector('.tab[aria-current="page"]')!.textContent!.trim()).toBe(label);
+  }
+
+  function thenICanSee(text: string): void {
+    expect(page().textContent).toContain(text);
+  }
+
+  function page(): HTMLElement {
+    return harness.routeNativeElement as HTMLElement;
+  }
+
+  function releaseRow(position: number): HTMLElement {
+    return page().querySelectorAll<HTMLElement>('.release')[position - 1];
+  }
 });

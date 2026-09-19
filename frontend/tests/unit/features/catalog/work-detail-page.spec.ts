@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { WorkDetailPage } from '@app/features/catalog/work-detail-page';
 import { AuthStore } from '@app/core/auth/auth-store';
@@ -69,7 +69,7 @@ describe('WorkDetailPage', () => {
     expect(fixture.nativeElement.textContent).not.toContain('No chapters have been published yet.');
   });
 
-  /** Given/When/Then model for component tests (see the frontend-component-tests skill). */
+  /** Model for component tests: given/when/then methods (frontend-component-tests skill). */
   describe('library and read markers (LIBRARY_USE)', () => {
     const CHAPTERS = ['1', '2', '3'].map((n) => ({
       id: `c-${n}`,
@@ -79,12 +79,45 @@ describe('WorkDetailPage', () => {
       status: 'PUBLISHED' as const,
       pageCount: 10
     }));
+    let lastRequest: TestRequest;
 
-    /**
-     * A free reader on the page of a 3-chapter series. What the tests assert on is passed in: whether the series is
-     * in the library, which chapters are finished and which one is next.
-     */
-    async function givenWorkPage(state: { inLibrary: boolean; finished: string[]; next: string }): Promise<void> {
+    it('dims finished chapters, highlights the next one and continues from it', async () => {
+      await givenIAmOnTheWorkPage({ inLibrary: true, finished: ['c-1'], next: 'c-2' });
+
+      thenChapterIsRead(1);
+      thenChapterIsNextUp(2);
+      thenChapterIsUnread(3);
+      thenICanContinueWith('Continue with chapter 2', '/read/c-2');
+      thenMyLibraryStatusIs('READING');
+    });
+
+    it('Marking all previous chapters as read', async () => {
+      await givenIAmOnTheWorkPage({ inLibrary: true, finished: ['c-1'], next: 'c-2' });
+      thenICanMarkPreviousChaptersOnlyBefore(3);
+
+      await whenIMarkTheChaptersBeforeAsRead(3, { nowFinished: ['c-1', 'c-2'], next: 'c-3' });
+
+      thenTheRequestWas('POST', `${API}/reading/chapters/c-3/read-up-to`);
+      thenChapterIsRead(2);
+      thenChapterIsNextUp(3);
+      thenICanNoLongerMarkPreviousChapters();
+    });
+
+    it('adds the series to the library, then removes it', async () => {
+      await givenIAmOnTheWorkPage({ inLibrary: false, finished: [], next: 'c-1' });
+
+      await whenIAddTheSeriesToMyLibrary({ savedAs: 'READING' });
+
+      thenTheRequestWas('PUT', `${API}/library/${WORK.id}`, {});
+      thenMyLibraryStatusIs('READING');
+
+      await whenIRemoveTheSeriesFromMyLibrary();
+
+      thenTheSeriesIsNotInMyLibrary();
+    });
+
+    /** A free reader on a 3-chapter series; the library and read state the test checks are its arguments. */
+    async function givenIAmOnTheWorkPage(state: { inLibrary: boolean; finished: string[]; next: string }): Promise<void> {
       await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: ['LIBRARY_USE'] }));
       fixture = TestBed.createComponent(WorkDetailPage);
       fixture.componentRef.setInput('workId', WORK.id);
@@ -102,70 +135,86 @@ describe('WorkDetailPage', () => {
       await settle(fixture);
     }
 
-    const chapterLinks = (): HTMLElement[] => Array.from(fixture.nativeElement.querySelectorAll('.chapter-link'));
-    const markPreviousButtons = (): HTMLButtonElement[] => Array.from(fixture.nativeElement.querySelectorAll('.mark-previous'));
-    const button = (label: string): HTMLButtonElement =>
-      Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('button')).find((b) => b.textContent?.includes(label))!;
-    const libraryStatus = (): string | undefined => fixture.nativeElement.querySelector('.library-status select')?.value;
-
-    it('dims finished chapters, highlights the next one and continues from it', async () => {
-      // Given
-      await givenWorkPage({ inLibrary: true, finished: ['c-1'], next: 'c-2' });
-
-      // Then
-      expect(chapterLinks()[0].classList).toContain('chapter-read');
-      expect(chapterLinks()[0].textContent).toContain('✓ Read');
-      expect(chapterLinks()[1].classList).toContain('chapter-next');
-      expect(chapterLinks()[1].textContent).toContain('Next up');
-      expect(chapterLinks()[2].classList).not.toContain('chapter-read');
-      const primary: HTMLAnchorElement = fixture.nativeElement.querySelector('.work-actions a.btn-primary');
-      expect(primary.textContent).toContain('Continue with chapter 2');
-      expect(primary.getAttribute('href')).toBe('/read/c-2');
-      expect(libraryStatus()).toBe('READING');
-    });
-
-    it('Marking all previous chapters as read', async () => {
-      // Given chapter 1 read: chapter 2 only has read chapters before it, so only chapter 3 offers the action
-      await givenWorkPage({ inLibrary: true, finished: ['c-1'], next: 'c-2' });
-      expect(markPreviousButtons()).toHaveLength(1);
-      expect(markPreviousButtons()[0].textContent).toContain('before chapter 3');
-
-      // When
-      markPreviousButtons()[0].click();
-      const request = http.expectOne(`${API}/reading/chapters/c-3/read-up-to`);
-      request.flush(ok({ workId: WORK.id, finishedChapterIds: ['c-1', 'c-2'], nextChapterId: 'c-3' }));
+    async function whenIMarkTheChaptersBeforeAsRead(chapter: number, progress: { nowFinished: string[]; next: string }): Promise<void> {
+      markPreviousButton(chapter)!.click();
+      lastRequest = http.expectOne(`${API}/reading/chapters/c-${chapter}/read-up-to`);
+      lastRequest.flush(ok({ workId: WORK.id, finishedChapterIds: progress.nowFinished, nextChapterId: progress.next }));
       await settle(fixture);
+    }
 
-      // Then
-      expect(request.request.method).toBe('POST');
-      expect(chapterLinks()[1].classList).toContain('chapter-read');
-      expect(chapterLinks()[2].classList).toContain('chapter-next');
-      expect(markPreviousButtons()).toHaveLength(0);
-    });
-
-    it('adds the series to the library, then removes it', async () => {
-      // Given
-      await givenWorkPage({ inLibrary: false, finished: [], next: 'c-1' });
-
-      // When
+    async function whenIAddTheSeriesToMyLibrary(answer: { savedAs: string }): Promise<void> {
       button('Add to library').click();
-      const save = http.expectOne(`${API}/library/${WORK.id}`);
-      save.flush(ok({ workId: WORK.id, status: 'READING', addedAt: '', updatedAt: '' }));
+      lastRequest = http.expectOne(`${API}/library/${WORK.id}`);
+      lastRequest.flush(ok({ workId: WORK.id, status: answer.savedAs, addedAt: '', updatedAt: '' }));
       await settle(fixture);
+    }
 
-      // Then
-      expect(save.request.method).toBe('PUT');
-      expect(save.request.body).toEqual({});
-      expect(libraryStatus()).toBe('READING');
-
-      // When
+    async function whenIRemoveTheSeriesFromMyLibrary(): Promise<void> {
       button('Remove from library').click();
-      http.expectOne(`${API}/library/${WORK.id}`).flush(null, { status: 204, statusText: 'No Content' });
+      lastRequest = http.expectOne(`${API}/library/${WORK.id}`);
+      lastRequest.flush(null, { status: 204, statusText: 'No Content' });
       await settle(fixture);
+    }
 
-      // Then
-      expect(libraryStatus()).toBeUndefined();
+    function thenChapterIsRead(chapter: number): void {
+      expect(chapterLink(chapter).classList).toContain('chapter-read');
+      expect(chapterLink(chapter).textContent).toContain('✓ Read');
+    }
+
+    function thenChapterIsUnread(chapter: number): void {
+      expect(chapterLink(chapter).classList).not.toContain('chapter-read');
+    }
+
+    function thenChapterIsNextUp(chapter: number): void {
+      expect(chapterLink(chapter).classList).toContain('chapter-next');
+      expect(chapterLink(chapter).textContent).toContain('Next up');
+    }
+
+    function thenICanContinueWith(label: string, href: string): void {
+      const primary: HTMLAnchorElement = fixture.nativeElement.querySelector('.work-actions a.btn-primary');
+      expect(primary.textContent).toContain(label);
+      expect(primary.getAttribute('href')).toBe(href);
+    }
+
+    function thenMyLibraryStatusIs(status: string): void {
+      expect(fixture.nativeElement.querySelector('.library-status select')?.value).toBe(status);
+    }
+
+    function thenTheSeriesIsNotInMyLibrary(): void {
+      expect(fixture.nativeElement.querySelector('.library-status')).toBeNull();
       expect(button('Add to library')).toBeDefined();
-    });
+    }
+
+    /** Chapter 1 has nothing before it; chapter 2 only has read chapters before it. */
+    function thenICanMarkPreviousChaptersOnlyBefore(chapter: number): void {
+      expect(markPreviousButtons()).toHaveLength(1);
+      expect(markPreviousButton(chapter)).toBeDefined();
+    }
+
+    function thenICanNoLongerMarkPreviousChapters(): void {
+      expect(markPreviousButtons()).toHaveLength(0);
+    }
+
+    function thenTheRequestWas(method: string, url: string, body?: unknown): void {
+      expect(lastRequest.request.method).toBe(method);
+      expect(lastRequest.request.url).toBe(url);
+      if (body !== undefined) expect(lastRequest.request.body).toEqual(body);
+    }
+
+    function chapterLink(chapter: number): HTMLElement {
+      return fixture.nativeElement.querySelectorAll('.chapter-link')[chapter - 1];
+    }
+
+    function markPreviousButtons(): HTMLButtonElement[] {
+      return Array.from(fixture.nativeElement.querySelectorAll('.mark-previous'));
+    }
+
+    function markPreviousButton(chapter: number): HTMLButtonElement | undefined {
+      return markPreviousButtons().find((b) => b.textContent?.includes(`before chapter ${chapter}`));
+    }
+
+    function button(label: string): HTMLButtonElement {
+      return Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('button')).find((b) => b.textContent?.includes(label))!;
+    }
   });
 });
