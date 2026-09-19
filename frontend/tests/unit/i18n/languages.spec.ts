@@ -54,6 +54,10 @@ describe('US-13 Reading Readora in my language', () => {
     thenISeeTheAlert('E-mail ou mot de passe incorrect.');
   });
 
+  it('Counts of zero and one read as singular in French', () => {
+    thenEveryFrenchPluralHasZeroAndOneForms();
+  });
+
   function givenIUseTheFrenchSite(): void {
     registerLocaleData(localeFr);
     loadTranslations(FRENCH);
@@ -115,6 +119,17 @@ describe('US-13 Reading Readora in my language', () => {
 
   function thenISeeTheAlert(message: string): void {
     expect(text(fixture.nativeElement.querySelector('[role="alert"]'))).toBe(message);
+  }
+
+  /**
+   * French counts 0 as singular ("0 page"), so `other` alone would print "0 pages"; and a word that doesn't change
+   * in English ("1 series") still does in French ("1 série").
+   */
+  function thenEveryFrenchPluralHasZeroAndOneForms(): void {
+    const incomplete = Object.entries(FRENCH)
+      .filter(([, message]) => message.includes(', plural,') && !(message.includes('=0 {') && message.includes('=1 {')))
+      .map(([id]) => id);
+    expect(incomplete).toEqual([]);
   }
 
   function typeInto(selector: string, value: string): void {

@@ -15,7 +15,7 @@
     "omnisearch.error": "La recherche est indisponible pour le moment.",
     "omnisearch.noMatch": "Aucune série ne correspond à « {$INTERPOLATION} ».",
     "omnisearch.seeAll": " Voir tous les résultats pour « {$INTERPOLATION} » ",
-    "omnisearch.count": "{VAR_PLURAL, plural, =1 {1 suggestion} other {{INTERPOLATION} suggestions}}",
+    "omnisearch.count": "{VAR_PLURAL, plural, =0 {0 suggestion} =1 {1 suggestion} other {{INTERPOLATION} suggestions}}",
     "shell.skipLink": "Aller au contenu principal",
     "shell.homeLink": "Accueil Readora",
     "shell.menu": "Menu",

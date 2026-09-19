@@ -10,7 +10,7 @@
     "discovery.rankings.loading": "Chargement du classement…",
     "discovery.rankings.loadError": "Impossible de charger le classement.",
     "discovery.rankings.empty": "Pas encore assez d'activité pour ce classement.",
-    "discovery.rankings.ratingCount": "{VAR_PLURAL, plural, =1 {1 note} other {{INTERPOLATION} notes}}",
+    "discovery.rankings.ratingCount": "{VAR_PLURAL, plural, =0 {0 note} =1 {1 note} other {{INTERPOLATION} notes}}",
     "discovery.rankings.periods.today": "Aujourd'hui",
     "discovery.rankings.periods.week": "Cette semaine",
     "discovery.rankings.periods.month": "Ce mois-ci",

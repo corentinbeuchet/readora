@@ -21,7 +21,7 @@
     "library.page.emptyStatus": "Rien n'est encore marqué « {$INTERPOLATION} ».",
     "library.page.empty": "Votre bibliothèque est vide. Ouvrez une série et choisissez « Ajouter à la bibliothèque ».",
     "library.page.browse": "Parcourir le catalogue",
-    "library.page.newChapters": "{VAR_PLURAL, plural, =1 {1 nouveau{START_TAG_SPAN} chapitre{CLOSE_TAG_SPAN}} other {{INTERPOLATION} nouveaux{START_TAG_SPAN} chapitres{CLOSE_TAG_SPAN}}}",
+    "library.page.newChapters": "{VAR_PLURAL, plural, =0 {0 nouveau{START_TAG_SPAN} chapitre{CLOSE_TAG_SPAN}} =1 {1 nouveau{START_TAG_SPAN} chapitre{CLOSE_TAG_SPAN}} other {{INTERPOLATION} nouveaux{START_TAG_SPAN} chapitres{CLOSE_TAG_SPAN}}}",
     "library.page.statusLabel": "Statut de lecture de {$INTERPOLATION}",
     "library.page.notify": "Alertes de nouveaux chapitres{$START_TAG_SPAN} pour {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
     "library.page.remove": " Retirer{$START_TAG_SPAN} {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
