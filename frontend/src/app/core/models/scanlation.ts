@@ -33,3 +33,22 @@ export interface CreateTaskRequest {
   assetUrl: string;
   pageCount: number;
 }
+
+/** An open task nobody holds yet; published or completed work can't be claimed. */
+export function canClaim(task: WorkflowTask): boolean {
+  return task.stage !== 'PUBLISHED' && task.status !== 'COMPLETED' && !task.assigneeId;
+}
+
+/** Only the assignee submits, and QC review ends with a publish, not a submit. */
+export function canSubmit(task: WorkflowTask, userId: string | null): boolean {
+  return task.stage !== 'PUBLISHED' && task.stage !== 'QC_REVIEW' && isAssignedTo(task, userId);
+}
+
+/** A chapter is published from the QC review stage. */
+export function canPublish(task: WorkflowTask): boolean {
+  return task.stage === 'QC_REVIEW';
+}
+
+export function isAssignedTo(task: WorkflowTask, userId: string | null): boolean {
+  return !!task.assigneeId && task.assigneeId === userId;
+}

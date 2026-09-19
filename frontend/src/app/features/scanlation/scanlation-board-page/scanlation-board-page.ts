@@ -6,7 +6,7 @@ import { ScanlationApi } from '@app/core/api/scanlation-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { Dialog } from '@app/shared/ui/dialog/dialog';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
-import { WorkflowTask } from '@app/core/models/scanlation';
+import { WorkflowTask, canClaim, canPublish, canSubmit, isAssignedTo } from '@app/core/models/scanlation';
 import { SeoService } from '@app/core/seo/seo.service';
 import { STAGES, tasksByStage, withTask, withTaskStage } from './scanlation-board';
 import { PageReportsPanel } from './page-reports-panel/page-reports-panel';
@@ -49,13 +49,12 @@ export class ScanlationBoardPage {
     return STAGES.map((stage) => ({
       ...stage,
       tasks: byStage[stage.key].map((task) => {
-        const mine = !!task.assigneeId && task.assigneeId === me;
         return {
           task,
-          mine,
-          canClaim: task.stage !== 'PUBLISHED' && task.status !== 'COMPLETED' && !task.assigneeId,
-          canSubmit: task.stage !== 'PUBLISHED' && task.stage !== 'QC_REVIEW' && mine,
-          canPublish: task.stage === 'QC_REVIEW'
+          mine: isAssignedTo(task, me),
+          canClaim: canClaim(task),
+          canSubmit: canSubmit(task, me),
+          canPublish: canPublish(task)
         };
       })
     }));
