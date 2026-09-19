@@ -1,6 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
-import { PublishFlow } from '@app/features/upload/services/publish-flow';
-import { UploadWizard } from '@app/features/upload/services/upload-wizard';
+import { PublishFlow } from '@app/features/upload/upload-studio-page/publish-flow';
+import { UploadWizard } from '@app/features/upload/upload-studio-page/upload-wizard';
 
 /** Step 4: what will be published, then publishing with its progress (retries resume where they stopped). */
 @Component({

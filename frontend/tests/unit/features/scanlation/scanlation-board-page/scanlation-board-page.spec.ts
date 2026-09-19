@@ -1,10 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { ScanlationBoardPage } from '@app/features/scanlation/scanlation-board-page';
+import { ScanlationBoardPage } from '@app/features/scanlation/scanlation-board-page/scanlation-board-page';
 import { ScanlationProject, WorkflowTask } from '@app/core/models/readora.models';
-import { givenIAmSignedInWith } from '../../core/auth/auth-fixtures';
-import { API, fail, ok, provideHttpTesting, settle } from '../../test-utils';
+import { givenIAmSignedInWith } from '../../../core/auth/auth-fixtures';
+import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 
 const PROJECT_ID = 'proj-1';
 const TASKS_URL = `${API}/scanlation/projects/${PROJECT_ID}/tasks`;

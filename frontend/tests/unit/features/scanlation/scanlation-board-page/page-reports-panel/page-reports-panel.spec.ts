@@ -1,9 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { PageReportsPanel } from '@app/features/scanlation/components/page-reports-panel';
+import { PageReportsPanel } from '@app/features/scanlation/scanlation-board-page/page-reports-panel/page-reports-panel';
 import { PageReport } from '@app/core/models/readora.models';
-import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
+import { API, fail, ok, provideHttpTesting, settle } from '../../../../test-utils';
 
 const LIST_URL = `${API}/scanlation/projects/proj-1/page-reports`;
 const REPORT: PageReport = {

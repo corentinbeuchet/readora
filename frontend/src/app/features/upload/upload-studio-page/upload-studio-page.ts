@@ -1,16 +1,16 @@
 import { Component, inject } from '@angular/core';
 import { SeoService } from '@app/core/seo/seo.service';
-import { ChapterStep } from './components/chapter-step';
-import { PagesStep } from './components/pages-step';
-import { ReviewStep } from './components/review-step';
-import { SeriesStep } from './components/series-step';
-import { UploadSuccess } from './components/upload-success';
-import { WizardSteps } from './components/wizard-steps';
-import { PublishFlow } from './services/publish-flow';
-import { UploadWizard } from './services/upload-wizard';
+import { ChapterStep } from './chapter-step/chapter-step';
+import { PagesStep } from './pages-step/pages-step';
+import { ReviewStep } from './review-step/review-step';
+import { SeriesStep } from './series-step/series-step';
+import { UploadSuccess } from './upload-success/upload-success';
+import { WizardSteps } from './wizard-steps/wizard-steps';
+import { PublishFlow } from './publish-flow';
+import { UploadWizard } from './upload-wizard';
 
-export { GENRE_PRESETS, parseChapterNumber } from './services/upload-wizard';
-export type { PublishingMode, UploadStep } from './services/upload-wizard';
+export { GENRE_PRESETS, parseChapterNumber } from './upload-wizard';
+export type { PublishingMode, UploadStep } from './upload-wizard';
 
 /**
  * Upload studio (`/upload`): a wizard to create a series and publish its first chapter, directly or through the

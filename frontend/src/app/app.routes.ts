@@ -46,7 +46,7 @@ export const routes: Routes = [
   },
   {
     path: 'upload',
-    loadComponent: () => import('@app/features/upload/upload-studio-page').then((m) => m.UploadStudioPage),
+    loadComponent: () => import('@app/features/upload/upload-studio-page/upload-studio-page').then((m) => m.UploadStudioPage),
     canActivate: [permissionGuard],
     data: { permission: 'WORK_CREATE' }
   },
@@ -57,13 +57,13 @@ export const routes: Routes = [
   },
   {
     path: 'scanlation',
-    loadComponent: () => import('@app/features/scanlation/scanlation-board-page').then((m) => m.ScanlationBoardPage),
+    loadComponent: () => import('@app/features/scanlation/scanlation-board-page/scanlation-board-page').then((m) => m.ScanlationBoardPage),
     canActivate: [permissionGuard],
     data: { permission: 'PROJECT_VIEW' }
   },
   {
     path: 'scanlation/:projectId',
-    loadComponent: () => import('@app/features/scanlation/scanlation-board-page').then((m) => m.ScanlationBoardPage),
+    loadComponent: () => import('@app/features/scanlation/scanlation-board-page/scanlation-board-page').then((m) => m.ScanlationBoardPage),
     canActivate: [permissionGuard],
     data: { permission: 'PROJECT_VIEW' }
   },

@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { firstValueFrom } from 'rxjs';
-import { UploadService } from '@app/features/upload/services/upload.service';
-import { ArchiveError, ArchiveLimits, PageUploadItem, naturalCompare, sortFilesNaturally, extractArchiveImages } from '@app/features/upload/services/file-utils';
+import { UploadService } from '@app/features/upload/upload-studio-page/upload.service';
+import { ArchiveError, ArchiveLimits, PageUploadItem, naturalCompare, sortFilesNaturally, extractArchiveImages } from '@app/features/upload/upload-studio-page/file-utils';
 import { StorageUploadResult } from '@app/core/models/readora.models';
 import JSZip from 'jszip';
 import { API, fail, ok, provideHttpTesting } from '../../../test-utils';

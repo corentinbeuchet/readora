@@ -1,7 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
-import { GENRE_PRESETS, UploadWizard } from '@app/features/upload/services/upload-wizard';
-import { CoverPicker } from './cover-picker';
+import { GENRE_PRESETS, UploadWizard } from '@app/features/upload/upload-studio-page/upload-wizard';
+import { CoverPicker } from './cover-picker/cover-picker';
 import { FieldErrors } from '@app/shared/forms/field-errors';
 import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
 

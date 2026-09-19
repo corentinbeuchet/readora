@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { UploadStudioPage, parseChapterNumber } from '@app/features/upload/upload-studio-page';
-import { API, fail, ok, provideHttpTesting } from '../../test-utils';
+import { UploadStudioPage, parseChapterNumber } from '@app/features/upload/upload-studio-page/upload-studio-page';
+import { API, fail, ok, provideHttpTesting } from '../../../test-utils';
 
 const WORK = { id: 'work-1', title: 'Blue Lock', synopsis: '', type: 'MANGA', status: 'ONGOING', coverImageUrl: '', genres: ['Action'] };
 const CHAPTER = { id: 'chap-1', workId: 'work-1', chapterNumber: '3', title: '', status: 'PUBLISHED', pages: [] };

@@ -1,7 +1,7 @@
 import { Component, computed, input, output } from '@angular/core';
-import { UploadStep } from '@app/features/upload/services/upload-wizard';
+import { UploadStep } from '@app/features/upload/upload-studio-page/upload-wizard';
 
-export type { UploadStep } from '@app/features/upload/services/upload-wizard';
+export type { UploadStep } from '@app/features/upload/upload-studio-page/upload-wizard';
 type WizardStep = Exclude<UploadStep, 'success'>;
 
 const STEPS: { key: WizardStep; label: string }[] = [

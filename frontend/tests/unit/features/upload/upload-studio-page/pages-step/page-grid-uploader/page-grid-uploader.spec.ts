@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { IMAGE_DECODE_CONCURRENCY, PageGridUploader } from '@app/features/upload/components/page-grid-uploader';
-import { PageUploadItem, mapWithConcurrency } from '@app/features/upload/services/file-utils';
+import { IMAGE_DECODE_CONCURRENCY, PageGridUploader } from '@app/features/upload/upload-studio-page/pages-step/page-grid-uploader/page-grid-uploader';
+import { PageUploadItem, mapWithConcurrency } from '@app/features/upload/upload-studio-page/file-utils';
 
 /** Image double: "decodes" asynchronously and records how many decodes run at once. */
 class FakeImage {
