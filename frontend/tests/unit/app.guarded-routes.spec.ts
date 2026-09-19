@@ -21,8 +21,18 @@ describe('guarded routes (real router)', () => {
     harness = await RouterTestingHarness.create();
   });
 
-  // Pages reached here may start loading their data; only where we land matters.
-  afterEach(() => http.match(() => true).forEach((request) => request.flush(null, { status: 404, statusText: 'Not Found' })));
+  /**
+   * The page a test lands on starts loading its data; these tests are about where navigation ends, so those reads
+   * are answered 404 without being asserted. Only GETs: an unexpected write still fails `verify()`.
+   */
+  function discardPageLoads(): void {
+    http.match((request) => request.method === 'GET').forEach((request) => request.flush(null, { status: 404, statusText: 'Not Found' }));
+  }
+
+  afterEach(() => {
+    discardPageLoads();
+    http.verify();
+  });
 
   async function signInWith(permissions: Permission[]): Promise<void> {
     await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions }));

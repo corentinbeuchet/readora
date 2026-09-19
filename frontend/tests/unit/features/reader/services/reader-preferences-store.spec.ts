@@ -1,22 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { BrowserStorage } from '@app/core/storage/browser-storage';
 import { READER_PREFERENCES_KEY, ReaderPreferencesStore, defaultLayout } from '@app/features/reader/services/reader-preferences-store';
-
-/** In-memory stand-in for the browser storage (jsdom here has no usable localStorage). */
-class MemoryStorage {
-  readonly values = new Map<string, string>();
-  read<T>(key: string): T | null {
-    const raw = this.values.get(key);
-    try {
-      return raw ? (JSON.parse(raw) as T) : null;
-    } catch {
-      return null;
-    }
-  }
-  write(key: string, value: unknown): void {
-    this.values.set(key, JSON.stringify(value));
-  }
-}
+import { MemoryStorage } from '../../../test-utils';
 
 describe('ReaderPreferencesStore', () => {
   let storage: MemoryStorage;

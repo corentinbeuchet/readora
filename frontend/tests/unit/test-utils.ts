@@ -1,4 +1,5 @@
-import { Component, EnvironmentProviders, Provider } from '@angular/core';
+import { ApplicationRef, Component, EnvironmentProviders, Provider } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { Routes } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
@@ -28,17 +29,25 @@ export class BlankPage {}
 /** Every URL resolves (to `BlankPage`), so specs can assert `router.url` after a real navigation. */
 export const ANY_URL: Routes = [{ path: '**', component: BlankPage }];
 
-/** In-memory `BrowserStorage` (jsdom's localStorage isn't reliable under Node 26): inspect `values` in assertions. */
+/**
+ * In-memory `BrowserStorage` (jsdom's localStorage isn't reliable under Node 26). Values are stored as JSON strings,
+ * like the real storage: a test can plant a raw (even corrupt) value in `values` and assert on `read()`.
+ */
 export class MemoryStorage implements Pick<BrowserStorage, 'available' | 'read' | 'write'> {
   readonly available = true;
-  readonly values = new Map<string, unknown>();
+  readonly values = new Map<string, string>();
 
   read<T>(key: string): T | null {
-    return (this.values.get(key) as T | undefined) ?? null;
+    const raw = this.values.get(key);
+    try {
+      return raw ? (JSON.parse(raw) as T) : null;
+    } catch {
+      return null;
+    }
   }
 
   write(key: string, value: unknown): void {
-    this.values.set(key, value);
+    this.values.set(key, JSON.stringify(value));
   }
 }
 
@@ -55,6 +64,14 @@ export function ok<T>(data: T): ApiResponse<T> {
 /** A failed API envelope (`success: false`) carrying `error`. */
 export function fail(error: string): ApiResponse<null> {
   return { success: false, data: null, error };
+}
+
+/**
+ * For services and resources without a component (angular.dev http-resource testing recipe): run this after the
+ * `flush()` of a request; `TestBed.tick()` beforehand makes the resource send it. Components use `settle()`.
+ */
+export async function resourcesStable(): Promise<void> {
+  await TestBed.inject(ApplicationRef).whenStable();
 }
 
 /**

@@ -4,7 +4,7 @@ import { HttpTestingController } from '@angular/common/http/testing';
 import { ApiError, parseEnvelope } from '@app/core/api/api-client';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { CommentsApi } from '@app/core/api/comments-api';
-import { API, fail, ok, provideHttpTesting } from '../../test-utils';
+import { API, fail, ok, provideHttpTesting, resourcesStable } from '../../test-utils';
 
 describe('httpResource envelope parsing', () => {
   let http: HttpTestingController;
@@ -16,12 +16,6 @@ describe('httpResource envelope parsing', () => {
 
   afterEach(() => http.verify());
 
-  async function settle(): Promise<void> {
-    TestBed.tick();
-    await new Promise<void>((resolve) => setTimeout(resolve, 0));
-    TestBed.tick();
-  }
-
   it('parseEnvelope returns data, and throws ApiError for success:false or a non-envelope body', () => {
     expect(parseEnvelope<number[]>(ok([1]))).toEqual([1]);
     expect(() => parseEnvelope(fail('Quota exceeded'))).toThrow(ApiError);
@@ -31,9 +25,9 @@ describe('httpResource envelope parsing', () => {
 
   it('a list resource surfaces success:false as an error instead of an empty list', async () => {
     const comments = TestBed.runInInjectionContext(() => TestBed.inject(CommentsApi).forChapterResource(signal('chap-1')));
-    await settle();
+    TestBed.tick();
     http.expectOne(`${API}/comments/chapter/chap-1`).flush(fail('Comments are disabled'));
-    await settle();
+    await resourcesStable();
 
     expect(comments.error()).toBeInstanceOf(ApiError);
     expect(comments.error()?.message).toBe('Comments are disabled');
@@ -42,9 +36,9 @@ describe('httpResource envelope parsing', () => {
 
   it('the paged works resource surfaces success:false as an error instead of an empty page', async () => {
     const works = TestBed.runInInjectionContext(() => TestBed.inject(CatalogApi).worksResource(signal({ page: 0, size: 20 })));
-    await settle();
+    TestBed.tick();
     http.expectOne((r) => r.url === `${API}/works`).flush(fail('Catalog unavailable'));
-    await settle();
+    await resourcesStable();
 
     expect(works.error()?.message).toBe('Catalog unavailable');
   });

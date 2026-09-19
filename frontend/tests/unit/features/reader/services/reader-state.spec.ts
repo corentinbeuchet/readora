@@ -4,20 +4,10 @@ import { ReaderState } from '@app/features/reader/services/reader-state';
 import { ReaderPreferencesStore } from '@app/features/reader/services/reader-preferences-store';
 import { BrowserStorage } from '@app/core/storage/browser-storage';
 import { Chapter } from '@app/core/models/readora.models';
+import { MemoryStorage } from '../../../test-utils';
 
 const pages = (n: number) => Array.from({ length: n }, (_, i) => ({ pageNumber: i + 1, storageKey: `p${i + 1}`, cdnUrl: `c${i + 1}` }));
 const CHAPTER: Chapter = { id: 'chap-1', workId: 'work-1', chapterNumber: '1', title: 'Chapter 1', status: 'PUBLISHED', pages: pages(3) };
-
-/** Storage that forgets everything: each test starts from default preferences. */
-class MemoryStorage {
-  private readonly values = new Map<string, unknown>();
-  read<T>(key: string): T | null {
-    return (this.values.get(key) as T) ?? null;
-  }
-  write(key: string, value: unknown): void {
-    this.values.set(key, value);
-  }
-}
 
 describe('ReaderState (derived reader state)', () => {
   let state: ReaderState;
