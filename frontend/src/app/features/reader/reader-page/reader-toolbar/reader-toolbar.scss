@@ -1,18 +1,27 @@
+@use 'breakpoints' as bp;
+
 :host {
   display: block;
   width: 100%;
   max-width: 900px;
 }
 
+// Phone: title above the controls; from md: side by side.
 .viewer-toolbar {
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
   justify-content: space-between;
-  align-items: center;
   gap: 1rem;
   padding: 1rem;
   background-color: var(--surface-2);
   border-radius: 0.5rem;
   margin-top: 1rem;
+
+  @include bp.from(md) {
+    flex-direction: row;
+    align-items: center;
+  }
 }
 
 .chapter-title {
@@ -33,6 +42,7 @@
 
 .viewer-actions [ngToolbarWidgetGroup] {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.25rem;
 }
 
