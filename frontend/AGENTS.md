@@ -170,8 +170,14 @@ breakpoints).
   API codes shown to readers go through the label maps in `core/models` (`WORK_STATUS_LABELS`, `ROLE_LABELS`…).
 - API errors are translated by code: `ApiError.code` (backend `ErrorCodes`) → `core/api/error-messages.ts`; a code
   without a text falls back to the server's English message. A new user-facing backend code gets its text there.
-- New or changed strings: `npm run extract-i18n`, then add the French to `src/locale/messages.fr.json` (same ids,
-  placeholders unchanged). The build fails on a missing translation (`i18nMissingTranslation: error`).
+- Translations: one file per feature folder plus `common`, `errors`, `labels`, `layout`, in `src/locale/en/`
+  (English reference, generated: don't edit) and `src/locale/fr/` (the French, edited by hand). The first segment of
+  an id picks the file (`FILE_OF_PREFIX` in `scripts/i18n-split.mjs`; a new area adds a line there, a new file also
+  goes in `angular.json` `fr.translation` and `tests/unit/i18n/french-translations.ts`).
+- New or changed strings: `npm run extract-i18n` (extract, split, check), then add the French to the file it names.
+  `npm run i18n:check` reports missing, stale or misplaced ids, generated (numeric) ids and changed placeholders; the
+  build also fails on a missing translation (`i18nMissingTranslation: error`). A plural nested in a larger message
+  gets a hash id: make it the whole content of its own `i18n` element (`&ngsp;` keeps a space between two elements).
 - Local: `npm run start:fr` serves French at the root of :4201 (the deployed build has `<base href="/fr/">`).
   `tests/unit/i18n/languages.spec.ts` checks French with the real file (`loadTranslations`); runtime translations
   stay in that spec. The Playwright project `chromium-fr` runs `tests/e2e/i18n-fr.spec.ts` (relative paths).

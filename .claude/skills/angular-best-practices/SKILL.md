@@ -31,7 +31,8 @@ checklist to apply while coding. Deeper docs: the `angular-developer` skill refe
   `.join` in templates; plurals are ICU inside an `i18n` element, not `I18nPluralPipe` maps.
 - i18n (frontend AGENTS "i18n"): every user-visible text marked with a stable id (`i18n="@@feature.x"`,
   `i18n-aria-label`, `` $localize`:@@id:…` `` in TS); no English ternaries; API codes through `core/models` label
-  maps; after text changes run `npm run extract-i18n` and add the French to `src/locale/messages.fr.json`.
+  maps; after text changes run `npm run extract-i18n` and add the French to the `src/locale/fr/<file>.json` it names
+  (one file per feature; `npm run i18n:check` must be clean).
 - `[class.x]` / `[style.x]`; never `[class]="…"` (it overwrites static classes), `ngClass`, `ngStyle`.
 - Read DOM values with template refs (`#fit (change)="setFit(fit.value)"`), not per-class `(event.target as …)` casts.
 - Images: `NgOptimizedImage` (`ngSrc`, sizes, `priority` on the LCP image), including avatars and covers.
