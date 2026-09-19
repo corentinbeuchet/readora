@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component } from '@angular/core';
+import { Component, DOCUMENT } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
@@ -7,7 +7,10 @@ import { Shell } from '@app/features/layout/shell/shell';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { LayoutStore } from '@app/core/layout/layout-store';
 import { Permission } from '@app/core/models/identity';
+import { BrowserStorage } from '@app/core/storage/browser-storage';
+import { THEME_KEY } from '@app/core/theme/theme-store';
 import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
+import { MemoryStorage } from '../../../test-utils';
 
 @Component({ template: '<h1>Page</h1>' })
 class DummyPage {}
@@ -241,5 +244,60 @@ describe('Shell primary navigation', () => {
 
   function link(label: string): HTMLAnchorElement {
     return links().find((a) => a.textContent?.trim() === label)!;
+  }
+});
+
+describe('Shell theme picker', () => {
+  let fixture: ComponentFixture<Shell>;
+  let storage: MemoryStorage;
+
+  beforeEach(async () => {
+    storage = new MemoryStorage();
+    await TestBed.configureTestingModule({
+      imports: [Shell],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(), { provide: BrowserStorage, useValue: storage }]
+    }).compileComponents();
+  });
+
+  afterEach(() => TestBed.inject(DOCUMENT).documentElement.removeAttribute('data-theme'));
+
+  it('follows the device by default; choosing Light pins it and is remembered', () => {
+    givenIAmOnTheSite();
+
+    thenTheThemePickerShows('system');
+    thenThePageThemeIs(null);
+
+    whenIChooseTheTheme('light');
+
+    thenThePageThemeIs('light');
+    thenMyThemeChoiceIsSaved('light');
+  });
+
+  function givenIAmOnTheSite(): void {
+    fixture = TestBed.createComponent(Shell);
+    fixture.detectChanges();
+  }
+
+  function whenIChooseTheTheme(value: string): void {
+    themePicker().value = value;
+    themePicker().dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+  }
+
+  function thenTheThemePickerShows(value: string): void {
+    expect(themePicker().value).toBe(value);
+  }
+
+  function thenThePageThemeIs(theme: string | null): void {
+    expect(TestBed.inject(DOCUMENT).documentElement.getAttribute('data-theme')).toBe(theme);
+  }
+
+  function thenMyThemeChoiceIsSaved(value: string): void {
+    expect(storage.read(THEME_KEY)).toBe(value);
+  }
+
+  function themePicker(): HTMLSelectElement {
+    const labels: HTMLLabelElement[] = Array.from(fixture.nativeElement.querySelectorAll('footer label'));
+    return labels.find((label) => label.textContent?.includes('Theme'))!.querySelector('select')!;
   }
 });

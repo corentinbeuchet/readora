@@ -5,6 +5,7 @@ import { filter } from 'rxjs';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@angular/aria/menu';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { LayoutStore } from '@app/core/layout/layout-store';
+import { ThemeStore, toThemePreference } from '@app/core/theme/theme-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { Omnisearch } from './omnisearch/omnisearch';
 import { NotificationBell } from './notification-bell/notification-bell';
@@ -25,6 +26,7 @@ import { NgOptimizedImage } from '@angular/common';
 export class Shell {
   protected readonly auth = inject(AuthStore);
   protected readonly layout = inject(LayoutStore);
+  protected readonly theme = inject(ThemeStore);
   private readonly router = inject(Router);
   protected readonly year = new Date().getFullYear();
 
@@ -82,6 +84,10 @@ export class Shell {
     if (options.returnFocus) {
       this.navToggle().nativeElement.focus();
     }
+  }
+
+  protected chooseTheme(value: string): void {
+    this.theme.setPreference(toThemePreference(value));
   }
 
   protected onUserMenuSelected(action: unknown): void {

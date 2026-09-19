@@ -83,5 +83,13 @@
 
   <footer class="app-footer">
     <p class="muted">© {{ year }} Readora — read manga, manhwa and comics.</p>
+    <label class="field theme-picker">
+      <span>Theme</span>
+      <select #themeSelect (change)="chooseTheme(themeSelect.value)">
+        <option value="system" [selected]="theme.preference() === 'system'">System</option>
+        <option value="light" [selected]="theme.preference() === 'light'">Light</option>
+        <option value="dark" [selected]="theme.preference() === 'dark'">Dark</option>
+      </select>
+    </label>
   </footer>
 </div>

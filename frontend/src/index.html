@@ -9,6 +9,13 @@
   <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0b1120" media="(prefers-color-scheme: dark)">
   <meta name="color-scheme" content="light dark">
+  <!-- Applies a saved light/dark choice before the first paint (ThemeStore, key readora.theme, keeps it in sync). -->
+  <script>
+    try {
+      var theme = JSON.parse(localStorage.getItem('readora.theme'));
+      if (theme === 'light' || theme === 'dark') document.documentElement.setAttribute('data-theme', theme);
+    } catch (e) {}
+  </script>
   <meta name="robots" content="index, follow">
   <meta property="og:site_name" content="Readora">
   <meta property="og:type" content="website">
