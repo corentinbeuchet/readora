@@ -54,6 +54,11 @@
 
 ## Data access
 - One API service per backend resource in `core/api/*-api.ts`, all built on `ApiClient` (envelope unwrap + `ApiError`).
+- `null` vs `undefined` (decided 2026-09-19): the backend sends every DTO field and an empty one as `null`, so
+  **response** types mirror the Java record: every field required, `T | null` exactly where it is `@Nullable`,
+  never `?:`. **Request** types say what callers send: `?:` for "left out", `T | null` for "sent as null", not both.
+  In code `null` = known empty (API value, 404 via `nullIfNotFound()`), `undefined` = not loaded yet / not given
+  (resources, optional params); `T | null | undefined` only where both really arrive. Test mocks spell out the nulls.
 - Reads: `httpResource` factories on the API service, fed by signals; return `undefined` URL to keep the resource idle:
   ```ts
   readonly workId = input.required<string>();            // route param via withComponentInputBinding
