@@ -66,6 +66,13 @@ export const routes: Routes = [
   },
 
   {
+    path: 'moderation',
+    loadComponent: () => import('./features/moderation/moderation-page').then((m) => m.ModerationPage),
+    canActivate: [permissionGuard],
+    data: { permission: 'COMMENT_MODERATE' }
+  },
+
+  {
     path: 'login',
     loadComponent: () => import('./features/auth/login-page').then((m) => m.LoginPage),
     canActivate: [guestGuard]

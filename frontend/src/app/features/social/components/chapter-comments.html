@@ -10,9 +10,16 @@
       [comments]="comments.value()"
       [canUpvote]="canUpvote()"
       [canReply]="canWrite()"
+      [canReport]="canReport()"
+      [currentUserId]="currentUserId()"
       (upvote)="upvote($event)"
       (reply)="startReply($event)"
+      (report)="startReport($event)"
     />
+    <p class="report-confirmation muted" role="status">{{ reportConfirmation() }}</p>
+    @if (reporting(); as target) {
+      <app-report-comment-dialog [comment]="target" (closed)="reporting.set(null)" (reported)="onReported()" />
+    }
   }
 
   <ng-container *appHasPermission="'COMMENT_WRITE'; else loginHint">

@@ -17,6 +17,11 @@ export class CommentTree {
   readonly canReply = input(true);
   /** Comment to highlight (from a notification link). */
   readonly highlightId = input<string | undefined>(undefined);
+  /** Whether the current user may report comments (`COMMENT_REPORT`). */
+  readonly canReport = input(false);
+  /** The signed-in reader, whose own comments can't be reported. */
+  readonly currentUserId = input<string | null>(null);
+  readonly report = output<ChapterComment>();
   readonly upvote = output<string>();
   readonly reply = output<ChapterComment>();
 

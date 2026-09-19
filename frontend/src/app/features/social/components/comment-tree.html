@@ -36,6 +36,11 @@
               Reply
             </button>
           }
+          @if (canReport() && comment.authorId !== currentUserId()) {
+            <button type="button" (click)="report.emit(comment)" class="btn-action btn-report">
+              Report<span class="sr-only"> comment by {{ comment.authorUsername }}</span>
+            </button>
+          }
         </div>
       </div>
     }

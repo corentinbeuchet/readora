@@ -1,0 +1,43 @@
+<section class="page">
+  <h1>Moderation</h1>
+  <p class="muted">Reported comments, oldest first. Hiding removes the comment for everyone and closes its reports.</p>
+
+  @if (actionError(); as message) {
+    <p class="form-error" role="alert">{{ message }}</p>
+  }
+
+  @if (queue.isLoading()) {
+    <p class="muted" role="status">Loading reports…</p>
+  } @else if (queue.error()) {
+    <p class="form-error" role="alert">
+      Could not load the reports.
+      <button type="button" class="btn btn-link" (click)="queue.reload()">Retry</button>
+    </p>
+  } @else if (queue.hasValue() && queue.value().length === 0) {
+    <p class="muted">No open reports. 🎉</p>
+  } @else if (queue.hasValue()) {
+    <ul class="queue">
+      @for (item of queue.value(); track item.reportId) {
+        <li class="card queue-item">
+          <p class="queue-meta">
+            <span class="badge">{{ labels[item.reason] }}</span>
+            <span class="muted">reported {{ item.reportedAt | date: 'medium' }} · comment by <strong>{{ item.authorUsername }}</strong></span>
+            @if (item.spoiler) {
+              <span class="badge">marked spoiler</span>
+            }
+          </p>
+          <blockquote class="queue-content">{{ item.content }}</blockquote>
+          <div class="queue-actions">
+            <a class="btn btn-sm" [routerLink]="['/read', item.chapterId]" [queryParams]="{ comment: item.commentId }">See in context</a>
+            <button type="button" class="btn btn-sm btn-danger" [disabled]="busyId() === item.reportId" (click)="hide(item)">
+              Hide comment<span class="sr-only"> by {{ item.authorUsername }}</span>
+            </button>
+            <button type="button" class="btn btn-sm" [disabled]="busyId() === item.reportId" (click)="dismiss(item)">
+              Dismiss report<span class="sr-only"> on the comment by {{ item.authorUsername }}</span>
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>

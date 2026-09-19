@@ -71,6 +71,7 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'profile', renderMode: RenderMode.Client },
   { path: 'library', renderMode: RenderMode.Client },
   { path: 'history', renderMode: RenderMode.Client },
+  { path: 'moderation', renderMode: RenderMode.Client },
   { path: 'subscription', renderMode: RenderMode.Client },
   { path: 'subscription/success', renderMode: RenderMode.Client },
   { path: 'subscription/cancel', renderMode: RenderMode.Client },

@@ -56,6 +56,7 @@
           <ng-template ngMenuContent>
             <button type="button" ngMenuItem value="/library">My library</button>
             <button type="button" ngMenuItem value="/history">History</button>
+            <button *appHasPermission="'COMMENT_MODERATE'" type="button" ngMenuItem value="/moderation">Moderation</button>
             <button type="button" ngMenuItem value="/profile">Profile</button>
             <button type="button" ngMenuItem value="/subscription">Subscription</button>
             <button type="button" ngMenuItem value="logout">Log out</button>

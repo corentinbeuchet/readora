@@ -8,6 +8,7 @@ import { HasPermissionDirective } from '@app/core/auth/has-permission.directive'
 import { ChapterComment } from '@app/core/models/readora.models';
 import { AnyField, apiErrorMessage, visibleErrors } from '@app/features/auth/auth-form.utils';
 import { CommentTree } from './comment-tree';
+import { ReportCommentDialog } from './report-comment-dialog';
 
 export const COMMENT_MAX_LENGTH = 2000;
 
@@ -41,7 +42,7 @@ interface CommentModel {
  */
 @Component({
   selector: 'app-chapter-comments',
-  imports: [RouterLink, FormField, HasPermissionDirective, CommentTree],
+  imports: [RouterLink, FormField, HasPermissionDirective, CommentTree, ReportCommentDialog],
   templateUrl: './chapter-comments.html',
   styleUrl: './chapter-comments.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -60,6 +61,11 @@ export class ChapterComments {
   protected readonly submitting = signal(false);
   protected readonly canWrite = computed(() => this.auth.can('COMMENT_WRITE'));
   protected readonly canUpvote = computed(() => this.auth.can('COMMENT_UPVOTE'));
+  protected readonly canReport = computed(() => this.auth.can('COMMENT_REPORT'));
+  protected readonly currentUserId = computed(() => this.auth.user()?.id ?? null);
+  /** Comment being reported (US-11); `null` when the dialog is closed. */
+  protected readonly reporting = signal<ChapterComment | null>(null);
+  protected readonly reportConfirmation = signal<string | null>(null);
   private readonly document = inject(DOCUMENT);
   private scrolledTo: string | null = null;
 
@@ -85,6 +91,16 @@ export class ChapterComments {
 
   protected errors(field: AnyField): string[] {
     return visibleErrors(field);
+  }
+
+  protected startReport(comment: ChapterComment): void {
+    this.reportConfirmation.set(null);
+    this.reporting.set(comment);
+  }
+
+  protected onReported(): void {
+    this.reporting.set(null);
+    this.reportConfirmation.set('Thanks! A moderator will look at it.');
   }
 
   protected startReply(comment: ChapterComment): void {

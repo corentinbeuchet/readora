@@ -192,5 +192,42 @@ describe('ChapterComments', () => {
     expect(fixture.nativeElement.querySelector('#comment-c2').classList).not.toContain('comment-highlight');
     expect(scrolled).toHaveBeenCalledTimes(1);
   });
+
+  it('reports someone else\'s comment with a reason (never your own)', async () => {
+    await signIn(store, http, mockUser({ id: 'u2', permissions: ['COMMENT_WRITE', 'COMMENT_REPORT'] }));
+    await render();
+
+    const reportButtons = fixture.nativeElement.querySelectorAll('.btn-report');
+    expect(reportButtons).toHaveLength(1); // alice's comment; bob (u2) can't report his own
+    reportButtons[0].click();
+    await settle(fixture);
+    fixture.nativeElement.querySelector('input[value="HARASSMENT"]').click();
+    fixture.nativeElement.querySelector('form.report-dialog').dispatchEvent(new Event('submit', { cancelable: true }));
+    const req = http.expectOne(`${API}/comments/c1/reports`);
+    expect(req.request.body).toEqual({ reason: 'HARASSMENT' });
+    req.flush({ success: true, data: { reportId: 'r-1' }, error: null });
+    await settle(fixture);
+
+    expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.report-confirmation').textContent).toContain('A moderator will look at it.');
+  });
+
+  it('shows the wait message when commenting too fast (429)', async () => {
+    await signIn(store, http, mockUser({ permissions: ['COMMENT_WRITE'] }));
+    await render();
+
+    const textarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('#comment-content');
+    textarea.value = 'Again!';
+    textarea.dispatchEvent(new Event('input'));
+    fixture.nativeElement.querySelector('form.compose').dispatchEvent(new Event('submit', { cancelable: true }));
+    await settle(fixture);
+    http.expectOne(`${API}/comments/chapter/${CHAPTER_ID}`).flush(
+      { success: false, data: null, error: 'Please wait 7 seconds before commenting again' },
+      { status: 429, statusText: 'Too Many Requests' }
+    );
+    await settle(fixture);
+
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Please wait 7 seconds before commenting again');
+  });
 });
 

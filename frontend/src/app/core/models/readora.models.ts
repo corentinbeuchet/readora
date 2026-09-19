@@ -146,12 +146,14 @@ export const PERMISSIONS = [
   'WORK_CREATE',
   'LIBRARY_USE',
   'PAGE_REPORT',
-  'RATE_WORK'
+  'RATE_WORK',
+  'COMMENT_REPORT',
+  'COMMENT_MODERATE'
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
 
-export type Role = 'READER' | 'SCANLATOR' | 'ADMIN';
+export type Role = 'READER' | 'SCANLATOR' | 'MODERATOR' | 'ADMIN';
 export type SubscriptionPlan = 'FREE' | 'PREMIUM';
 export type SubscriptionStatus = 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | 'INCOMPLETE';
 
@@ -367,6 +369,29 @@ export interface WorkReview {
   verdict: string;
   helpfulVotes: number;
   updatedAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// Comment moderation (US-11)
+// ---------------------------------------------------------------------------
+
+export type CommentReportReason = 'UNMARKED_SPOILER' | 'HARASSMENT' | 'SPAM';
+
+export const COMMENT_REPORT_REASON_LABELS: Record<CommentReportReason, string> = {
+  UNMARKED_SPOILER: 'Unmarked spoiler',
+  HARASSMENT: 'Harassment or abuse',
+  SPAM: 'Spam or scam'
+};
+
+export interface ModerationItem {
+  reportId: string;
+  reason: CommentReportReason;
+  reportedAt: string;
+  commentId: string;
+  chapterId: string;
+  authorUsername: string;
+  content: string;
+  spoiler: boolean;
 }
 
 // ---------------------------------------------------------------------------

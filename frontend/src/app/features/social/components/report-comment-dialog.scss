@@ -1,0 +1,30 @@
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(2, 6, 23, 0.7);
+  z-index: 60;
+}
+
+.report-dialog {
+  width: min(440px, 90vw);
+}
+
+.report-reasons {
+  border: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+
+  legend {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
