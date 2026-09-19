@@ -4,7 +4,7 @@ import { FormField, form, min, pattern, required, submit } from '@angular/forms/
 import { firstValueFrom } from 'rxjs';
 import { ScanlationApi } from '@app/core/api/scanlation-api';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { FocusTrapDirective } from '@app/core/a11y/focus-trap.directive';
+import { Dialog } from '@app/shared/ui/dialog';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { WorkflowTask } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
@@ -21,7 +21,7 @@ interface SubmitModel {
 
 @Component({
   selector: 'app-kanban-board',
-  imports: [FieldErrors, AriaInvalidDirective, RouterLink, FormField, HasPermissionDirective, FocusTrapDirective, PageReportsPanel],
+  imports: [FieldErrors, AriaInvalidDirective, RouterLink, FormField, HasPermissionDirective, Dialog, PageReportsPanel],
   templateUrl: './kanban-board.html',
   styleUrl: './kanban-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -59,22 +59,3 @@
     font-size: 0.85rem;
   }
 }
-
-.dialog-backdrop {
-  position: fixed;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: rgba(2, 6, 23, 0.7);
-  z-index: 60;
-}
-
-.submit-dialog {
-  width: min(480px, 90vw);
-}
-
-.dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}

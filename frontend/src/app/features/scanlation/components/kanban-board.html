@@ -80,9 +80,8 @@
     @if (submitTarget(); as task) {
       <!-- The dialog (and its form/focus-trap code) is only loaded when first opened. -->
       @defer (on immediate) {
-        <div class="dialog-backdrop">
-          <form class="card form submit-dialog" role="dialog" aria-modal="true" aria-labelledby="submit-title"
-                appFocusTrap (escaped)="closeSubmit()" (submit)="onSubmitWork($event)" novalidate>
+        <app-dialog labelledBy="submit-title" width="480px" (closed)="closeSubmit()">
+          <form class="form submit-dialog" (submit)="onSubmitWork($event)" novalidate>
             <h2 id="submit-title">Submit work for chapter {{ task.chapterNumber }}</h2>
             <p class="muted">Stage: {{ task.stage }}</p>
 
@@ -107,7 +106,7 @@
               </button>
             </div>
           </form>
-        </div>
+        </app-dialog>
       } @loading {
         <p class="muted" role="status">Opening…</p>
       }

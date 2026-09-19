@@ -1,6 +1,5 @@
-<div class="dialog-backdrop">
-  <form class="card form report-dialog" role="dialog" aria-modal="true" aria-labelledby="report-comment-title"
-        appFocusTrap (escaped)="closed.emit()" (submit)="send($event)" novalidate>
+<app-dialog labelledBy="report-comment-title" (closed)="closed.emit()">
+  <form class="form" (submit)="send($event)" novalidate>
     <h2 id="report-comment-title">Report {{ comment().authorUsername }}'s comment</h2>
     <fieldset class="report-reasons">
       <legend>What is wrong with it?</legend>
@@ -19,4 +18,4 @@
       <button type="submit" class="btn btn-primary" [disabled]="sending.busy()">{{ sending.busy() ? 'Sending…' : 'Send report' }}</button>
     </div>
   </form>
-</div>
+</app-dialog>

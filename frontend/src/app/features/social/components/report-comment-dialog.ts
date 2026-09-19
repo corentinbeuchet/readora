@@ -1,6 +1,6 @@
 import { Component, inject, input, output, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { FocusTrapDirective } from '@app/core/a11y/focus-trap.directive';
+import { Dialog } from '@app/shared/ui/dialog';
 import { ModerationApi } from '@app/core/api/moderation-api';
 import { COMMENT_REPORT_REASON_LABELS, ChapterComment, CommentReportReason } from '@app/core/models/readora.models';
 import { asyncAction } from '@app/core/utils/async-action';
@@ -8,7 +8,7 @@ import { asyncAction } from '@app/core/utils/async-action';
 /** "Report this comment" (US-11): why, then the moderators get it. */
 @Component({
   selector: 'app-report-comment-dialog',
-  imports: [FocusTrapDirective],
+  imports: [Dialog],
   templateUrl: './report-comment-dialog.html',
   styleUrl: './report-comment-dialog.scss'
 })

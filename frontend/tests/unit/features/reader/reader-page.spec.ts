@@ -823,7 +823,7 @@ describe('ReaderPage (API-driven)', () => {
 
     const missing: HTMLInputElement = fixture.nativeElement.querySelector('input[value="MISSING_PAGE"]');
     missing.click();
-    fixture.nativeElement.querySelector('form.report-dialog').dispatchEvent(new Event('submit', { cancelable: true }));
+    fixture.nativeElement.querySelector('[role="dialog"] form').dispatchEvent(new Event('submit', { cancelable: true }));
     const req = http.expectOne(`${API}/chapters/${MOCK_CHAPTER.id}/pages/2/reports`);
     expect(req.request.body).toEqual({ reason: 'MISSING_PAGE' });
     req.flush({ success: true, data: { id: 'r-1' }, error: null });
@@ -842,7 +842,7 @@ describe('ReaderPage (API-driven)', () => {
     await dialog.render(DeferBlockState.Complete);
     await settle(fixture);
 
-    fixture.nativeElement.querySelector('form.report-dialog').dispatchEvent(new Event('submit', { cancelable: true }));
+    fixture.nativeElement.querySelector('[role="dialog"] form').dispatchEvent(new Event('submit', { cancelable: true }));
     http.expectOne(`${API}/chapters/${MOCK_CHAPTER.id}/pages/1/reports`).flush({ success: false, data: null, error: 'Chapter 10 has no page 1' }, { status: 400, statusText: 'Bad Request' });
     await settle(fixture);
 

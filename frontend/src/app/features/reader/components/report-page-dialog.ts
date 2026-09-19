@@ -1,6 +1,6 @@
 import { Component, inject, input, output, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { FocusTrapDirective } from '@app/core/a11y/focus-trap.directive';
+import { Dialog } from '@app/shared/ui/dialog';
 import { PageReportsApi } from '@app/core/api/page-reports-api';
 import { PAGE_REPORT_REASON_LABELS, PageReportReason } from '@app/core/models/readora.models';
 import { asyncAction } from '@app/core/utils/async-action';
@@ -8,7 +8,7 @@ import { asyncAction } from '@app/core/utils/async-action';
 /** "Report this page" (US-06): why the page doesn't display; the scanlation team gets the report. */
 @Component({
   selector: 'app-report-page-dialog',
-  imports: [FocusTrapDirective],
+  imports: [Dialog],
   templateUrl: './report-page-dialog.html',
   styleUrl: './report-page-dialog.scss'
 })

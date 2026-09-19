@@ -202,7 +202,7 @@ describe('ChapterComments', () => {
     reportButtons[0].click();
     await settle(fixture);
     fixture.nativeElement.querySelector('input[value="HARASSMENT"]').click();
-    fixture.nativeElement.querySelector('form.report-dialog').dispatchEvent(new Event('submit', { cancelable: true }));
+    fixture.nativeElement.querySelector('[role="dialog"] form').dispatchEvent(new Event('submit', { cancelable: true }));
     const req = http.expectOne(`${API}/comments/c1/reports`);
     expect(req.request.body).toEqual({ reason: 'HARASSMENT' });
     req.flush({ success: true, data: { reportId: 'r-1' }, error: null });
