@@ -78,8 +78,6 @@ describe('ReaderPage (API-driven)', () => {
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
     // Reaching the last page loads the chapter's top comments (own test below).
     // Opening another chapter cancels the previous chapter's request.
     http.match((r) => r.url.endsWith('/top')).filter((r) => !r.cancelled).forEach((r) => r.flush(ok([])));

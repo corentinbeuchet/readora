@@ -151,8 +151,6 @@ describe('extractArchiveImages limits (zip-bomb guards)', () => {
     return new File([blob], name, { type: 'application/zip' });
   }
 
-  afterEach(() => vi.restoreAllMocks());
-
   it('rejects an archive file above the size limit before reading it', async () => {
     const loadSpy = vi.spyOn(JSZip.prototype, 'loadAsync');
     const big = new File([new Uint8Array(LIMITS.maxArchiveBytes + 1)], 'huge.cbz');

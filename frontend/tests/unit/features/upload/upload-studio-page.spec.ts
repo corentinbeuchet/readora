@@ -49,8 +49,6 @@ describe('UploadStudioPage', () => {
 
   afterEach(() => {
     http.verify();
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
   });
 
   const el = (): HTMLElement => fixture.nativeElement;

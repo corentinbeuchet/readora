@@ -76,11 +76,6 @@ describe('PageGridUploader', () => {
     await settleDecodes(fixture);
   }
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
-  });
-
   const images = (n: number): File[] => Array.from({ length: n }, (_, i) => new File([`p${i}`], `p${i + 1}.png`, { type: 'image/png' }));
   const deleteButtons = (): HTMLButtonElement[] => Array.from(fixture.nativeElement.querySelectorAll('button[aria-label="Delete page"]'));
 
