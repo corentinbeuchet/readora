@@ -139,6 +139,17 @@ describe('Shell primary navigation', () => {
     thenTheFocusIsNotOnThePageHeading();
   });
 
+  it('logging out from the account menu ends the session and goes home', async () => {
+    givenIAmOnTheSite();
+    await givenIHaveOpened('/works');
+    await givenIAmSignedInWithoutTheNotificationBell();
+
+    await whenILogOutFromTheAccountMenu();
+
+    thenIAmOn('/');
+    thenICanLogIn();
+  });
+
   function givenIAmOnTheSite(): void {
     fixture = TestBed.createComponent(Shell);
     fixture.detectChanges();
@@ -146,6 +157,11 @@ describe('Shell primary navigation', () => {
 
   async function givenIHaveOpened(url: string): Promise<void> {
     await whenINavigateTo(url);
+  }
+
+  /** The bell (shown with `LIBRARY_USE`) polls the API and has its own spec. */
+  async function givenIAmSignedInWithoutTheNotificationBell(): Promise<void> {
+    await whenISignInWith([]);
   }
 
   function givenTheFocusIsOnTheNavigationLink(label: string): void {
@@ -167,6 +183,16 @@ describe('Shell primary navigation', () => {
 
   async function whenISignInWith(permissions: Permission[]): Promise<void> {
     await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions }));
+    fixture.detectChanges();
+  }
+
+  async function whenILogOutFromTheAccountMenu(): Promise<void> {
+    fixture.nativeElement.querySelector('button[aria-label="Account menu"]').click();
+    fixture.detectChanges();
+    const items: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('[role="menuitem"]'));
+    items.find((item) => item.textContent?.trim() === 'Log out')!.click();
+    http.expectOne((r) => r.method === 'POST' && r.url.endsWith('/auth/logout')).flush({ success: true, data: null });
+    await fixture.whenStable();
     fixture.detectChanges();
   }
 
@@ -224,6 +250,10 @@ describe('Shell primary navigation', () => {
 
   function thenIAmOn(url: string): void {
     expect(router.url).toBe(url);
+  }
+
+  function thenICanLogIn(): void {
+    expect(fixture.nativeElement.querySelector('a[href="/login"]')?.textContent.trim()).toBe('Log in');
   }
 
   function thenTheCurrentPageLinkIs(label: string): void {

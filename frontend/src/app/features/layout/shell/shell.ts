@@ -1,7 +1,7 @@
 import { Component, DOCUMENT, ElementRef, Injector, LOCALE_ID, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { filter } from 'rxjs';
+import { filter, firstValueFrom } from 'rxjs';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@angular/aria/menu';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { LayoutStore } from '@app/core/layout/layout-store';
@@ -99,9 +99,10 @@ export class Shell {
     this.theme.setPreference(toThemePreference(value));
   }
 
-  protected onUserMenuSelected(action: unknown): void {
+  protected async onUserMenuSelected(action: unknown): Promise<void> {
     if (action === 'logout') {
-      this.auth.logout().subscribe(() => void this.router.navigateByUrl('/'));
+      await firstValueFrom(this.auth.logout());
+      void this.router.navigateByUrl('/');
       return;
     }
     if (typeof action === 'string') {
