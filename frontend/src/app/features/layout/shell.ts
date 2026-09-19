@@ -4,8 +4,8 @@ import { Menu, MenuContent, MenuItem, MenuTrigger } from '@angular/aria/menu';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { LayoutStore } from '@app/core/layout/layout-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
-import { Omnisearch } from '@app/features/catalog/components/omnisearch';
-import { NotificationBell } from './notification-bell';
+import { Omnisearch } from '@app/features/layout/components/omnisearch';
+import { NotificationBell } from './components/notification-bell';
 import { NgOptimizedImage } from '@angular/common';
 
 /**

@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
-import { Omnisearch, SUGGEST_DEBOUNCE_MS } from '@app/features/catalog/components/omnisearch';
+import { Omnisearch, SUGGEST_DEBOUNCE_MS } from '@app/features/layout/components/omnisearch';
 import { WorkSummary } from '@app/core/models/readora.models';
 import { environment } from '../../../../../src/environments/environment';
 

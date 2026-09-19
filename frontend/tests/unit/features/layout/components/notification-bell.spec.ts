@@ -2,11 +2,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
-import { NOTIFICATION_POLL_MS, NotificationBell } from '@app/features/layout/notification-bell';
+import { NOTIFICATION_POLL_MS, NotificationBell } from '@app/features/layout/components/notification-bell';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { ReaderNotification } from '@app/core/models/readora.models';
-import { environment } from '../../../../src/environments/environment';
-import { mockUser, signIn } from '../../core/auth/auth-fixtures';
+import { environment } from '../../../../../src/environments/environment';
+import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
 
 const API = environment.apiUrl;
 const NEW_CHAPTER: ReaderNotification = {
