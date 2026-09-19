@@ -1,10 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { AddToList } from '@app/features/catalog/components/add-to-list';
+import { AddToList } from '@app/features/catalog/work-detail-page/add-to-list/add-to-list';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
-import { API, ok, provideHttpTesting, settle } from '../../../test-utils';
+import { mockUser, signIn } from '../../../../core/auth/auth-fixtures';
+import { API, ok, provideHttpTesting, settle } from '../../../../test-utils';
 
 interface MyList {
   id: string;

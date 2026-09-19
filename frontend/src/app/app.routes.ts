@@ -10,11 +10,11 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    loadComponent: () => import('@app/features/catalog/works-page').then((m) => m.WorksPage)
+    loadComponent: () => import('@app/features/catalog/works-page/works-page').then((m) => m.WorksPage)
   },
   {
     path: 'works',
-    loadComponent: () => import('@app/features/catalog/works-page').then((m) => m.WorksPage)
+    loadComponent: () => import('@app/features/catalog/works-page/works-page').then((m) => m.WorksPage)
   },
   {
     path: 'updates',
@@ -42,7 +42,7 @@ export const routes: Routes = [
   },
   {
     path: 'works/:workId',
-    loadComponent: () => import('@app/features/catalog/work-detail-page').then((m) => m.WorkDetailPage)
+    loadComponent: () => import('@app/features/catalog/work-detail-page/work-detail-page').then((m) => m.WorkDetailPage)
   },
   {
     path: 'upload',
@@ -100,7 +100,7 @@ export const routes: Routes = [
   },
   {
     path: 'profile',
-    loadComponent: () => import('@app/features/profile/profile-page').then((m) => m.ProfilePage),
+    loadComponent: () => import('@app/features/profile/profile-page/profile-page').then((m) => m.ProfilePage),
     canActivate: [authGuard]
   },
   {

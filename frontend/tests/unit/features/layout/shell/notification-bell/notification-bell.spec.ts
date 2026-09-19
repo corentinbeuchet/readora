@@ -1,11 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
-import { NOTIFICATION_POLL_MS, NotificationBell } from '@app/features/layout/components/notification-bell';
+import { NOTIFICATION_POLL_MS, NotificationBell } from '@app/features/layout/shell/notification-bell/notification-bell';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { ReaderNotification } from '@app/core/models/readora.models';
-import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
-import { ANY_URL, API, FIXED_NOW, fail, ok, provideHttpTesting } from '../../../test-utils';
+import { mockUser, signIn } from '../../../../core/auth/auth-fixtures';
+import { ANY_URL, API, FIXED_NOW, fail, ok, provideHttpTesting } from '../../../../test-utils';
 
 const NEW_CHAPTER: ReaderNotification = {
   id: 'n-1',

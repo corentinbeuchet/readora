@@ -1,9 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
-import { Omnisearch, SUGGEST_DEBOUNCE_MS } from '@app/features/layout/components/omnisearch';
+import { Omnisearch, SUGGEST_DEBOUNCE_MS } from '@app/features/layout/shell/omnisearch/omnisearch';
 import { WorkSummary } from '@app/core/models/readora.models';
-import { ANY_URL, API, fail, ok, provideHttpTesting } from '../../../test-utils';
+import { ANY_URL, API, fail, ok, provideHttpTesting } from '../../../../test-utils';
 
 const OMNI: WorkSummary = {
   id: 'w-2',

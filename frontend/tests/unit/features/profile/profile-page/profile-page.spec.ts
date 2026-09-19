@@ -1,11 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { ProfilePage } from '@app/features/profile/profile-page';
+import { ProfilePage } from '@app/features/profile/profile-page/profile-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { UserProfile } from '@app/core/models/readora.models';
-import { mockUser } from '../../core/auth/auth-fixtures';
-import { API, ok, provideHttpTesting } from '../../test-utils';
+import { mockUser } from '../../../core/auth/auth-fixtures';
+import { API, ok, provideHttpTesting } from '../../../test-utils';
 
 type Profile = Partial<Pick<UserProfile, 'displayName' | 'bio'>>;
 

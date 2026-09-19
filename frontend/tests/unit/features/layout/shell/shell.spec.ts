@@ -3,11 +3,11 @@ import { Component } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
-import { Shell } from '@app/features/layout/shell';
+import { Shell } from '@app/features/layout/shell/shell';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { LayoutStore } from '@app/core/layout/layout-store';
 import { Permission } from '@app/core/models/readora.models';
-import { mockUser, signIn } from '../../core/auth/auth-fixtures';
+import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
 
 @Component({ template: '<h1>Page</h1>' })
 class DummyPage {}

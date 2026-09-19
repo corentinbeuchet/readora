@@ -2,9 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { Router, provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { WorksPage } from '@app/features/catalog/works-page';
+import { WorksPage } from '@app/features/catalog/works-page/works-page';
 import { PagedResponse, WorkSummary } from '@app/core/models/readora.models';
-import { API, BlankPage, fail, ok, provideHttpTesting, settle } from '../../test-utils';
+import { API, BlankPage, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 
 const SOLO: WorkSummary = {
   id: 'w-1',

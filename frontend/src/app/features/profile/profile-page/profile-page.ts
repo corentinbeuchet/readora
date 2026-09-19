@@ -5,8 +5,8 @@ import { Tab, TabContent, TabList, TabPanel, Tabs } from '@angular/aria/tabs';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { UserProfile } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
-import { BookmarkList } from './components/bookmark-list';
-import { ProfileForm } from './components/profile-form';
+import { BookmarkList } from './bookmark-list/bookmark-list';
+import { ProfileForm } from './profile-form/profile-form';
 
 export type ProfileTab = 'overview' | 'bookmarks' | 'subscription';
 

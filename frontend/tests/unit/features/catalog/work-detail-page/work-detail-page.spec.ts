@@ -1,11 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { WorkDetailPage } from '@app/features/catalog/work-detail-page';
+import { WorkDetailPage } from '@app/features/catalog/work-detail-page/work-detail-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { ApiResponse, Work } from '@app/core/models/readora.models';
-import { givenIAmSignedInWith, mockUser, signIn } from '../../core/auth/auth-fixtures';
-import { API, fail, ok, provideHttpTesting, settle } from '../../test-utils';
+import { givenIAmSignedInWith, mockUser, signIn } from '../../../core/auth/auth-fixtures';
+import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 
 const WORK: Work = {
   id: 'w-1',
