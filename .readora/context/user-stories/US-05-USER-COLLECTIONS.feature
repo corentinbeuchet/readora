@@ -1,5 +1,5 @@
 # Rewritten 2026-09 from the first draft ("curated public collections"): readers first need a personal library
-# (it also feeds the "new chapters" badge of US-07). Public lists are kept as a @could idea.
+# (it also feeds the "new chapters" badge of US-07). Public lists are a @could.
 # The library is free for every signed-in reader; exact-page progress sync stays Premium (US-01).
 
 Feature: My library
@@ -38,7 +38,7 @@ Feature: My library
     Given "Kenji" has "Solo Leveling" in his library
     Then the library of reader "Aoi" is empty
 
-  @could @wip
+  @could
   Scenario: Sharing a public list
     When "Kenji" publishes the list "Peak Webtoons" with "Solo Leveling" and "Omniscient Reader"
     Then other readers can see and upvote "Peak Webtoons"

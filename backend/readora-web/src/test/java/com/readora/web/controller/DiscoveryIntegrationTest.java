@@ -52,6 +52,7 @@ class DiscoveryIntegrationTest extends AuthTestSupport {
         Work other = workRepository.save(Work.create("Other " + tag, "", WorkType.MANGA, "c.webp", Set.of(tag)));
         Chapter first = publish(followed, "1");
         publish(followed, "2");
+        Thread.sleep(5); // distinct publish times: "newest first" must not depend on a tie-break
         publish(other, "1");
 
         mockMvc.perform(get("/api/v1/updates"))

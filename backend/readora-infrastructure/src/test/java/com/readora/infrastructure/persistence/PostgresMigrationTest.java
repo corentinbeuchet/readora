@@ -21,6 +21,7 @@ import com.readora.infrastructure.persistence.adapter.LibraryRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.NotificationRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.PageReportRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.RatingRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.ReadingListRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.ScanlationProjectRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.WorkRepositoryAdapter;
 import org.junit.jupiter.api.DisplayName;
@@ -275,6 +276,25 @@ class PostgresMigrationTest {
         assertThat(discovery.findLatestReleases(reader, 0, 10)).extracting(r -> r.chapterId()).contains(chapter.getId());
         assertThat(community.unfollow(reader, team.getId())).isTrue();
         assertThat(community.usernames(List.of(reader))).isEmpty();
+    }
+
+    @Autowired
+    private ReadingListRepositoryAdapter readingLists;
+
+    @Test
+    @DisplayName("Reading lists (ordered items with notes, upvotes, top published) run on PostgreSQL")
+    void readingListsRunOnPostgres() {
+        Work first = workRepository.save(Work.create("PG List A", "", WorkType.MANGA, "c.png", Set.of("Action")));
+        Work second = workRepository.save(Work.create("PG List B", "", WorkType.MANGA, "c.png", Set.of("Action")));
+        var list = com.readora.domain.list.ReadingList.create(UserId.of("pg-owner"), "pgowner", "PG List", "", List.of(
+                new com.readora.domain.list.ListItem(second.getId(), "second first"), new com.readora.domain.list.ListItem(first.getId(), null)),
+                true, java.time.Instant.now());
+        readingLists.save(list);
+        assertThat(readingLists.addUpvote(list.getId(), UserId.of("pg-fan"))).isEqualTo(1);
+        assertThat(readingLists.findById(list.getId())).get()
+                .satisfies(l -> assertThat(l.getItems()).extracting(i -> i.workId()).containsExactly(second.getId(), first.getId()));
+        assertThat(readingLists.findTopPublished(10)).extracting(l -> l.getId()).contains(list.getId());
+        assertThat(readingLists.countUpvotes(List.of(list.getId()))).containsEntry(list.getId(), 1L);
     }
 
     private static void sleepPastClockTick() {

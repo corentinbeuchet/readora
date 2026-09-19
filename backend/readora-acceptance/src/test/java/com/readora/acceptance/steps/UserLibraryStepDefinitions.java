@@ -3,9 +3,13 @@ package com.readora.acceptance.steps;
 import com.readora.acceptance.fakes.InMemoryChapterReadRepository;
 import com.readora.acceptance.fakes.InMemoryChapterRepository;
 import com.readora.acceptance.fakes.InMemoryLibraryRepository;
+import com.readora.acceptance.fakes.InMemoryReadingListRepository;
 import com.readora.acceptance.fakes.InMemoryWorkRepository;
 import com.readora.application.port.in.ManageLibraryUseCase.LibraryItem;
+import com.readora.application.port.in.ManageListsUseCase;
 import com.readora.application.service.LibraryService;
+import com.readora.application.service.ReadingListService;
+import com.readora.domain.list.ListItem;
 import com.readora.domain.common.UserId;
 import com.readora.domain.social.ReadingStatus;
 import com.readora.domain.work.Work;
@@ -33,6 +37,7 @@ public class UserLibraryStepDefinitions {
 
     private InMemoryWorkRepository works;
     private LibraryService library;
+    private ReadingListService lists;
     private UserId kenji;
     private List<LibraryItem> shown = List.of();
 
@@ -41,7 +46,23 @@ public class UserLibraryStepDefinitions {
         works = new InMemoryWorkRepository();
         InMemoryChapterRepository chapters = new InMemoryChapterRepository();
         library = new LibraryService(new InMemoryLibraryRepository(), works, new InMemoryChapterReadRepository(chapters), Clock.systemUTC());
+        lists = new ReadingListService(new InMemoryReadingListRepository(), works, Clock.systemUTC());
         shown = List.of();
+    }
+
+    @When("{string} publishes the list {string} with {string} and {string}")
+    public void publishesTheList(String reader, String title, String first, String second) {
+        var draft = new ManageListsUseCase.ListDraft(title, "", List.of(
+                new ListItem(works.byTitle(first).getId(), null), new ListItem(works.byTitle(second).getId(), null)), true);
+        lists.create(UserId.of(reader), reader.toLowerCase(java.util.Locale.ROOT), draft);
+    }
+
+    @Then("other readers can see and upvote {string}")
+    public void otherReadersCanSeeAndUpvote(String title) {
+        var shared = lists.top().stream().filter(view -> view.list().getTitle().equals(title)).findFirst().orElseThrow();
+        assertThat(lists.get(UserId.of("Aoi"), shared.list().getId()).works()).hasSize(2);
+        assertThat(lists.upvote(UserId.of("Aoi"), shared.list().getId())).isEqualTo(1);
+        assertThat(lists.upvote(UserId.of("Aoi"), shared.list().getId())).isEqualTo(1);
     }
 
     @Given("reader {string} has a free account")

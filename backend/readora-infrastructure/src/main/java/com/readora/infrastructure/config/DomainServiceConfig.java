@@ -8,6 +8,7 @@ import com.readora.application.port.in.DiscoverUseCase;
 import com.readora.application.port.in.ManageAssetsUseCase;
 import com.readora.application.port.in.ManageBookmarkUseCase;
 import com.readora.application.port.in.ManageLibraryUseCase;
+import com.readora.application.port.in.ManageListsUseCase;
 import com.readora.application.port.in.ManageProfileUseCase;
 import com.readora.application.port.in.ManageScanlationTaskUseCase;
 import com.readora.application.port.in.ManageSubscriptionUseCase;
@@ -32,6 +33,7 @@ import com.readora.application.service.ModerationService;
 import com.readora.application.service.NotificationService;
 import com.readora.application.service.PageReportService;
 import com.readora.application.service.RatingService;
+import com.readora.application.service.ReadingListService;
 import com.readora.application.service.ProfileService;
 import com.readora.application.service.ReaderSocialService;
 import com.readora.application.service.ReadingTrackerService;
@@ -212,6 +214,11 @@ public class DomainServiceConfig {
                                              ScanlationProjectRepositoryPort projects, WorkRepositoryPort works, ChapterRepositoryPort chapters) {
         return transactional(new CommunityService(users, community, projects, works, chapters, Clock.systemUTC()), CommunityUseCase.class,
                 transactionManager);
+    }
+
+    @Bean
+    public ManageListsUseCase manageListsUseCase(ReadingListRepositoryPort lists, WorkRepositoryPort works) {
+        return transactional(new ReadingListService(lists, works, Clock.systemUTC()), ManageListsUseCase.class, transactionManager);
     }
 
     @Bean
