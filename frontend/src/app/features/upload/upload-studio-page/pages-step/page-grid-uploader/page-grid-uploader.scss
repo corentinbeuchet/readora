@@ -97,9 +97,15 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 
-  /* Keyboard users must see the actions too, not only mouse users. */
+  /* Keyboard users must see the actions too, not only mouse users; touch screens have no hover, so always show them. */
   &:hover,
   &:focus-within {
+    .page-overlay-actions {
+      opacity: 1;
+    }
+  }
+
+  @media (hover: none) {
     .page-overlay-actions {
       opacity: 1;
     }

@@ -171,7 +171,7 @@ app-omnisearch {
 }
 
 .app-footer {
-  padding: 1.25rem var(--space-page);
+  padding: 1.25rem var(--space-page) max(1.25rem, env(safe-area-inset-bottom));
   border-top: 1px solid var(--border);
   font-size: 0.85rem;
 }
