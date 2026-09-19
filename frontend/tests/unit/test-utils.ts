@@ -9,6 +9,18 @@ import { environment } from '../../src/environments/environment';
 /** API root the app calls in tests (the `API_BASE_URL` default). */
 export const API = environment.apiUrl;
 
+/** "Now" for tests that show relative times: fixtures are built from it, never from the real clock. */
+export const FIXED_NOW = new Date('2026-09-19T12:00:00Z');
+
+/**
+ * Fakes only `Date` (setTimeout stays real, so `settle()` keeps working) and sets it to `now`.
+ * Pair with `vi.useRealTimers()` in `afterEach`.
+ */
+export function freezeDate(now: Date = FIXED_NOW): void {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(now);
+}
+
 /** Empty page for routes a test navigates to without caring what renders. */
 @Component({ template: '' })
 export class BlankPage {}

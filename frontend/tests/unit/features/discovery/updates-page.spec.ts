@@ -6,7 +6,7 @@ import { UpdatesPage } from '@app/features/discovery/updates-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { Release } from '@app/core/models/readora.models';
 import { mockUser, signIn } from '../../core/auth/auth-fixtures';
-import { API, fail, ok, provideHttpTesting, settle } from '../../test-utils';
+import { API, FIXED_NOW, fail, freezeDate, ok, provideHttpTesting, settle } from '../../test-utils';
 
 function release(id: string, title: string, number: string, minutesAgo: number, read = false): Release {
   return {
@@ -14,7 +14,7 @@ function release(id: string, title: string, number: string, minutesAgo: number, 
     chapterId: id,
     chapterNumber: number,
     chapterTitle: '',
-    publishedAt: new Date(Date.now() - minutesAgo * 60_000).toISOString(),
+    publishedAt: new Date(FIXED_NOW.getTime() - minutesAgo * 60_000).toISOString(),
     read
   };
 }
@@ -24,13 +24,18 @@ describe('UpdatesPage (US-08)', () => {
   let http: HttpTestingController;
 
   beforeEach(async () => {
+    // "10 minutes ago" must not depend on how long the run takes.
+    freezeDate();
     TestBed.configureTestingModule({
       providers: [provideRouter([{ path: 'updates', component: UpdatesPage }], withComponentInputBinding()), ...provideHttpTesting()]
     });
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    http.verify();
+    vi.useRealTimers();
+  });
 
   const el = (): HTMLElement => harness.routeNativeElement as HTMLElement;
 
