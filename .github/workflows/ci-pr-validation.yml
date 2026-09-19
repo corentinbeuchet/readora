@@ -27,7 +27,7 @@ jobs:
         run: mvn -B verify
 
   frontend-fast-validation:
-    name: Frontend Vitest Unit Tests & Build
+    name: Frontend Lint, Vitest Unit Tests & Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,6 +42,10 @@ jobs:
       - name: Install dependencies
         working-directory: frontend
         run: npm ci
+
+      - name: Lint (ESLint + angular-eslint template rules)
+        working-directory: frontend
+        run: npm run lint
 
       - name: Run Vitest Unit Tests (jsdom, tests/unit)
         working-directory: frontend
