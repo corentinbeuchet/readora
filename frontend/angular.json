@@ -115,7 +115,8 @@
               "buildTarget": "readora-frontend:build:development"
             },
             "fr": {
-              "buildTarget": "readora-frontend:build:development,fr"
+              "buildTarget": "readora-frontend:build:development,fr",
+              "prebundle": false
             }
           },
           "defaultConfiguration": "development"
