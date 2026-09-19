@@ -87,10 +87,6 @@ public class S3ClientConfig {
         if (hasCustomEndpoint) {
             return AnonymousCredentialsProvider.create();
         }
-        try {
-            return DefaultCredentialsProvider.create();
-        } catch (Exception e) {
-            return AnonymousCredentialsProvider.create();
-        }
+        return DefaultCredentialsProvider.create();
     }
 }
