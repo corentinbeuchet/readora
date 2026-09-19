@@ -2,7 +2,7 @@
   <h1>Moderation</h1>
   <p class="muted">Reported comments, oldest first. Hiding removes the comment for everyone and closes its reports.</p>
 
-  @if (actionError(); as message) {
+  @if (action.error(); as message) {
     <p class="form-error" role="alert">{{ message }}</p>
   }
 
@@ -29,10 +29,10 @@
           <blockquote class="queue-content">{{ item.content }}</blockquote>
           <div class="queue-actions">
             <a class="btn btn-sm" [routerLink]="['/read', item.chapterId]" [queryParams]="{ comment: item.commentId }">See in context</a>
-            <button type="button" class="btn btn-sm btn-danger" [disabled]="busyId() === item.reportId" (click)="hide(item)">
+            <button type="button" class="btn btn-sm btn-danger" [disabled]="action.busyKey() === item.reportId" (click)="hide(item)">
               Hide comment<span class="sr-only"> by {{ item.authorUsername }}</span>
             </button>
-            <button type="button" class="btn btn-sm" [disabled]="busyId() === item.reportId" (click)="dismiss(item)">
+            <button type="button" class="btn btn-sm" [disabled]="action.busyKey() === item.reportId" (click)="dismiss(item)">
               Dismiss report<span class="sr-only"> on the comment by {{ item.authorUsername }}</span>
             </button>
           </div>

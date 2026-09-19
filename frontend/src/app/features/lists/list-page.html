@@ -38,12 +38,12 @@
             <li class="muted">No series yet. Add some from a series page with "Add to a list".</li>
           }
         </ul>
-        @if (error(); as message) {
+        @if (action.error(); as message) {
           <p class="form-error" role="alert">{{ message }}</p>
         }
         <div class="list-actions">
           <button type="button" class="btn" (click)="draft.set(null)">Cancel</button>
-          <button type="submit" class="btn btn-primary" [disabled]="busy()">Save list</button>
+          <button type="submit" class="btn btn-primary" [disabled]="action.busy()">Save list</button>
         </div>
       </form>
     } @else {
@@ -60,7 +60,7 @@
         }
         <div class="list-actions">
           @if (canUpvote() && l.published) {
-            <button type="button" class="btn" [disabled]="busy()" (click)="upvote()">▲ Upvote <span class="sr-only">this list</span>({{ l.upvotes }})</button>
+            <button type="button" class="btn" [disabled]="action.busy()" (click)="upvote()">▲ Upvote <span class="sr-only">this list</span>({{ l.upvotes }})</button>
           } @else {
             <span class="muted">▲ {{ l.upvotes }}</span>
           }
@@ -69,7 +69,7 @@
           }
         </div>
         <p class="muted" role="status">{{ message() }}</p>
-        @if (error(); as message) {
+        @if (action.error(); as message) {
           <p class="form-error" role="alert">{{ message }}</p>
         }
       </header>

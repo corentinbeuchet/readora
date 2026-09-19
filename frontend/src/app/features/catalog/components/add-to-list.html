@@ -15,9 +15,9 @@
         <span>Note (optional)</span>
         <input type="text" maxlength="300" [value]="note()" (input)="note.set(value($event))" />
       </label>
-      <button type="submit" class="btn">Add</button>
+      <button type="submit" class="btn" [disabled]="adding.busy()">Add</button>
       <p class="muted" role="status">{{ message() }}</p>
-      @if (error(); as message) {
+      @if (adding.error(); as message) {
         <p class="form-error" role="alert">{{ message }}</p>
       }
     </form>

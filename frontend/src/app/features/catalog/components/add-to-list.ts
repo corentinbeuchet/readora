@@ -1,9 +1,9 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { apiErrorMessage } from '@app/core/api/api-client';
 import { ListsApi } from '@app/core/api/lists-api';
 import { AuthStore } from '@app/core/auth/auth-store';
+import { asyncAction } from '@app/core/utils/async-action';
 
 /** "Add to a list" on a series page (US-05): pick one of my lists, add an optional note. */
 @Component({
@@ -22,21 +22,18 @@ export class AddToList {
   protected readonly selected = signal('');
   protected readonly note = signal('');
   protected readonly message = signal<string | null>(null);
-  protected readonly error = signal<string | null>(null);
+  protected readonly adding = asyncAction();
 
   protected async add(event: Event): Promise<void> {
     event.preventDefault();
     const listId = this.selected() || (this.mine.hasValue() ? this.mine.value()[0]?.id : undefined);
     if (!listId) return;
     this.message.set(null);
-    this.error.set(null);
-    try {
+    await this.adding.run(async () => {
       const list = await firstValueFrom(this.api.addItem(listId, this.workId(), this.note().trim() || undefined));
       this.message.set(`Added to “${list.title}”.`);
       this.note.set('');
-    } catch (err) {
-      this.error.set(apiErrorMessage(err));
-    }
+    });
   }
 
   protected value(event: Event): string {

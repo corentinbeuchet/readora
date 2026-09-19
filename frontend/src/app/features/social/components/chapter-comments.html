@@ -30,7 +30,7 @@
           <button type="button" class="btn btn-link" (click)="cancelReply()">Cancel</button>
         </p>
       }
-      @if (submitError(); as error) {
+      @if (posting.error(); as error) {
         <p class="form-error" role="alert">{{ error }}</p>
       }
 
@@ -64,8 +64,8 @@
         </label>
       </div>
 
-      <button type="submit" class="btn btn-primary" [disabled]="submitting()">
-        {{ submitting() ? 'Posting…' : replyTo() ? 'Post reply' : 'Post comment' }}
+      <button type="submit" class="btn btn-primary" [disabled]="posting.busy()">
+        {{ posting.busy() ? 'Posting…' : replyTo() ? 'Post reply' : 'Post comment' }}
       </button>
     </form>
   </ng-container>

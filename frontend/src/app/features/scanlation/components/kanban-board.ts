@@ -8,9 +8,10 @@ import { FocusTrapDirective } from '@app/core/a11y/focus-trap.directive';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { WorkflowTask } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
-import { AnyField, apiErrorMessage, visibleErrors } from '@app/features/auth/auth-form.utils';
+import { AnyField, visibleErrors } from '@app/features/auth/auth-form.utils';
 import { STAGES, tasksByStage, withTask, withTaskStage } from '../services/scanlation-board';
 import { PageReportsPanel } from './page-reports-panel';
+import { asyncAction } from '@app/core/utils/async-action';
 
 interface SubmitModel {
   assetUrl: string;
@@ -35,8 +36,8 @@ export class KanbanBoard {
   /** The project resource is the board's only state: local changes are written back with `project.update(...)`. */
   protected readonly project = this.scanlationApi.projectResource(this.projectId);
   protected readonly currentProject = computed(() => (this.project.hasValue() ? (this.project.value() ?? null) : null));
-  protected readonly busyTaskId = signal<string | null>(null);
-  protected readonly actionError = signal<string | null>(null);
+  /** Claim / submit / publish: `busyKey` is the task being changed. */
+  protected readonly action = asyncAction('The action could not be completed');
   protected readonly submitTarget = signal<WorkflowTask | null>(null);
 
   protected readonly currentUserId = computed(() => this.auth.user()?.id ?? null);
@@ -83,7 +84,7 @@ export class KanbanBoard {
   }
 
   protected openSubmit(task: WorkflowTask): void {
-    this.actionError.set(null);
+    this.action.clearError();
     this.submitModel.set({ assetUrl: task.assetPackageUrl ?? '', pageCount: task.pageCount || 1 });
     this.submitTarget.set(task);
   }
@@ -122,15 +123,7 @@ export class KanbanBoard {
   }
 
   private async run(task: WorkflowTask, action: () => Promise<void>): Promise<void> {
-    this.actionError.set(null);
-    this.busyTaskId.set(task.id);
-    try {
-      await action();
-    } catch (error) {
-      this.actionError.set(apiErrorMessage(error, 'The action could not be completed'));
-    } finally {
-      this.busyTaskId.set(null);
-    }
+    await this.action.run(action, { key: task.id });
   }
 
   private requireProjectId(): string {

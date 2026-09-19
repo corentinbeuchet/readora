@@ -16,12 +16,12 @@
     }
   </p>
 
-  @if (error(); as message) {
+  @if (action.error(); as message) {
     <p class="form-error" role="alert">{{ message }}</p>
   }
 
   <ng-container *appHasPermission="'RATE_WORK'">
-    <fieldset class="my-rating" [disabled]="saving()">
+    <fieldset class="my-rating" [disabled]="action.busy()">
       <legend>Your rating</legend>
       <div class="score-options">
         @for (score of scores; track score) {
@@ -57,7 +57,7 @@
         </div>
         <div class="form-actions">
           <button type="button" class="btn" (click)="reviewOpen.set(false)">Cancel</button>
-          <button type="submit" class="btn btn-primary" [disabled]="saving()">Publish review</button>
+          <button type="submit" class="btn btn-primary" [disabled]="action.busy()">Publish review</button>
         </div>
       </form>
     }
@@ -83,7 +83,7 @@
           <p class="review-footer muted">
             {{ review.helpfulVotes }} found this helpful
             @if (review.authorId !== myUserId()) {
-              <button *appHasPermission="'RATE_WORK'" type="button" class="btn btn-link" [disabled]="saving()" (click)="markHelpful(review)">
+              <button *appHasPermission="'RATE_WORK'" type="button" class="btn btn-link" [disabled]="action.busy()" (click)="markHelpful(review)">
                 Helpful<span class="sr-only">: review by {{ review.authorUsername }}</span>
               </button>
             }

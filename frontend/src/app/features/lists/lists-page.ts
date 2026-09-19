@@ -2,12 +2,12 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormField, form, maxLength, required, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
-import { apiErrorMessage } from '@app/core/api/api-client';
 import { ListsApi } from '@app/core/api/lists-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { SeoService } from '@app/core/seo/seo.service';
 import { AnyField, visibleErrors } from '@app/features/auth/auth-form.utils';
+import { asyncAction } from '@app/core/utils/async-action';
 
 /** Community lists (US-05): the most upvoted public lists, my lists, and a new-list form. */
 @Component({
@@ -24,7 +24,7 @@ export class ListsPage {
   protected readonly top = this.api.topResource();
   private readonly canCreate = computed(() => this.auth.can('LIBRARY_USE'));
   protected readonly mine = this.api.mineResource(this.canCreate);
-  protected readonly createError = signal<string | null>(null);
+  protected readonly creating = asyncAction();
   protected readonly model = signal({ title: '', description: '' });
   protected readonly newListForm = form(this.model, (path) => {
     required(path.title, { message: 'Give your list a title' });
@@ -43,15 +43,13 @@ export class ListsPage {
   /** Creates an empty private list, then opens it for editing. */
   protected async create(event: Event): Promise<void> {
     event.preventDefault();
-    this.createError.set(null);
+    this.creating.clearError();
     await submit(this.newListForm, async (f) => {
       const { title, description } = f().value();
-      try {
+      await this.creating.run(async () => {
         const list = await firstValueFrom(this.api.create({ title, description, published: false, items: [] }));
         void this.router.navigate(['/lists', list.id]);
-      } catch (error) {
-        this.createError.set(apiErrorMessage(error));
-      }
+      });
     });
   }
 }

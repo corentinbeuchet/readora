@@ -20,7 +20,7 @@
     }
   </nav>
 
-  @if (actionError(); as message) {
+  @if (action.error(); as message) {
     <p class="form-error" role="alert">{{ message }}</p>
   }
 
@@ -63,18 +63,18 @@
           <div class="library-actions">
             <label class="field status-field">
               <span class="sr-only">Reading status of {{ item.work.title }}</span>
-              <select [disabled]="busyWorkId() === item.work.id" (change)="changeStatus(item, $event)">
+              <select [disabled]="action.busyKey() === item.work.id" (change)="changeStatus(item, $event)">
                 @for (option of statuses; track option) {
                   <option [value]="option" [selected]="item.status === option">{{ labels[option] }}</option>
                 }
               </select>
             </label>
             <label class="checkbox notify-toggle">
-              <input type="checkbox" [checked]="item.newChapterNotifications" [disabled]="busyWorkId() === item.work.id"
+              <input type="checkbox" [checked]="item.newChapterNotifications" [disabled]="action.busyKey() === item.work.id"
                      (change)="toggleNotifications(item, $event)" />
               New chapter alerts<span class="sr-only"> for {{ item.work.title }}</span>
             </label>
-            <button type="button" class="btn btn-danger-outline btn-sm" [disabled]="busyWorkId() === item.work.id" (click)="remove(item)">
+            <button type="button" class="btn btn-danger-outline btn-sm" [disabled]="action.busyKey() === item.work.id" (click)="remove(item)">
               Remove<span class="sr-only"> {{ item.work.title }}</span>
             </button>
           </div>

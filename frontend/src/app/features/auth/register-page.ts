@@ -4,13 +4,13 @@ import { FieldTree, FormField, email, form, maxLength, minLength, pattern, requi
 import { firstValueFrom } from 'rxjs';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { SeoService } from '@app/core/seo/seo.service';
+import { asyncAction } from '@app/core/utils/async-action';
 import {
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
   USERNAME_PATTERN,
-  apiErrorMessage,
   visibleErrors
 } from './auth-form.utils';
 
@@ -52,8 +52,7 @@ export class RegisterPage {
     );
   });
 
-  protected readonly submitError = signal<string | null>(null);
-  protected readonly submitting = signal(false);
+  protected readonly registering = asyncAction('Could not create your account');
 
   constructor() {
     this.seo.private_('Create an account');
@@ -65,18 +64,13 @@ export class RegisterPage {
 
   protected async onSubmit(event: Event): Promise<void> {
     event.preventDefault();
-    this.submitError.set(null);
+    this.registering.clearError();
     await submit(this.registerForm, async (f) => {
-      this.submitting.set(true);
-      try {
+      await this.registering.run(async () => {
         const { email, username, password } = f().value();
         await firstValueFrom(this.auth.register({ email, username, password }));
         await this.router.navigateByUrl('/profile');
-      } catch (error) {
-        this.submitError.set(apiErrorMessage(error, 'Could not create your account'));
-      } finally {
-        this.submitting.set(false);
-      }
+      });
     });
   }
 }

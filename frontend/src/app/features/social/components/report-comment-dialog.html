@@ -11,12 +11,12 @@
         </label>
       }
     </fieldset>
-    @if (error(); as message) {
+    @if (sending.error(); as message) {
       <p class="form-error" role="alert">{{ message }}</p>
     }
     <div class="dialog-actions">
       <button type="button" class="btn" (click)="closed.emit()">Cancel</button>
-      <button type="submit" class="btn btn-primary" [disabled]="sending()">{{ sending() ? 'Sending…' : 'Send report' }}</button>
+      <button type="submit" class="btn btn-primary" [disabled]="sending.busy()">{{ sending.busy() ? 'Sending…' : 'Send report' }}</button>
     </div>
   </form>
 </div>

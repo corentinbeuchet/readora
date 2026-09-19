@@ -2,10 +2,10 @@ import { Component, DOCUMENT, DestroyRef, ElementRef, afterNextRender, computed,
 import { NavigationEnd, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
-import { apiErrorMessage } from '@app/core/api/api-client';
 import { NotificationStore } from '@app/core/notifications/notification-store';
 import { ReaderNotification } from '@app/core/models/readora.models';
 import { timeAgo } from '@app/core/utils/time-ago';
+import { asyncAction } from '@app/core/utils/async-action';
 
 /** How often the unread count is refreshed while the app is open. */
 export const NOTIFICATION_POLL_MS = 60_000;
@@ -27,7 +27,7 @@ export class NotificationBell {
   private readonly trigger = viewChild.required<ElementRef<HTMLButtonElement>>('trigger');
 
   protected readonly open = signal(false);
-  protected readonly error = signal<string | null>(null);
+  protected readonly markingRead = asyncAction();
   protected readonly label = computed(() => {
     const unread = this.store.unread();
     return unread > 0 ? `Notifications, ${unread} unread` : 'Notifications';
@@ -72,12 +72,7 @@ export class NotificationBell {
   }
 
   protected async markAllRead(): Promise<void> {
-    this.error.set(null);
-    try {
-      await this.store.markAllRead();
-    } catch (err) {
-      this.error.set(apiErrorMessage(err));
-    }
+    await this.markingRead.run(() => this.store.markAllRead());
   }
 
   /** Links may carry a query string (`?comment=`), so they go through the router as URLs. */

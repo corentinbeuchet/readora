@@ -42,7 +42,7 @@
       @if (hasFilters()) {
         <button type="button" class="btn btn-link clear-filters" (click)="clearFilters()">Clear all filters</button>
       }
-      <p class="muted surprise-message" role="status">{{ surpriseMessage() }}</p>
+      <p class="muted surprise-message" role="status">{{ surprise.error() }}</p>
     </div>
 
     @if (genres.hasValue() && genres.value().length > 0) {

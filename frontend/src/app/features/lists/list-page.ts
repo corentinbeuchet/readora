@@ -1,11 +1,11 @@
 import { Component, computed, effect, inject, input, linkedSignal, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { apiErrorMessage } from '@app/core/api/api-client';
 import { ListsApi } from '@app/core/api/lists-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { ReadingList } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
+import { asyncAction } from '@app/core/utils/async-action';
 
 interface Draft {
   title: string;
@@ -36,9 +36,9 @@ export class ListPage {
   protected readonly canUpvote = computed(() => this.auth.can('LIBRARY_USE') && !this.isOwner());
   /** The owner's edit in progress; dropped when another list is opened, so it can never be saved to that list. */
   protected readonly draft = linkedSignal<string | undefined, Draft | null>({ source: this.listId, computation: () => null });
-  protected readonly busy = signal(false);
   protected readonly message = signal<string | null>(null);
-  protected readonly error = signal<string | null>(null);
+  /** Save and upvote. */
+  protected readonly action = asyncAction();
 
   constructor() {
     effect(() => {
@@ -88,10 +88,10 @@ export class ListPage {
     const id = this.listId();
     if (!draft || !id) return;
     if (!draft.title.trim()) {
-      this.error.set('Give your list a title');
+      this.action.fail('Give your list a title');
       return;
     }
-    await this.run(async () => {
+    await this.action.run(async () => {
       const saved = await firstValueFrom(
         this.api.update(id, {
           title: draft.title,
@@ -109,21 +109,9 @@ export class ListPage {
   protected async upvote(): Promise<void> {
     const list = this.current();
     if (!list) return;
-    await this.run(async () => {
+    await this.action.run(async () => {
       const upvotes = await firstValueFrom(this.api.upvote(list.id));
       this.list.update((l) => (l ? { ...l, upvotes } : l));
     });
-  }
-
-  private async run(action: () => Promise<void>): Promise<void> {
-    this.busy.set(true);
-    this.error.set(null);
-    try {
-      await action();
-    } catch (err) {
-      this.error.set(apiErrorMessage(err));
-    } finally {
-      this.busy.set(false);
-    }
   }
 }

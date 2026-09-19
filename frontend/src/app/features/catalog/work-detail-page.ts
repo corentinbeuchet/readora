@@ -3,7 +3,7 @@ import { DatePipe, NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { firstValueFrom } from 'rxjs';
-import { apiErrorMessage } from '@app/core/api/api-client';
+import { asyncAction } from '@app/core/utils/async-action';
 import { BookmarksApi } from '@app/core/api/bookmarks-api';
 import { LibraryApi } from '@app/core/api/library-api';
 import { ReadingApi } from '@app/core/api/reading-api';
@@ -60,11 +60,10 @@ export class WorkDetailPage {
     const items = this.libraryItems.hasValue() ? this.libraryItems.value() : [];
     return items.find((item) => item.work.id === this.workId())?.newChapterNotifications ?? true;
   });
-  protected readonly librarySaving = signal(false);
-  protected readonly libraryError = signal<string | null>(null);
+  /** Library, notification and read-marker changes: one busy/error state. */
+  protected readonly library = asyncAction('Could not update your library. Please try again.');
 
   private readonly progress = this.readingApi.progressResource(this.workId, this.canUseLibrary);
-  protected readonly markingRead = signal(false);
   private readonly finished = computed(() => new Set(this.progress.hasValue() ? (this.progress.value()?.finishedChapterIds ?? []) : []));
   protected readonly nextChapterId = computed(() => (this.progress.hasValue() ? (this.progress.value()?.nextChapterId ?? null) : null));
   /** "Continue" for a free reader who already finished chapters here. */
@@ -104,15 +103,9 @@ export class WorkDetailPage {
   }
 
   protected async markPreviousAsRead(chapterId: string): Promise<void> {
-    this.markingRead.set(true);
-    this.libraryError.set(null);
-    try {
-      this.progress.set(await firstValueFrom(this.readingApi.markReadUpTo(chapterId)));
-    } catch (error) {
-      this.libraryError.set(apiErrorMessage(error, 'Could not update your read chapters. Please try again.'));
-    } finally {
-      this.markingRead.set(false);
-    }
+    await this.library.run(async () => this.progress.set(await firstValueFrom(this.readingApi.markReadUpTo(chapterId))), {
+      fallback: 'Could not update your read chapters. Please try again.'
+    });
   }
 
   protected async addToLibrary(): Promise<void> {
@@ -126,16 +119,13 @@ export class WorkDetailPage {
 
   protected async toggleNotifications(event: Event): Promise<void> {
     const enabled = (event.target as HTMLInputElement).checked;
-    this.librarySaving.set(true);
-    this.libraryError.set(null);
-    try {
-      await firstValueFrom(this.libraryApi.setNotifications(this.workId(), enabled));
-      this.libraryNotify.set(enabled);
-    } catch (error) {
-      this.libraryError.set(apiErrorMessage(error, 'Could not update your notifications. Please try again.'));
-    } finally {
-      this.librarySaving.set(false);
-    }
+    await this.library.run(
+      async () => {
+        await firstValueFrom(this.libraryApi.setNotifications(this.workId(), enabled));
+        this.libraryNotify.set(enabled);
+      },
+      { fallback: 'Could not update your notifications. Please try again.' }
+    );
   }
 
   protected async removeFromLibrary(): Promise<void> {
@@ -148,14 +138,6 @@ export class WorkDetailPage {
   }
 
   private async saveLibrary(action: () => Promise<ReadingStatus | null>): Promise<void> {
-    this.librarySaving.set(true);
-    this.libraryError.set(null);
-    try {
-      this.libraryStatus.set(await action());
-    } catch (error) {
-      this.libraryError.set(apiErrorMessage(error, 'Could not update your library. Please try again.'));
-    } finally {
-      this.librarySaving.set(false);
-    }
+    await this.library.run(async () => this.libraryStatus.set(await action()));
   }
 }

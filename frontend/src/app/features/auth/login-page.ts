@@ -4,7 +4,8 @@ import { FieldTree, FormField, email, form, required, submit } from '@angular/fo
 import { firstValueFrom } from 'rxjs';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { SeoService } from '@app/core/seo/seo.service';
-import { apiErrorMessage, visibleErrors } from './auth-form.utils';
+import { visibleErrors } from './auth-form.utils';
+import { asyncAction } from '@app/core/utils/async-action';
 
 interface LoginModel {
   email: string;
@@ -30,8 +31,7 @@ export class LoginPage {
     required(path.password, { message: 'Password is required' });
   });
 
-  protected readonly submitError = signal<string | null>(null);
-  protected readonly submitting = signal(false);
+  protected readonly signingIn = asyncAction('Invalid email or password');
 
   constructor() {
     this.seo.private_('Log in');
@@ -43,17 +43,12 @@ export class LoginPage {
 
   protected async onSubmit(event: Event): Promise<void> {
     event.preventDefault();
-    this.submitError.set(null);
+    this.signingIn.clearError();
     await submit(this.loginForm, async (f) => {
-      this.submitting.set(true);
-      try {
+      await this.signingIn.run(async () => {
         await firstValueFrom(this.auth.login(f().value()));
         await this.router.navigateByUrl(this.returnUrl());
-      } catch (error) {
-        this.submitError.set(apiErrorMessage(error, 'Invalid email or password'));
-      } finally {
-        this.submitting.set(false);
-      }
+      });
     });
   }
 

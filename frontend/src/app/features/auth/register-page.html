@@ -3,7 +3,7 @@
   <p class="muted">Free forever. Upgrade to Premium anytime for bookmarks and reading progress.</p>
 
   <form class="form card" (submit)="onSubmit($event)" novalidate>
-    @if (submitError(); as error) {
+    @if (registering.error(); as error) {
       <p class="form-error" role="alert">{{ error }}</p>
     }
 
@@ -51,8 +51,8 @@
       </div>
     </div>
 
-    <button type="submit" class="btn btn-primary" [disabled]="submitting()">
-      {{ submitting() ? 'Creating account…' : 'Sign up' }}
+    <button type="submit" class="btn btn-primary" [disabled]="registering.busy()">
+      {{ registering.busy() ? 'Creating account…' : 'Sign up' }}
     </button>
 
     <p class="muted">Already registered? <a routerLink="/login">Log in</a></p>

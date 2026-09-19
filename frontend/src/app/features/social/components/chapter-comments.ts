@@ -6,9 +6,10 @@ import { CommentsApi } from '@app/core/api/comments-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { ChapterComment } from '@app/core/models/readora.models';
-import { AnyField, apiErrorMessage, visibleErrors } from '@app/features/auth/auth-form.utils';
+import { AnyField, visibleErrors } from '@app/features/auth/auth-form.utils';
 import { CommentTree } from './comment-tree';
 import { ReportCommentDialog } from './report-comment-dialog';
+import { asyncAction } from '@app/core/utils/async-action';
 
 export const COMMENT_MAX_LENGTH = 2000;
 
@@ -57,8 +58,7 @@ export class ChapterComments {
 
   protected readonly comments = this.commentsApi.forChapterResource(this.chapterId);
   protected readonly replyTo = signal<ChapterComment | null>(null);
-  protected readonly submitError = signal<string | null>(null);
-  protected readonly submitting = signal(false);
+  protected readonly posting = asyncAction('Could not post your comment');
   protected readonly canWrite = computed(() => this.auth.can('COMMENT_WRITE'));
   protected readonly canUpvote = computed(() => this.auth.can('COMMENT_UPVOTE'));
   protected readonly canReport = computed(() => this.auth.can('COMMENT_REPORT'));
@@ -126,10 +126,9 @@ export class ChapterComments {
 
   protected async onSubmit(event: Event): Promise<void> {
     event.preventDefault();
-    this.submitError.set(null);
+    this.posting.clearError();
     await submit(this.commentForm, async (f) => {
-      this.submitting.set(true);
-      try {
+      await this.posting.run(async () => {
         const { content, pageReference, isSpoiler } = f().value();
         const parent = this.replyTo();
         const created = await firstValueFrom(
@@ -143,11 +142,7 @@ export class ChapterComments {
         this.comments.update((list) => insertInThread(list, created));
         this.model.set({ content: '', pageReference: null, isSpoiler: false });
         this.replyTo.set(null);
-      } catch (error) {
-        this.submitError.set(apiErrorMessage(error, 'Could not post your comment'));
-      } finally {
-        this.submitting.set(false);
-      }
+      });
     });
   }
 }

@@ -1,14 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { apiErrorMessage } from '@app/core/api/api-client';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { DiscoveryApi } from '@app/core/api/discovery-api';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { CatalogQuery, Demographic, WorkStatus, WorkType } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
 import { FALLBACK_COVER_IMAGE, onImageError } from '@app/core/utils/image-utils';
+import { asyncAction } from '@app/core/utils/async-action';
 
 const PAGE_SIZE = 24;
 
@@ -81,7 +81,8 @@ export class WorksPage {
     const query = this.query();
     return !!(query.text || query.genres?.length || query.excludedGenres?.length || query.type || query.status || query.demographic);
   });
-  protected readonly surpriseMessage = signal<string | null>(null);
+  /** "Surprise me": `error` also says when nothing matches the filters. */
+  protected readonly surprise = asyncAction();
   protected readonly hasPrevious = computed(() => this.query().page > 0);
   protected readonly hasNext = computed(() => this.query().page + 1 < (this.works.hasValue() ? this.works.value().totalPages : 0));
 
@@ -121,17 +122,12 @@ export class WorksPage {
 
   /** Opens a random series matching the current filters (US-08). */
   protected async surpriseMe(): Promise<void> {
-    this.surpriseMessage.set(null);
     const { genres, excludedGenres, type, status, demographic } = this.query();
-    try {
-      const work = await firstValueFrom(this.discoveryApi.random({ genres, excludedGenres, type, status, demographic }));
-      if (work) {
-        void this.router.navigate(['/works', work.id]);
-      } else {
-        this.surpriseMessage.set('No series match these filters.');
-      }
-    } catch (error) {
-      this.surpriseMessage.set(apiErrorMessage(error));
+    const work = await this.surprise.run(() => firstValueFrom(this.discoveryApi.random({ genres, excludedGenres, type, status, demographic })));
+    if (work) {
+      void this.router.navigate(['/works', work.id]);
+    } else if (work === null) {
+      this.surprise.fail('No series match these filters.');
     }
   }
 

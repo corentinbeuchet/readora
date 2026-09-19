@@ -1,12 +1,12 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { FormField, form, maxLength, required, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
-import { apiErrorMessage } from '@app/core/api/api-client';
 import { RatingsApi } from '@app/core/api/ratings-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { WorkReview } from '@app/core/models/readora.models';
 import { AnyField, visibleErrors } from '@app/features/auth/auth-form.utils';
+import { asyncAction } from '@app/core/utils/async-action';
 
 const REVIEW_MAX = 2000;
 
@@ -39,8 +39,8 @@ export class WorkRatings {
   );
   protected readonly myScore = computed(() => (this.mine.hasValue() ? (this.mine.value()?.score ?? null) : null));
   protected readonly hasReview = computed(() => (this.mine.hasValue() ? !!this.mine.value()?.verdict : false));
-  protected readonly saving = signal(false);
-  protected readonly error = signal<string | null>(null);
+  /** Rating, review and helpful votes. */
+  protected readonly action = asyncAction();
   protected readonly reviewOpen = signal(false);
   protected readonly myUserId = computed(() => this.auth.user()?.id ?? null);
   /** Series whose review the form was last filled from. */
@@ -75,7 +75,7 @@ export class WorkRatings {
   }
 
   protected async rate(score: number): Promise<void> {
-    await this.run(async () => {
+    await this.action.run(async () => {
       const saved = await firstValueFrom(this.api.rate(this.workId(), score));
       this.mine.set(saved);
       this.summary.reload();
@@ -86,12 +86,12 @@ export class WorkRatings {
     event.preventDefault();
     const score = this.myScore();
     if (score === null) {
-      this.error.set('Rate the series before writing a review.');
+      this.action.fail('Rate the series before writing a review.');
       return;
     }
     await submit(this.reviewForm, async (f) => {
       const { liked, disliked, verdict } = f().value();
-      await this.run(async () => {
+      await this.action.run(async () => {
         const saved = await firstValueFrom(this.api.review(this.workId(), { score, liked: liked || undefined, disliked: disliked || undefined, verdict }));
         this.mine.set(saved);
         this.reviewOpen.set(false);
@@ -101,21 +101,9 @@ export class WorkRatings {
   }
 
   protected async markHelpful(review: WorkReview): Promise<void> {
-    await this.run(async () => {
+    await this.action.run(async () => {
       const helpfulVotes = await firstValueFrom(this.api.markHelpful(review.id));
       this.reviews.update((all) => all.map((r) => (r.id === review.id ? { ...r, helpfulVotes } : r)));
     });
-  }
-
-  private async run(action: () => Promise<void>): Promise<void> {
-    this.saving.set(true);
-    this.error.set(null);
-    try {
-      await action();
-    } catch (err) {
-      this.error.set(apiErrorMessage(err));
-    } finally {
-      this.saving.set(false);
-    }
   }
 }

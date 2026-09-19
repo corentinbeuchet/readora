@@ -48,23 +48,23 @@
             @if (libraryStatus(); as status) {
               <label class="field library-status">
                 <span>In my library</span>
-                <select [disabled]="librarySaving()" (change)="changeLibraryStatus($event)">
+                <select [disabled]="library.busy()" (change)="changeLibraryStatus($event)">
                   @for (option of statuses; track option) {
                     <option [value]="option" [selected]="status === option">{{ statusLabels[option] }}</option>
                   }
                 </select>
               </label>
               <label class="checkbox">
-                <input type="checkbox" [checked]="libraryNotify()" [disabled]="librarySaving()" (change)="toggleNotifications($event)" />
+                <input type="checkbox" [checked]="libraryNotify()" [disabled]="library.busy()" (change)="toggleNotifications($event)" />
                 Notify me of new chapters
               </label>
-              <button type="button" class="btn btn-link" [disabled]="librarySaving()" (click)="removeFromLibrary()">Remove from library</button>
+              <button type="button" class="btn btn-link" [disabled]="library.busy()" (click)="removeFromLibrary()">Remove from library</button>
             } @else {
-              <button type="button" class="btn" [disabled]="librarySaving()" (click)="addToLibrary()">+ Add to library</button>
+              <button type="button" class="btn" [disabled]="library.busy()" (click)="addToLibrary()">+ Add to library</button>
             }
           </ng-container>
         </div>
-        @if (libraryError(); as message) {
+        @if (library.error(); as message) {
           <p class="form-error" role="alert">{{ message }}</p>
         }
         <app-add-to-list *appHasPermission="'LIBRARY_USE'" [workId]="w.id" />
@@ -106,7 +106,7 @@
                 </span>
               </a>
               @if (!read && hasUnreadBefore(i)) {
-                <button type="button" class="btn btn-sm btn-link mark-previous" [disabled]="markingRead()" (click)="markPreviousAsRead(chapter.id)">
+                <button type="button" class="btn btn-sm btn-link mark-previous" [disabled]="library.busy()" (click)="markPreviousAsRead(chapter.id)">
                   Mark all previous as read<span class="sr-only"> (before chapter {{ chapter.chapterNumber }})</span>
                 </button>
               }

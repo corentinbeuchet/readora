@@ -1,11 +1,11 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { apiErrorMessage } from '@app/core/api/api-client';
 import { ModerationApi } from '@app/core/api/moderation-api';
 import { COMMENT_REPORT_REASON_LABELS, ModerationItem } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
+import { asyncAction } from '@app/core/utils/async-action';
 
 /** Moderation queue (US-11): reported comments, oldest first; hide the comment or dismiss the report. */
 @Component({
@@ -18,8 +18,8 @@ export class ModerationPage {
   private readonly api = inject(ModerationApi);
   protected readonly queue = this.api.queueResource();
   protected readonly labels = COMMENT_REPORT_REASON_LABELS;
-  protected readonly busyId = signal<string | null>(null);
-  protected readonly actionError = signal<string | null>(null);
+  /** Hide / dismiss: `busyKey` is the report being handled. */
+  protected readonly action = asyncAction();
 
   constructor() {
     inject(SeoService).private_('Moderation');
@@ -34,15 +34,12 @@ export class ModerationPage {
   }
 
   private async act(item: ModerationItem, action: () => Promise<unknown>): Promise<void> {
-    this.busyId.set(item.reportId);
-    this.actionError.set(null);
-    try {
-      await action();
-      this.queue.reload();
-    } catch (error) {
-      this.actionError.set(apiErrorMessage(error));
-    } finally {
-      this.busyId.set(null);
-    }
+    await this.action.run(
+      async () => {
+        await action();
+        this.queue.reload();
+      },
+      { key: item.reportId }
+    );
   }
 }

@@ -3,7 +3,7 @@
   <p class="muted">Welcome back to Readora.</p>
 
   <form class="form card" (submit)="onSubmit($event)" novalidate aria-describedby="login-error">
-    @if (submitError(); as error) {
+    @if (signingIn.error(); as error) {
       <p id="login-error" class="form-error" role="alert">{{ error }}</p>
     }
 
@@ -41,8 +41,8 @@
       </div>
     </div>
 
-    <button type="submit" class="btn btn-primary" [disabled]="submitting()">
-      {{ submitting() ? 'Logging in…' : 'Log in' }}
+    <button type="submit" class="btn btn-primary" [disabled]="signingIn.busy()">
+      {{ signingIn.busy() ? 'Logging in…' : 'Log in' }}
     </button>
 
     <p class="muted">No account yet? <a routerLink="/register">Create one</a></p>

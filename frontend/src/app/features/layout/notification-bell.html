@@ -10,9 +10,9 @@
   <section id="notification-panel" class="bell-panel" aria-label="Notifications" [hidden]="!open()">
     <header class="bell-header">
       <h2>Notifications</h2>
-      <button type="button" class="btn btn-link" (click)="markAllRead()" [disabled]="store.unread() === 0">Mark all as read</button>
+      <button type="button" class="btn btn-link" (click)="markAllRead()" [disabled]="store.unread() === 0 || markingRead.busy()">Mark all as read</button>
     </header>
-    @if (error(); as message) {
+    @if (markingRead.error(); as message) {
       <p class="form-error" role="alert">{{ message }}</p>
     }
     @if (store.loadError()) {

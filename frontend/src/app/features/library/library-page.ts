@@ -1,14 +1,14 @@
-import { Component, DOCUMENT, computed, inject, input, signal } from '@angular/core';
+import { Component, DOCUMENT, computed, inject, input } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { apiErrorMessage } from '@app/core/api/api-client';
 import { CommunityApi } from '@app/core/api/community-api';
 import { LibraryApi } from '@app/core/api/library-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { LibraryItem, READING_STATUS_LABELS, ReadingStatus } from '@app/core/models/readora.models';
 import { SeoService } from '@app/core/seo/seo.service';
 import { FALLBACK_COVER_IMAGE, onImageError } from '@app/core/utils/image-utils';
+import { asyncAction } from '@app/core/utils/async-action';
 
 const STATUSES = Object.keys(READING_STATUS_LABELS) as ReadingStatus[];
 
@@ -35,8 +35,8 @@ export class LibraryPage {
   protected readonly selected = computed(() => STATUSES.find((s) => s === this.status()));
   private readonly enabled = computed(() => this.auth.can('LIBRARY_USE'));
   protected readonly items = this.libraryApi.listResource(this.selected, this.enabled);
-  protected readonly actionError = signal<string | null>(null);
-  protected readonly busyWorkId = signal<string | null>(null);
+  /** Row actions (status, notifications, remove) and the export: `busyKey` is the series being changed. */
+  protected readonly action = asyncAction();
 
   constructor() {
     inject(SeoService).private_('My library');
@@ -58,13 +58,10 @@ export class LibraryPage {
 
   /** Downloads my library as a file (US-12). */
   protected async exportLibrary(format: 'csv' | 'json'): Promise<void> {
-    this.actionError.set(null);
-    try {
-      const file = await firstValueFrom(this.communityApi.exportLibrary(format));
-      this.saveFile(file, `readora-library.${format}`);
-    } catch (error) {
-      this.actionError.set(apiErrorMessage(error, 'Could not export your library. Please try again.'));
-    }
+    await this.action.run(
+      async () => this.saveFile(await firstValueFrom(this.communityApi.exportLibrary(format)), `readora-library.${format}`),
+      { key: 'export', fallback: 'Could not export your library. Please try again.' }
+    );
   }
 
   /** Browser side effect, overridable in tests. */
@@ -84,15 +81,12 @@ export class LibraryPage {
   }
 
   private async run(item: LibraryItem, action: () => Promise<unknown>): Promise<void> {
-    this.actionError.set(null);
-    this.busyWorkId.set(item.work.id);
-    try {
-      await action();
-      this.items.reload();
-    } catch (error) {
-      this.actionError.set(apiErrorMessage(error, `Could not update “${item.work.title}”. Please try again.`));
-    } finally {
-      this.busyWorkId.set(null);
-    }
+    await this.action.run(
+      async () => {
+        await action();
+        this.items.reload();
+      },
+      { key: item.work.id, fallback: `Could not update “${item.work.title}”. Please try again.` }
+    );
   }
 }

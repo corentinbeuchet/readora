@@ -6,7 +6,7 @@
     }
   </h2>
 
-  @if (actionError(); as message) {
+  @if (action.error(); as message) {
     <p class="form-error" role="alert">{{ message }}</p>
   }
 
@@ -29,7 +29,7 @@
           </div>
           <div class="report-actions">
             <a class="btn btn-sm" [routerLink]="['/read', report.chapterId]" [queryParams]="{ page: report.pageNumber }">Open page</a>
-            <button type="button" class="btn btn-sm btn-primary" [disabled]="busyId() === report.id" (click)="markFixed(report)">
+            <button type="button" class="btn btn-sm btn-primary" [disabled]="action.busyKey() === report.id" (click)="markFixed(report)">
               Mark fixed<span class="sr-only">: chapter {{ report.chapterNumber }}, page {{ report.pageNumber }}</span>
             </button>
           </div>
