@@ -1,4 +1,4 @@
-import { RenderMode, ServerRoute } from '@angular/ssr';
+import { PrerenderFallback, RenderMode, ServerRoute } from '@angular/ssr';
 import { environment } from '../environments/environment';
 import { ApiResponse, ChapterSummary, PagedResponse, WorkSummary } from './core/models/readora.models';
 
@@ -24,13 +24,18 @@ async function fetchApi<T>(path: string): Promise<T | null> {
  * Work ids to prerender. When the API is unreachable at build time we log and fall back to
  * prerendering only static routes; dynamic pages are then served by `index.csr.html`.
  */
-async function prerenderedWorkIds(): Promise<string[]> {
-  const page = await fetchApi<PagedResponse<WorkSummary>>(`/works?page=0&size=${MAX_PRERENDERED_WORKS}`);
-  if (!page) {
-    console.warn(`[prerender] Catalog API unreachable at ${API}: only static routes will be prerendered.`);
-    return [];
-  }
-  return page.items.map((w) => w.id);
+let workIds: Promise<string[]> | undefined;
+
+/** Fetched once per build, shared by the work and chapter routes. */
+function prerenderedWorkIds(): Promise<string[]> {
+  workIds ??= fetchApi<PagedResponse<WorkSummary>>(`/works?page=0&size=${MAX_PRERENDERED_WORKS}`).then((page) => {
+    if (!page) {
+      console.warn(`[prerender] Catalog API unreachable at ${API}: only static routes will be prerendered.`);
+      return [];
+    }
+    return page.items.map((w) => w.id);
+  });
+  return workIds;
 }
 
 async function prerenderedChapterIds(): Promise<string[]> {
@@ -46,7 +51,8 @@ export const serverRoutes: ServerRoute[] = [
   {
     path: 'works/:workId',
     renderMode: RenderMode.Prerender,
-    fallback: undefined,
+    // Static output has no server: pages not prerendered are rendered in the browser (index.csr.html).
+    fallback: PrerenderFallback.Client,
     async getPrerenderParams() {
       return (await prerenderedWorkIds()).map((workId) => ({ workId }));
     }
@@ -54,7 +60,8 @@ export const serverRoutes: ServerRoute[] = [
   {
     path: 'read/:chapterId',
     renderMode: RenderMode.Prerender,
-    fallback: undefined,
+    // Static output has no server: pages not prerendered are rendered in the browser (index.csr.html).
+    fallback: PrerenderFallback.Client,
     async getPrerenderParams() {
       return (await prerenderedChapterIds()).map((chapterId) => ({ chapterId }));
     }
@@ -79,6 +86,7 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'subscription', renderMode: RenderMode.Client },
   { path: 'subscription/success', renderMode: RenderMode.Client },
   { path: 'subscription/cancel', renderMode: RenderMode.Client },
+  { path: 'upload', renderMode: RenderMode.Client },
   { path: 'scanlation', renderMode: RenderMode.Client },
   { path: 'scanlation/:projectId', renderMode: RenderMode.Client },
   { path: 'forbidden', renderMode: RenderMode.Client },
