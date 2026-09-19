@@ -67,6 +67,7 @@
         @if (libraryError(); as message) {
           <p class="form-error" role="alert">{{ message }}</p>
         }
+        <app-add-to-list *appHasPermission="'LIBRARY_USE'" [workId]="w.id" />
       </div>
     </article>
 

@@ -1,0 +1,53 @@
+.new-list {
+  max-width: 32rem;
+  margin: 1rem 0 1.5rem;
+}
+
+h2 {
+  font-size: 1.1rem;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.list-cards {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+}
+
+.list-title {
+  font-weight: 600;
+  color: inherit;
+}
+
+.list-items {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+
+.list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.list-item-body {
+  flex: 1;
+}
+
+.list-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}

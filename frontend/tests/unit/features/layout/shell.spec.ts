@@ -41,7 +41,7 @@ describe('Shell primary navigation', () => {
 
   it('is a list of links, not an ARIA menubar', () => {
     expect(fixture.nativeElement.querySelector('[role="menubar"]')).toBeNull();
-    expect(links().map((a) => a.textContent?.trim())).toEqual(['Home', 'Catalog', 'Updates', 'Rankings']);
+    expect(links().map((a) => a.textContent?.trim())).toEqual(['Home', 'Catalog', 'Updates', 'Rankings', 'Lists']);
     expect(links().every((a) => a.getAttribute('href'))).toBe(true);
   });
 
@@ -59,7 +59,7 @@ describe('Shell primary navigation', () => {
   it('shows permission-gated entries only to allowed users', async () => {
     await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: ['PROJECT_VIEW'] }));
     fixture.detectChanges();
-    expect(links().map((a) => a.textContent?.trim())).toEqual(['Home', 'Catalog', 'Updates', 'Rankings', 'Scanlation']);
+    expect(links().map((a) => a.textContent?.trim())).toEqual(['Home', 'Catalog', 'Updates', 'Rankings', 'Lists', 'Scanlation']);
   });
 
   it('hides the site header and footer in the reader zen mode', () => {

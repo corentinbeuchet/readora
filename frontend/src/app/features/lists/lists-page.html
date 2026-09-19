@@ -1,0 +1,61 @@
+<section class="page">
+  <h1>Lists</h1>
+  <p class="muted">Series picked and annotated by readers.</p>
+
+  <ng-container *appHasPermission="'LIBRARY_USE'">
+    <form class="card form new-list" (submit)="create($event)" novalidate>
+      <h2>New list</h2>
+      <div class="field">
+        <label for="new-list-title">Title</label>
+        <input id="new-list-title" type="text" [formField]="newListForm.title"
+               [attr.aria-invalid]="errors(newListForm.title).length > 0" aria-describedby="new-list-title-error" />
+        <div id="new-list-title-error" class="field-errors">
+          @for (msg of errors(newListForm.title); track $index) {
+            <span class="field-error">{{ msg }}</span>
+          }
+        </div>
+      </div>
+      <div class="field">
+        <label for="new-list-description">Description</label>
+        <textarea id="new-list-description" rows="2" [formField]="newListForm.description"></textarea>
+      </div>
+      @if (createError(); as message) {
+        <p class="form-error" role="alert">{{ message }}</p>
+      }
+      <button type="submit" class="btn btn-primary">Create list</button>
+    </form>
+
+    @if (mine.hasValue() && mine.value().length > 0) {
+      <h2>My lists</h2>
+      <ul class="list-cards">
+        @for (list of mine.value(); track list.id) {
+          <li class="card">
+            <a [routerLink]="['/lists', list.id]" class="list-title">{{ list.title }}</a>
+            <span class="muted">{{ list.items.length }} series · {{ list.published ? 'public' : 'private' }} · ▲ {{ list.upvotes }}</span>
+          </li>
+        }
+      </ul>
+    }
+  </ng-container>
+
+  <h2>Most upvoted</h2>
+  @if (top.isLoading()) {
+    <p class="muted" role="status">Loading lists…</p>
+  } @else if (top.error()) {
+    <p class="form-error" role="alert">
+      Could not load the lists.
+      <button type="button" class="btn btn-link" (click)="top.reload()">Retry</button>
+    </p>
+  } @else if (top.hasValue() && top.value().length === 0) {
+    <p class="muted">No public lists yet.</p>
+  } @else if (top.hasValue()) {
+    <ul class="list-cards">
+      @for (list of top.value(); track list.id) {
+        <li class="card">
+          <a [routerLink]="['/lists', list.id]" class="list-title">{{ list.title }}</a>
+          <span class="muted">by {{ list.ownerUsername }} · {{ list.items.length }} series · ▲ {{ list.upvotes }}</span>
+        </li>
+      }
+    </ul>
+  }
+</section>

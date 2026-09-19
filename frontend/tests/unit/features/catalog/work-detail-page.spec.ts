@@ -34,6 +34,7 @@ describe('WorkDetailPage', () => {
 
   afterEach(() => {
     // The ratings section (its own spec) loads with the page.
+    http.match((r) => r.url.endsWith('/lists/mine')).forEach((r) => r.flush({ success: true, data: [], error: null }));
     http.match((r) => /\/works\/[^/]+\/(ratings|reviews|rating\/mine)$/.test(r.url)).forEach((r) =>
       r.flush({ success: true, data: r.request.url.endsWith('ratings') ? { average: 0, count: 0 } : [], error: null })
     );

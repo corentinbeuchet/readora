@@ -1,0 +1,25 @@
+@if (mine.hasValue()) {
+  @if (mine.value().length === 0) {
+    <p class="muted add-to-list">Make <a routerLink="/lists">a list</a> to collect series you recommend.</p>
+  } @else {
+    <form class="add-to-list" (submit)="add($event)">
+      <label class="field">
+        <span>Add to a list</span>
+        <select (change)="selected.set(value($event))">
+          @for (list of mine.value(); track list.id) {
+            <option [value]="list.id">{{ list.title }}</option>
+          }
+        </select>
+      </label>
+      <label class="field">
+        <span>Note (optional)</span>
+        <input type="text" maxlength="300" [value]="note()" (input)="note.set(value($event))" />
+      </label>
+      <button type="submit" class="btn">Add</button>
+      <p class="muted" role="status">{{ message() }}</p>
+      @if (error(); as message) {
+        <p class="form-error" role="alert">{{ message }}</p>
+      }
+    </form>
+  }
+}
