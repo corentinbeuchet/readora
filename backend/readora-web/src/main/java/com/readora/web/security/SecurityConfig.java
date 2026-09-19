@@ -44,6 +44,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/chapters/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/comments/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/works/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/updates", "/api/v1/rankings/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/storage/assets/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/subscriptions/stripe/webhook").permitAll()
                         .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()

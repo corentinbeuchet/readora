@@ -60,6 +60,13 @@ public class InMemoryWorkRepository implements WorkRepositoryPort {
     }
 
     @Override
+    public Optional<Work> findRandom(WorkSearch search) {
+        List<Work> matching = works.values().stream().filter(work -> matches(work, search)).toList();
+        return matching.isEmpty() ? Optional.empty()
+                : Optional.of(matching.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(matching.size())));
+    }
+
+    @Override
     public List<String> findAllGenres() {
         return works.values().stream().flatMap(work -> work.getGenres().stream()).distinct().sorted().toList();
     }

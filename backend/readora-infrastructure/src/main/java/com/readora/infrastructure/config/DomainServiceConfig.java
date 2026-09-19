@@ -3,6 +3,7 @@ package com.readora.infrastructure.config;
 import com.readora.application.port.in.AuthenticateUserUseCase;
 import com.readora.application.port.in.BrowseCatalogUseCase;
 import com.readora.application.port.in.DirectPublishChapterUseCase;
+import com.readora.application.port.in.DiscoverUseCase;
 import com.readora.application.port.in.ManageAssetsUseCase;
 import com.readora.application.port.in.ManageBookmarkUseCase;
 import com.readora.application.port.in.ManageLibraryUseCase;
@@ -21,6 +22,7 @@ import com.readora.application.service.AuthenticationService;
 import com.readora.application.service.BookmarkService;
 import com.readora.application.service.CatalogService;
 import com.readora.application.service.ChapterReadingService;
+import com.readora.application.service.DiscoveryService;
 import com.readora.application.service.LibraryService;
 import com.readora.application.service.PageReportService;
 import com.readora.application.service.RatingService;
@@ -174,6 +176,12 @@ public class DomainServiceConfig {
     @Bean
     public RateWorkUseCase rateWorkUseCase(RatingRepositoryPort ratingRepository, WorkRepositoryPort workRepository) {
         return transactional(new RatingService(ratingRepository, workRepository, Clock.systemUTC()), RateWorkUseCase.class,
+                transactionManager);
+    }
+
+    @Bean
+    public DiscoverUseCase discoverUseCase(DiscoveryQueryPort discovery, WorkRepositoryPort workRepository, RatingRepositoryPort ratingRepository) {
+        return transactional(new DiscoveryService(discovery, workRepository, ratingRepository, Clock.systemUTC()), DiscoverUseCase.class,
                 transactionManager);
     }
 

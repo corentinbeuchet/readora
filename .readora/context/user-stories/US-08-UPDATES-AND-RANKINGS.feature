@@ -1,7 +1,6 @@
 # From docs/use-cases (2026-09): UC-28 release feed, UC-11 rankings, UC-14 "surprise me".
-# Priority tags: @must / @should / @could. @wip = not built yet (feature level: nothing here is built).
+# Priority tags: @must / @should / @could.
 
-@wip
 Feature: Latest updates and rankings
   As a reader
   I want to see what just came out and what everyone is reading
@@ -9,7 +8,7 @@ Feature: Latest updates and rankings
 
   Background:
     Given the catalog has the series "Solo Leveling", "One Piece" and "Horimiya"
-    And "Kenji" has "Solo Leveling" in his library
+    And "Solo Leveling" is in the library of "Kenji"
 
   # Inspired by: MangaDex "Latest updates", WEBTOON "Updated"
   @must
@@ -22,12 +21,14 @@ Feature: Latest updates and rankings
   # Inspired by: MangaDex "Follows" feed
   @must
   Scenario: Only the series in my library
+    Given chapters 5 and 6 of "Solo Leveling" and chapter 180 of "One Piece" came out today
+    And "Kenji" read chapter 5 of "Solo Leveling"
     When "Kenji" opens "Latest updates" and chooses "My library"
     Then he only sees chapters of "Solo Leveling"
-    And chapters he already read are marked "Read"
+    And chapter 5 is marked "Read" and chapter 6 is not
 
   # Inspired by: comix.to, WEBTOON trending
-  # Score: reads + 3 × comments + 5 × library adds over the period, older activity counting less.
+  # Score: reads + 3 × comments + 5 × library adds during the chosen period.
   @should
   Scenario: Popular this week
     Given "Horimiya" had the most reads, comments and library adds this week

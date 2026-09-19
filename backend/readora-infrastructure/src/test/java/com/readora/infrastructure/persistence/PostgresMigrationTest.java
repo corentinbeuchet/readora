@@ -12,6 +12,7 @@ import com.readora.domain.report.PageReportReason;
 import com.readora.domain.library.LibraryEntry;
 import com.readora.domain.social.ReadingStatus;
 import com.readora.infrastructure.persistence.adapter.ChapterReadRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.DiscoveryQueryAdapter;
 import com.readora.infrastructure.persistence.adapter.ChapterRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.LibraryRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.PageReportRepositoryAdapter;
@@ -170,6 +171,29 @@ class PostgresMigrationTest {
         assertThat(ratingRepository.findReviews(work.getId(), 10)).isEmpty(); // no user row for pg-rater: inner join
         assertThat(ratingRepository.addHelpfulVote(rating.getId(), UserId.of("pg-voter"))).isEqualTo(1);
         assertThat(ratingRepository.findTopRated(1, 10)).extracting(r -> r.workId()).contains(work.getId());
+    }
+
+    @Autowired
+    private DiscoveryQueryAdapter discovery;
+
+    @Test
+    @DisplayName("Feed and popularity queries (sub-selects across reads, comments, library, follows) run on PostgreSQL")
+    void discoveryQueriesRunOnPostgres() {
+        Work work = workRepository.save(Work.create("PG Popular", "", WorkType.MANGA, "c.png", Set.of("Action")));
+        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", null);
+        chapter.updatePages(List.of(PageAsset.create(1, "p1.webp", null)));
+        chapter.publish(UserId.of("qc"));
+        chapterRepository.save(chapter);
+        UserId reader = UserId.of("pg-discovery");
+        library.save(LibraryEntry.add(reader, work.getId(), ReadingStatus.READING, java.time.Instant.now()));
+        chapterReads.save(new ChapterRead(reader, work.getId(), chapter.getId(), chapter.getChapterNumber(), java.time.Instant.now(), true));
+
+        assertThat(discovery.findLatestReleases(reader, 0, 10)).extracting(r -> r.chapterId()).containsExactly(chapter.getId());
+        assertThat(discovery.findFinished(reader, List.of(chapter.getId()))).containsExactly(chapter.getId());
+        assertThat(discovery.findPopular(java.time.Instant.now().minusSeconds(3600), 10))
+                .anySatisfy(p -> assertThat(p.workId()).isEqualTo(work.getId()));
+        assertThat(workRepository.findRandom(new com.readora.application.port.out.WorkRepositoryPort.WorkSearch(
+                null, Set.of("action"), Set.of(), Set.of(), Set.of(), Set.of()))).isPresent();
     }
 
     private static void sleepPastClockTick() {

@@ -55,6 +55,18 @@ public class WorkRepositoryAdapter implements WorkRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<Work> findRandom(WorkSearch search) {
+        var matching = WorkSpecifications.matching(search);
+        long count = springDataRepository.count(matching);
+        if (count == 0) {
+            return Optional.empty();
+        }
+        int offset = java.util.concurrent.ThreadLocalRandom.current().nextInt((int) Math.min(count, Integer.MAX_VALUE));
+        return springDataRepository.findAll(matching, PageRequest.of(offset, 1, Sort.by("id"))).stream().findFirst().map(this::toDomain);
+    }
+
+    @Override
     @Transactional
     public Work save(Work work) {
         WorkJpaEntity existing = springDataRepository.findById(work.getId().value()).orElse(null);

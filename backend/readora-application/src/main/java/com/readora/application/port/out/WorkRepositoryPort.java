@@ -44,4 +44,7 @@ public interface WorkRepositoryPort {
 
     /// Every genre used by at least one work, sorted alphabetically.
     List<String> findAllGenres();
+
+    /// A uniformly random work among those matching `search`, if any.
+    Optional<Work> findRandom(WorkSearch search);
 }
