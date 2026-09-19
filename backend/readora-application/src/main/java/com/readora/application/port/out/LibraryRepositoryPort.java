@@ -19,4 +19,7 @@ public interface LibraryRepositoryPort {
 
     /// @return whether an entry was removed
     boolean delete(UserId userId, WorkId workId);
+
+    /// Readers who have the series in their library with new-chapter notifications on.
+    List<UserId> findSubscribers(WorkId workId);
 }

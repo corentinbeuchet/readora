@@ -24,6 +24,9 @@ public class LibraryEntryJpaEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(nullable = false)
+    private boolean notify = true;
+
     protected LibraryEntryJpaEntity() {
     }
 
@@ -40,6 +43,8 @@ public class LibraryEntryJpaEntity {
     public Instant getAddedAt() { return addedAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+    public boolean isNotify() { return notify; }
+    public void setNotify(boolean notify) { this.notify = notify; }
 
     @Embeddable
     public static class Key implements Serializable {

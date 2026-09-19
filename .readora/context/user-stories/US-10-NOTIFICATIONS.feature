@@ -1,8 +1,7 @@
 # From docs/use-cases (2026-09): UC-27 release notifications, UC-29 social notifications.
 # In-app first; browser push and e-mail digests can come later.
-# Priority tags: @must / @should / @could. @wip = not built yet (feature level: nothing here is built).
+# Priority tags: @must / @should / @could.
 
-@wip
 Feature: Notifications
   As a reader
   I want to be told when something I care about happens
@@ -22,7 +21,7 @@ Feature: Notifications
   Scenario: The notification bell
     Given "Kenji" has 3 unread notifications
     Then the bell shows 3
-    When he clicks "Mark all as read"
+    When he chooses "Mark all as read"
     Then the bell shows no count
 
   # Inspired by: every comment system

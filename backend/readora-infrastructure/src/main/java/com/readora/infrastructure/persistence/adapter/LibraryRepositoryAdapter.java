@@ -49,6 +49,7 @@ public class LibraryRepositoryAdapter implements LibraryRepositoryPort {
                 })
                 .orElseGet(() -> new LibraryEntryJpaEntity(entry.getUserId().value(), entry.getWorkId().value(),
                         entry.getStatus().name(), entry.getAddedAt(), entry.getUpdatedAt()));
+        row.setNotify(entry.notifiesNewChapters());
         return toDomain(springDataRepository.saveAndFlush(row));
     }
 
@@ -63,12 +64,18 @@ public class LibraryRepositoryAdapter implements LibraryRepositoryPort {
         return true;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserId> findSubscribers(WorkId workId) {
+        return springDataRepository.findSubscriberIds(workId.value()).stream().map(UserId::of).toList();
+    }
+
     private static LibraryEntryJpaEntity.Key key(UserId userId, WorkId workId) {
         return new LibraryEntryJpaEntity.Key(userId.value(), workId.value());
     }
 
     private LibraryEntry toDomain(LibraryEntryJpaEntity row) {
         return new LibraryEntry(UserId.of(row.getId().getUserId()), WorkId.of(row.getId().getWorkId()),
-                ReadingStatus.valueOf(row.getStatus()), row.getAddedAt(), row.getUpdatedAt());
+                ReadingStatus.valueOf(row.getStatus()), row.getAddedAt(), row.getUpdatedAt(), row.isNotify());
     }
 }

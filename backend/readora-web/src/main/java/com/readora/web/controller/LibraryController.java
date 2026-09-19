@@ -1,12 +1,14 @@
 package com.readora.web.controller;
 
 import com.readora.application.port.in.ManageLibraryUseCase;
+import com.readora.application.port.in.NotifyUseCase;
 import com.readora.domain.social.ReadingStatus;
 import com.readora.domain.work.WorkId;
 import com.readora.web.dto.ApiResponse;
 import com.readora.web.dto.LibraryEntryDto;
 import com.readora.web.dto.LibraryItemDto;
 import com.readora.web.dto.SaveLibraryEntryRequest;
+import com.readora.web.dto.SeriesNotificationsRequest;
 import com.readora.web.security.CurrentUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -25,10 +28,12 @@ import java.util.UUID;
 public class LibraryController {
 
     private final ManageLibraryUseCase manageLibraryUseCase;
+    private final NotifyUseCase notifyUseCase;
     private final CurrentUserProvider currentUserProvider;
 
-    public LibraryController(ManageLibraryUseCase manageLibraryUseCase, CurrentUserProvider currentUserProvider) {
+    public LibraryController(ManageLibraryUseCase manageLibraryUseCase, NotifyUseCase notifyUseCase, CurrentUserProvider currentUserProvider) {
         this.manageLibraryUseCase = manageLibraryUseCase;
+        this.notifyUseCase = notifyUseCase;
         this.currentUserProvider = currentUserProvider;
     }
 
@@ -56,6 +61,14 @@ public class LibraryController {
         ReadingStatus status = request != null ? request.status() : null;
         var entry = manageLibraryUseCase.save(currentUserProvider.requireUserId(), WorkId.of(workId), status);
         return ResponseEntity.ok(ApiResponse.ok(LibraryEntryDto.fromDomain(entry)));
+    }
+
+    @PutMapping("/{workId}/notifications")
+    @Operation(summary = "Turn new-chapter notifications for a series in my library on or off")
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> notifications(@PathVariable UUID workId,
+                                                                          @RequestBody SeriesNotificationsRequest request) {
+        notifyUseCase.setSeriesNotifications(currentUserProvider.requireUserId(), WorkId.of(workId), request.enabled());
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("enabled", request.enabled())));
     }
 
     @DeleteMapping("/{workId}")

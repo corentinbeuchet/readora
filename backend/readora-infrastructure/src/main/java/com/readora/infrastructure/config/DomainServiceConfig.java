@@ -11,6 +11,7 @@ import com.readora.application.port.in.ManageProfileUseCase;
 import com.readora.application.port.in.ManageScanlationTaskUseCase;
 import com.readora.application.port.in.ManageSubscriptionUseCase;
 import com.readora.application.port.in.ManageWorkUseCase;
+import com.readora.application.port.in.NotifyUseCase;
 import com.readora.application.port.in.ReadChapterUseCase;
 import com.readora.application.port.in.RateWorkUseCase;
 import com.readora.application.port.in.ReaderInteractionUseCase;
@@ -24,6 +25,7 @@ import com.readora.application.service.CatalogService;
 import com.readora.application.service.ChapterReadingService;
 import com.readora.application.service.DiscoveryService;
 import com.readora.application.service.LibraryService;
+import com.readora.application.service.NotificationService;
 import com.readora.application.service.PageReportService;
 import com.readora.application.service.RatingService;
 import com.readora.application.service.ProfileService;
@@ -183,6 +185,13 @@ public class DomainServiceConfig {
     public DiscoverUseCase discoverUseCase(DiscoveryQueryPort discovery, WorkRepositoryPort workRepository, RatingRepositoryPort ratingRepository) {
         return transactional(new DiscoveryService(discovery, workRepository, ratingRepository, Clock.systemUTC()), DiscoverUseCase.class,
                 transactionManager);
+    }
+
+    @Bean
+    public NotifyUseCase notifyUseCase(NotificationRepositoryPort notifications, LibraryRepositoryPort library,
+                                       ChapterRepositoryPort chapters, WorkRepositoryPort works, CommentRepositoryPort comments) {
+        return transactional(new NotificationService(notifications, library, chapters, works, comments, Clock.systemUTC()),
+                NotifyUseCase.class, transactionManager);
     }
 
     @Bean

@@ -46,14 +46,14 @@ public class ChapterComment extends AggregateRoot<CommentId> {
                                             @Nullable Integer pageReference, boolean isSpoiler) {
         CommentId id = CommentId.generate();
         ChapterComment comment = new ChapterComment(id, chapterId, authorId, username, CommentContent.of(text), pageReference, null, 1, isSpoiler, 0, Instant.now());
-        comment.registerEvent(CommentPostedEvent.now(id, chapterId, authorId));
+        comment.registerEvent(CommentPostedEvent.now(id, chapterId, authorId, null));
         return comment;
     }
 
     public static ChapterComment createReply(ChapterComment parent, UserId authorId, @Nullable String username, String text, boolean isSpoiler) {
         CommentId id = CommentId.generate();
         ChapterComment reply = new ChapterComment(id, parent.getChapterId(), authorId, username, CommentContent.of(text), parent.getPageReference(), parent.getId(), parent.getDepth() + 1, isSpoiler, 0, Instant.now());
-        reply.registerEvent(CommentPostedEvent.now(id, parent.getChapterId(), authorId));
+        reply.registerEvent(CommentPostedEvent.now(id, parent.getChapterId(), authorId, parent.getId()));
         return reply;
     }
 

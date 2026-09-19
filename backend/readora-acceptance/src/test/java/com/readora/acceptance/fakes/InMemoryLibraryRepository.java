@@ -43,11 +43,19 @@ public class InMemoryLibraryRepository implements LibraryRepositoryPort {
         return entries.remove(key(userId, workId)) != null;
     }
 
+    @Override
+    public List<UserId> findSubscribers(WorkId workId) {
+        return entries.values().stream()
+                .filter(e -> e.getWorkId().equals(workId) && e.notifiesNewChapters())
+                .map(LibraryEntry::getUserId)
+                .toList();
+    }
+
     private static String key(UserId userId, WorkId workId) {
         return userId.value() + "|" + workId.value();
     }
 
     private static LibraryEntry copy(LibraryEntry e) {
-        return new LibraryEntry(e.getUserId(), e.getWorkId(), e.getStatus(), e.getAddedAt(), e.getUpdatedAt());
+        return new LibraryEntry(e.getUserId(), e.getWorkId(), e.getStatus(), e.getAddedAt(), e.getUpdatedAt(), e.notifiesNewChapters());
     }
 }

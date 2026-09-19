@@ -15,6 +15,7 @@ import com.readora.infrastructure.persistence.adapter.ChapterReadRepositoryAdapt
 import com.readora.infrastructure.persistence.adapter.DiscoveryQueryAdapter;
 import com.readora.infrastructure.persistence.adapter.ChapterRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.LibraryRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.NotificationRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.PageReportRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.RatingRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.ScanlationProjectRepositoryAdapter;
@@ -194,6 +195,29 @@ class PostgresMigrationTest {
                 .anySatisfy(p -> assertThat(p.workId()).isEqualTo(work.getId()));
         assertThat(workRepository.findRandom(new com.readora.application.port.out.WorkRepositoryPort.WorkSearch(
                 null, Set.of("action"), Set.of(), Set.of(), Set.of(), Set.of()))).isPresent();
+    }
+
+    @Autowired
+    private NotificationRepositoryAdapter notificationRepository;
+
+    @Test
+    @DisplayName("Notifications and library subscribers run on PostgreSQL")
+    void notificationQueriesRunOnPostgres() {
+        Work work = workRepository.save(Work.create("PG Notified", "", WorkType.MANGA, "c.png", Set.of("Action")));
+        UserId reader = UserId.of("pg-notified");
+        LibraryEntry entry = LibraryEntry.add(reader, work.getId(), ReadingStatus.READING, java.time.Instant.now());
+        library.save(entry);
+        assertThat(library.findSubscribers(work.getId())).containsExactly(reader);
+        entry.setNotifications(false, java.time.Instant.now());
+        library.save(entry);
+        assertThat(library.findSubscribers(work.getId())).isEmpty();
+
+        notificationRepository.saveAll(List.of(com.readora.domain.notification.Notification.create(reader,
+                com.readora.domain.notification.NotificationType.NEW_CHAPTER, "New", "/read/x", java.time.Instant.now())));
+        assertThat(notificationRepository.countUnread(reader)).isEqualTo(1);
+        notificationRepository.markAllRead(reader, java.time.Instant.now());
+        assertThat(notificationRepository.countUnread(reader)).isZero();
+        assertThat(notificationRepository.findRecent(reader, 5)).hasSize(1);
     }
 
     private static void sleepPastClockTick() {
