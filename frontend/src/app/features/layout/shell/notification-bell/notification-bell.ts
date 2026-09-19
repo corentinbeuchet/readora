@@ -30,7 +30,7 @@ export class NotificationBell {
   protected readonly markingRead = asyncAction();
   protected readonly label = computed(() => {
     const unread = this.store.unread();
-    return unread > 0 ? `Notifications, ${unread} unread` : 'Notifications';
+    return unread > 0 ? $localize`:@@bell.label.unread:Notifications, ${unread}:count: unread` : $localize`:@@bell.label:Notifications`;
   });
 
   constructor() {

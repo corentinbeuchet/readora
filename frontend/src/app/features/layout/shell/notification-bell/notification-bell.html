@@ -7,18 +7,18 @@
     }
   </button>
 
-  <section id="notification-panel" class="bell-panel" aria-label="Notifications" [hidden]="!open()">
+  <section id="notification-panel" class="bell-panel" aria-label="Notifications" i18n-aria-label="@@bell.panel" [hidden]="!open()">
     <header class="bell-header">
-      <h2>Notifications</h2>
-      <button type="button" class="btn btn-link" (click)="markAllRead()" [disabled]="store.unread() === 0 || markingRead.busy()">Mark all as read</button>
+      <h2 i18n="@@bell.title">Notifications</h2>
+      <button type="button" class="btn btn-link" (click)="markAllRead()" [disabled]="store.unread() === 0 || markingRead.busy()" i18n="@@bell.markAllRead">Mark all as read</button>
     </header>
     @if (markingRead.error(); as message) {
       <p class="form-error" role="alert">{{ message }}</p>
     }
     @if (store.loadError()) {
-      <p class="form-error" role="alert">Could not load your notifications.</p>
+      <p class="form-error" role="alert" i18n="@@bell.loadError">Could not load your notifications.</p>
     } @else if (store.items().length === 0) {
-      <p class="muted">Nothing yet. Add series to your library to hear about new chapters.</p>
+      <p class="muted" i18n="@@bell.empty">Nothing yet. Add series to your library to hear about new chapters.</p>
     } @else {
       <ul class="bell-list">
         @for (item of store.items(); track item.id) {
@@ -27,7 +27,7 @@
               <span class="bell-message">{{ item.message }}</span>
               <span class="muted bell-time">{{ item.createdAt | timeAgo }}</span>
               @if (!item.read) {
-                <span class="sr-only">(unread)</span>
+                <span class="sr-only" i18n="@@bell.unread">(unread)</span>
               }
             </a>
           </li>

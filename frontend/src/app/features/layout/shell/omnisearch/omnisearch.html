@@ -1,5 +1,5 @@
 <div class="omnisearch" role="search">
-  <label class="sr-only" [attr.for]="`${listboxId}-input`">Search series by title or author</label>
+  <label class="sr-only" [attr.for]="`${listboxId}-input`" i18n="@@omnisearch.label">Search series by title or author</label>
   <input
     [id]="`${listboxId}-input`"
     class="omnisearch-input"
@@ -7,6 +7,7 @@
     role="combobox"
     autocomplete="off"
     placeholder="Search title or author…"
+    i18n-placeholder="@@omnisearch.placeholder"
     aria-autocomplete="list"
     [attr.aria-expanded]="expanded()"
     [attr.aria-controls]="listboxId"
@@ -20,7 +21,7 @@
 
   <!-- Focus stays on the input (aria-activedescendant); options are clickable but not tab stops. -->
   <div class="omnisearch-popup" [hidden]="!expanded()">
-    <ul [id]="listboxId" role="listbox" aria-label="Search suggestions" class="omnisearch-list">
+    <ul [id]="listboxId" role="listbox" aria-label="Search suggestions" i18n-aria-label="@@omnisearch.suggestions" class="omnisearch-list">
       @for (work of suggestions().items; track work.id) {
         <li
           [id]="optionId($index)"
@@ -48,13 +49,13 @@
     </ul>
     @switch (suggestions().state) {
       @case ('error') {
-        <p class="omnisearch-status form-error">Search is unavailable right now.</p>
+        <p class="omnisearch-status form-error" i18n="@@omnisearch.error">Search is unavailable right now.</p>
       }
       @case ('done') {
         @if (suggestions().items.length === 0) {
-          <p class="omnisearch-status muted">No series match “{{ suggestions().text }}”.</p>
+          <p class="omnisearch-status muted" i18n="@@omnisearch.noMatch">No series match “{{ suggestions().text }}”.</p>
         } @else {
-          <button type="button" class="btn btn-link omnisearch-all" (mousedown)="keepFocus($event)" (click)="searchAll()">
+          <button type="button" class="btn btn-link omnisearch-all" (mousedown)="keepFocus($event)" (click)="searchAll()" i18n="@@omnisearch.seeAll">
             See all results for “{{ suggestions().text }}”
           </button>
         }
@@ -63,7 +64,7 @@
   </div>
   <p class="sr-only" aria-live="polite">
     @if (expanded() && suggestions().state === 'done') {
-      {{ suggestions().items.length }} suggestions
+      <ng-container i18n="@@omnisearch.count">{suggestions().items.length, plural, =1 {1 suggestion} other {{{ suggestions().items.length }} suggestions}}</ng-container>
     }
   </p>
 </div>

@@ -1,39 +1,39 @@
 <div class="app-layout" [class.immersive]="layout.immersive()">
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <a class="skip-link" href="#main-content" i18n="@@shell.skipLink">Skip to main content</a>
 
   <header class="app-header">
-    <a routerLink="/" class="logo" aria-label="Readora home">
+    <a routerLink="/" class="logo" aria-label="Readora home" i18n-aria-label="@@shell.homeLink">
       <span class="logo-text">Readora</span>
     </a>
 
     <!-- Below the lg breakpoint the navigation is a disclosure (CSS decides visibility, so prerendered HTML is right). -->
     <button #navToggle type="button" class="btn nav-toggle" aria-controls="primary-nav" [attr.aria-expanded]="navOpen()" (click)="toggleNav()">
-      <span aria-hidden="true">☰</span> Menu
+      <span aria-hidden="true">☰</span> <ng-container i18n="@@shell.menu">Menu</ng-container>
     </button>
 
     <!-- Site navigation is a list of links (not an ARIA menubar): native Tab/Enter, one navigation per activation. -->
-    <nav id="primary-nav" class="app-nav" [class.nav-open]="navOpen()" aria-label="Primary">
+    <nav id="primary-nav" class="app-nav" [class.nav-open]="navOpen()" aria-label="Primary" i18n-aria-label="@@shell.nav.label">
       <ul class="nav-list">
         <li>
-          <a class="nav-link" routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page" [routerLinkActiveOptions]="{ exact: true }">Home</a>
+          <a class="nav-link" routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page" [routerLinkActiveOptions]="{ exact: true }" i18n="@@shell.nav.home">Home</a>
         </li>
         <li>
-          <a class="nav-link" routerLink="/works" routerLinkActive="active" ariaCurrentWhenActive="page">Catalog</a>
+          <a class="nav-link" routerLink="/works" routerLinkActive="active" ariaCurrentWhenActive="page" i18n="@@shell.nav.catalog">Catalog</a>
         </li>
         <li>
-          <a class="nav-link" routerLink="/updates" routerLinkActive="active" ariaCurrentWhenActive="page">Updates</a>
+          <a class="nav-link" routerLink="/updates" routerLinkActive="active" ariaCurrentWhenActive="page" i18n="@@shell.nav.updates">Updates</a>
         </li>
         <li>
-          <a class="nav-link" routerLink="/rankings" routerLinkActive="active" ariaCurrentWhenActive="page">Rankings</a>
+          <a class="nav-link" routerLink="/rankings" routerLinkActive="active" ariaCurrentWhenActive="page" i18n="@@shell.nav.rankings">Rankings</a>
         </li>
         <li>
-          <a class="nav-link" routerLink="/lists" routerLinkActive="active" ariaCurrentWhenActive="page">Lists</a>
+          <a class="nav-link" routerLink="/lists" routerLinkActive="active" ariaCurrentWhenActive="page" i18n="@@shell.nav.lists">Lists</a>
         </li>
         <li *appHasPermission="'PROJECT_VIEW'">
-          <a class="nav-link" routerLink="/scanlation" routerLinkActive="active" ariaCurrentWhenActive="page">Scanlation</a>
+          <a class="nav-link" routerLink="/scanlation" routerLinkActive="active" ariaCurrentWhenActive="page" i18n="@@shell.nav.scanlation">Scanlation</a>
         </li>
         <li *appHasPermission="'WORK_CREATE'">
-          <a class="nav-link" routerLink="/upload" routerLinkActive="active" ariaCurrentWhenActive="page">Upload Studio</a>
+          <a class="nav-link" routerLink="/upload" routerLinkActive="active" ariaCurrentWhenActive="page" i18n="@@shell.nav.upload">Upload Studio</a>
         </li>
       </ul>
     </nav>
@@ -51,28 +51,29 @@
           ngMenuTrigger
           [menu]="userMenu"
           aria-label="Account menu"
+          i18n-aria-label="@@shell.accountMenu"
         >
           @if (auth.user()?.avatarUrl; as avatar) {
             <img class="avatar" [ngSrc]="avatar" alt="" width="24" height="24" />
           }
           <span class="user-name">{{ auth.user()?.displayName }}</span>
           @if (auth.isPremium()) {
-            <span class="badge badge-premium">Premium</span>
+            <span class="badge badge-premium" i18n="@@shell.premiumBadge">Premium</span>
           }
         </button>
         <div ngMenu #userMenu="ngMenu" (itemSelected)="onUserMenuSelected($event)" class="user-menu">
           <ng-template ngMenuContent>
-            <button type="button" ngMenuItem value="/library">My library</button>
-            <button type="button" ngMenuItem value="/history">History</button>
-            <button *appHasPermission="'COMMENT_MODERATE'" type="button" ngMenuItem value="/moderation">Moderation</button>
-            <button type="button" ngMenuItem value="/profile">Profile</button>
-            <button type="button" ngMenuItem value="/subscription">Subscription</button>
-            <button type="button" ngMenuItem value="logout">Log out</button>
+            <button type="button" ngMenuItem value="/library" i18n="@@shell.menu.library">My library</button>
+            <button type="button" ngMenuItem value="/history" i18n="@@shell.menu.history">History</button>
+            <button *appHasPermission="'COMMENT_MODERATE'" type="button" ngMenuItem value="/moderation" i18n="@@shell.menu.moderation">Moderation</button>
+            <button type="button" ngMenuItem value="/profile" i18n="@@shell.menu.profile">Profile</button>
+            <button type="button" ngMenuItem value="/subscription" i18n="@@shell.menu.subscription">Subscription</button>
+            <button type="button" ngMenuItem value="logout" i18n="@@shell.menu.logout">Log out</button>
           </ng-template>
         </div>
       } @else {
-        <a routerLink="/login" class="btn">Log in</a>
-        <a routerLink="/register" class="btn btn-primary">Sign up</a>
+        <a routerLink="/login" class="btn" i18n="@@shell.login">Log in</a>
+        <a routerLink="/register" class="btn btn-primary" i18n="@@shell.signUp">Sign up</a>
       }
     </div>
   </header>
@@ -82,13 +83,13 @@
   </main>
 
   <footer class="app-footer">
-    <p class="muted">© {{ year }} Readora — read manga, manhwa and comics.</p>
+    <p class="muted" i18n="@@shell.footer.copyright">© {{ year }} Readora — read manga, manhwa and comics.</p>
     <label class="field theme-picker">
-      <span>Theme</span>
+      <span i18n="@@shell.theme.label">Theme</span>
       <select #themeSelect (change)="chooseTheme(themeSelect.value)">
-        <option value="system" [selected]="theme.preference() === 'system'">System</option>
-        <option value="light" [selected]="theme.preference() === 'light'">Light</option>
-        <option value="dark" [selected]="theme.preference() === 'dark'">Dark</option>
+        <option value="system" [selected]="theme.preference() === 'system'" i18n="@@shell.theme.system">System</option>
+        <option value="light" [selected]="theme.preference() === 'light'" i18n="@@shell.theme.light">Light</option>
+        <option value="dark" [selected]="theme.preference() === 'dark'" i18n="@@shell.theme.dark">Dark</option>
       </select>
     </label>
   </footer>
