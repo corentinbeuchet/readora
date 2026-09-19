@@ -82,6 +82,9 @@
 - Interceptors: `catchError` scoped to the exact call it handles (e.g. only `store.refresh()`), not the retried request.
 
 ## Templates & a11y
+Checklists: skill `frontend-accessibility` (WCAG 2.2 AA, APG patterns mapped to our components) and skill
+`frontend-responsive` (phone/tablet/desktop, breakpoints 480/768/1024/1280 mobile-first, dvh, touch, SSR-safe
+breakpoints).
 - Built-in control flow only: `@if (x(); as y)`, `@for (i of items(); track i.id)`, `@switch`.
 - Standard async block: loading (`role="status"`) / error + retry / empty / content (model: `works-page.html`); the
   error state is `<app-load-error [error]="r.error()" notFound="…" (retry)="r.reload()">` (a 404 is not a network error).
@@ -248,3 +251,19 @@ skill) — fixed:
   colliding e2e suffixes, CI retries hiding flakes. — fixed (`git log --grep ng-best-practices/27`)
 - F38 `components/` + `services/` type folders with up to 24 flat files each (the style guide says to avoid them).
   — fixed: folder per component, children nested under their user (`git log --grep ng-best-practices/30`)
+
+Accessibility and responsive gaps (2026-09-19 research, skills `frontend-accessibility` / `frontend-responsive`):
+- F39 Header has no small-screen layout: one non-wrapping row (`features/layout/shell/shell.html`/`.scss`). Fix: menu
+  button + nav disclosure (or bottom bar) below 768px, search collapses to an icon.
+- F40 `100vh` for full-height views (shell, reader page, paged/vertical flows, scanlation board, `70vh`/`90vh` popover
+  and dialog caps): hidden behind mobile browser bars. Fix: `dvh`/`svh` with a `vh` fallback.
+- F41 No shared breakpoints or fluid tokens: 6 ad-hoc `max-width` queries (500/600/640/768) and no spacing/type
+  tokens in `styles.scss`. Fix: SCSS breakpoint mixins (480/768/1024/1280, mobile-first) and `clamp()` tokens.
+- F42 No input-modality or notch handling: no `hover`/`pointer` media features, `touch-action`, `viewport-fit=cover`
+  with `env(safe-area-inset-*)`.
+- F43 Covers have no `sizes` (`shared/ui/work-cover/`): phones download desktop-sized images.
+- F44 No focus move or announcement after route navigation (focus the page `h1`/`main` after `NavigationEnd`,
+  browser only).
+- F45 No `prefers-reduced-motion` handling (spinner in `styles.scss`, reader transitions).
+- F46 No mobile-viewport checks: e2e overflow at 320px (`scrollWidth <= innerWidth`), header, reader swipe; target
+  sizes (≥ 24px, WCAG 2.5.8) unverified. Pairs with F24 (axe).

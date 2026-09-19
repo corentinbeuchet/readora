@@ -38,7 +38,7 @@ Phone < 768px · tablet 768–1023px (portrait) · tablet landscape / laptop 102
 - Reader pages use `sizes="100vw"` (`50vw` per page in spreads).
 
 ## Dialogs (`shared/ui/dialog/`)
-- Phone (< 600px): full-screen sheet, `inline-size: 100%`, `block-size: 100dvh`, sticky title and actions,
+- Phone (below 480px): full-screen sheet, `inline-size: 100%`, `block-size: 100dvh`, sticky title and actions,
   safe-area padding.
 - Larger: centred, `min(width, 90vw)` (today), `max-block-size: 90dvh` with the body scrolling.
 - Focus trap and Escape unchanged at every size.

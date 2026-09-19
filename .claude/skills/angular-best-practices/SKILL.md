@@ -74,6 +74,8 @@ checklist to apply while coding. Deeper docs: the `angular-developer` skill refe
 - Shared patterns (`.tab`, `.pager`, cards) in `src/styles.scss`, not copied per component.
 
 ## Accessibility (AGENTS.md "Templates & a11y")
+- Load `frontend-accessibility` for markup, focus or keyboard work and `frontend-responsive` for layout, SCSS or
+  image work; they hold the detailed checklists.
 - AXE clean, WCAG 2.2 AA. Every control labelled; no interactive element inside another (`role="button"` wrapping an
   `<input>`); disclosure panels and dialogs: `aria-expanded`/`aria-controls`, Escape closes, focus returns to the
   trigger; dialogs trap focus. Required markers `aria-hidden`. Nested content (comment threads) uses list structure.
