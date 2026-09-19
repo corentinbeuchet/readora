@@ -108,6 +108,21 @@ describe('WorksPage (US-04 catalog filters)', () => {
     thenTheUrlIs('/works');
   });
 
+  it('offers to clear the filters right where it says nothing matches', async () => {
+    await givenIAmOn('/works?genre=Romance', { results: [] });
+
+    await whenIClearTheFiltersFromTheEmptyState();
+
+    thenTheUrlIs('/works');
+  });
+
+  it('shows each series as one card linking to it, with its type and status by name', async () => {
+    await givenIAmOn('/works', { results: [SOLO] });
+
+    thenTheSeriesCardsLinkTo(['/works/' + SOLO.id]);
+    thenICanSee('Manhwa');
+  });
+
   it('shows an error with a retry when the search fails', async () => {
     await givenTheSearchFailsWhenIOpen('/works');
     thenTheErrorSays('Could not load the catalog.');
@@ -168,6 +183,11 @@ describe('WorksPage (US-04 catalog filters)', () => {
     await answerTheNextSearch([SOLO]);
   }
 
+  async function whenIClearTheFiltersFromTheEmptyState(): Promise<void> {
+    el().querySelector<HTMLButtonElement>('app-empty-state button')!.click();
+    await answerTheNextSearch([SOLO]);
+  }
+
   async function whenIRetry(catalog: { results: WorkSummary[] }): Promise<void> {
     el().querySelector<HTMLButtonElement>('[role="alert"] button')!.click();
     await answerTheNextSearch(catalog.results);
@@ -195,6 +215,10 @@ describe('WorksPage (US-04 catalog filters)', () => {
 
   function thenTheRandomPickWasAskedFor(params: Params): void {
     expectLastRequestParams(params);
+  }
+
+  function thenTheSeriesCardsLinkTo(hrefs: string[]): void {
+    expect(Array.from(el().querySelectorAll('app-work-card a')).map((a) => a.getAttribute('href'))).toEqual(hrefs);
   }
 
   function thenICanSee(text: string): void {

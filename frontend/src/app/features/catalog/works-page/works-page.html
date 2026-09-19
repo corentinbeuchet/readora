@@ -38,7 +38,7 @@
           }
         </select>
       </label>
-      <button type="button" class="btn surprise" (click)="surpriseMe()" i18n="@@catalog.works.surprise">🎲 Surprise me</button>
+      <button type="button" class="btn surprise" (click)="surpriseMe()"><app-icon name="dices" /><ng-container i18n="@@catalog.works.surprise">Surprise me</ng-container></button>
       @if (hasFilters()) {
         <button type="button" class="btn btn-link clear-filters" (click)="clearFilters()" i18n="@@catalog.works.filters.clear">Clear all filters</button>
       }
@@ -79,34 +79,31 @@
   </section>
 
   @if (works.isLoading()) {
-    <p class="muted" role="status" i18n="@@catalog.works.loading">Loading works…</p>
+    <app-work-card-skeleton count="12" i18n="@@catalog.works.loading">Loading works…</app-work-card-skeleton>
   } @else if (works.error()) {
     <app-load-error (retry)="reload()"><ng-container i18n="@@catalog.works.loadError">Could not load the catalog.</ng-container></app-load-error>
   } @else if (works.value(); as workList) {
     @if (workList.items.length === 0) {
-      <p class="muted" role="status">
+      <div role="status">
         @if (hasFilters()) {
-          <ng-container i18n="@@catalog.works.noMatch">No series match these filters.</ng-container>
+          <app-empty-state>
+            <ng-container i18n="@@catalog.works.noMatch">No series match these filters.</ng-container>
+            <button emptyAction type="button" class="btn btn-primary" (click)="clearFilters()" i18n="@@catalog.works.noMatch.clear">Clear all filters</button>
+          </app-empty-state>
         } @else {
-          <ng-container i18n="@@catalog.works.empty">No works have been published yet.</ng-container>
+          <app-empty-state><ng-container i18n="@@catalog.works.empty">No works have been published yet.</ng-container></app-empty-state>
         }
-      </p>
+      </div>
     } @else {
       <ul class="work-grid">
         @for (work of workList.items; track work.id) {
-          <li class="work-card">
-            <a [routerLink]="['/works', work.id]" class="work-link">
-              <!-- Lazy by default; the first cover is the LCP candidate. -->
-              <app-work-cover class="work-cover" [src]="work.coverImageUrl" alt="Cover of {{ work.title }}" i18n-alt="@@catalog.works.coverAlt" width="200" height="280" [priority]="$first" />
-              <h2 class="work-title">{{ work.title }}</h2>
+          <li>
+            <!-- Lazy by default; the first cover is the LCP candidate. -->
+            <app-work-card [work]="work" [priority]="$first">
               @if (work.author) {
-                <p class="work-author muted">{{ work.author }}</p>
+                <p cardMeta class="muted work-author">{{ work.author }}</p>
               }
-              <p class="work-meta">
-                <span class="badge">{{ typeLabels[work.type] }}</span>
-                <span class="badge">{{ statusLabels[work.status] }}</span>
-              </p>
-            </a>
+            </app-work-card>
           </li>
         }
       </ul>

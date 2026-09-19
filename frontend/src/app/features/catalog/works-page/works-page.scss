@@ -7,44 +7,8 @@
   flex-wrap: wrap;
 }
 
-.work-grid {
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 1.25rem;
-}
-
-.work-link {
-  display: block;
-  color: inherit;
-  text-decoration: none;
-  border-radius: var(--radius);
-  outline-offset: 3px;
-
-  @media (hover: hover) {
-    &:hover .work-title {
-      color: var(--accent);
-    }
-  }
-}
-
-.work-cover {
-  width: 100%;
-  aspect-ratio: 5 / 7;
-  border-radius: var(--radius);
-  background: var(--surface-2);
-}
-
-.work-title {
-  font-size: var(--fs-base);
-  margin-top: 0.6rem;
-  line-height: 1.3;
-}
-
-.work-meta {
-  display: flex;
-  gap: 0.35rem;
-  margin-top: 0.35rem;
+.work-author {
+  font-size: var(--fs-sm);
 }
 
 .catalog-filters {

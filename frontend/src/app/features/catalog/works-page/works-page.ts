@@ -8,7 +8,10 @@ import { CatalogQuery, DEMOGRAPHIC_LABELS, Demographic, WORK_STATUS_LABELS, WORK
 import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
 import { LoadError } from '@app/shared/ui/load-error';
-import { WorkCover } from '@app/shared/ui/work-cover/work-cover';
+import { EmptyState } from '@app/shared/ui/empty-state/empty-state';
+import { Icon } from '@app/shared/ui/icon/icon';
+import { WorkCard } from '@app/shared/ui/work-card/work-card';
+import { WorkCardSkeleton } from '@app/shared/ui/work-card-skeleton/work-card-skeleton';
 
 const PAGE_SIZE = 24;
 
@@ -42,7 +45,7 @@ function oneOf<T extends string>(allowed: readonly T[], value: string | undefine
  */
 @Component({
   selector: 'app-works-page',
-  imports: [WorkCover, LoadError, RouterLink, HasPermissionDirective],
+  imports: [WorkCard, WorkCardSkeleton, EmptyState, Icon, LoadError, RouterLink, HasPermissionDirective],
   templateUrl: './works-page.html',
   styleUrl: './works-page.scss'
 })
