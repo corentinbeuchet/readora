@@ -32,7 +32,7 @@ public class UserAccountJpaEntity {
     @Column(nullable = false)
     private String roles;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private SubscriptionJpaEntity subscription;
 
     @Column(name = "created_at", nullable = false)

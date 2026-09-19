@@ -2,12 +2,16 @@ package com.readora.infrastructure.persistence;
 
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.UserId;
+import com.readora.domain.identity.Email;
+import com.readora.domain.identity.PasswordHash;
+import com.readora.domain.identity.UserAccount;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.ScanlationRole;
 import com.readora.domain.scanlation.TeamMember;
 import com.readora.domain.work.*;
 import com.readora.infrastructure.persistence.adapter.ChapterRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.ScanlationProjectRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.UserAccountRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.WorkRepositoryAdapter;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.SessionFactory;
@@ -54,6 +58,9 @@ class QueryCountTest {
 
     @Autowired
     private ScanlationProjectRepositoryAdapter projectRepository;
+
+    @Autowired
+    private UserAccountRepositoryAdapter accountRepository;
 
     @Autowired
     private EntityManagerFactory entityManagerFactory;
@@ -118,5 +125,17 @@ class QueryCountTest {
             assertThat(p.getTasks()).hasSize(1);
         });
         assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(4);
+    }
+
+    @Test
+    @DisplayName("Logging in loads the account and its subscription in one statement")
+    void accountLoadsWithItsSubscriptionInOneStatement() {
+        accountRepository.save(UserAccount.register(Email.of("count@readora.test"), "count-reader", PasswordHash.of("hash")));
+
+        statistics.clear();
+        UserAccount account = accountRepository.findByEmail(Email.of("count@readora.test")).orElseThrow();
+
+        assertThat(account.getSubscription()).isNotNull();
+        assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
     }
 }
