@@ -58,12 +58,12 @@ export function provideHttpTesting(): (Provider | EnvironmentProviders)[] {
 
 /** A successful API envelope, as the backend sends it. */
 export function ok<T>(data: T): ApiResponse<T> {
-  return { success: true, data, error: null };
+  return { success: true, data, error: null, code: null };
 }
 
-/** A failed API envelope (`success: false`) carrying `error`. */
-export function fail(error: string): ApiResponse<null> {
-  return { success: false, data: null, error };
+/** A failed API envelope (`success: false`) carrying `error` and, like the real API, an error `code`. */
+export function fail(error: string, code: string | null = null): ApiResponse<null> {
+  return { success: false, data: null, error, code };
 }
 
 /**

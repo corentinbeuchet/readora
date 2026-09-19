@@ -1,0 +1,30 @@
+{
+  "locale": "en",
+  "translations": {
+    "error.generic": "Something went wrong. Please try again.",
+    "error.network": "Cannot reach the server. Check your connection and try again.",
+    "error.invalidCredentials": "Invalid email or password.",
+    "error.sessionExpired": "Your session has expired. Please log in again.",
+    "error.unauthenticated": "Please log in to continue.",
+    "error.forbidden": "You don't have permission to do this.",
+    "error.notFound": "We couldn't find what you were looking for.",
+    "error.conflict": "Someone else changed this at the same time. Reload and try again.",
+    "error.rateLimited": "Too many attempts. Please wait a moment and try again.",
+    "error.malformedRequest": "The request was not valid. Check the form and try again.",
+    "error.fileTooLarge": "This file is too large.",
+    "error.unsupportedFileFormat": "This file format is not supported.",
+    "error.emptyFile": "This file is empty.",
+    "error.storageUnavailable": "File storage is unavailable right now. Please try again later.",
+    "error.paymentFailed": "The payment provider could not complete the request. Please try again later.",
+    "error.emailTaken": "An account already uses this email.",
+    "error.usernameTaken": "This username is already taken.",
+    "error.taskAlreadyClaimed": "Someone else has already claimed this task.",
+    "error.taskClaimedByOther": "This task is claimed by another member.",
+    "error.taskAlreadyExists": "A task for this chapter already exists.",
+    "error.ownContent": "You can't do this on your own content.",
+    "error.listDuplicateSeries": "This series is already in the list.",
+    "error.alreadyHandled": "This has already been handled.",
+    "error.noActiveSubscription": "You have no active subscription to cancel.",
+    "error.cancellationAlreadyScheduled": "Your subscription is already set to end with this period."
+  }
+}

@@ -20,7 +20,9 @@
             "outputPath": "dist/readora-frontend",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "polyfills": [],
+            "polyfills": [
+              "@angular/localize/init"
+            ],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -39,7 +41,8 @@
             },
             "scripts": [],
             "server": "src/main.server.ts",
-            "outputMode": "static"
+            "outputMode": "static",
+            "i18nMissingTranslation": "error"
           },
           "configurations": {
             "production": {
@@ -61,7 +64,8 @@
                   "with": "src/environments/environment.prod.ts"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "localize": true
             },
             "staging": {
               "budgets": [
@@ -82,12 +86,18 @@
                   "with": "src/environments/environment.staging.ts"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "localize": true
             },
             "development": {
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "fr": {
+              "localize": [
+                "fr"
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -103,6 +113,9 @@
             },
             "development": {
               "buildTarget": "readora-frontend:build:development"
+            },
+            "fr": {
+              "buildTarget": "readora-frontend:build:development,fr"
             }
           },
           "defaultConfiguration": "development"
@@ -127,6 +140,26 @@
               "src/**/*.html",
               "tests/**/*.ts"
             ]
+          }
+        },
+        "extract-i18n": {
+          "builder": "@angular/build:extract-i18n",
+          "options": {
+            "buildTarget": "readora-frontend:build:development",
+            "format": "json",
+            "outputPath": "src/locale"
+          }
+        }
+      },
+      "i18n": {
+        "sourceLocale": {
+          "code": "en",
+          "subPath": ""
+        },
+        "locales": {
+          "fr": {
+            "translation": "src/locale/messages.fr.json",
+            "subPath": "fr"
           }
         }
       }

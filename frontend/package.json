@@ -8,7 +8,9 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "start:fr": "ng serve --configuration=fr --port 4201",
     "build": "ng build",
+    "extract-i18n": "ng extract-i18n",
     "build:staging": "ng build --configuration=staging && node scripts/generate-sitemap.mjs --configuration=staging",
     "build:prod": "ng build --configuration=production && node scripts/generate-sitemap.mjs --configuration=production",
     "watch": "ng build --watch --configuration development",
@@ -40,6 +42,7 @@
     "@angular/build": "^22.1.0",
     "@angular/cli": "^22.1.0",
     "@angular/compiler-cli": "^22.1.0",
+    "@angular/localize": "^22.1.6",
     "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.63.0",

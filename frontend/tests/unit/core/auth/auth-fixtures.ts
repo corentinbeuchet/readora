@@ -41,5 +41,5 @@ export function mockSession(overrides: Partial<AuthResponse> = {}): AuthResponse
 
 /** `mockSession` wrapped in the API envelope, ready to `flush()`. */
 export function mockAuthResponse(overrides: Partial<AuthResponse> = {}): ApiResponse<AuthResponse> {
-  return { success: true, error: null, data: mockSession(overrides) };
+  return { success: true, error: null, code: null, data: mockSession(overrides) };
 }

@@ -3,13 +3,16 @@ import { Service, inject } from '@angular/core';
 import { Observable, OperatorFunction, catchError, map, of, throwError } from 'rxjs';
 import { API_BASE_URL } from '@app/core/config/urls';
 import { ApiResponse } from '@app/core/models/api';
+import { errorMessageForCode } from '@app/core/api/error-messages';
 
 /** Normalised error raised by every API client. */
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
     message: string,
-    public readonly source?: unknown
+    public readonly source?: unknown,
+    /** The API's error code (`ApiResponse.code`), `null` for network and non-API failures. */
+    public readonly code: string | null = null
   ) {
     super(message);
     this.name = 'ApiError';
@@ -93,12 +96,12 @@ export class ApiClient {
 }
 
 /** User-facing message for a failed API call (`ApiError`), with a fallback for anything else. */
-export function apiErrorMessage(error: unknown, fallback = 'Something went wrong. Please try again.'): string {
+export function apiErrorMessage(error: unknown, fallback = $localize`:@@error.generic:Something went wrong. Please try again.`): string {
   if (error instanceof ApiError) {
     if (error.status === 0) {
-      return 'Cannot reach the server. Check your connection and try again.';
+      return $localize`:@@error.network:Cannot reach the server. Check your connection and try again.`;
     }
-    return error.message || fallback;
+    return errorMessageForCode(error.code) ?? (error.message || fallback);
   }
   return fallback;
 }
@@ -128,7 +131,7 @@ export function parseEnvelope<T>(raw: unknown): T {
 
 export function unwrap<T>(response: ApiResponse<T>): T {
   if (!response.success) {
-    throw new ApiError(200, response.error ?? 'Request failed');
+    throw new ApiError(200, response.error ?? 'Request failed', undefined, response.code ?? null);
   }
   return response.data as T;
 }
@@ -145,7 +148,8 @@ export function toApiError(error: unknown): Observable<never> {
         : error.status === 0
           ? 'Network error: the API is unreachable'
           : error.message;
-    return throwError(() => new ApiError(error.status, message, error));
+    const code = typeof body === 'object' && body !== null && typeof body.code === 'string' ? body.code : null;
+    return throwError(() => new ApiError(error.status, message, error, code));
   }
   return throwError(() => new ApiError(0, error instanceof Error ? error.message : 'Unknown error', error));
 }
