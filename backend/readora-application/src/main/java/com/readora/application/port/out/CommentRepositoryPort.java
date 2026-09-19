@@ -14,6 +14,9 @@ public interface CommentRepositoryPort {
     /// Visible comments of the chapter (hidden ones are left out), oldest first.
     List<ChapterComment> findByChapterId(ChapterId chapterId);
 
+    /// Visible top-level comments of the chapter without spoilers, most upvoted first (oldest first on a tie).
+    List<ChapterComment> findTopByChapterId(ChapterId chapterId, int limit);
+
     /// When the author last commented, for the comment rate limit.
     Optional<Instant> findLatestCommentTime(UserId authorId);
     ChapterComment save(ChapterComment comment);

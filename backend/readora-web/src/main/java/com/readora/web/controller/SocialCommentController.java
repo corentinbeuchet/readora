@@ -41,6 +41,16 @@ public class SocialCommentController {
         return ResponseEntity.ok(ApiResponse.ok(dtos));
     }
 
+    @GetMapping("/chapter/{chapterId}/top")
+    @Operation(summary = "The most upvoted comments without spoilers, for the end of the chapter")
+    public ResponseEntity<ApiResponse<List<CommentDto>>> getTopComments(@PathVariable UUID chapterId,
+                                                                        @RequestParam(defaultValue = "3") int limit) {
+        List<CommentDto> dtos = readerInteractionUseCase.topComments(ChapterId.of(chapterId), limit).stream()
+                .map(CommentDto::fromDomain)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.ok(dtos));
+    }
+
     @PostMapping("/chapter/{chapterId}")
     @PreAuthorize("hasAuthority('COMMENT_WRITE')")
     @Operation(summary = "Post a comment or reply on chapter (author taken from the authenticated principal)")

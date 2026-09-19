@@ -42,6 +42,13 @@ public class CommentRepositoryAdapter implements CommentRepositoryPort {
     }
 
     @Override
+    public List<ChapterComment> findTopByChapterId(ChapterId chapterId, int limit) {
+        return springDataRepository.findTop(chapterId.value(), org.springframework.data.domain.Limit.of(limit)).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<Instant> findLatestCommentTime(UserId authorId) {
         return springDataRepository.findLatestCreatedAt(authorId.value());

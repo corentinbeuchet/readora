@@ -231,7 +231,7 @@ class PostgresMigrationTest {
     private CommentRepositoryAdapter comments;
 
     @Test
-    @DisplayName("Hidden comments, the author's last comment time and comment reports work on PostgreSQL")
+    @DisplayName("Hidden comments, top comments, the author's last comment time and comment reports work on PostgreSQL")
     void moderationQueriesRunOnPostgres() {
         Work work = workRepository.save(Work.create("PG Moderated", "", WorkType.MANGA, "c.png", Set.of("Action")));
         Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", null);
@@ -245,10 +245,13 @@ class PostgresMigrationTest {
         var report = commentReports.save(com.readora.domain.moderation.CommentReport.open(comment.getId(), UserId.of("pg-reporter"),
                 com.readora.domain.moderation.CommentReportReason.SPAM, java.time.Instant.now()));
         assertThat(commentReports.findOpen(10)).extracting(r -> r.getId()).contains(report.getId());
+        comments.save(com.readora.domain.social.ChapterComment.createRoot(chapter.getId(), author, "pg", "Spoiler", null, true));
+        assertThat(comments.findTopByChapterId(chapter.getId(), 3)).extracting(c -> c.getId()).containsExactly(comment.getId());
 
         comment.hide();
         comments.save(comment);
-        assertThat(comments.findByChapterId(chapter.getId())).isEmpty();
+        assertThat(comments.findByChapterId(chapter.getId())).extracting(c -> c.getContent().value()).containsExactly("Spoiler");
+        assertThat(comments.findTopByChapterId(chapter.getId(), 3)).isEmpty();
         assertThat(comments.findById(comment.getId())).get().extracting(c -> c.isHidden()).isEqualTo(true);
     }
 

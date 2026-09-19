@@ -18,6 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.List;
 import java.util.Set;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -93,11 +94,38 @@ class CommentUpvoteIntegrationTest extends AuthTestSupport {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    @DisplayName("Top comments (public) are the most upvoted ones without spoilers or replies")
+    void topCommentsSkipSpoilersAndReplies() throws Exception {
+        Session author = register();
+        Session voter = register();
+        String plain = postComment(author);
+        String liked = postComment(author, "Loved it", null, false);
+        String spoiler = postComment(author, "He dies!", null, true);
+        String reply = postComment(author, "Same", liked, false);
+        for (String id : List.of(liked, spoiler, reply)) {
+            mockMvc.perform(post("/api/v1/comments/" + id + "/upvote").header("Authorization", voter.bearer())).andExpect(status().isOk());
+        }
+
+        mockMvc.perform(get("/api/v1/comments/chapter/" + chapter.getId().value() + "/top"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].id").value(liked))
+                .andExpect(jsonPath("$.data[1].id").value(plain));
+        mockMvc.perform(get("/api/v1/comments/chapter/" + chapter.getId().value() + "/top").param("limit", "1"))
+                .andExpect(jsonPath("$.data.length()").value(1));
+    }
+
     private String postComment(Session author) throws Exception {
+        return postComment(author, "Great chapter", null, false);
+    }
+
+    private String postComment(Session author, String text, String parentId, boolean spoiler) throws Exception {
         var result = mockMvc.perform(post("/api/v1/comments/chapter/" + chapter.getId().value())
                         .header("Authorization", author.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new CreateCommentRequest("Great chapter", null, null, false))))
+                        .content(objectMapper.writeValueAsString(new CreateCommentRequest(text, null,
+                                parentId == null ? null : java.util.UUID.fromString(parentId), spoiler))))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn();
         return json(result).path("data").path("id").asString();

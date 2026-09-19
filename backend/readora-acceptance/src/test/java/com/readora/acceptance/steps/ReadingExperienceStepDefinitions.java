@@ -1,6 +1,11 @@
 package com.readora.acceptance.steps;
 
 import com.readora.acceptance.fakes.FakeStorage;
+import com.readora.acceptance.fakes.InMemoryCommentRepository;
+import com.readora.application.service.ReaderSocialService;
+import com.readora.domain.social.ChapterComment;
+import com.readora.domain.social.CommentContent;
+import com.readora.domain.social.CommentId;
 import com.readora.acceptance.fakes.InMemoryChapterReadRepository;
 import com.readora.acceptance.fakes.InMemoryChapterRepository;
 import com.readora.acceptance.fakes.InMemoryLibraryRepository;
@@ -50,6 +55,9 @@ public class ReadingExperienceStepDefinitions {
     private WorkProgress progress;
     private List<HistoryItem> history = List.of();
     private final java.util.Map<String, ChapterId> lastChapterRead = new java.util.HashMap<>();
+    private InMemoryCommentRepository comments;
+    private ReaderSocialService social;
+    private List<ChapterComment> shownComments = List.of();
 
     @Before
     public void setup() {
@@ -60,6 +68,8 @@ public class ReadingExperienceStepDefinitions {
         reading = new ReadingTrackerService(reads, chapters, works, clock);
         library = new LibraryService(new InMemoryLibraryRepository(), works, reads, clock);
         chapterReader = new ChapterReadingService(chapters, works, new FakeStorage());
+        comments = new InMemoryCommentRepository();
+        social = new ReaderSocialService(comments, chapters, event -> { });
         lastChapterRead.clear();
     }
 
@@ -193,6 +203,28 @@ public class ReadingExperienceStepDefinitions {
                 .filteredOn(item -> item.work().getTitle().equals(title))
                 .singleElement()
                 .satisfies(item -> assertThat(item.newChapters()).isEqualTo(expected));
+    }
+
+    /// Upvotes 0..7 on eight comments of chapter 5 of "Solo Leveling"; the two most upvoted are spoilers.
+    @Given("chapter {int} has many comments")
+    public void chapterHasManyComments(int number) {
+        Chapter chapter = chapter("Solo Leveling", number);
+        for (int upvotes = 0; upvotes < 8; upvotes++) {
+            comments.save(new ChapterComment(CommentId.generate(), chapter.getId(), UserId.of("fan-" + upvotes), "fan-" + upvotes,
+                    CommentContent.of("Comment with " + upvotes + " upvotes"), null, null, 1, upvotes >= 6, upvotes,
+                    START.plusSeconds(upvotes)));
+        }
+    }
+
+    @When("{string} reaches the last page")
+    public void reachesTheLastPage(String name) {
+        shownComments = social.topComments(chapter("Solo Leveling", 5).getId(), 3);
+    }
+
+    @Then("the three most-upvoted comments without spoilers are shown under it")
+    public void theThreeMostUpvotedCommentsWithoutSpoilersAreShown() {
+        assertThat(shownComments).extracting(ChapterComment::getUpvotes).containsExactly(5, 4, 3);
+        assertThat(shownComments).noneMatch(ChapterComment::isSpoiler);
     }
 
     private void read(String title, int number) {

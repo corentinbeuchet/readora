@@ -90,6 +90,11 @@ public class ReaderSocialService implements ReaderInteractionUseCase {
         return commentRepository.findByChapterId(chapterId);
     }
 
+    @Override
+    public List<ChapterComment> topComments(ChapterId chapterId, int limit) {
+        return commentRepository.findTopByChapterId(chapterId, Math.clamp(limit, 1, MAX_TOP_COMMENTS));
+    }
+
     /// Comments are only allowed on chapters readers can see.
     ///
     /// @throws NotFoundException if the chapter does not exist

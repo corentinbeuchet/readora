@@ -52,6 +52,11 @@ public class SocialCommentsStepDefinitions {
             }
 
             @Override
+            public List<ChapterComment> findTopByChapterId(ChapterId chapterId, int limit) {
+                throw new UnsupportedOperationException("not used by the US-03 scenarios");
+            }
+
+            @Override
 
             public java.util.Optional<java.time.Instant> findLatestCommentTime(UserId authorId) {
 

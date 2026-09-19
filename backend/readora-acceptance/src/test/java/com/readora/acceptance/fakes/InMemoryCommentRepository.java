@@ -33,6 +33,15 @@ public class InMemoryCommentRepository implements CommentRepositoryPort {
     }
 
     @Override
+    public List<ChapterComment> findTopByChapterId(ChapterId chapterId, int limit) {
+        return findByChapterId(chapterId).stream()
+                .filter(c -> c.getParentId() == null && !c.isSpoiler())
+                .sorted(Comparator.comparingInt(ChapterComment::getUpvotes).reversed().thenComparing(ChapterComment::getCreatedAt))
+                .limit(limit)
+                .toList();
+    }
+
+    @Override
     public Optional<Instant> findLatestCommentTime(UserId authorId) {
         return comments.values().stream().filter(c -> c.getAuthorId().equals(authorId)).map(ChapterComment::getCreatedAt)
                 .max(Comparator.naturalOrder());

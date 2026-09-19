@@ -156,7 +156,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     Then he can still read chapter 6
 
   # Inspired by: WEBTOON
-  @could @wip
+  @could
   Scenario: Seeing the best comments at the end of a chapter
     Given chapter 5 has many comments
     When "Kenji" reaches the last page
