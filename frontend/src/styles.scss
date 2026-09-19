@@ -16,6 +16,14 @@ body {
   padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
 }
 
+/* Form controls use the browser's own font (13.33px Arial) unless told to inherit the page's. */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
 /* No double-tap-to-zoom delay on controls; pinch zoom stays available everywhere. */
 a,
 button,
