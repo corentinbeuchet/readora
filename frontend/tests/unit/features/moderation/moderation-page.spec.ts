@@ -26,45 +26,80 @@ describe('ModerationPage (US-11)', () => {
       providers: [provideRouter([]), ...provideHttpTesting()]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
-    fixture = TestBed.createComponent(ModerationPage);
-    await settle(fixture);
   });
 
   afterEach(() => http.verify());
 
-  const buttons = (): HTMLButtonElement[] => Array.from(fixture.nativeElement.querySelectorAll('.queue-actions button'));
-
   it('shows each reported comment with its reason and a link to it in context', async () => {
-    http.expectOne(`${API}/moderation/reports`).flush(ok([ITEM]));
-    await settle(fixture);
+    await whenIOpenTheQueue([ITEM]);
 
-    const item: HTMLElement = fixture.nativeElement.querySelector('.queue-item');
-    expect(item.textContent).toContain('Unmarked spoiler');
-    expect(item.textContent).toContain('He dies in the end');
-    expect(item.querySelector('a')!.getAttribute('href')).toBe('/read/ch-5?comment=c-1');
+    thenTheReportShows(1, 'Unmarked spoiler');
+    thenTheReportShows(1, 'He dies in the end');
+    thenTheReportLinksTo(1, '/read/ch-5?comment=c-1');
   });
 
   it('hides the comment, then reloads the queue', async () => {
-    http.expectOne(`${API}/moderation/reports`).flush(ok([ITEM]));
-    await settle(fixture);
+    await givenTheQueueHolds([ITEM]);
 
-    buttons()[0].click();
-    http.expectOne(`${API}/moderation/reports/r-1/hide`).flush(ok({ status: 'HIDDEN' }));
-    await settle(fixture);
-    http.expectOne(`${API}/moderation/reports`).flush(ok([]));
-    await settle(fixture);
+    await whenIHideTheCommentOf(ITEM, { queueAfter: [] });
 
-    expect(fixture.nativeElement.textContent).toContain('No open reports.');
+    thenICanSee('No open reports.');
   });
 
   it('dismisses a report and shows errors', async () => {
-    http.expectOne(`${API}/moderation/reports`).flush(ok([ITEM]));
-    await settle(fixture);
+    await givenTheQueueHolds([ITEM]);
 
-    buttons()[1].click();
-    http.expectOne(`${API}/moderation/reports/r-1/dismiss`).flush(fail('Open comment report not found'), { status: 404, statusText: 'Not Found' });
-    await settle(fixture);
+    await whenIDismissTheReportButItFails(ITEM, 'Open comment report not found');
 
-    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Open comment report not found');
+    thenTheAlertSays('Open comment report not found');
   });
+
+  async function givenTheQueueHolds(reports: ModerationItem[]): Promise<void> {
+    await whenIOpenTheQueue(reports);
+  }
+
+  async function whenIOpenTheQueue(reports: ModerationItem[]): Promise<void> {
+    fixture = TestBed.createComponent(ModerationPage);
+    await settle(fixture);
+    http.expectOne(`${API}/moderation/reports`).flush(ok(reports));
+    await settle(fixture);
+  }
+
+  async function whenIHideTheCommentOf(report: ModerationItem, answer: { queueAfter: ModerationItem[] }): Promise<void> {
+    actionButtons()[0].click();
+    http.expectOne(`${API}/moderation/reports/${report.reportId}/hide`).flush(ok({ status: 'HIDDEN' }));
+    await settle(fixture);
+    http.expectOne(`${API}/moderation/reports`).flush(ok(answer.queueAfter));
+    await settle(fixture);
+  }
+
+  async function whenIDismissTheReportButItFails(report: ModerationItem, error: string): Promise<void> {
+    actionButtons()[1].click();
+    http.expectOne(`${API}/moderation/reports/${report.reportId}/dismiss`).flush(fail(error), { status: 404, statusText: 'Not Found' });
+    await settle(fixture);
+  }
+
+  function thenTheReportShows(position: number, text: string): void {
+    expect(reportRow(position).textContent).toContain(text);
+  }
+
+  function thenTheReportLinksTo(position: number, href: string): void {
+    expect(reportRow(position).querySelector('a')!.getAttribute('href')).toBe(href);
+  }
+
+  function thenICanSee(text: string): void {
+    expect(fixture.nativeElement.textContent).toContain(text);
+  }
+
+  function thenTheAlertSays(message: string): void {
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain(message);
+  }
+
+  function reportRow(position: number): HTMLElement {
+    return fixture.nativeElement.querySelectorAll('.queue-item')[position - 1];
+  }
+
+  function actionButtons(): HTMLButtonElement[] {
+    return Array.from(fixture.nativeElement.querySelectorAll('.queue-actions button'));
+  }
 });

@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { TeamPage } from '@app/features/community/team-page';
 import { AuthStore } from '@app/core/auth/auth-store';
@@ -20,6 +20,7 @@ const TEAM: TeamProfile = {
 describe('TeamPage (US-12)', () => {
   let fixture: ComponentFixture<TeamPage>;
   let http: HttpTestingController;
+  let lastRequest: TestRequest;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -27,40 +28,74 @@ describe('TeamPage (US-12)', () => {
       providers: [provideRouter([]), ...provideHttpTesting()]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
-    await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: ['LIBRARY_USE'] }));
-    fixture = TestBed.createComponent(TeamPage);
-    fixture.componentRef.setInput('projectId', 't-1');
-    await settle(fixture);
-    http.expectOne(`${API}/teams/t-1`).flush(ok(TEAM));
-    await settle(fixture);
   });
 
   afterEach(() => http.verify());
 
-  it('shows the members, the series and the latest chapters', () => {
-    const text: string = fixture.nativeElement.textContent;
-    expect(text).toContain('Shadow Scans');
-    expect(text).toContain('3 followers');
-    const links = Array.from(fixture.nativeElement.querySelectorAll('a') as NodeListOf<HTMLAnchorElement>).map((a) => a.getAttribute('href'));
-    expect(links).toContain('/works/w-1');
-    expect(links).toContain('/u/leader');
-    expect(links).toContain('/read/c-5');
+  it('shows the members, the series and the latest chapters', async () => {
+    await givenIAmOnTheTeamPageOf(TEAM);
+
+    thenICanSee('Shadow Scans');
+    thenICanSee('3 followers');
+    thenThereIsALinkTo('/works/w-1');
+    thenThereIsALinkTo('/u/leader');
+    thenThereIsALinkTo('/read/c-5');
   });
 
   it('follows and unfollows the team', async () => {
-    const button = (): HTMLButtonElement => fixture.nativeElement.querySelector('.profile-header button');
-    button().click();
-    http.expectOne(`${API}/teams/t-1/follow`).flush(ok({ following: true }));
-    await settle(fixture);
-    expect(button().textContent!.trim()).toBe('Following');
-    expect(button().getAttribute('aria-pressed')).toBe('true');
-    expect(fixture.nativeElement.textContent).toContain('4 followers');
+    await givenIAmOnTheTeamPageOf({ ...TEAM, followers: 3, following: false });
 
-    button().click();
-    const req = http.expectOne(`${API}/teams/t-1/follow`);
-    expect(req.request.method).toBe('DELETE');
-    req.flush(ok({ following: false }));
-    await settle(fixture);
-    expect(button().textContent!.trim()).toBe('Follow');
+    await whenIClickFollow({ nowFollowing: true });
+
+    thenTheFollowButtonSays('Following');
+    thenTheFollowButtonIsPressed();
+    thenICanSee('4 followers');
+
+    await whenIClickFollow({ nowFollowing: false });
+
+    thenTheRequestMethodWas('DELETE');
+    thenTheFollowButtonSays('Follow');
   });
+
+  /** Signed in with LIBRARY_USE, so the follow button is there. */
+  async function givenIAmOnTheTeamPageOf(team: TeamProfile): Promise<void> {
+    await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: ['LIBRARY_USE'] }));
+    fixture = TestBed.createComponent(TeamPage);
+    fixture.componentRef.setInput('projectId', team.id);
+    await settle(fixture);
+    http.expectOne(`${API}/teams/${team.id}`).flush(ok(team));
+    await settle(fixture);
+  }
+
+  async function whenIClickFollow(answer: { nowFollowing: boolean }): Promise<void> {
+    followButton().click();
+    lastRequest = http.expectOne(`${API}/teams/t-1/follow`);
+    lastRequest.flush(ok({ following: answer.nowFollowing }));
+    await settle(fixture);
+  }
+
+  function thenICanSee(text: string): void {
+    expect(fixture.nativeElement.textContent).toContain(text);
+  }
+
+  function thenThereIsALinkTo(href: string): void {
+    const links = Array.from(fixture.nativeElement.querySelectorAll('a') as NodeListOf<HTMLAnchorElement>).map((a) => a.getAttribute('href'));
+    expect(links).toContain(href);
+  }
+
+  function thenTheFollowButtonSays(label: string): void {
+    expect(followButton().textContent!.trim()).toBe(label);
+  }
+
+  function thenTheFollowButtonIsPressed(): void {
+    expect(followButton().getAttribute('aria-pressed')).toBe('true');
+  }
+
+  function thenTheRequestMethodWas(method: string): void {
+    expect(lastRequest.request.method).toBe(method);
+  }
+
+  function followButton(): HTMLButtonElement {
+    return fixture.nativeElement.querySelector('.profile-header button');
+  }
 });

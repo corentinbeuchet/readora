@@ -1,11 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, TestRequest, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { Router, provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { WorksPage } from '@app/features/catalog/works-page';
 import { PagedResponse, WorkSummary } from '@app/core/models/readora.models';
-import { API, fail, ok, settle } from '../../test-utils';
+import { API, BlankPage, fail, ok, provideHttpTesting, settle } from '../../test-utils';
 
 const SOLO: WorkSummary = {
   id: 'w-1',
@@ -22,16 +21,25 @@ function page(items: WorkSummary[]): PagedResponse<WorkSummary> {
   return { items, page: 0, size: 24, totalElements: items.length, totalPages: 1 };
 }
 
+/** A string is a single value, an array every value of a repeated param, `null` an absent param. */
+type Params = Record<string, string | string[] | null>;
+
 describe('WorksPage (US-04 catalog filters)', () => {
   let harness: RouterTestingHarness;
   let http: HttpTestingController;
+  let lastRequest: TestRequest;
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
       providers: [
-        provideRouter([{ path: 'works', component: WorksPage }], withComponentInputBinding()),
-        provideHttpClient(),
-        provideHttpClientTesting()
+        provideRouter(
+          [
+            { path: 'works', component: WorksPage },
+            { path: 'works/:workId', component: BlankPage }
+          ],
+          withComponentInputBinding()
+        ),
+        ...provideHttpTesting()
       ]
     });
     http = TestBed.inject(HttpTestingController);
@@ -40,127 +48,195 @@ describe('WorksPage (US-04 catalog filters)', () => {
 
   afterEach(() => http.verify());
 
-  const el = (): HTMLElement => harness.routeNativeElement as HTMLElement;
-  const chip = (genre: string): HTMLButtonElement =>
-    Array.from(el().querySelectorAll<HTMLButtonElement>('.chip')).find((b) => b.textContent?.includes(genre))!;
+  it('Clicking a genre cycles between wanted, excluded and ignored', async () => {
+    await givenIAmOn('/works');
+
+    await whenIClickTheGenre('Action');
+
+    thenTheGenreIs('Action', 'wanted');
+    thenTheCatalogWasAskedFor({ genre: ['Action'], excludeGenre: null });
+
+    await whenIClickTheGenre('Action');
+
+    thenTheGenreIs('Action', 'excluded');
+    thenTheCatalogWasAskedFor({ genre: null, excludeGenre: ['Action'] });
+
+    await whenIClickTheGenre('Action');
+
+    thenTheGenreIs('Action', 'not filtered');
+    thenTheCatalogWasAskedFor({ genre: null, excludeGenre: null });
+  });
+
+  it('reads every filter from the URL and sends it to the API', async () => {
+    await whenIOpen('/works?q=solo&genre=Action&genre=Fantasy&excludeGenre=Romance&type=MANHWA&status=COMPLETED&demographic=SHOUNEN&page=2');
+
+    thenTheCatalogWasAskedFor({
+      q: 'solo',
+      genre: ['Action', 'Fantasy'],
+      excludeGenre: ['Romance'],
+      type: 'MANHWA',
+      status: 'COMPLETED',
+      demographic: 'SHOUNEN',
+      page: '2'
+    });
+    thenICanSee('Results for “solo”');
+    thenICanSee('Chugong');
+  });
+
+  it('ignores unknown facet values in the URL instead of sending them', async () => {
+    await whenIOpen('/works?type=NOVEL&page=-4');
+
+    thenTheCatalogWasAskedFor({ type: null, page: '0' });
+  });
+
+  it('a facet change goes back to the first page and is kept in the URL', async () => {
+    await givenIAmOn('/works?page=3');
+
+    await whenIChooseTheType('MANGA');
+
+    thenTheCatalogWasAskedFor({ type: 'MANGA', page: '0' });
+    thenTheUrlIs('/works?type=MANGA');
+  });
+
+  it('says when no series match and clears every filter', async () => {
+    await givenIAmOn('/works?genre=Romance&type=COMIC', { results: [] });
+    thenICanSee('No series match these filters.');
+
+    await whenIClearEveryFilter();
+
+    thenTheUrlIs('/works');
+  });
+
+  it('shows an error with a retry when the search fails', async () => {
+    await givenTheSearchFailsWhenIOpen('/works');
+    thenTheErrorSays('Could not load the catalog.');
+
+    await whenIRetry({ results: [SOLO] });
+
+    thenICanSee('Solo Leveling');
+  });
+
+  it('"Surprise me" opens a random series matching the filters, or says none match', async () => {
+    await givenIAmOn('/works?genre=Romance');
+
+    await whenIAskForASurprise({ pick: null });
+
+    thenTheSurpriseSays('No series match these filters.');
+
+    await whenIAskForASurprise({ pick: SOLO });
+
+    thenTheRandomPickWasAskedFor({ genre: ['Romance'], page: null });
+    thenTheUrlIs('/works/w-1');
+  });
+
+  async function givenIAmOn(url: string, catalog: { results?: WorkSummary[] } = {}): Promise<void> {
+    await whenIOpen(url, catalog);
+  }
+
+  async function givenTheSearchFailsWhenIOpen(url: string): Promise<void> {
+    await harness.navigateByUrl(url);
+    await settle(harness);
+    http.expectOne(`${API}/works/genres`).flush(ok([]));
+    worksRequest().flush(fail('down'));
+    await settle(harness);
+  }
+
+  async function whenIOpen(url: string, catalog: { results?: WorkSummary[] } = {}): Promise<void> {
+    await harness.navigateByUrl(url);
+    await settle(harness);
+    http.expectOne(`${API}/works/genres`).flush(ok(['Action', 'Fantasy', 'Romance']));
+    lastRequest = worksRequest();
+    lastRequest.flush(ok(page(catalog.results ?? [SOLO])));
+    await settle(harness);
+  }
+
+  async function whenIClickTheGenre(genre: string): Promise<void> {
+    chip(genre).click();
+    await answerTheNextSearch([SOLO]);
+  }
+
+  async function whenIChooseTheType(type: string): Promise<void> {
+    const select = el().querySelectorAll<HTMLSelectElement>('select')[0];
+    select.value = type;
+    select.dispatchEvent(new Event('change'));
+    await answerTheNextSearch([SOLO]);
+  }
+
+  async function whenIClearEveryFilter(): Promise<void> {
+    el().querySelector<HTMLButtonElement>('.clear-filters')!.click();
+    await answerTheNextSearch([SOLO]);
+  }
+
+  async function whenIRetry(catalog: { results: WorkSummary[] }): Promise<void> {
+    el().querySelector<HTMLButtonElement>('[role="alert"] button')!.click();
+    await answerTheNextSearch(catalog.results);
+  }
+
+  /** `pick: null` is answered like the API does when nothing matches: a 404. */
+  async function whenIAskForASurprise(answer: { pick: WorkSummary | null }): Promise<void> {
+    el().querySelector<HTMLButtonElement>('button.surprise')!.click();
+    lastRequest = http.expectOne((r) => r.url === `${API}/works/random`);
+    if (answer.pick) {
+      lastRequest.flush(ok(answer.pick));
+    } else {
+      lastRequest.flush(fail('none'), { status: 404, statusText: 'Not Found' });
+    }
+    await settle(harness);
+  }
+
+  function thenTheGenreIs(genre: string, state: string): void {
+    expect(chip(genre).getAttribute('aria-label')).toBe(`${genre}: ${state}`);
+  }
+
+  function thenTheCatalogWasAskedFor(params: Params): void {
+    expectLastRequestParams(params);
+  }
+
+  function thenTheRandomPickWasAskedFor(params: Params): void {
+    expectLastRequestParams(params);
+  }
+
+  function thenICanSee(text: string): void {
+    expect(el().textContent).toContain(text);
+  }
+
+  function thenTheUrlIs(url: string): void {
+    expect(TestBed.inject(Router).url).toBe(url);
+  }
+
+  function thenTheErrorSays(message: string): void {
+    expect(el().querySelector('[role="alert"]')?.textContent).toContain(message);
+  }
+
+  function thenTheSurpriseSays(message: string): void {
+    expect(el().querySelector('.surprise-message')!.textContent).toContain(message);
+  }
+
+  async function answerTheNextSearch(results: WorkSummary[]): Promise<void> {
+    await settle(harness);
+    lastRequest = worksRequest();
+    lastRequest.flush(ok(page(results)));
+    await settle(harness);
+  }
+
+  function expectLastRequestParams(params: Params): void {
+    const sent = lastRequest.request.params;
+    for (const [name, value] of Object.entries(params)) {
+      if (value === null) expect(sent.has(name), name).toBe(false);
+      else if (Array.isArray(value)) expect(sent.getAll(name), name).toEqual(value);
+      else expect(sent.get(name), name).toBe(value);
+    }
+  }
 
   function worksRequest(): TestRequest {
     return http.expectOne((r) => r.url === `${API}/works`);
   }
 
-  async function open(url: string, items: WorkSummary[] = [SOLO]): Promise<TestRequest> {
-    await harness.navigateByUrl(url);
-    await settle(harness);
-    http.expectOne(`${API}/works/genres`).flush(ok(['Action', 'Fantasy', 'Romance']));
-    const request = worksRequest();
-    request.flush(ok(page(items)));
-    await settle(harness);
-    return request;
+  function el(): HTMLElement {
+    return harness.routeNativeElement as HTMLElement;
   }
 
-  async function nextWorksRequest(items: WorkSummary[] = [SOLO]): Promise<TestRequest> {
-    await settle(harness);
-    const request = worksRequest();
-    request.flush(ok(page(items)));
-    await settle(harness);
-    return request;
+  function chip(genre: string): HTMLButtonElement {
+    return Array.from(el().querySelectorAll<HTMLButtonElement>('.chip')).find((b) => b.textContent?.includes(genre))!;
   }
-
-  it('Clicking a genre cycles between wanted, excluded and ignored', async () => {
-    await open('/works');
-
-    chip('Action').click();
-    let request = await nextWorksRequest();
-    expect(chip('Action').getAttribute('aria-label')).toBe('Action: wanted');
-    expect(request.request.params.getAll('genre')).toEqual(['Action']);
-    expect(request.request.params.has('excludeGenre')).toBe(false);
-
-    chip('Action').click();
-    request = await nextWorksRequest();
-    expect(chip('Action').getAttribute('aria-label')).toBe('Action: excluded');
-    expect(request.request.params.has('genre')).toBe(false);
-    expect(request.request.params.getAll('excludeGenre')).toEqual(['Action']);
-
-    chip('Action').click();
-    request = await nextWorksRequest();
-    expect(chip('Action').getAttribute('aria-label')).toBe('Action: not filtered');
-    expect(request.request.params.has('genre')).toBe(false);
-    expect(request.request.params.has('excludeGenre')).toBe(false);
-  });
-
-  it('reads every filter from the URL and sends it to the API', async () => {
-    const request = await open('/works?q=solo&genre=Action&genre=Fantasy&excludeGenre=Romance&type=MANHWA&status=COMPLETED&demographic=SHOUNEN&page=2');
-
-    const params = request.request.params;
-    expect(params.get('q')).toBe('solo');
-    expect(params.getAll('genre')).toEqual(['Action', 'Fantasy']);
-    expect(params.getAll('excludeGenre')).toEqual(['Romance']);
-    expect(params.get('type')).toBe('MANHWA');
-    expect(params.get('status')).toBe('COMPLETED');
-    expect(params.get('demographic')).toBe('SHOUNEN');
-    expect(params.get('page')).toBe('2');
-    expect(el().textContent).toContain('Results for “solo”');
-    expect(el().textContent).toContain('Chugong');
-  });
-
-  it('ignores unknown facet values in the URL instead of sending them', async () => {
-    const request = await open('/works?type=NOVEL&page=-4');
-
-    expect(request.request.params.has('type')).toBe(false);
-    expect(request.request.params.get('page')).toBe('0');
-  });
-
-  it('a facet change goes back to the first page and is kept in the URL', async () => {
-    await open('/works?page=3');
-
-    const select = el().querySelectorAll<HTMLSelectElement>('select')[0];
-    select.value = 'MANGA';
-    select.dispatchEvent(new Event('change'));
-    const request = await nextWorksRequest();
-
-    expect(request.request.params.get('type')).toBe('MANGA');
-    expect(request.request.params.get('page')).toBe('0');
-    expect(TestBed.inject(Router).url).toBe('/works?type=MANGA');
-  });
-
-  it('says when no series match and clears every filter', async () => {
-    await open('/works?genre=Romance&type=COMIC', []);
-
-    expect(el().textContent).toContain('No series match these filters.');
-    el().querySelector<HTMLButtonElement>('.clear-filters')!.click();
-    await nextWorksRequest();
-
-    expect(TestBed.inject(Router).url).toBe('/works');
-  });
-
-  it('shows an error with a retry when the search fails', async () => {
-    await harness.navigateByUrl('/works');
-    await settle(harness);
-    http.expectOne(`${API}/works/genres`).flush(ok([]));
-    worksRequest().flush(fail('down'));
-    await settle(harness);
-
-    expect(el().querySelector('[role="alert"]')?.textContent).toContain('Could not load the catalog.');
-    el().querySelector<HTMLButtonElement>('[role="alert"] button')!.click();
-    await nextWorksRequest();
-    expect(el().textContent).toContain('Solo Leveling');
-  });
-
-  it('"Surprise me" opens a random series matching the filters, or says none match', async () => {
-    await open('/works?genre=Romance');
-    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
-
-    el().querySelector<HTMLButtonElement>('button.surprise')!.click();
-    const req = http.expectOne((r) => r.url === `${API}/works/random`);
-    expect(req.request.params.getAll('genre')).toEqual(['Romance']);
-    expect(req.request.params.has('page')).toBe(false);
-    req.flush(ok(SOLO));
-    await settle(harness);
-    expect(navigate).toHaveBeenCalledWith(['/works', 'w-1']);
-
-    el().querySelector<HTMLButtonElement>('button.surprise')!.click();
-    http.expectOne((r) => r.url === `${API}/works/random`).flush(fail('none'), { status: 404, statusText: 'Not Found' });
-    await settle(harness);
-    expect(el().querySelector('.surprise-message')!.textContent).toContain('No series match these filters.');
-  });
 });

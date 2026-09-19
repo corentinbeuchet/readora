@@ -1,15 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { ProfilePage } from '@app/features/profile/profile-page';
 import { AuthStore } from '@app/core/auth/auth-store';
+import { UserProfile } from '@app/core/models/readora.models';
 import { mockUser } from '../../core/auth/auth-fixtures';
 import { API, ok, provideHttpTesting } from '../../test-utils';
+
+type Profile = Partial<Pick<UserProfile, 'displayName' | 'bio'>>;
 
 describe('ProfilePage (Angular Aria Tabs + Signal Forms)', () => {
   let fixture: ComponentFixture<ProfilePage>;
   let http: HttpTestingController;
   let store: AuthStore;
+  let lastRequest: TestRequest;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -18,91 +22,154 @@ describe('ProfilePage (Angular Aria Tabs + Signal Forms)', () => {
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     store = TestBed.inject(AuthStore);
-    store.setUser(mockUser({ displayName: 'Jane Reader', bio: 'I read a lot', username: 'jane' }));
-    fixture = TestBed.createComponent(ProfilePage);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
   });
 
   afterEach(() => http.verify());
 
-  const all = (selector: string): HTMLElement[] => Array.from(fixture.nativeElement.querySelectorAll(selector));
-  const one = <T extends HTMLElement>(selector: string): T => fixture.nativeElement.querySelector(selector) as T;
+  it('renders the header, three tabs and the pre-filled profile form on the Overview tab', async () => {
+    await givenIAmOnMyProfile({ displayName: 'Jane Reader', bio: 'I read a lot' });
 
-  it('renders the header, three tabs and the pre-filled profile form on the Overview tab', () => {
-    expect(one('h1').textContent).toContain('Jane Reader');
-    const tabs = all('[ngTab]');
-    expect(tabs.map((t) => t.textContent?.trim())).toEqual(['Overview', 'Bookmarks', 'Subscription']);
-    expect(one('[ngTabList]').getAttribute('role')).toBe('tablist');
-    expect(tabs[0].getAttribute('aria-selected')).toBe('true');
-
-    expect(one<HTMLInputElement>('#profile-display-name').value).toBe('Jane Reader');
-    expect(one<HTMLTextAreaElement>('#profile-bio').value).toBe('I read a lot');
+    thenTheHeaderShows('Jane Reader');
+    thenTheTabsAre(['Overview', 'Bookmarks', 'Subscription']);
+    thenTheTabsFormATablist();
+    thenTheSelectedTabIs('Overview');
+    thenTheDisplayNameFieldHolds('Jane Reader');
+    thenTheBioFieldHolds('I read a lot');
   });
 
   it('switching to the Bookmarks tab shows the Premium upsell for a free reader', async () => {
-    all('[ngTab]')[1].click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
+    await givenIAmOnMyProfile({ displayName: 'Jane Reader', bio: 'I read a lot' });
 
-    expect(all('[ngTab]')[1].getAttribute('aria-selected')).toBe('true');
-    expect(fixture.nativeElement.textContent).toContain('Bookmarks are a Premium feature');
-    http.expectNone(`${API}/bookmarks`);
+    await whenIOpenTheTab('Bookmarks');
+
+    thenTheSelectedTabIs('Bookmarks');
+    thenICanSee('Bookmarks are a Premium feature');
+    thenMyBookmarksWereNotRequested();
   });
 
   it('saving the form calls PUT /profile and updates the AuthStore', async () => {
-    const input = one<HTMLInputElement>('#profile-display-name');
-    input.value = 'Jane R.';
-    input.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
+    await givenIAmOnMyProfile({ displayName: 'Jane Reader', bio: 'I read a lot' });
 
-    one<HTMLFormElement>('form').dispatchEvent(new Event('submit', { cancelable: true }));
-    await fixture.whenStable();
+    whenITypeMyDisplayName('Jane R.');
+    await whenISaveMyProfile({ savedAs: { displayName: 'Jane R.' } });
 
-    const req = http.expectOne(`${API}/profile`);
-    expect(req.request.method).toBe('PUT');
-    expect(req.request.body).toMatchObject({ displayName: 'Jane R.', bio: 'I read a lot', avatarUrl: null });
-    req.flush(ok(mockUser({ displayName: 'Jane R.', username: 'jane' })));
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(store.user()?.displayName).toBe('Jane R.');
-    expect(fixture.nativeElement.textContent).toContain('Profile saved.');
+    thenTheSaveRequestWas('PUT', { displayName: 'Jane R.', bio: 'I read a lot', avatarUrl: null });
+    thenMySessionDisplayNameIs('Jane R.');
+    thenICanSee('Profile saved.');
   });
 
   it('keeps in-progress edits when the user object is refreshed, and re-seeds once saved', async () => {
-    const name = one<HTMLInputElement>('#profile-display-name');
-    name.value = 'Typing a new name';
-    name.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
+    await givenIAmOnMyProfile({ displayName: 'Jane Reader', bio: 'I read a lot' });
+    whenITypeMyDisplayName('Typing a new name');
 
-    // e.g. AuthStore refreshing the user after a Stripe checkout: same user, new object.
-    store.setUser(mockUser({ displayName: 'Jane Reader', bio: 'Bio from the server', username: 'jane' }));
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
+    await whenMyProfileIsRefreshed({ displayName: 'Jane Reader', bio: 'Bio from the server' });
 
-    expect(one<HTMLInputElement>('#profile-display-name').value).toBe('Typing a new name');
-    expect(one<HTMLTextAreaElement>('#profile-bio').value).toBe('I read a lot');
+    thenTheDisplayNameFieldHolds('Typing a new name');
+    thenTheBioFieldHolds('I read a lot');
 
-    one<HTMLFormElement>('form').dispatchEvent(new Event('submit', { cancelable: true }));
-    await fixture.whenStable();
-    http.expectOne(`${API}/profile`).flush(ok(mockUser({ displayName: 'Typing a new name', bio: 'Normalised bio', username: 'jane' })));
-    await fixture.whenStable();
-    fixture.detectChanges();
+    await whenISaveMyProfile({ savedAs: { displayName: 'Typing a new name', bio: 'Normalised bio' } });
 
-    expect(one<HTMLInputElement>('#profile-display-name').value).toBe('Typing a new name');
-    expect(one<HTMLTextAreaElement>('#profile-bio').value).toBe('Normalised bio');
+    thenTheDisplayNameFieldHolds('Typing a new name');
+    thenTheBioFieldHolds('Normalised bio');
   });
 
   it('re-seeds a pristine form when the profile is refreshed', async () => {
-    store.setUser(mockUser({ displayName: 'Jane Reader', bio: 'Updated elsewhere', username: 'jane' }));
+    await givenIAmOnMyProfile({ displayName: 'Jane Reader', bio: 'I read a lot' });
+
+    await whenMyProfileIsRefreshed({ displayName: 'Jane Reader', bio: 'Updated elsewhere' });
+
+    thenTheBioFieldHolds('Updated elsewhere');
+  });
+
+  async function givenIAmOnMyProfile(profile: Profile): Promise<void> {
+    store.setUser(mockUser({ ...profile, username: 'jane' }));
+    fixture = TestBed.createComponent(ProfilePage);
+    await render();
+  }
+
+  async function whenIOpenTheTab(label: string): Promise<void> {
+    tab(label).click();
+    await render();
+  }
+
+  function whenITypeMyDisplayName(name: string): void {
+    const input = one<HTMLInputElement>('#profile-display-name');
+    input.value = name;
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+  }
+
+  async function whenISaveMyProfile(answer: { savedAs: Profile }): Promise<void> {
+    one<HTMLFormElement>('form').dispatchEvent(new Event('submit', { cancelable: true }));
+    await fixture.whenStable();
+    lastRequest = http.expectOne(`${API}/profile`);
+    lastRequest.flush(ok(mockUser({ ...answer.savedAs, username: 'jane' })));
+    await fixture.whenStable();
+    fixture.detectChanges();
+  }
+
+  /** Same user, new object: e.g. the AuthStore refreshing the user after a Stripe checkout. */
+  async function whenMyProfileIsRefreshed(profile: Profile): Promise<void> {
+    store.setUser(mockUser({ ...profile, username: 'jane' }));
+    await render();
+  }
+
+  function thenTheHeaderShows(text: string): void {
+    expect(one('h1').textContent).toContain(text);
+  }
+
+  function thenTheTabsAre(labels: string[]): void {
+    expect(tabs().map((t) => t.textContent?.trim())).toEqual(labels);
+  }
+
+  function thenTheTabsFormATablist(): void {
+    expect(one('[ngTabList]').getAttribute('role')).toBe('tablist');
+  }
+
+  function thenTheSelectedTabIs(label: string): void {
+    expect(tab(label).getAttribute('aria-selected')).toBe('true');
+  }
+
+  function thenTheDisplayNameFieldHolds(value: string): void {
+    expect(one<HTMLInputElement>('#profile-display-name').value).toBe(value);
+  }
+
+  function thenTheBioFieldHolds(value: string): void {
+    expect(one<HTMLTextAreaElement>('#profile-bio').value).toBe(value);
+  }
+
+  function thenICanSee(text: string): void {
+    expect(fixture.nativeElement.textContent).toContain(text);
+  }
+
+  function thenMyBookmarksWereNotRequested(): void {
+    http.expectNone(`${API}/bookmarks`);
+  }
+
+  function thenTheSaveRequestWas(method: string, body: Record<string, unknown>): void {
+    expect(lastRequest.request.method).toBe(method);
+    expect(lastRequest.request.body).toMatchObject(body);
+  }
+
+  function thenMySessionDisplayNameIs(name: string): void {
+    expect(store.user()?.displayName).toBe(name);
+  }
+
+  async function render(): Promise<void> {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
+  }
 
-    expect(one<HTMLTextAreaElement>('#profile-bio').value).toBe('Updated elsewhere');
-  });
+  function one<T extends HTMLElement>(selector: string): T {
+    return fixture.nativeElement.querySelector(selector) as T;
+  }
+
+  function tabs(): HTMLElement[] {
+    return Array.from(fixture.nativeElement.querySelectorAll('[ngTab]'));
+  }
+
+  function tab(label: string): HTMLElement {
+    return tabs().find((t) => t.textContent?.trim() === label)!;
+  }
 });

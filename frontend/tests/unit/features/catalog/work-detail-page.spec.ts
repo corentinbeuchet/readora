@@ -3,8 +3,8 @@ import { HttpTestingController, TestRequest } from '@angular/common/http/testing
 import { provideRouter } from '@angular/router';
 import { WorkDetailPage } from '@app/features/catalog/work-detail-page';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { Work } from '@app/core/models/readora.models';
-import { mockUser, signIn } from '../../core/auth/auth-fixtures';
+import { ApiResponse, Work } from '@app/core/models/readora.models';
+import { givenIAmSignedInWith, mockUser, signIn } from '../../core/auth/auth-fixtures';
 import { API, fail, ok, provideHttpTesting, settle } from '../../test-utils';
 
 const WORK: Work = {
@@ -39,34 +39,18 @@ describe('WorkDetailPage', () => {
   });
 
   it('"Continue reading" restores the saved page via ?page=N', async () => {
-    await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: ['BOOKMARK_READ', 'BOOKMARK_WRITE'] }));
-    fixture = TestBed.createComponent(WorkDetailPage);
-    fixture.componentRef.setInput('workId', WORK.id);
-    await settle(fixture);
+    await givenIAmSignedInWith(['BOOKMARK_READ', 'BOOKMARK_WRITE']);
 
-    http.expectOne(`${API}/works/${WORK.id}`).flush(ok(WORK));
-    http.expectOne(`${API}/works/${WORK.id}/chapters`).flush(ok([]));
-    // Only this series' bookmark is fetched, not the whole list.
-    http.expectOne(`${API}/bookmarks/${WORK.id}`).flush(ok({ workId: WORK.id, lastReadChapterId: 'chap-7', lastReadPageIndex: 5, status: 'READING', updatedAt: '' }));
-    await settle(fixture);
+    await whenIOpenTheWorkPage({ chapters: ok([]), bookmark: { chapterId: 'chap-7', page: 5 } });
 
-    const link: HTMLAnchorElement = fixture.nativeElement.querySelector('.work-actions a');
-    expect(link.textContent).toContain('Continue reading (page 5)');
-    expect(link.getAttribute('href')).toBe('/read/chap-7?page=5');
+    thenTheFirstActionIs('Continue reading (page 5)', '/read/chap-7?page=5');
   });
 
   it('shows an error (not "no chapters") when the chapter list answers success:false', async () => {
-    fixture = TestBed.createComponent(WorkDetailPage);
-    fixture.componentRef.setInput('workId', WORK.id);
-    await settle(fixture);
+    await whenIOpenTheWorkPage({ chapters: fail('Chapters unavailable') });
 
-    http.expectOne(`${API}/works/${WORK.id}`).flush(ok(WORK));
-    http.expectOne(`${API}/works/${WORK.id}/chapters`).flush(fail('Chapters unavailable'));
-    await settle(fixture);
-
-    const alert: HTMLElement = fixture.nativeElement.querySelector('.chapters [role="alert"]');
-    expect(alert.textContent).toContain('The chapter list could not be loaded.');
-    expect(fixture.nativeElement.textContent).not.toContain('No chapters have been published yet.');
+    thenTheChapterListShowsTheError('The chapter list could not be loaded.');
+    thenIDoNotSee('No chapters have been published yet.');
   });
 
   /** Model for component tests: given/when/then methods (frontend-component-tests skill). */
@@ -217,4 +201,34 @@ describe('WorkDetailPage', () => {
       return Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('button')).find((b) => b.textContent?.includes(label))!;
     }
   });
+
+  /** The bookmark request is only made (and answered) for a reader who has one to restore. */
+  async function whenIOpenTheWorkPage(answers: { chapters: ApiResponse<unknown>; bookmark?: { chapterId: string; page: number } }): Promise<void> {
+    fixture = TestBed.createComponent(WorkDetailPage);
+    fixture.componentRef.setInput('workId', WORK.id);
+    await settle(fixture);
+    http.expectOne(`${API}/works/${WORK.id}`).flush(ok(WORK));
+    http.expectOne(`${API}/works/${WORK.id}/chapters`).flush(answers.chapters);
+    if (answers.bookmark) {
+      // Only this series' bookmark is fetched, not the whole list.
+      http
+        .expectOne(`${API}/bookmarks/${WORK.id}`)
+        .flush(ok({ workId: WORK.id, lastReadChapterId: answers.bookmark.chapterId, lastReadPageIndex: answers.bookmark.page, status: 'READING', updatedAt: '' }));
+    }
+    await settle(fixture);
+  }
+
+  function thenTheFirstActionIs(label: string, href: string): void {
+    const link: HTMLAnchorElement = fixture.nativeElement.querySelector('.work-actions a');
+    expect(link.textContent).toContain(label);
+    expect(link.getAttribute('href')).toBe(href);
+  }
+
+  function thenTheChapterListShowsTheError(message: string): void {
+    expect(fixture.nativeElement.querySelector('.chapters [role="alert"]').textContent).toContain(message);
+  }
+
+  function thenIDoNotSee(text: string): void {
+    expect(fixture.nativeElement.textContent).not.toContain(text);
+  }
 });
