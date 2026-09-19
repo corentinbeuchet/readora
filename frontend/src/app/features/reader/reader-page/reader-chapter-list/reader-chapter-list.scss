@@ -39,7 +39,7 @@
     }
 
     &.current {
-      font-weight: 700;
+      font-weight: var(--fw-bold);
       outline: 1px solid var(--accent);
     }
   }
@@ -52,5 +52,5 @@
 
 .reader-chapter-state {
   margin-left: auto;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
 }

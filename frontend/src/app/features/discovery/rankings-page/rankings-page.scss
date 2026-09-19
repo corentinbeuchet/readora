@@ -20,7 +20,7 @@
 }
 
 .rank {
-  font-weight: 800;
+  font-weight: var(--fw-black);
   color: var(--accent);
   min-width: 2.5rem;
 }
@@ -28,5 +28,5 @@
 .ranking-title {
   flex: 1;
   color: inherit;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }

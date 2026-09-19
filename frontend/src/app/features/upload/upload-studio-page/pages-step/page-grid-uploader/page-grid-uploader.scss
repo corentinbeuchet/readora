@@ -32,17 +32,17 @@
   gap: 0.5rem;
 
   .upload-icon {
-    font-size: 2.5rem;
+    font-size: var(--fs-icon-lg);
     margin-bottom: 0.25rem;
   }
 
   .primary-text {
-    font-size: 1.05rem;
+    font-size: var(--fs-md);
     margin: 0;
   }
 
   .secondary-text {
-    font-size: 0.875rem;
+    font-size: var(--fs-sm);
     margin: 0;
   }
 }
@@ -55,7 +55,7 @@
   padding: 0.75rem;
   background: var(--surface-2);
   border-radius: 0.5rem;
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
   color: var(--accent);
 }
 
@@ -131,8 +131,8 @@
     background: rgba(0, 0, 0, 0.75);
     color: var(--text);
     padding: 0.15rem 0.4rem;
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
     border-radius: 0.25rem;
     backdrop-filter: blur(2px);
   }
@@ -163,7 +163,7 @@
     border-radius: 0.25rem;
     width: 1.6rem;
     height: 1.6rem;
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -192,14 +192,14 @@
   gap: 0.15rem;
 
   .page-filename {
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .page-dims {
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     color: var(--muted);
   }
 }
@@ -216,11 +216,11 @@
   flex-direction: column;
   gap: 0.2rem;
   padding: 0 0.5rem 0.5rem;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
 
   textarea {
     width: 100%;
     resize: vertical;
-    font-size: 0.8rem;
+    font-size: var(--fs-sm);
   }
 }

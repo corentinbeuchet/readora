@@ -50,8 +50,8 @@
 }
 
 .logo-text {
-  font-size: 1.5rem;
-  font-weight: 800;
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-black);
   color: var(--accent);
   letter-spacing: -0.05em;
 }
@@ -97,7 +97,7 @@
   padding: 0.5rem 0.9rem;
   border-radius: 8px;
   color: var(--muted);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   text-decoration: none;
 
   &:hover,
@@ -173,7 +173,7 @@ app-omnisearch {
 .app-footer {
   padding: 1.25rem var(--space-page) max(1.25rem, env(safe-area-inset-bottom));
   border-top: 1px solid var(--border);
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
 }
 
 // Reader zen mode: nothing but the pages.

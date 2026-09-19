@@ -4,8 +4,8 @@
   gap: 0.5rem;
 
   .group-label {
-    font-size: 0.9rem;
-    font-weight: 600;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
   }
 }
 
@@ -29,7 +29,7 @@
   transition: border-color 0.2s, background-color 0.2s;
 
   .cover-icon {
-    font-size: 2.5rem;
+    font-size: var(--fs-icon-lg);
     margin-bottom: 0.5rem;
   }
 
@@ -38,7 +38,7 @@
   }
 
   .small {
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
   }
 
   &:hover {

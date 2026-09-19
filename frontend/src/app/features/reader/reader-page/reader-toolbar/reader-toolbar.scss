@@ -25,7 +25,7 @@
 }
 
 .chapter-title {
-  font-size: 1.1rem;
+  font-size: var(--fs-md);
   margin-bottom: 0.2rem;
 }
 
@@ -34,7 +34,7 @@
   display: inline-flex;
   align-items: center;
   min-block-size: 1.5rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--accent);
 }
 

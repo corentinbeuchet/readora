@@ -13,7 +13,7 @@
 }
 
 .chapter-end-title {
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   margin-bottom: 0.75rem;
 }
 
@@ -29,7 +29,7 @@
   margin: 0 0 2rem;
 
   h2 {
-    font-size: 1rem;
+    font-size: var(--fs-base);
     margin-bottom: 0.5rem;
   }
 
@@ -54,6 +54,6 @@
 }
 
 .top-comment-author {
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   margin-right: 0.5rem;
 }

@@ -4,7 +4,7 @@
 }
 
 h2 {
-  font-size: 1.1rem;
+  font-size: var(--fs-md);
   margin: 1.25rem 0 0.5rem;
 }
 
@@ -23,6 +23,6 @@ h2 {
 }
 
 .list-title {
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: inherit;
 }

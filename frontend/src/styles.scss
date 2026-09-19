@@ -1,32 +1,10 @@
 /* Global Styles */
+@use "tokens";
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-}
-
-:root {
-  --bg: #0b1120;
-  --surface: #0f172a;
-  --surface-2: #1e293b;
-  --border: #1e293b;
-  --text: #f8fafc;
-  --muted: #94a3b8;
-  --accent: #38bdf8;
-  --accent-strong: #0ea5e9;
-  --danger: #f87171;
-  --success: #4ade80;
-  --violet: #a78bfa;
-  /* Text on filled accent / danger / success backgrounds (contrast AA). */
-  --on-accent: #082f49;
-  --on-danger: #1f0707;
-  --on-success: #052e16;
-  --star: #facc15;
-  --radius: 10px;
-  /* Fluid sizes (rem term keeps them growing with the user's zoom). */
-  --space-page: clamp(1rem, 0.6rem + 2vw, 2rem);
-  --fs-h1: clamp(1.5rem, 1.2rem + 1.5vw, 2rem);
-  --fs-h2: clamp(1.2rem, 1.05rem + 0.75vw, 1.5rem);
 }
 
 body {
@@ -113,7 +91,7 @@ h2 {
   border: 1px solid var(--surface-2);
   background: var(--surface-2);
   color: var(--text);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
   text-decoration: none;
   transition: background 0.15s ease, border-color 0.15s ease;
@@ -151,7 +129,7 @@ h2 {
 
 .btn-sm {
   padding: 0.35rem 0.75rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
 }
 
 .btn-danger-outline {
@@ -201,8 +179,8 @@ h2 {
 
   label,
   legend {
-    font-size: 0.9rem;
-    font-weight: 600;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
     color: var(--muted);
   }
 
@@ -250,7 +228,7 @@ fieldset.field {
 
 .field-error {
   color: var(--danger);
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
 }
 
 .form-error {
@@ -312,7 +290,7 @@ fieldset.field {
   background: transparent;
   color: var(--muted);
   font: inherit;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   cursor: pointer;
   text-decoration: none;
 
@@ -372,8 +350,8 @@ fieldset.field {
   display: inline-block;
   padding: 0.15rem 0.55rem;
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
   background: var(--surface-2);
   color: var(--muted);
 }
@@ -388,7 +366,7 @@ fieldset.field {
   padding: 2rem;
 
   h2 {
-    font-size: 1.35rem;
+    font-size: var(--fs-h2);
     margin-top: 0;
     margin-bottom: 0.35rem;
   }
@@ -434,7 +412,7 @@ fieldset.field {
   &.active {
     border-color: var(--accent);
     color: var(--accent);
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
   }
 
   &:focus-visible {
@@ -445,7 +423,7 @@ fieldset.field {
 
 .tab-sm {
   padding: 0.25rem 0.7rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
 }
 
 /* Touch screens: controls get finger-sized hit areas (WCAG 2.5.8 asks for 24px; 44px is comfortable). */

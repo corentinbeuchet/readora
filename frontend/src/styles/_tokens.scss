@@ -1,0 +1,45 @@
+// Design tokens: the only place colours, font sizes and weights are defined. Components read them with var(--…).
+// Emitted once through `@use 'tokens'` in styles.scss.
+
+:root {
+  --bg: #0b1120;
+  --surface: #0f172a;
+  --surface-2: #1e293b;
+  --border: #1e293b;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --accent: #38bdf8;
+  --accent-strong: #0ea5e9;
+  --danger: #f87171;
+  --success: #4ade80;
+  --violet: #a78bfa;
+  /* Text on filled accent / danger / success backgrounds (contrast AA). */
+  --on-accent: #082f49;
+  --on-danger: #1f0707;
+  --on-success: #052e16;
+  --star: #facc15;
+  --radius: 10px;
+
+  /* Fluid sizes (rem term keeps them growing with the user's zoom). */
+  --space-page: clamp(1rem, 0.6rem + 2vw, 2rem);
+
+  /* Type scale: pick the nearest step, never a raw size. */
+  --fs-xs: 0.75rem; /* badges, counters, fine print */
+  --fs-sm: 0.85rem; /* secondary text, meta lines, small buttons */
+  --fs-base: 1rem;
+  --fs-md: 1.1rem; /* card and list titles */
+  --fs-lg: 1.25rem;
+  --fs-xl: 1.5rem;
+  --fs-h2: clamp(1.2rem, 1.05rem + 0.75vw, 1.5rem);
+  --fs-h1: clamp(1.5rem, 1.2rem + 1.5vw, 2rem);
+  --fs-2xl: 2rem; /* prices, big numbers */
+  /* Glyph icons drawn with text (upload, cover, success marks). */
+  --fs-icon-lg: 2.5rem;
+  --fs-icon-xl: 3.5rem;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-black: 800;
+}

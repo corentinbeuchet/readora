@@ -24,7 +24,7 @@
 .review-item {
   display: flex;
   gap: 0.75rem;
-  font-size: 0.95rem;
+  font-size: var(--fs-base);
 
   .label {
     color: var(--muted);
@@ -37,7 +37,7 @@
   }
 
   .strong {
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
   }
 }
 
@@ -77,7 +77,7 @@
 }
 
 .progress-text {
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--accent);
   margin: 0;
   text-align: center;
@@ -87,6 +87,6 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1rem;
+  font-size: var(--fs-base);
   padding: 0.75rem 1.5rem;
 }

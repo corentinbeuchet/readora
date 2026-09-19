@@ -15,7 +15,7 @@
 }
 
 .progress-percent {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--muted);
   min-width: 2.5rem;
   text-align: right;

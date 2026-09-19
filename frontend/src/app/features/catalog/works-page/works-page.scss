@@ -36,7 +36,7 @@
 }
 
 .work-title {
-  font-size: 1rem;
+  font-size: var(--fs-base);
   margin-top: 0.6rem;
   line-height: 1.3;
 }
@@ -71,12 +71,12 @@
   margin: 0;
 
   legend {
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
   }
 }
 
 .genre-hint {
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   margin: 0.25rem 0 0.5rem;
 }
 
@@ -97,7 +97,7 @@
   background: var(--surface-2);
   color: var(--text);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   cursor: pointer;
 
   &:focus-visible {
@@ -129,6 +129,6 @@
 }
 
 .work-author {
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   margin-top: 0.15rem;
 }

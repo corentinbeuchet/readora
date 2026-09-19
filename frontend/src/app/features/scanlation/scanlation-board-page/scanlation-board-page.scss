@@ -34,7 +34,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .task-card {
@@ -57,13 +57,13 @@
 
   .btn {
     padding: 0.3rem 0.6rem;
-    font-size: 0.85rem;
+    font-size: var(--fs-sm);
   }
 }
 
 // Tasks per column.
 .count-badge {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   padding: 0.1rem 0.5rem;
   border-radius: 999px;
   background: var(--surface);
@@ -71,8 +71,8 @@
 }
 
 .status-pill {
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
   text-transform: uppercase;
   padding: 0.1rem 0.45rem;
   border-radius: 999px;

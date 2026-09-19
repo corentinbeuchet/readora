@@ -51,7 +51,7 @@
 }
 
 .mark-previous {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
 }
 
 .chapter-link {
@@ -73,12 +73,12 @@
 }
 
 .chapter-number {
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   color: var(--accent);
 }
 
 .chapter-info {
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
 }
 
 .work-actions {
@@ -97,7 +97,7 @@
   .chapter-number,
   .chapter-title {
     color: var(--muted);
-    font-weight: 400;
+    font-weight: var(--fw-regular);
   }
 }
 
@@ -107,11 +107,11 @@
 
 .chapter-state {
   margin-left: 0.5rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--muted);
 }
 
 .chapter-state-next {
   color: var(--accent);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }

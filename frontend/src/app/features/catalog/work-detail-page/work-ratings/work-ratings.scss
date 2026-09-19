@@ -19,7 +19,7 @@
   margin-bottom: 1rem;
 
   legend {
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     margin-bottom: 0.4rem;
   }
 }
@@ -59,7 +59,7 @@
   &.selected span {
     border-color: var(--accent);
     color: var(--accent);
-    font-weight: 700;
+    font-weight: var(--fw-bold);
   }
 }
 
@@ -86,12 +86,12 @@
 }
 
 .review-label {
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .review-footer {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
 }
