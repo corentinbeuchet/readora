@@ -18,6 +18,30 @@
   --on-danger: #1f0707;
   --on-success: #052e16;
   --star: #facc15;
+  /* Tints of the colours above (backgrounds, borders); they follow the theme with their base colour. */
+  --accent-tint: color-mix(in srgb, var(--accent) 8%, transparent);
+  --accent-soft: color-mix(in srgb, var(--accent) 15%, transparent);
+  --danger-soft: color-mix(in srgb, var(--danger) 10%, transparent);
+  --danger-hover: color-mix(in srgb, var(--danger) 15%, transparent);
+  --danger-line: color-mix(in srgb, var(--danger) 30%, transparent);
+  --success-soft: color-mix(in srgb, var(--success) 10%, transparent);
+  --success-line: color-mix(in srgb, var(--success) 30%, transparent);
+  /* Elevation: popovers, menus and raised cards. */
+  --shadow-color: rgb(0 0 0 / 0.4);
+  --shadow-popover: 0 10px 30px var(--shadow-color);
+  --shadow-card: 0 4px 12px var(--shadow-color);
+  /* Dims the page behind a dialog. */
+  --scrim: rgb(2 6 23 / 0.7);
+  /* On top of artwork (covers, page thumbnails): dark in every theme, with light text. */
+  --overlay: rgb(0 0 0 / 0.75);
+  --overlay-strong: rgb(0 0 0 / 0.85);
+  --overlay-control: rgb(255 255 255 / 0.2);
+  --on-overlay: #f8fafc;
+  /* Reader page background, a reader setting independent of the theme. */
+  --reader-black: #000;
+  --reader-gray: #3f3f46;
+  --reader-white: #fff;
+  --reader-page-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5);
   --radius: 10px;
 
   /* Fluid sizes (rem term keeps them growing with the user's zoom). */

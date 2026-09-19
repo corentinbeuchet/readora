@@ -138,7 +138,7 @@ h2 {
   background: transparent;
 
   &:hover:not(:disabled) {
-    background: rgba(248, 113, 113, 0.15);
+    background: var(--danger-hover);
   }
 }
 
@@ -233,8 +233,8 @@ fieldset.field {
 
 .form-error {
   color: var(--danger);
-  background: rgba(248, 113, 113, 0.1);
-  border: 1px solid rgba(248, 113, 113, 0.3);
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-line);
   border-radius: 8px;
   padding: 0.6rem 0.75rem;
 }
@@ -256,8 +256,8 @@ fieldset.field {
 
 .form-success {
   color: var(--success);
-  background: rgba(74, 222, 128, 0.1);
-  border: 1px solid rgba(74, 222, 128, 0.3);
+  background: var(--success-soft);
+  border: 1px solid var(--success-line);
   border-radius: 8px;
   padding: 0.6rem 0.75rem;
 }
@@ -318,7 +318,7 @@ fieldset.field {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-popover);
   list-style: none;
 
   &:not([data-visible="true"]),
@@ -357,7 +357,7 @@ fieldset.field {
 }
 
 .badge-premium {
-  background: rgba(56, 189, 248, 0.15);
+  background: var(--accent-soft);
   color: var(--accent);
 }
 

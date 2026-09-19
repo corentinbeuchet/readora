@@ -94,7 +94,7 @@
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-card);
   }
 
   /* Keyboard users must see the actions too, not only mouse users; touch screens have no hover, so always show them. */
@@ -128,8 +128,8 @@
     position: absolute;
     top: 0.35rem;
     left: 0.35rem;
-    background: rgba(0, 0, 0, 0.75);
-    color: var(--text);
+    background: var(--overlay);
+    color: var(--on-overlay);
     padding: 0.15rem 0.4rem;
     font-size: var(--fs-xs);
     font-weight: var(--fw-semibold);
@@ -142,7 +142,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent);
+    background: linear-gradient(to top, var(--overlay-strong), transparent);
     padding: 0.5rem 0.35rem;
     display: flex;
     justify-content: center;
@@ -157,8 +157,8 @@
       outline-offset: 1px;
     }
 
-    background: rgba(255, 255, 255, 0.2);
-    color: var(--text);
+    background: var(--overlay-control);
+    color: var(--on-overlay);
     border: none;
     border-radius: 0.25rem;
     width: 1.6rem;

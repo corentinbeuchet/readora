@@ -11,15 +11,15 @@
 
 // Background around the pages (the reader's choice); the controls keep the site colours.
 .bg-black {
-  --reader-bg: #000;
+  --reader-bg: var(--reader-black);
 }
 
 .bg-gray {
-  --reader-bg: #3f3f46;
+  --reader-bg: var(--reader-gray);
 }
 
 .bg-white {
-  --reader-bg: #fff;
+  --reader-bg: var(--reader-white);
 }
 
 .viewer-status {
@@ -64,5 +64,5 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  background: var(--reader-bg, #000);
+  background: var(--reader-bg, var(--reader-black));
 }

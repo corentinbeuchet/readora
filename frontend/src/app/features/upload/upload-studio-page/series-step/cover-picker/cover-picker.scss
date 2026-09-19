@@ -52,7 +52,7 @@
   aspect-ratio: 5 / 7;
   border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-card);
 
   .cover-img {
     width: 100%;
@@ -66,6 +66,8 @@
     left: 50%;
     transform: translateX(-50%);
     backdrop-filter: blur(4px);
-    background: rgba(0, 0, 0, 0.8);
+    background: var(--overlay-strong);
+    border-color: var(--overlay-strong);
+    color: var(--on-overlay);
   }
 }
