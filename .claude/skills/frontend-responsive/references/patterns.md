@@ -28,7 +28,7 @@ Phone < 768px · tablet 768–1023px (portrait) · tablet landscape / laptop 102
   Native scrolling; no fixed heights.
 - **Paged mode:** one page at every size. Double page (`DOUBLE_PAGE_MEDIA_QUERY`, 1024px, set after hydration via
   `matchMedia`) only when the user enabled spreads and the screen is wide; landscape tablets qualify.
-- Heights use `dvh`, not `100vh` (F40), so the page isn't hidden under the mobile URL bar.
+- Heights use `dvh` (with a `vh` fallback), so the page isn't hidden under the mobile URL bar.
 - Swipe (`paged-flow.ts`, horizontal travel threshold, mirrored in RTL) plus visible prev/next buttons plus keyboard;
   tap zones are shortcuts.
 - Zoom +/- buttons (50–200%) plus native pinch; never block pinch.
@@ -61,5 +61,5 @@ Phone < 768px · tablet 768–1023px (portrait) · tablet landscape / laptop 102
 - `autocomplete` and `inputmode`/`type` (email) so phones show the right keyboard.
 
 ## Notification bell popover (`features/layout/shell/notification-bell/`)
-- `min(22rem, 90vw)` wide, `max-block-size: 70dvh` (today 70vh) with scroll. On phones it may become a full-width panel
+- `min(22rem, 90vw)` wide, `max-block-size: 70dvh` with scroll. On phones it may become a full-width panel
   under the header.

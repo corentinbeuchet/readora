@@ -35,8 +35,8 @@ Screen by screen expectations: `references/patterns.md`. Accessibility side (ref
 ## Viewport
 - `index.html` has `width=device-width, initial-scale=1`. Never add `user-scalable=no` or `maximum-scale`.
 - Full-height views use `min-height: 100dvh` (with `100vh` first as a fallback) or `svh` for sticky layouts, never
-  bare `100vh`, which is hidden behind mobile browser bars. Today `100vh` is in the shell, reader, paged/vertical flows
-  and kanban (F40).
+  bare `100vh`, which is hidden behind mobile browser bars. Pattern used across the app: `min-height: 100vh;` then
+  `min-height: 100dvh;` (the build keeps both).
 - Fixed or sticky bars at the screen edge pad with `env(safe-area-inset-*)`, which only works once `viewport-fit=cover`
   is in the meta tag (F42). Add both together, never one alone.
 - Forms and search at the bottom of the screen: the virtual keyboard doesn't change viewport units;
