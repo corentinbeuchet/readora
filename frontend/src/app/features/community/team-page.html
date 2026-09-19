@@ -1,0 +1,43 @@
+<section class="page">
+  @if (team.isLoading()) {
+    <p class="muted" role="status">Loading the team…</p>
+  } @else if (team.error()) {
+    <p class="form-error" role="alert">
+      This team could not be found.
+      <a routerLink="/works" class="btn btn-link">Browse the catalog</a>
+    </p>
+  } @else if (team.hasValue() && team.value(); as t) {
+    <header class="profile-header">
+      <h1>{{ t.name }}</h1>
+      <p class="muted">
+        Translates <a [routerLink]="['/works', t.series.id]">{{ t.series.title }}</a>
+        · {{ followers() }} {{ followers() === 1 ? 'follower' : 'followers' }}
+      </p>
+      <button *appHasPermission="'LIBRARY_USE'" type="button" class="btn" [class.btn-primary]="!following()"
+              [attr.aria-pressed]="following()" [disabled]="saving()" (click)="toggleFollow()">
+        {{ following() ? 'Following' : 'Follow' }}
+      </button>
+      @if (error(); as message) {
+        <p class="form-error" role="alert">{{ message }}</p>
+      }
+    </header>
+
+    <h2>Members</h2>
+    <ul class="plain-list">
+      @for (member of t.members; track member.username) {
+        <li><a [routerLink]="['/u', member.username]">{{ member.username }}</a> <span class="muted">· {{ member.roles.join(', ') }}</span></li>
+      }
+    </ul>
+
+    <h2>Latest chapters</h2>
+    @if (t.latestChapters.length === 0) {
+      <p class="muted">No chapters published yet.</p>
+    } @else {
+      <ul class="plain-list">
+        @for (chapter of t.latestChapters; track chapter.id) {
+          <li><a [routerLink]="['/read', chapter.id]">Chapter {{ chapter.chapterNumber }}</a> <span class="muted">{{ chapter.title }}</span></li>
+        }
+      </ul>
+    }
+  }
+</section>

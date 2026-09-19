@@ -16,6 +16,9 @@
       <div class="chapter-info">
         @if (state.currentChapter()?.work; as work) {
           <a class="series-link" [routerLink]="['/works', work.id]">{{ work.title }}</a>
+          @if (state.currentChapter()?.scanlationProjectId; as teamId) {
+            <a class="series-link team-link" [routerLink]="['/teams', teamId]">Translation team</a>
+          }
         }
         <h1 class="chapter-title">{{ state.currentChapter()?.title || 'No Chapter Loaded' }}</h1>
         <span class="page-indicator" aria-live="polite">

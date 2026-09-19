@@ -63,6 +63,8 @@ export const serverRoutes: ServerRoute[] = [
   // Live data: prerendering would freeze it (and the transfer cache would serve the stale copy).
   { path: 'updates', renderMode: RenderMode.Client },
   { path: 'rankings', renderMode: RenderMode.Client },
+  { path: 'u/:username', renderMode: RenderMode.Client },
+  { path: 'teams/:projectId', renderMode: RenderMode.Client },
 
   // Private / session-dependent pages: client-rendered and `noindex`.
   { path: 'read', renderMode: RenderMode.Client },

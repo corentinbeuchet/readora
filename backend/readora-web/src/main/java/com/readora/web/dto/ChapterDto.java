@@ -20,6 +20,7 @@ public record ChapterDto(
         String title,
         String status,
         List<PageAssetDto> pages,
+        @Nullable UUID scanlationProjectId,
         @Nullable WorkRef work,
         @Nullable UUID previousChapterId,
         @Nullable UUID nextChapterId
@@ -50,6 +51,7 @@ public record ChapterDto(
                 chapter.getTitle(),
                 chapter.getStatus().name(),
                 pageDtos,
+                Optional.ofNullable(chapter.getScanlationProjectId()).map(id -> id.value()).orElse(null),
                 work,
                 Optional.ofNullable(previous).map(ChapterId::value).orElse(null),
                 Optional.ofNullable(next).map(ChapterId::value).orElse(null)

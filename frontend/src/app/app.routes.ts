@@ -25,6 +25,14 @@ export const routes: Routes = [
     loadComponent: () => import('./features/discovery/rankings-page').then((m) => m.RankingsPage)
   },
   {
+    path: 'u/:username',
+    loadComponent: () => import('./features/community/profile-page').then((m) => m.PublicProfilePage)
+  },
+  {
+    path: 'teams/:projectId',
+    loadComponent: () => import('./features/community/team-page').then((m) => m.TeamPageComponent)
+  },
+  {
     path: 'works/:workId',
     loadComponent: () => import('./features/catalog/work-detail-page').then((m) => m.WorkDetailPage)
   },

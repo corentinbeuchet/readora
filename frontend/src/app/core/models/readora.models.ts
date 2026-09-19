@@ -372,6 +372,31 @@ export interface WorkReview {
 }
 
 // ---------------------------------------------------------------------------
+// Community (US-12)
+// ---------------------------------------------------------------------------
+
+export interface PublicProfile {
+  username: string;
+  displayName: string;
+  avatarUrl?: string | null;
+  bio: string;
+  joinedAt: string;
+  chaptersRead: number;
+  favouriteGenres: string[];
+  completedSeries: WorkSummary[];
+}
+
+export interface TeamPage {
+  id: string;
+  name: string;
+  series: WorkSummary;
+  members: { username: string; roles: string[] }[];
+  latestChapters: ChapterSummary[];
+  followers: number;
+  following: boolean;
+}
+
+// ---------------------------------------------------------------------------
 // Comment moderation (US-11)
 // ---------------------------------------------------------------------------
 

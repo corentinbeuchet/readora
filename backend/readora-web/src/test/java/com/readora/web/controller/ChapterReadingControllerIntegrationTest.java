@@ -73,6 +73,7 @@ class ChapterReadingControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.work.title").value("Solo Leveling"))
                 .andExpect(jsonPath("$.data.work.type").value("MANHWA"))
+                .andExpect(jsonPath("$.data.scanlationProjectId").doesNotExist())
                 .andExpect(jsonPath("$.data.previousChapterId").value(chapter.getId().value().toString()))
                 .andExpect(jsonPath("$.data.nextChapterId").value(tenth.getId().value().toString()));
 

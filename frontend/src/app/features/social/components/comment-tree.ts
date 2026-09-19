@@ -1,10 +1,11 @@
 import { Component, ChangeDetectionStrategy, input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { ChapterComment } from '@app/core/models/readora.models';
 
 @Component({
   selector: 'app-comment-tree',
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink],
   templateUrl: './comment-tree.html',
   styleUrl: './comment-tree.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

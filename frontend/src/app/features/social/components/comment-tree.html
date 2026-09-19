@@ -6,7 +6,7 @@
       <div class="comment-node" [attr.id]="'comment-' + comment.id" [class.comment-highlight]="comment.id === highlightId()"
            [style.margin-left.rem]="(comment.depth - 1) * 1.5">
         <div class="comment-header">
-          <span class="comment-author">{{ comment.authorUsername }}</span>
+          <a class="comment-author" [routerLink]="['/u', comment.authorUsername]">{{ comment.authorUsername }}</a>
           @if (comment.pageReference) {
             <span class="badge-page">Page {{ comment.pageReference }}</span>
           }

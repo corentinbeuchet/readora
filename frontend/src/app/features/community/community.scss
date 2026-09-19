@@ -1,0 +1,43 @@
+.profile-header {
+  margin-bottom: 1.5rem;
+
+  .btn {
+    margin-top: 0.5rem;
+  }
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat {
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+
+  dt {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  dd {
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+}
+
+h2 {
+  font-size: 1.1rem;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.plain-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}

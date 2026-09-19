@@ -1,0 +1,40 @@
+<section class="page">
+  @if (profile.isLoading()) {
+    <p class="muted" role="status">Loading the profile…</p>
+  } @else if (notFound()) {
+    <p class="form-error" role="alert">
+      This reader could not be found.
+      <a routerLink="/works" class="btn btn-link">Browse the catalog</a>
+    </p>
+  } @else if (profile.hasValue() && profile.value(); as p) {
+    <header class="profile-header">
+      <h1>{{ p.displayName }}</h1>
+      <p class="muted">@{{ p.username }} · reading on Readora since {{ p.joinedAt | date: 'longDate' }}</p>
+      @if (p.bio) {
+        <p>{{ p.bio }}</p>
+      }
+    </header>
+
+    <dl class="stats">
+      <div class="stat">
+        <dt>Chapters read</dt>
+        <dd>{{ p.chaptersRead }}</dd>
+      </div>
+      <div class="stat">
+        <dt>Favourite genres</dt>
+        <dd>{{ p.favouriteGenres.length ? p.favouriteGenres.join(', ') : '—' }}</dd>
+      </div>
+    </dl>
+
+    <h2>Completed series</h2>
+    @if (p.completedSeries.length === 0) {
+      <p class="muted">None yet.</p>
+    } @else {
+      <ul class="plain-list">
+        @for (work of p.completedSeries; track work.id) {
+          <li><a [routerLink]="['/works', work.id]">{{ work.title }}</a></li>
+        }
+      </ul>
+    }
+  }
+</section>

@@ -1,8 +1,9 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, DOCUMENT, computed, inject, input, signal } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '@app/core/api/api-client';
+import { CommunityApi } from '@app/core/api/community-api';
 import { LibraryApi } from '@app/core/api/library-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { LibraryItem, READING_STATUS_LABELS, ReadingStatus } from '@app/core/models/readora.models';
@@ -20,6 +21,8 @@ const STATUSES = Object.keys(READING_STATUS_LABELS) as ReadingStatus[];
 })
 export class LibraryPage {
   private readonly libraryApi = inject(LibraryApi);
+  private readonly communityApi = inject(CommunityApi);
+  private readonly document = inject(DOCUMENT);
   private readonly auth = inject(AuthStore);
   protected readonly fallbackCover = FALLBACK_COVER_IMAGE;
   protected readonly handleCoverError = onImageError;
@@ -51,6 +54,29 @@ export class LibraryPage {
 
   protected async remove(item: LibraryItem): Promise<void> {
     await this.run(item, () => firstValueFrom(this.libraryApi.remove(item.work.id)));
+  }
+
+  /** Downloads my library as a file (US-12). */
+  protected async exportLibrary(format: 'csv' | 'json'): Promise<void> {
+    this.actionError.set(null);
+    try {
+      const file = await firstValueFrom(this.communityApi.exportLibrary(format));
+      this.saveFile(file, `readora-library.${format}`);
+    } catch (error) {
+      this.actionError.set(apiErrorMessage(error, 'Could not export your library. Please try again.'));
+    }
+  }
+
+  /** Browser side effect, overridable in tests. */
+  protected saveFile(file: Blob, name: string): void {
+    const win = this.document.defaultView;
+    if (!win?.URL?.createObjectURL) return;
+    const url = win.URL.createObjectURL(file);
+    const link = this.document.createElement('a');
+    link.href = url;
+    link.download = name;
+    link.click();
+    win.URL.revokeObjectURL(url);
   }
 
   protected reload(): void {

@@ -1,5 +1,11 @@
 <section class="page">
-  <h1>My library</h1>
+  <header class="library-header">
+    <h1>My library</h1>
+    <div class="export">
+      <button type="button" class="btn btn-sm" (click)="exportLibrary('csv')">Download CSV</button>
+      <button type="button" class="btn btn-sm" (click)="exportLibrary('json')">Download JSON</button>
+    </div>
+  </header>
 
   <nav class="status-tabs" aria-label="Filter by reading status">
     <a routerLink="/library" [queryParams]="{}" class="tab" [class.active]="!selected()" [attr.aria-current]="!selected() ? 'page' : null">All</a>

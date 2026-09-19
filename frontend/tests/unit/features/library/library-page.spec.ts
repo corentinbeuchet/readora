@@ -140,4 +140,19 @@ describe('LibraryPage (US-05 My library)', () => {
 
     expect(el().querySelector<HTMLInputElement>('.notify-toggle input')!.checked).toBe(false);
   });
+
+  it('downloads the library as a CSV file', async () => {
+    await open('/library', [SOLO]);
+    const page = harness.routeDebugElement!.componentInstance as { saveFile: (file: Blob, name: string) => void };
+    const saved = vi.spyOn(page, 'saveFile').mockImplementation(() => undefined);
+
+    el().querySelector<HTMLButtonElement>('.export button')!.click();
+    const req = http.expectOne((r) => r.url === `${API}/library/export`);
+    expect(req.request.params.get('format')).toBe('csv');
+    req.flush(new Blob(['title,status,last_chapter_read\n']));
+    await settle();
+
+    expect(saved).toHaveBeenCalledWith(expect.any(Blob), 'readora-library.csv');
+  });
 });
+
