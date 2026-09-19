@@ -67,9 +67,11 @@ export interface LoginRequest {
 }
 
 export interface UpdateProfileRequest {
-  displayName?: string | null;
-  bio?: string | null;
-  avatarUrl?: string | null;
+  /** Left out = unchanged. */
+  displayName?: string;
+  bio?: string;
+  /** `null` (or empty) removes the avatar. */
+  avatarUrl: string | null;
 }
 
 export interface CheckoutSession {

@@ -16,5 +16,5 @@ export interface ReadingListPayload {
   title: string;
   description: string;
   published: boolean;
-  items: { workId: string; note?: string | null }[];
+  items: { workId: string; note: string | null }[];
 }

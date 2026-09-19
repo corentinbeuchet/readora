@@ -40,7 +40,7 @@ export interface ModerationItem {
 
 export interface CreateCommentRequest {
   content: string;
-  pageReference?: number | null;
-  parentId?: string | null;
+  pageReference: number | null;
+  parentId: string | null;
   isSpoiler: boolean;
 }
