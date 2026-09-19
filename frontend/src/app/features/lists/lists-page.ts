@@ -16,7 +16,7 @@ import { LoadError } from '@app/shared/ui/load-error';
   selector: 'app-lists-page',
   imports: [LoadError, FieldErrors, AriaInvalidDirective, RouterLink, FormField, HasPermissionDirective],
   templateUrl: './lists-page.html',
-  styleUrl: './lists.scss'
+  styleUrl: './lists-page.scss'
 })
 export class ListsPage {
   private readonly api = inject(ListsApi);

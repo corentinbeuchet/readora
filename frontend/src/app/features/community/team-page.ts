@@ -13,7 +13,7 @@ import { I18nPluralPipe } from '@angular/common';
   selector: 'app-team-page',
   imports: [I18nPluralPipe, LoadError, RouterLink, HasPermissionDirective],
   templateUrl: './team-page.html',
-  styleUrl: './community.scss'
+  styleUrl: './team-page.scss'
 })
 export class TeamPage {
   protected readonly followersPlural = { '=1': '1 follower', other: '# followers' };

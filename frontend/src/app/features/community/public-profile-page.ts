@@ -10,7 +10,7 @@ import { LoadError } from '@app/shared/ui/load-error';
   selector: 'app-public-profile-page',
   imports: [LoadError, RouterLink, DatePipe],
   templateUrl: './public-profile-page.html',
-  styleUrl: './community.scss'
+  styleUrl: './public-profile-page.scss'
 })
 export class PublicProfilePage {
   private readonly seo = inject(SeoService);

@@ -20,7 +20,7 @@ interface Draft {
   selector: 'app-list-page',
   imports: [LoadError, RouterLink],
   templateUrl: './list-page.html',
-  styleUrl: './lists.scss'
+  styleUrl: './list-page.scss'
 })
 export class ListPage {
   private readonly api = inject(ListsApi);

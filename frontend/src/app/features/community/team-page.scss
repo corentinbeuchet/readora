@@ -1,0 +1,19 @@
+.profile-header {
+  margin-bottom: 1.5rem;
+
+  .btn {
+    margin-top: 0.5rem;
+  }
+}
+
+h2 {
+  font-size: 1.1rem;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.plain-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
