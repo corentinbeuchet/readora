@@ -204,3 +204,17 @@
   flex-direction: column;
   gap: 0.25rem;
 }
+
+.page-description {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0 0.5rem 0.5rem;
+  font-size: 0.75rem;
+
+  textarea {
+    width: 100%;
+    resize: vertical;
+    font-size: 0.8rem;
+  }
+}

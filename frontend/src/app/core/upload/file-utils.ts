@@ -12,6 +12,8 @@ export interface PageUploadItem {
   storageKey?: string;
   cdnUrl?: string;
   error?: string;
+  /** Optional text for screen readers, typed in the upload studio (US-07). */
+  description?: string;
 }
 
 export const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'];

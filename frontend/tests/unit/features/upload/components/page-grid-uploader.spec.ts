@@ -88,6 +88,21 @@ describe('PageGridUploader', () => {
     expect(third.pageNumber).toBe(3);
   });
 
+  it('keeps an optional description per page for screen readers (US-07)', async () => {
+    await component.handleFiles(images(2));
+    fixture.detectChanges();
+    const before = component.pages();
+    const field: HTMLTextAreaElement = fixture.nativeElement.querySelectorAll('.page-description textarea')[1];
+    expect(fixture.nativeElement.querySelectorAll('.page-description')[1].textContent).toContain('Description of page 2');
+
+    field.value = 'A storm over the city';
+    field.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(component.pages().map((p) => p.description)).toEqual([undefined, 'A storm over the city']);
+    expect(before[1].description).toBeUndefined();
+  });
+
   it('revokes every preview URL on "Clear All"', async () => {
     await component.handleFiles(images(3));
     fixture.detectChanges();

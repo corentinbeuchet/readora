@@ -535,6 +535,27 @@ describe('ChapterViewer (API-driven)', () => {
     expect(String(navigate.mock.calls[0][0])).toBe('/read/c-2');
   });
 
+  it('Reading with a screen reader', async () => {
+    const described: Chapter = {
+      ...MOCK_CHAPTER,
+      pages: MOCK_CHAPTER.pages.map((p) => (p.pageNumber === 3 ? { ...p, description: 'Jinwoo stands alone in the dungeon' } : p))
+    };
+    await loadChapter(undefined, described);
+    await switchMode('Paged');
+    const announcement = (): string => fixture.nativeElement.querySelector('.page-announcement[aria-live="polite"]').textContent.trim();
+    expect(announcement()).toBe('Page 1 of 3');
+    expect(fixture.nativeElement.querySelector('.page-indicator').getAttribute('aria-hidden')).toBe('true');
+
+    click('button.btn-next');
+    click('button.btn-next');
+    await settle(fixture);
+    expect(announcement()).toBe('Page 3 of 3');
+    expect(fixture.nativeElement.querySelector('.page-stage img.page-image').alt).toBe('Page 3: Jinwoo stands alone in the dungeon');
+
+    click('button.btn-prev');
+    expect(fixture.nativeElement.querySelector('.page-stage img.page-image').alt).toBe('Page 2');
+  });
+
   it('Seeing the best comments at the end of a chapter', async () => {
     await loadChapter();
     await switchMode('Paged');

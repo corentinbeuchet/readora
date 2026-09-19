@@ -8,7 +8,7 @@ import { UploadService } from '@app/core/upload/upload.service';
 import {
   CreateWorkPayload,
   Demographic,
-  PageAsset,
+  DirectPublishChapterPayload,
   Work,
   WorkStatus,
   WorkType,
@@ -295,12 +295,13 @@ export class UploadStudioPage {
 
   private async publishDirect(work: Work, uploadedPages: PageUploadItem[], chapterNumber: string): Promise<void> {
     this.uploadStatusText.set('Publishing chapter directly to catalog…');
-    const pagesPayload: PageAsset[] = uploadedPages.map((p) => ({
+    const pagesPayload: DirectPublishChapterPayload['pages'] = uploadedPages.map((p) => ({
       pageNumber: p.pageNumber,
       storageKey: p.storageKey ?? '',
       cdnUrl: p.cdnUrl ?? '',
       width: p.width,
       height: p.height,
+      description: p.description?.trim() || undefined,
     }));
     const chapter = await firstValueFrom(
       this.uploadService.directPublishChapter(work.id, {

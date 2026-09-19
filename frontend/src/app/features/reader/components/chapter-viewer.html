@@ -21,8 +21,11 @@
           }
         }
         <h1 class="chapter-title">{{ state.currentChapter()?.title || 'No Chapter Loaded' }}</h1>
-        <span class="page-indicator" aria-live="polite">
+        <span class="page-indicator" aria-hidden="true">
           Page {{ state.currentPageIndex() + 1 }} / {{ state.totalPages() }}
+        </span>
+        <span class="sr-only page-announcement" aria-live="polite">
+          Page {{ state.currentPageIndex() + 1 }} of {{ state.totalPages() }}
         </span>
       </div>
 
@@ -199,12 +202,12 @@
                   [width]="page.width || defaultPageWidth"
                   [height]="page.height || defaultPageHeight"
                   [priority]="first"
-                  [alt]="'Page ' + page.pageNumber"
+                  [alt]="pageAlt(page)"
                   (error)="handlePageError($event, fallbackPage)"
                   class="page-image"
                 />
               } @else {
-                <img [src]="fallbackPage" [alt]="'Page ' + page.pageNumber" class="page-image" width="800" height="1200" />
+                <img [src]="fallbackPage" [alt]="pageAlt(page)" class="page-image" width="800" height="1200" />
               }
             </div>
           }
@@ -222,12 +225,12 @@
                   [width]="page.width || defaultPageWidth"
                   [height]="page.height || defaultPageHeight"
                   priority
-                  [alt]="'Page ' + page.pageNumber"
+                  [alt]="pageAlt(page)"
                   (error)="handlePageError($event, fallbackPage)"
                   class="page-image active-page"
                 />
               } @else {
-                <img [src]="fallbackPage" [alt]="'Page ' + page.pageNumber" class="page-image active-page" width="800" height="1200" />
+                <img [src]="fallbackPage" [alt]="pageAlt(page)" class="page-image active-page" width="800" height="1200" />
               }
             }
             <!-- Click the left or right third to turn the page: a mouse shortcut for the buttons below, so hidden

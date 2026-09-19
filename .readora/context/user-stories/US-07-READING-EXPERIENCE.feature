@@ -2,7 +2,7 @@
 # MangaDex, MANGA Plus, Mihon (Tachiyomi successor), Shonen Jump, Tapas.
 # Priority tags: @must / @should / @could.
 # @ui = frontend-only, verified by a Vitest test named after the scenario (not run by Cucumber).
-# @wip = not built yet. Data saver needs server-side image variants; offline, top comments and page descriptions are later ideas.
+# @wip = not built yet. Offline reading needs a service worker and downloaded chapters: left for later.
 # Untagged scenarios (next chapter, read markers, history, new-chapter badges) run as Cucumber acceptance tests.
 
 Feature: A reading experience as good as the best manga and webtoon apps
@@ -163,7 +163,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     Then the three most-upvoted comments without spoilers are shown under it
 
   # Differentiator: no major platform does this well
-  @could @wip
+  @could @ui
   Scenario: Reading with a screen reader
     Given "Aiko" uses a screen reader
     When she turns a page

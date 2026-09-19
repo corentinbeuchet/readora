@@ -34,6 +34,8 @@ export interface DirectPublishChapterPayload {
     cdnUrl?: string;
     width?: number;
     height?: number;
+    /** What the page shows, for screen-reader users (US-07). */
+    description?: string;
   }[];
 }
 
@@ -48,6 +50,8 @@ export interface PageAsset {
   cdnUrl: string;
   width?: number;
   height?: number;
+  /** Written by the uploader for screen readers; used as the image's alt text (US-07). */
+  description?: string | null;
 }
 
 export interface Chapter {

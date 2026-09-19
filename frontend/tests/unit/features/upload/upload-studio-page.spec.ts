@@ -236,7 +236,7 @@ describe('UploadStudioPage', () => {
         chapterNumber: '3',
         title: undefined,
         pages: [
-          { pageNumber: 1, storageKey: 'k1', cdnUrl: 'https://cdn/k1', width: undefined, height: undefined },
+          { pageNumber: 1, storageKey: 'k1', cdnUrl: 'https://cdn/k1', width: undefined, height: undefined, description: undefined },
           { pageNumber: 2, storageKey: 'k2', cdnUrl: 'https://cdn/k2', width: undefined, height: undefined },
         ],
       });

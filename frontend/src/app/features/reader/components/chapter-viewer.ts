@@ -31,6 +31,7 @@ import { LayoutStore } from '@app/core/layout/layout-store';
 import { SeoService } from '@app/core/seo/seo.service';
 import { ChapterComments } from '@app/features/social/components/chapter-comments';
 import { FALLBACK_PAGE_IMAGE, onImageError } from '@app/core/utils/image-utils';
+import { PageAsset } from '@app/core/models/readora.models';
 import { ReaderState } from '../services/reader-state';
 import { ReportPageDialog } from './report-page-dialog';
 import {
@@ -480,6 +481,11 @@ export class ChapterViewer {
       clearTimeout(this.hideControlsTimer);
       this.hideControlsTimer = null;
     }
+  }
+
+  /** Screen readers read the uploader's description when there is one (US-07). */
+  protected pageAlt(page: PageAsset): string {
+    return page.description ? `Page ${page.pageNumber}: ${page.description}` : `Page ${page.pageNumber}`;
   }
 
   protected toggleChapters(): void {

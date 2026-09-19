@@ -150,6 +150,12 @@ export class PageGridUploader {
     this.pages.set(renumber(items));
   }
 
+  /** Optional page description for screen-reader users (US-07). */
+  describe(index: number, event: Event): void {
+    const description = (event.target as HTMLTextAreaElement).value;
+    this.pages.update((items) => items.map((item, i) => (i === index ? { ...item, description } : item)));
+  }
+
   clearAll(): void {
     this.pages().forEach((item) => revokePreviewUrl(item.previewUrl));
     this.pages.set([]);

@@ -109,6 +109,10 @@
               <span class="page-dims">{{ page.width }}×{{ page.height }}</span>
             }
           </div>
+          <label class="page-description">
+            <span>Description <span class="sr-only">of page {{ i + 1 }}</span>(for screen readers)</span>
+            <textarea rows="2" maxlength="500" [value]="page.description ?? ''" (input)="describe(i, $event)"></textarea>
+          </label>
         </li>
       }
     </ul>
