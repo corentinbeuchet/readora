@@ -12,6 +12,7 @@
     "build": "ng build",
     "extract-i18n": "ng extract-i18n && node scripts/i18n-split.mjs",
     "i18n:check": "node scripts/i18n-split.mjs --check",
+    "icons": "node scripts/generate-icons.mjs",
     "build:staging": "ng build --configuration=staging && node scripts/generate-sitemap.mjs --configuration=staging",
     "build:prod": "ng build --configuration=production && node scripts/generate-sitemap.mjs --configuration=production",
     "watch": "ng build --watch --configuration development",
@@ -52,6 +53,7 @@
     "angular-eslint": "22.5.0",
     "eslint": "^10.9.1",
     "jsdom": "^30.0.0",
+    "lucide-static": "^1.47.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "8.69.0",
     "vitest": "^4.1.0"
