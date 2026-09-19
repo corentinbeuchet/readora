@@ -2,15 +2,15 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { TeamPageComponent } from '@app/features/community/team-page';
+import { TeamPage } from '@app/features/community/team-page';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { TeamPage } from '@app/core/models/readora.models';
+import { TeamProfile } from '@app/core/models/readora.models';
 import { environment } from '../../../../src/environments/environment';
 import { mockUser, signIn } from '../../core/auth/auth-fixtures';
 import { settle } from '../../test-utils';
 
 const API = environment.apiUrl;
-const TEAM: TeamPage = {
+const TEAM: TeamProfile = {
   id: 't-1',
   name: 'Shadow Scans',
   series: { id: 'w-1', title: 'Solo Leveling', type: 'MANHWA', status: 'ONGOING', coverImageUrl: '', genres: [] },
@@ -21,17 +21,17 @@ const TEAM: TeamPage = {
 };
 
 describe('TeamPage (US-12)', () => {
-  let fixture: ComponentFixture<TeamPageComponent>;
+  let fixture: ComponentFixture<TeamPage>;
   let http: HttpTestingController;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TeamPageComponent],
+      imports: [TeamPage],
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: ['LIBRARY_USE'] }));
-    fixture = TestBed.createComponent(TeamPageComponent);
+    fixture = TestBed.createComponent(TeamPage);
     fixture.componentRef.setInput('projectId', 't-1');
     await settle(fixture);
     http.expectOne(`${API}/teams/t-1`).flush({ success: true, data: TEAM, error: null });

@@ -419,7 +419,7 @@ export interface PublicProfile {
   completedSeries: WorkSummary[];
 }
 
-export interface TeamPage {
+export interface TeamProfile {
   id: string;
   name: string;
   series: WorkSummary;

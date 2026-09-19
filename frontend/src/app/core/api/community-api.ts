@@ -1,7 +1,7 @@
 import { HttpClient, httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal, inject } from '@angular/core';
 import { Observable, catchError } from 'rxjs';
-import { PublicProfile, TeamPage } from '@app/core/models/readora.models';
+import { PublicProfile, TeamProfile } from '@app/core/models/readora.models';
 import { ApiClient, parseEnvelope, toApiError } from './api-client';
 
 /** Public profiles, team pages, team follows and the library export (US-12). */
@@ -20,13 +20,13 @@ export class CommunityApi {
     );
   }
 
-  teamResource(projectId: Signal<string | undefined>): HttpResourceRef<TeamPage | undefined> {
-    return httpResource<TeamPage | undefined>(
+  teamResource(projectId: Signal<string | undefined>): HttpResourceRef<TeamProfile | undefined> {
+    return httpResource<TeamProfile | undefined>(
       () => {
         const id = projectId();
         return id ? this.api.url(`/teams/${id}`) : undefined;
       },
-      { parse: (raw) => parseEnvelope<TeamPage>(raw) }
+      { parse: (raw) => parseEnvelope<TeamProfile>(raw) }
     );
   }
 

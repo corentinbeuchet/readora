@@ -34,11 +34,11 @@ export const routes: Routes = [
   },
   {
     path: 'u/:username',
-    loadComponent: () => import('@app/features/community/profile-page').then((m) => m.PublicProfilePage)
+    loadComponent: () => import('@app/features/community/public-profile-page').then((m) => m.PublicProfilePage)
   },
   {
     path: 'teams/:projectId',
-    loadComponent: () => import('@app/features/community/team-page').then((m) => m.TeamPageComponent)
+    loadComponent: () => import('@app/features/community/team-page').then((m) => m.TeamPage)
   },
   {
     path: 'works/:workId',

@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { PublicProfilePage } from '@app/features/community/profile-page';
+import { PublicProfilePage } from '@app/features/community/public-profile-page';
 import { environment } from '../../../../src/environments/environment';
 import { settle } from '../../test-utils';
 

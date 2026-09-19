@@ -9,7 +9,7 @@ import { LoadError } from '@app/shared/ui/load-error';
 @Component({
   selector: 'app-public-profile-page',
   imports: [LoadError, RouterLink, DatePipe],
-  templateUrl: './profile-page.html',
+  templateUrl: './public-profile-page.html',
   styleUrl: './community.scss'
 })
 export class PublicProfilePage {

@@ -15,7 +15,7 @@ import { I18nPluralPipe } from '@angular/common';
   templateUrl: './team-page.html',
   styleUrl: './community.scss'
 })
-export class TeamPageComponent {
+export class TeamPage {
   protected readonly followersPlural = { '=1': '1 follower', other: '# followers' };
   private readonly api = inject(CommunityApi);
   private readonly seo = inject(SeoService);
