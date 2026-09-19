@@ -17,7 +17,8 @@ series; teams take chapters from RAW to published). Monorepo:
 
 ## Commands
 - Backend: `mvn -f backend/pom.xml verify` (ArchUnit + unit + integration + acceptance)
-- Frontend (from `frontend/`): `npm test`, `npm run lint`, `npm run build`, `npm run e2e` (needs running backend)
+- Frontend (from `frontend/`): `npm test`, `npm run lint`, `npm run build`, `npm run e2e` (needs running backend);
+  `npm run start:fr` (French on :4201), `npm run extract-i18n` after changing user-visible text (see frontend AGENTS "i18n")
 - Local stack: `docker compose up` (Postgres, MinIO, backend). The backend image is rebuilt on every `up`
   (`pull_policy: build`, cached layers make it fast), so it always runs the current code. `docker compose up --watch`
   also rebuilds and restarts the backend whenever a backend source or pom changes.

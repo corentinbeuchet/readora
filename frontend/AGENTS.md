@@ -158,6 +158,25 @@ breakpoints).
 ## SEO
 - Call `SeoService.update(...)` in the constructor; non-indexable pages use `seo.private_('Title')` (no "— Readora" suffix by hand).
 
+## i18n (US-13: English at `/`, French at `/fr/`)
+- Angular built-in i18n (`@angular/localize`): one prerendered build per language (`angular.json` `i18n`; languages
+  also listed in `core/i18n/site-locales.ts` and `scripts/generate-sitemap.mjs`: keep the three in sync). Switching
+  language is a full page load (footer switcher), not a router navigation.
+- Every user-visible text is marked, with a stable id `@@<feature>.<component>.<key>`: `i18n="@@…"` on elements,
+  `i18n-aria-label` / `i18n-placeholder` / `i18n-alt` / `i18n-title` on attributes, `` $localize`:@@id:Text ${x}:name:` ``
+  in TS (name every placeholder). Choices between texts are `@if` blocks with an `i18n` container each (no English
+  ternaries); counts are ICU plurals (`{n, plural, =1 {…} other {…}}`), never `I18nPluralPipe` maps or `n + 's'`.
+- Dates, numbers, prices through the pipes (`date`, `number`, `currency: 'EUR'`) and `timeAgo` (Intl, build locale).
+  API codes shown to readers go through the label maps in `core/models` (`WORK_STATUS_LABELS`, `ROLE_LABELS`…).
+- API errors are translated by code: `ApiError.code` (backend `ErrorCodes`) → `core/api/error-messages.ts`; a code
+  without a text falls back to the server's English message. A new user-facing backend code gets its text there.
+- New or changed strings: `npm run extract-i18n`, then add the French to `src/locale/messages.fr.json` (same ids,
+  placeholders unchanged). The build fails on a missing translation (`i18nMissingTranslation: error`).
+- Local: `npm run start:fr` serves French at the root of :4201 (the deployed build has `<base href="/fr/">`).
+  `tests/unit/i18n/languages.spec.ts` checks French with the real file (`loadTranslations`); runtime translations
+  stay in that spec. The Playwright project `chromium-fr` runs `tests/e2e/i18n-fr.spec.ts` (relative paths).
+- User content (titles, synopses, comments, notification messages stored by the backend) is not translated.
+
 ## Naming & layout
 - `core/` = app-wide singletons (api, auth, seo). A feature-only service lives in its feature.
 - API types: one file per domain in `core/models/<domain>.ts` (`catalog`, `chapter`, `scanlation`, `identity`, …),
@@ -294,3 +313,7 @@ Accessibility and responsive gaps (2026-09-19 research, skills `frontend-accessi
 - F47 Dark-only UI, 19 raw font sizes and 22 raw colours in components; `<button>`s in the browser font. — fixed
   4bfcf59, 7e5987f, 50f1fcd, 27686e2, bacca4f (`_tokens.scss` type scale + semantic colours, `light-dark()` light
   theme, System/Light/Dark picker, axe in both themes)
+- F48 English-only interface and API errors (US-13). — fixed 43ef54f, c3e26bf, 6d0442e, 28e5827, bfb49ba, fca0fce,
+  04d871f (+ e2e in the same branch). Still open: notification messages are English text stored by the backend (send
+  a type + parameters instead); CloudFront must serve `/fr/*` fallbacks from `fr/index.csr.html` and may redirect `/`
+  by `Accept-Language`; `VALIDATION_FAILED` details stay English (backstop checks the forms already make).

@@ -13,6 +13,8 @@ Support: `tests/e2e/support/fixtures.ts` (`test` with fixtures) and `tests/e2e/s
 - Stack: `docker compose up -d` (backend :8080, Postgres, MinIO; dev seed accounts) and the dev server
   (Playwright starts `npm run start` unless one is already on :4200).
 - `npm run e2e -- --project=chromium` while developing; all 5 projects before merging a UI-wide change.
+- French (US-13): project `chromium-fr` runs only `tests/e2e/i18n-fr.spec.ts` against `npm run start:fr` (:4201,
+  started by Playwright) or `<deployed>/fr/`; use relative paths there (`page.goto('works')`) so the `/fr/` base is kept.
 - New or changed test: `npm run e2e:stress` (chromium, `--repeat-each=5`) with the stack started as
   `READORA_AUTH_RATE_LIMIT=200 docker compose up -d` (the default 10 auth calls/min/IP stops repeated sign-ups).
 - Failures: open the trace (`npx playwright show-trace test-results/…/trace.zip`), not just the screenshot.

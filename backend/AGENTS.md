@@ -66,6 +66,11 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 - Requests: records with Bean Validation + messages (model: `dto/RegisterRequest.java`). Validate list elements with `List<@Valid Item>` (`@Valid` on the
   container is deprecated in Hibernate Validator 9).
 - Responses: records with `static fromDomain(...)`, wrapped in `ApiResponse.ok(...)`. Creates return 201.
+- Errors carry a stable code (US-13): `ApiResponse.error(code, message)`, codes in `domain.common.ErrorCodes`. Domain
+  exceptions implement `CodedException`; a rule a reader can break through the UI uses
+  `DomainValidationException.withCode(ErrorCodes.X, "…")` (backstop checks keep `VALIDATION_FAILED`). The message
+  stays English for logs; the frontend translates by code (`core/api/error-messages.ts`), so add the text there too.
+  Never rename a published code.
 - Actor always from `currentUserProvider.require()`. `@PreAuthorize` with a specific permission on every mutating endpoint;
   the service re-checks fresh permissions where it matters (model: `BookmarkService`).
 - `GlobalExceptionHandler`: never put `ex.getMessage()` of unexpected exceptions in the response; map framework exceptions

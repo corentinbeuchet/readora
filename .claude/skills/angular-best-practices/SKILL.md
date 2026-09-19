@@ -27,8 +27,11 @@ checklist to apply while coding. Deeper docs: the `angular-developer` skill refe
 - Built-in control flow, `track` by id, `@empty` for empty lists, `@let` for repeated reads.
 - No method calls inside `@for` and no repeated calls per row: build a view-model with `computed`
   (e.g. `rows = computed(() => chapters().map(c => ({ chapter: c, read: finished().has(c.id), … })))`).
-- Formatting belongs in pipes (`DatePipe`, `DecimalPipe`, `I18nPluralPipe`, custom pure pipes), not in `toFixed`,
-  ternaries for plurals or `.join` in templates.
+- Formatting belongs in pipes (`DatePipe`, `DecimalPipe`, `CurrencyPipe`, custom pure pipes), not in `toFixed` or
+  `.join` in templates; plurals are ICU inside an `i18n` element, not `I18nPluralPipe` maps.
+- i18n (frontend AGENTS "i18n"): every user-visible text marked with a stable id (`i18n="@@feature.x"`,
+  `i18n-aria-label`, `` $localize`:@@id:…` `` in TS); no English ternaries; API codes through `core/models` label
+  maps; after text changes run `npm run extract-i18n` and add the French to `src/locale/messages.fr.json`.
 - `[class.x]` / `[style.x]`; never `[class]="…"` (it overwrites static classes), `ngClass`, `ngStyle`.
 - Read DOM values with template refs (`#fit (change)="setFit(fit.value)"`), not per-class `(event.target as …)` casts.
 - Images: `NgOptimizedImage` (`ngSrc`, sizes, `priority` on the LCP image), including avatars and covers.
