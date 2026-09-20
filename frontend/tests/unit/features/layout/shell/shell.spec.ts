@@ -289,6 +289,7 @@ describe('Shell navigation', () => {
 describe('Shell theme switch', () => {
   let fixture: ComponentFixture<Shell>;
   let storage: MemoryStorage;
+  let http: HttpTestingController;
 
   beforeEach(async () => {
     storage = new MemoryStorage();
@@ -296,9 +297,13 @@ describe('Shell theme switch', () => {
       imports: [Shell],
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(), { provide: BrowserStorage, useValue: storage }]
     }).compileComponents();
+    http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => TestBed.inject(DOCUMENT).documentElement.removeAttribute('data-theme'));
+  afterEach(() => {
+    http.verify();
+    TestBed.inject(DOCUMENT).documentElement.removeAttribute('data-theme');
+  });
 
   it('switches to the light theme and back from the header, and remembers the choice', () => {
     givenIAmOnTheSite();

@@ -101,9 +101,12 @@ breakpoints).
 - Forms: Signal Forms (`@angular/forms/signals`), validators in the schema (no `required`/`maxlength` attributes on
   `[formField]`, NG8022); per field `[appAriaInvalid]="f.x"` + `aria-describedby` and
   `<app-field-errors id="…-error" [field]="f.x" />` (`shared/forms/`). Ids must be unique — never a static id inside `@for`.
-- Shared UI (`src/app/shared/`) before writing a copy: `app-load-error`, `app-work-cover` (ngSrc + fallback),
-  `app-dialog` (focus trap, Escape, labelledBy), `timeAgo` pipe, `app-field-errors`, `appAriaInvalid`; shared styles
-  `.tab`, `.pager`, `.wizard-*`, `.dialog-actions` in `styles.scss`. A third copy of anything means it should be shared.
+- Shared UI (`src/app/shared/`) before writing a copy: `app-work-card`, `app-work-card-skeleton`, `app-rail`,
+  `app-section-header`, `app-empty-state`, `app-list-card`, `app-icon` (see "Design"), `app-load-error`,
+  `app-work-cover` (ngSrc + fallback), `app-dialog` (focus trap, Escape, labelledBy), `timeAgo` pipe,
+  `app-field-errors`, `appAriaInvalid`; shared styles `.work-grid`, `.work-rows`, `.rail-item`, `.skeleton`, `.tab`,
+  `.pager`, `.wizard-*`, `.dialog-actions` in `styles.scss`. A third copy of anything means it should be shared.
+  Content projected into a shared component is styled from `styles.scss` (an attribute or class), never `::ng-deep`.
 - Every `<label>` has a control; custom radios/toggles need `role`, `aria-checked/pressed`, and keyboard handlers;
   dialogs need focus trap, Escape, initial focus and focus return (`appFocusTrap`, `core/a11y/focus-trap.directive.ts`); hover-only controls must also show on `:focus-visible`.
 - Use global styles `.field`, `.form-error`, `.sr-only` — no Bootstrap-style classes, no per-component `.visually-hidden`.
@@ -117,11 +120,61 @@ breakpoints).
   `light-dark(<light>, <dark>)` and must pass AA in both (the axe e2e runs each page in light and dark); tints are
   `color-mix()` of their base token. Text over artwork uses `--overlay*` + `--on-overlay` (theme-less), the reader
   page backgrounds `--reader-*` (a reader setting, not the theme). A new token goes in `_tokens.scss`.
-- Theme: `ThemeStore` (`core/theme/theme-store.ts`, System / Light / Dark, footer picker) sets `data-theme` on
-  `<html>`; an inline script in `index.html` applies the saved choice before the first paint (key `readora.theme`).
+- Theme: dark by default. `ThemeStore` (`core/theme/theme-store.ts`; Dark / Light / System in the footer, a
+  light/dark switch in the header) sets `data-theme` on `<html>` ("system" removes it); an inline script in
+  `index.html` applies the saved choice before the first paint (key `readora.theme`). Tests that need a theme write
+  that key (`givenMyThemeIs` in `tests/e2e/support/helpers.ts`): the app does not follow `colorScheme` emulation.
 - `@defer` heavy or below-the-fold UI (comments, kanban modal, upload studio widgets) with an `@placeholder`;
   never defer what is visible in the initial viewport (layout shift). Deferred deps must be standalone and not
   imported elsewhere in the file. Tests use `DeferBlockBehavior.Manual`.
+
+## Design (decided 2026-09-19; checklist and evidence: skill `frontend-visual-design`)
+Identity: **ink, paper, screentone**. Manga is black ink and halftone on paper with loud magazine-cover type, so the
+interface is neutral and the cover art is the colour on the page.
+- **Colour:** true-neutral greys with tonal surface steps (`--bg` < `--surface` < `--surface-2` < `--surface-3`)
+  instead of shadows; shadows (`--elev-*`) only for what floats (menus, dialogs, the featured cover). One accent
+  (persimmon): `--accent` for text, links and outlines, `--accent-strong` for fills with `--on-accent` on top. No
+  second brand colour, no gradients. After changing a colour token run
+  `node .claude/skills/frontend-visual-design/scripts/contrast.mjs` (AA for every pair, both themes).
+- **Screentone** (`--screentone`, `.skeleton`) is the signature: loading placeholders, empty states, the home
+  feature, the fallback cover. Text never sits on it (axe reports contrast over a background image as "incomplete",
+  so nothing would catch it): put the words on a plain surface next to it.
+- **Type:** one family, Archivo Variable, self-hosted (`src/styles/_fonts.scss`, preloaded once in `index.html`
+  with the same root-absolute URL). Two voices through its width axis: `--wdth-display` + `--fw-black` for `h1`/`h2`,
+  rank numerals and the logo; `--wdth-text` for everything else; `--wdth-condensed` for tab-bar labels.
+  `font-variant-numeric: tabular-nums` for ranks, scores and counts. Prose is at most `--measure` wide.
+- **Scales, never raw values:** `--space-1..8`, `--radius-sm|md|lg|pill` by role (covers and thumbnails = sm, a
+  book corner; controls and cards = md; sheets, dialogs and feature panels = lg; chips = pill), `--dur-fast|base` +
+  `--ease-out`, `--z-*`, `--page-max`. Motion only answers an action: no entrance animations, nothing auto-rotates
+  or auto-advances.
+- **Icons:** `<app-icon name="…">` only (typed set generated from Lucide by `npm run icons`,
+  `scripts/generate-icons.mjs`); no emoji or text glyphs as icons, none inside translated strings. An icon is
+  decoration (`aria-hidden`): the control's text or `aria-label` names it.
+- **A series is always an `<app-work-card>`** (`grid` tile or `row`): its title is the one link, stretched over
+  the card, so the accessible name is the title and the cover is decoration; at most two badges; extra lines in
+  `[cardMeta]`, buttons in `[cardActions]`. Lists of series use `.work-grid` or `.work-rows`; a reading list is an
+  `<app-list-card>`. No heading elements inside cards: a page with 24 of them would have 24 headings, and the section
+  already has one (the single featured series of the home page is an article of its own, so it has an `h3`).
+- **States:** loading = `<app-work-card-skeleton>` (static screentone inside `role="status"`, with the loading text
+  projected for screen readers), never a lone grey sentence; empty = `<app-empty-state>` with one action that fills
+  it; error = `<app-load-error>`.
+- **Sections** of a page: `<app-section-header>` (its "See all" link names the section) or `<app-rail>` for a line
+  of tiles: a scrollable list of links with mouse-only arrows, not an ARIA carousel.
+- **Navigation** (US-14): one `<nav aria-label="Primary">` (`shell/primary-nav/`), a bottom tab bar below `lg` and
+  header links from `lg`, by CSS only; at most five entries shown at once; the logo is the way home (no "Home" link
+  in the header); team tools (scanlation, upload, moderation) live in the account menu. A new section must earn its
+  place in those five. The footer may repeat sections (it is far from the header); two links to one page in the same
+  view are a bug. Pages that need the whole phone screen call `LayoutStore.setTabBarHidden`.
+- **Home page:** only the frame is prerendered; rankings, latest chapters, lists and everything personal load in
+  the browser behind a `live` signal set in `afterNextRender` (the transfer cache only hands over catalog reads and
+  nothing rebuilds the site on a schedule). A signed-in reader's page starts with "Continue reading".
+- **Words:** sentence case, plain verbs, a button says what it does ("Create a free account"), an empty screen says
+  what belongs there and how to fill it. Meta information is separate elements or badges, not strings joined by
+  "·". No all-caps labels above headings, no numbering that is not a real order, no sign-up wall: accounts are
+  offered after the content, where they help (continue reading, follow, comment).
+- Follow-ups of this pass (not done): series page, catalog filter panel and sort, reader chrome, auth and plans
+  pages; backend: catalog `sort`, a chapter pointer on `LibraryItem` (a "Continue" on library rows), title and cover
+  on bookmarks, assignee name on tasks; a new `og-default.png` in the new palette.
 
 ## Routing & auth
 - Every route uses `loadComponent`. Permissions in route data: `canActivate: [permissionGuard], data: { permission: 'PROJECT_VIEW' }`.

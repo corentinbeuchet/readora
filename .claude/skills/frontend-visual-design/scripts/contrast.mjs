@@ -2,6 +2,7 @@
 /**
  * WCAG 2.2 contrast check of the colour tokens in frontend/src/styles/_tokens.scss, in the light and the dark theme.
  * Run it after changing a colour: `node .claude/skills/frontend-visual-design/scripts/contrast.mjs`. Exits 1 on a failure.
+ * Add `--table` to print the ratio of every pair.
  *
  * What it checks (the pairs the app really uses):
  * - text colours on every surface: 4.5:1 (SC 1.4.3);
@@ -46,6 +47,7 @@ for (const [, name, base, percent] of source.matchAll(/--([\w-]+):\s*color-mix\(
 }
 
 const failures = [];
+const table = [];
 let checked = 0;
 
 for (const theme of [0, 1]) {
@@ -63,6 +65,7 @@ for (const theme of [0, 1]) {
   }
 }
 
+if (process.argv.includes('--table')) console.log(table.join('\n'));
 console.log(`[contrast] ${checked} pairs checked, ${failures.length} failing.`);
 for (const line of failures) console.log(`  ${line}`);
 process.exitCode = failures.length ? 1 : 0;
@@ -70,6 +73,7 @@ process.exitCode = failures.length ? 1 : 0;
 function check(theme, foregroundName, foreground, backgroundName, background, minimum) {
   checked++;
   const ratio = contrast(foreground, background);
+  table.push(`${theme === 0 ? 'light' : 'dark '}  ${ratio.toFixed(2).padStart(5)}  (min ${minimum})  --${foregroundName} on --${backgroundName}`);
   if (ratio < minimum) {
     failures.push(`${theme === 0 ? 'light' : 'dark '}  --${foregroundName} on --${backgroundName}: ${ratio.toFixed(2)} (needs ${minimum})`);
   }

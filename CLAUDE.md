@@ -6,7 +6,8 @@
 - Before re-touching an area, check `git log --grep "review-2026-09/<id>"` and the "Known pitfalls" backlog.
 - Frontend work: load the `angular-best-practices` skill first (checklist; `frontend/AGENTS.md` is the source);
   tests: `frontend-unit-tests`, `frontend-component-tests`, `frontend-e2e-tests`; accessibility and screen sizes:
-  `frontend-accessibility`, `frontend-responsive`.
+  `frontend-accessibility`, `frontend-responsive`; look, composition, navigation and interface copy:
+  `frontend-visual-design` (checklist + research evidence + contrast script; rules in `frontend/AGENTS.md` "Design").
 - Project automations (`.claude/`): skill `verify` (all checks, prints the commit `Verify:` line), skill
   `story-check` (every non-`@wip` scenario ran in Cucumber or has its `@ui` Vitest test), agent `rules-reviewer`
   (diff vs the AGENTS.md rules, run before committing a feature), and a PreToolUse hook that denies edits to
