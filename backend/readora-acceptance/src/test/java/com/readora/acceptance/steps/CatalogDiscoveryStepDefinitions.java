@@ -4,10 +4,23 @@ import com.readora.acceptance.fakes.InMemoryChapterRepository;
 import com.readora.acceptance.fakes.InMemoryProjectRepository;
 import com.readora.acceptance.fakes.InMemoryTeamRepository;
 import com.readora.acceptance.fakes.InMemoryWorkRepository;
+import com.readora.acceptance.fakes.NoUserAccounts;
+import com.readora.application.port.in.ManageWorkUseCase.WorkDescription;
 import com.readora.application.port.in.BrowseCatalogUseCase.CatalogQuery;
 import com.readora.application.service.CatalogService;
+import com.readora.application.service.WorkManagementService;
+import com.readora.domain.common.AccessDeniedDomainException;
+import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.UserId;
+import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.ScanlationRole;
+import com.readora.domain.scanlation.Team;
+import com.readora.domain.scanlation.TeamMember;
+import com.readora.domain.work.ContentRating;
 import com.readora.domain.work.Demographic;
+import com.readora.domain.work.OriginalLanguage;
 import com.readora.domain.work.Work;
+import com.readora.domain.work.WorkFacts;
 import com.readora.domain.work.WorkStatus;
 import com.readora.domain.work.WorkType;
 import io.cucumber.datatable.DataTable;
@@ -16,12 +29,15 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
+import java.time.Clock;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,14 +47,25 @@ public class CatalogDiscoveryStepDefinitions {
     private static final Pattern QUOTED = Pattern.compile("\"([^\"]+)\"");
 
     private InMemoryWorkRepository works;
+    private InMemoryProjectRepository projects;
+    private InMemoryTeamRepository teams;
     private CatalogService catalog;
+    private WorkManagementService seriesEditing;
     private List<Work> results = List.of();
+    private final Map<String, Team> teamLedBy = new HashMap<>();
+    private final Map<String, RuntimeException> refusals = new HashMap<>();
 
     @Before
     public void setup() {
         works = new InMemoryWorkRepository();
-        catalog = new CatalogService(works, new InMemoryChapterRepository(), new InMemoryProjectRepository(), new InMemoryTeamRepository());
+        projects = new InMemoryProjectRepository();
+        teams = new InMemoryTeamRepository();
+        catalog = new CatalogService(works, new InMemoryChapterRepository(), projects, teams);
+        seriesEditing = new WorkManagementService(works, new InMemoryChapterRepository(), projects, teams, new NoUserAccounts(), event -> { },
+                Clock.systemUTC());
         results = List.of();
+        teamLedBy.clear();
+        refusals.clear();
     }
 
     @Given("the catalog has these series:")
@@ -88,6 +115,70 @@ public class CatalogDiscoveryStepDefinitions {
             assertThat(work.getTitle()).isEqualTo(title);
             assertThat(work.getAuthor()).isEqualTo(author);
         });
+    }
+
+    @Given("scanlator {string} leads a team that translates {string}")
+    public void scanlatorLeadsATeamThatTranslates(String leader, String title) {
+        Team team = teams.save(Team.create(leader + " Scans", null, UserId.of(leader)));
+        projects.save(ScanlationProject.create(team.getName() + " - " + title, works.byTitle(title).getId(), team.getId()));
+        teamLedBy.put(leader, team);
+    }
+
+    @Given("{string} is a translator of the team of {string}")
+    public void isATranslatorOfTheTeamOf(String member, String leader) {
+        Team team = teamLedBy.get(leader);
+        team.addMember(TeamMember.of(UserId.of(member), ScanlationRole.TRANSLATOR));
+        teams.save(team);
+    }
+
+    @When("{string} sets the facts of {string} to artist {string}, year {int}, language {string}, rating {string} and other title {string}")
+    public void setsTheFactsOf(String editor, String title, String artist, int year, String language, String rating, String otherTitle) {
+        describe(editor, title, () -> new WorkFacts(List.of(otherTitle), artist, year, OriginalLanguage.valueOf(language), ContentRating.valueOf(rating)));
+    }
+
+    @When("{string} sets the artist of {string} to {string}")
+    public void setsTheArtistOf(String editor, String title, String artist) {
+        describe(editor, title, () -> new WorkFacts(List.of(), artist, null, null, null));
+    }
+
+    @When("{string} gives {string} {int} other titles")
+    public void givesOtherTitles(String editor, String title, int count) {
+        describe(editor, title, () -> new WorkFacts(IntStream.rangeClosed(1, count).mapToObj(n -> "Title " + n).toList(), null, null, null, null));
+    }
+
+    @Then("{string} has artist {string}, year {int}, language {string}, rating {string} and other title {string}")
+    public void hasTheFacts(String title, String artist, int year, String language, String rating, String otherTitle) {
+        assertThat(refusals).isEmpty();
+        assertThat(works.byTitle(title).getFacts())
+                .isEqualTo(new WorkFacts(List.of(otherTitle), artist, year, OriginalLanguage.valueOf(language), ContentRating.valueOf(rating)));
+    }
+
+    @Then("the edit is refused to {string}")
+    public void theEditIsRefusedTo(String editor) {
+        assertThat(refusals.get(editor)).isInstanceOf(AccessDeniedDomainException.class);
+    }
+
+    @Then("{string} has no artist")
+    public void hasNoArtist(String title) {
+        assertThat(works.byTitle(title).getFacts().artist()).isNull();
+    }
+
+    @Then("the edit is refused because a series has at most {int} other titles")
+    public void theEditIsRefusedBecauseOfTooManyTitles(int max) {
+        assertThat(refusals.values()).singleElement()
+                .isInstanceOf(DomainValidationException.class)
+                .satisfies(refusal -> assertThat(refusal).hasMessageContaining("at most " + max + " other titles"));
+    }
+
+    /// Edits only the facts: the rest of the description is sent back as it is, as the edit form does.
+    private void describe(String editor, String title, java.util.function.Supplier<WorkFacts> facts) {
+        Work work = works.byTitle(title);
+        try {
+            seriesEditing.updateWork(work.getId(), new WorkDescription(work.getTitle(), work.getSynopsis(), work.getType(), work.getStatus(),
+                    work.getAuthor(), work.getDemographic(), work.getCoverImageUrl(), work.getGenres(), facts.get()), UserId.of(editor));
+        } catch (AccessDeniedDomainException | DomainValidationException refusal) {
+            refusals.put(editor, refusal);
+        }
     }
 
     private void search(CatalogQuery query) {

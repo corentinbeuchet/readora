@@ -1,5 +1,6 @@
 package com.readora.web.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -38,11 +39,18 @@ public record CreateWorkRequest(
         @Size(max = 20, message = "A work cannot have more than 20 genres")
         @Nullable Set<@NotBlank(message = "Genre cannot be blank") @Size(max = 50, message = "Genre must not exceed 50 characters") String> genres,
 
+        @Valid @Nullable WorkFactsRequest facts,
+
         /// One of my teams that will translate the series; without it the series gets a new team of its own.
         @Nullable UUID teamId
 ) {
     public CreateWorkRequest(String title, @Nullable String synopsis, WorkType type, @Nullable WorkStatus status, @Nullable String author,
                              @Nullable Demographic demographic, @Nullable String coverImageUrl, @Nullable Set<String> genres) {
-        this(title, synopsis, type, status, author, demographic, coverImageUrl, genres, null);
+        this(title, synopsis, type, status, author, demographic, coverImageUrl, genres, null, null);
+    }
+
+    public CreateWorkRequest(String title, @Nullable String synopsis, WorkType type, @Nullable WorkStatus status, @Nullable String author,
+                             @Nullable Demographic demographic, @Nullable String coverImageUrl, @Nullable Set<String> genres, @Nullable UUID teamId) {
+        this(title, synopsis, type, status, author, demographic, coverImageUrl, genres, null, teamId);
     }
 }

@@ -20,8 +20,10 @@ import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.*;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 public class WorkManagementService implements ManageWorkUseCase, DirectPublishChapterUseCase {
@@ -32,19 +34,22 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
     private final TeamRepositoryPort teamRepository;
     private final UserAccountRepositoryPort userRepository;
     private final EventPublisherPort eventPublisher;
+    private final Clock clock;
 
     public WorkManagementService(WorkRepositoryPort workRepository,
                                  ChapterRepositoryPort chapterRepository,
                                  ScanlationProjectRepositoryPort projectRepository,
                                  TeamRepositoryPort teamRepository,
                                  UserAccountRepositoryPort userRepository,
-                                 EventPublisherPort eventPublisher) {
+                                 EventPublisherPort eventPublisher,
+                                 Clock clock) {
         this.workRepository = Objects.requireNonNull(workRepository, "WorkRepositoryPort cannot be null");
         this.chapterRepository = Objects.requireNonNull(chapterRepository, "ChapterRepositoryPort cannot be null");
         this.projectRepository = Objects.requireNonNull(projectRepository, "ScanlationProjectRepositoryPort cannot be null");
         this.teamRepository = Objects.requireNonNull(teamRepository, "TeamRepositoryPort cannot be null");
         this.userRepository = Objects.requireNonNull(userRepository, "UserAccountRepositoryPort cannot be null");
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "EventPublisherPort cannot be null");
+        this.clock = Objects.requireNonNull(clock, "Clock cannot be null");
     }
 
     @Override
@@ -65,7 +70,7 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
         WorkStatus requested = details.status();
         WorkStatus status = requested != null ? requested : WorkStatus.ONGOING;
         Work work = Work.create(title, details.synopsis(), details.type(), status, details.author(), details.demographic(),
-                details.coverImageUrl(), details.genres() != null ? details.genres() : Set.of());
+                details.coverImageUrl(), details.genres() != null ? details.genres() : Set.of(), details.facts());
         Work savedWork = workRepository.save(work);
 
         if (ownTeam != null) {
@@ -79,6 +84,20 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
         }
 
         return savedWork;
+    }
+
+    @Override
+    public Work updateWork(WorkId workId, WorkDescription description, UserId editorId) {
+        Work work = workRepository.findById(workId).orElseThrow(() -> new NotFoundException("Work", workId));
+        requireSeriesLeaderOrAdmin(work, editorId);
+        if (description.title() != null && description.title().length() > 255) {
+            throw new DomainValidationException("Work title cannot exceed 255 characters");
+        }
+        WorkStatus status = description.status() != null ? description.status() : WorkStatus.ONGOING;
+        work.describe(description.title(), description.synopsis(), description.type(), status, description.author(),
+                description.demographic(), description.coverImageUrl(), description.genres() != null ? description.genres() : Set.of(),
+                description.facts(), clock.instant());
+        return workRepository.save(work);
     }
 
     @Override
@@ -118,6 +137,17 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
             throw new AccessDeniedDomainException("Only a leader of " + team.getName() + " can add a series to it");
         }
         return team;
+    }
+
+    /// A series has no owner: it belongs to the teams that translate it, so their leaders keep its page right.
+    private void requireSeriesLeaderOrAdmin(Work work, UserId editorId) {
+        boolean leadsATeamOfTheSeries = projectRepository.findByWorkId(work.getId()).stream()
+                .map(project -> teamRepository.findById(project.getTeamId()))
+                .flatMap(Optional::stream)
+                .anyMatch(team -> team.isLeader(editorId));
+        if (!leadsATeamOfTheSeries && !userRepository.findById(editorId).map(account -> account.can(Permission.USER_MANAGE)).orElse(false)) {
+            throw new AccessDeniedDomainException("Only a leader of a team that translates " + work.getTitle() + " can edit it");
+        }
     }
 
     /// The chapter is published as `teamId`'s version: the team must work on the series (have a task board for it),

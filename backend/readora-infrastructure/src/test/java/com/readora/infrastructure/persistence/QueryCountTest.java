@@ -79,17 +79,19 @@ class QueryCountTest {
     }
 
     @Test
-    @DisplayName("Listing 12 works with their genres takes a constant number of statements")
+    @DisplayName("Listing 12 works with their genres and other titles takes a constant number of statements")
     void listingWorksDoesNotIssueOneQueryPerWork() {
         IntStream.range(0, 12).forEach(i ->
-                workRepository.save(Work.create("Count Work " + i, "S", WorkType.MANGA, "c.png", Set.of("Action", "Drama"))));
+                workRepository.save(Work.create("Count Work " + i, "S", WorkType.MANGA, WorkStatus.ONGOING, null, null, "c.png", Set.of("Action", "Drama"),
+                        new WorkFacts(List.of("Other title " + i), null, null, null, null))));
 
         statistics.clear();
         List<Work> works = workRepository.search(
                 new WorkRepositoryPort.WorkSearch(null, Set.of(), Set.of(), Set.of(), Set.of(), Set.of()), 0, 12).items();
 
         assertThat(works).hasSize(12).allSatisfy(w -> assertThat(w.getGenres()).isNotEmpty());
-        assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(3);
+        assertThat(works).allSatisfy(w -> assertThat(w.getFacts().alternativeTitles()).hasSize(1));
+        assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(4);
     }
 
     @Test

@@ -22,6 +22,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -41,6 +44,8 @@ class WorkManagementServiceTest {
     private EventPublisherPort eventPublisher;
     private WorkManagementService service;
 
+    private static final Instant NOW = Instant.parse("2026-09-20T10:00:00Z");
+
     @BeforeEach
     void setUp() {
         workRepository = mock(WorkRepositoryPort.class);
@@ -49,7 +54,8 @@ class WorkManagementServiceTest {
         teamRepository = mock(TeamRepositoryPort.class);
         userRepository = mock(UserAccountRepositoryPort.class);
         eventPublisher = mock(EventPublisherPort.class);
-        service = new WorkManagementService(workRepository, chapterRepository, projectRepository, teamRepository, userRepository, eventPublisher);
+        service = new WorkManagementService(workRepository, chapterRepository, projectRepository, teamRepository, userRepository, eventPublisher,
+                Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
     @Test

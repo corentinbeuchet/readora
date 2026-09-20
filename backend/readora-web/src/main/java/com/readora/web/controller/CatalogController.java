@@ -113,10 +113,30 @@ public class CatalogController {
                 request.demographic(),
                 request.coverImageUrl(),
                 request.genres() != null ? request.genres() : Set.of(),
+                WorkFactsRequest.toDomain(request.facts()),
                 request.teamId() != null ? TeamId.of(request.teamId()) : null
         );
         Work work = manageWorkUseCase.createWork(details, currentUserProvider.requireUserId());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(WorkDto.fromDomain(work)));
+    }
+
+    @PutMapping("/{workId}")
+    @PreAuthorize("hasAuthority('WORK_CREATE')")
+    @Operation(summary = "Replace the description of a series (leaders of a team that translates it, or an admin)")
+    public ResponseEntity<ApiResponse<WorkDto>> updateWork(@PathVariable UUID workId, @Valid @RequestBody UpdateWorkRequest request) {
+        var description = new ManageWorkUseCase.WorkDescription(
+                request.title(),
+                request.synopsis(),
+                request.type(),
+                request.status(),
+                request.author(),
+                request.demographic(),
+                request.coverImageUrl(),
+                request.genres() != null ? request.genres() : Set.of(),
+                WorkFactsRequest.toDomain(request.facts())
+        );
+        Work work = manageWorkUseCase.updateWork(WorkId.of(workId), description, currentUserProvider.requireUserId());
+        return ResponseEntity.ok(ApiResponse.ok(WorkDto.fromDomain(work)));
     }
 
     @PostMapping("/{workId}/chapters/direct")

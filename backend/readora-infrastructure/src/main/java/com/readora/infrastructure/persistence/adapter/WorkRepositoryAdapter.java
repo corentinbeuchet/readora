@@ -80,6 +80,7 @@ public class WorkRepositoryAdapter implements WorkRepositoryPort {
             existing.setDemographic(demographicName(work));
             existing.setCoverImageUrl(work.getCoverImageUrl());
             existing.setGenres(new ArrayList<>(work.getGenres()));
+            copyFacts(work.getFacts(), existing);
             existing.setUpdatedAt(work.getUpdatedAt());
             WorkJpaEntity saved = OptimisticLocking.flush(work, "Work", () -> springDataRepository.saveAndFlush(existing));
             work.restoreVersion(saved.getVersion());
@@ -107,6 +108,12 @@ public class WorkRepositoryAdapter implements WorkRepositoryPort {
                 entity.getDemographic() != null ? Demographic.valueOf(entity.getDemographic()) : null,
                 entity.getCoverImageUrl(),
                 entity.getGenres() != null ? new HashSet<>(entity.getGenres()) : new HashSet<>(),
+                new WorkFacts(
+                        List.copyOf(entity.getAlternativeTitles()),
+                        entity.getArtist(),
+                        entity.getReleaseYear(),
+                        entity.getOriginalLanguage() != null ? OriginalLanguage.valueOf(entity.getOriginalLanguage()) : null,
+                        entity.getContentRating() != null ? ContentRating.valueOf(entity.getContentRating()) : null),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );
@@ -117,8 +124,20 @@ public class WorkRepositoryAdapter implements WorkRepositoryPort {
         return demographic != null ? demographic.name() : null;
     }
 
+    /// The titles are replaced in place: Hibernate then rewrites only the rows of this collection.
+    private static void copyFacts(WorkFacts facts, WorkJpaEntity entity) {
+        entity.getAlternativeTitles().clear();
+        entity.getAlternativeTitles().addAll(facts.alternativeTitles());
+        entity.setArtist(facts.artist());
+        entity.setReleaseYear(facts.releaseYear());
+        OriginalLanguage language = facts.originalLanguage();
+        entity.setOriginalLanguage(language != null ? language.name() : null);
+        ContentRating rating = facts.contentRating();
+        entity.setContentRating(rating != null ? rating.name() : null);
+    }
+
     private WorkJpaEntity toEntity(Work work) {
-        return new WorkJpaEntity(
+        WorkJpaEntity entity = new WorkJpaEntity(
                 work.getId().value(),
                 work.getTitle(),
                 work.getSynopsis(),
@@ -131,5 +150,7 @@ public class WorkRepositoryAdapter implements WorkRepositoryPort {
                 work.getCreatedAt(),
                 work.getUpdatedAt()
         );
+        copyFacts(work.getFacts(), entity);
+        return entity;
     }
 }

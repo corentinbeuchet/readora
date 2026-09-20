@@ -95,7 +95,7 @@ public class CommunityStepDefinitions {
         Clock clock = Clock.systemUTC();
         community = new CommunityService(users, communityQueries, teams, projects, works, clock);
         teamManagement = new TeamManagementService(teams, projects, works, users, clock);
-        publishing = new WorkManagementService(works, chapters, projects, teams, users, event -> { });
+        publishing = new WorkManagementService(works, chapters, projects, teams, users, event -> { }, clock);
         chapterReader = new ChapterReadingService(chapters, works, teams, new FakeStorage());
         refusal = null;
         discovery = new DiscoveryService(discoveryQueries, works, new InMemoryRatingRepository(), teams, clock);

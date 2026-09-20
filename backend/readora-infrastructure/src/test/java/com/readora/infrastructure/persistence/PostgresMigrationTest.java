@@ -101,6 +101,23 @@ class PostgresMigrationTest {
     }
 
     @Test
+    @DisplayName("Series facts (V21) round-trip on PostgreSQL: other titles keep their order and an edit replaces them")
+    void seriesFactsRoundTrip() {
+        WorkFacts facts = new WorkFacts(List.of("Na Honjaman Level Up", "Only I Level Up"), "DUBU", 2018, OriginalLanguage.KOREAN, ContentRating.TEEN);
+        Work work = workRepository.save(Work.create("PG Facts", "", WorkType.MANHWA, WorkStatus.ONGOING, "Chugong", null, null, Set.of("Action"), facts));
+
+        assertThat(workRepository.findById(work.getId()).orElseThrow().getFacts()).isEqualTo(facts);
+
+        Work loaded = workRepository.findById(work.getId()).orElseThrow();
+        WorkFacts edited = new WorkFacts(List.of("Only I Level Up"), null, null, null, ContentRating.MATURE);
+        loaded.describe("PG Facts", "", WorkType.MANHWA, WorkStatus.ONGOING, "Chugong", null, null, Set.of("Action"), edited,
+                java.time.Instant.parse("2026-09-20T10:00:00Z"));
+        workRepository.save(loaded);
+
+        assertThat(workRepository.findById(work.getId()).orElseThrow().getFacts()).isEqualTo(edited);
+    }
+
+    @Test
     @DisplayName("Catalog search (genre EXISTS sub-queries, LIKE with escapes, facets) runs on PostgreSQL")
     void catalogSearchRunsOnPostgres() {
         workRepository.save(Work.create("PG Solo Leveling", "", WorkType.MANHWA, WorkStatus.COMPLETED, "Chugong", Demographic.SHOUNEN, null, Set.of("Action", "PG-run")));

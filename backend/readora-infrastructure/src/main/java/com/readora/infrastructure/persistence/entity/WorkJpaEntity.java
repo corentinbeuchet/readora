@@ -3,6 +3,7 @@ package com.readora.infrastructure.persistence.entity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.BatchSize;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,6 +40,25 @@ public class WorkJpaEntity {
     @CollectionTable(name = "work_genres", joinColumns = @JoinColumn(name = "work_id"))
     @Column(name = "genre")
     private List<String> genres;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @BatchSize(size = 64)
+    @CollectionTable(name = "work_alt_titles", joinColumns = @JoinColumn(name = "work_id"))
+    @OrderColumn(name = "title_order")
+    @Column(name = "title", nullable = false, length = 255)
+    private List<String> alternativeTitles = new ArrayList<>();
+
+    @Column(length = 120)
+    private String artist;
+
+    @Column(name = "release_year")
+    private Integer releaseYear;
+
+    @Column(name = "original_language", length = 20)
+    private String originalLanguage;
+
+    @Column(name = "content_rating", length = 20)
+    private String contentRating;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -89,6 +109,15 @@ public class WorkJpaEntity {
     public void setCoverImageUrl(String coverImageUrl) { this.coverImageUrl = coverImageUrl; }
     public List<String> getGenres() { return genres; }
     public void setGenres(List<String> genres) { this.genres = genres; }
+    public List<String> getAlternativeTitles() { return alternativeTitles; }
+    public String getArtist() { return artist; }
+    public void setArtist(String artist) { this.artist = artist; }
+    public Integer getReleaseYear() { return releaseYear; }
+    public void setReleaseYear(Integer releaseYear) { this.releaseYear = releaseYear; }
+    public String getOriginalLanguage() { return originalLanguage; }
+    public void setOriginalLanguage(String originalLanguage) { this.originalLanguage = originalLanguage; }
+    public String getContentRating() { return contentRating; }
+    public void setContentRating(String contentRating) { this.contentRating = contentRating; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

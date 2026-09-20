@@ -103,6 +103,20 @@ SELECT CAST('00000000-0000-4000-9000-000000000014' AS UUID), g.genre
 FROM (SELECT 'Action' AS genre UNION ALL SELECT 'Dark Fantasy' UNION ALL SELECT 'Horror') g
 WHERE NOT EXISTS (SELECT 1 FROM work_genres wg WHERE wg.work_id = CAST('00000000-0000-4000-9000-000000000014' AS UUID) AND wg.genre = g.genre);
 
+-- Series facts (US-04) on two of them, to see them on the series page; left alone once someone edited them locally.
+UPDATE works SET artist = 'DUBU', release_year = 2018, original_language = 'KOREAN', content_rating = 'TEEN'
+WHERE id = CAST('00000000-0000-4000-9000-000000000011' AS UUID)
+  AND artist IS NULL AND release_year IS NULL AND original_language IS NULL AND content_rating IS NULL;
+
+INSERT INTO work_alt_titles (work_id, title_order, title)
+SELECT CAST('00000000-0000-4000-9000-000000000011' AS UUID), t.title_order, t.title
+FROM (SELECT 0 AS title_order, 'Na Honjaman Level Up' AS title UNION ALL SELECT 1, 'Only I Level Up') t
+WHERE NOT EXISTS (SELECT 1 FROM work_alt_titles wt WHERE wt.work_id = CAST('00000000-0000-4000-9000-000000000011' AS UUID));
+
+UPDATE works SET release_year = 1989, original_language = 'JAPANESE', content_rating = 'MATURE'
+WHERE id = CAST('00000000-0000-4000-9000-000000000014' AS UUID)
+  AND artist IS NULL AND release_year IS NULL AND original_language IS NULL AND content_rating IS NULL;
+
 -- The demo team and its project on the demo series share one id, like every team migrated by V17.
 INSERT INTO teams (id, name, name_key, description, created_at, updated_at, version)
 SELECT CAST('00000000-0000-4000-9000-000000000101' AS UUID), 'Readora Demo Team', 'readora demo team', 'Demo scanlation team with one member per role.',

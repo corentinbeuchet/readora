@@ -71,7 +71,8 @@ public class DomainServiceConfig {
             TeamRepositoryPort teamRepository,
             UserAccountRepositoryPort userRepository,
             EventPublisherPort eventPublisher) {
-        return new WorkManagementService(workRepository, chapterRepository, projectRepository, teamRepository, userRepository, eventPublisher);
+        return new WorkManagementService(workRepository, chapterRepository, projectRepository, teamRepository, userRepository, eventPublisher,
+                Clock.systemUTC());
     }
 
     @Bean

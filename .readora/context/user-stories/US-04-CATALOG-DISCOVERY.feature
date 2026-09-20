@@ -46,3 +46,28 @@ Feature: Finding a series in the catalog
     Then "Action" is marked as excluded
     When he clicks it a third time
     Then "Action" is no longer used as a filter
+
+  # Series facts (decided 2026-09-20; seen on the series pages of comix.to and MangaDex): other titles, artist, year,
+  # original language and content rating. All optional: a fact nobody filled in is simply not shown.
+  @should
+  Scenario: A team leader fills in the facts of a series
+    Given scanlator "Mina" leads a team that translates "Solo Leveling"
+    When "Mina" sets the facts of "Solo Leveling" to artist "DUBU", year 2018, language "KOREAN", rating "TEEN" and other title "Na Honjaman Level Up"
+    Then "Solo Leveling" has artist "DUBU", year 2018, language "KOREAN", rating "TEEN" and other title "Na Honjaman Level Up"
+
+  @should
+  Scenario: Only the leaders of a team of the series can edit it
+    Given scanlator "Mina" leads a team that translates "Solo Leveling"
+    And scanlator "Tom" leads a team that translates "Berserk"
+    And "Aoi" is a translator of the team of "Mina"
+    When "Tom" sets the artist of "Solo Leveling" to "Nobody"
+    Then the edit is refused to "Tom"
+    When "Aoi" sets the artist of "Solo Leveling" to "Nobody"
+    Then the edit is refused to "Aoi"
+    And "Solo Leveling" has no artist
+
+  @could
+  Scenario: A series has at most ten other titles
+    Given scanlator "Mina" leads a team that translates "Solo Leveling"
+    When "Mina" gives "Solo Leveling" 11 other titles
+    Then the edit is refused because a series has at most 10 other titles

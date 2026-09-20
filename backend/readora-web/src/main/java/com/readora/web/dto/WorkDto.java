@@ -18,6 +18,7 @@ public record WorkDto(
         @Nullable String demographic,
         @Nullable String coverImageUrl,
         List<String> genres,
+        WorkFactsDto facts,
         Instant createdAt,
         Instant updatedAt
 ) {
@@ -32,6 +33,7 @@ public record WorkDto(
                 Optional.ofNullable(work.getDemographic()).map(Enum::name).orElse(null),
                 work.getCoverImageUrl(),
                 work.getGenres().stream().sorted().toList(),
+                WorkFactsDto.fromDomain(work.getFacts()),
                 work.getCreatedAt(),
                 work.getUpdatedAt()
         );
