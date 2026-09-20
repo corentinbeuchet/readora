@@ -20,22 +20,22 @@ export class CommunityApi {
     );
   }
 
-  teamResource(projectId: Signal<string | undefined>): HttpResourceRef<TeamProfile | undefined> {
+  teamResource(teamId: Signal<string | undefined>): HttpResourceRef<TeamProfile | undefined> {
     return httpResource<TeamProfile | undefined>(
       () => {
-        const id = projectId();
+        const id = teamId();
         return id ? this.api.url(`/teams/${id}`) : undefined;
       },
       { parse: (raw) => parseEnvelope<TeamProfile>(raw) }
     );
   }
 
-  follow(projectId: string): Observable<unknown> {
-    return this.api.put(`/teams/${projectId}/follow`, {});
+  follow(teamId: string): Observable<unknown> {
+    return this.api.put(`/teams/${teamId}/follow`, {});
   }
 
-  unfollow(projectId: string): Observable<unknown> {
-    return this.api.delete(`/teams/${projectId}/follow`);
+  unfollow(teamId: string): Observable<unknown> {
+    return this.api.delete(`/teams/${teamId}/follow`);
   }
 
   /** The export is a file, not an API envelope; failures still surface as `ApiError`. */

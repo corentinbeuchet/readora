@@ -75,7 +75,7 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'u/:username', renderMode: RenderMode.Client },
   { path: 'lists', renderMode: RenderMode.Client },
   { path: 'lists/:listId', renderMode: RenderMode.Client },
-  { path: 'teams/:projectId', renderMode: RenderMode.Client },
+  { path: 'teams/:teamId', renderMode: RenderMode.Client },
 
   // Private / session-dependent pages: client-rendered and `noindex`.
   { path: 'read', renderMode: RenderMode.Client },

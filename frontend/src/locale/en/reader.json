@@ -53,7 +53,7 @@
     "reader.settings.dataSaver": "Data saver (lighter, lower-quality images)",
     "reader.page.altDescribed": "Page {$page}: {$description}",
     "reader.page.alt": "Page {$page}",
-    "reader.toolbar.team": "Translation team",
+    "reader.toolbar.translatedBy": "Translated by",
     "reader.toolbar.noChapter": "No Chapter Loaded",
     "reader.toolbar.pageIndicator": "Page {$INTERPOLATION} / {$INTERPOLATION_1}",
     "reader.toolbar.pageAnnouncement": "Page {$INTERPOLATION} of {$INTERPOLATION_1}",

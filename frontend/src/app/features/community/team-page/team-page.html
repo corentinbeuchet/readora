@@ -9,6 +9,9 @@
   } @else if (team.hasValue() && team.value(); as t) {
     <header class="profile-header">
       <h1>{{ t.name }}</h1>
+      @if (t.description) {
+        <p class="team-description">{{ t.description }}</p>
+      }
       <p class="muted" i18n="@@community.team.followers">{followers(), plural, =1 {1 follower} other {{{ followers() }} followers}}</p>
       <button *appHasPermission="'LIBRARY_USE'" type="button" class="btn" [class.btn-primary]="!following()"
               [attr.aria-pressed]="following()" [disabled]="follow.busy()" (click)="toggleFollow()">
@@ -23,8 +26,25 @@
       }
     </header>
 
-    <h2 i18n="@@community.team.series">Translates</h2>
-    <app-work-card class="team-series" [work]="t.series" variant="row" priority />
+    <section aria-labelledby="team-series">
+      <app-section-header heading="Series" i18n-heading="@@community.team.series" headingId="team-series" />
+      @if (t.series.length === 0) {
+        <app-empty-state>
+          <ng-container i18n="@@community.team.seriesNone">This team has not started a series yet.</ng-container>
+          <a emptyAction routerLink="/works" class="btn btn-primary" i18n="@@community.team.browse">Browse the catalog</a>
+        </app-empty-state>
+      } @else {
+        <ul class="work-grid">
+          @for (entry of t.series; track entry.work.id) {
+            <li>
+              <app-work-card [work]="entry.work" [priority]="$first">
+                <p cardMeta class="muted series-count" i18n="@@community.team.seriesChapters">{entry.chapterCount, plural, =0 {No chapter yet} =1 {1 chapter} other {{{ entry.chapterCount }} chapters}}</p>
+              </app-work-card>
+            </li>
+          }
+        </ul>
+      }
+    </section>
 
     <h2 i18n="@@community.team.members">Members</h2>
     <ul class="plain-list">
@@ -38,8 +58,11 @@
       <p class="muted" i18n="@@community.team.latestNone">No chapters published yet.</p>
     } @else {
       <ul class="plain-list">
-        @for (chapter of t.latestChapters; track chapter.id) {
-          <li><a [routerLink]="['/read', chapter.id]" i18n="@@community.team.chapter">Chapter {{ chapter.chapterNumber }}</a> <span class="muted">{{ chapter.title }}</span></li>
+        @for (row of latestChapters(); track row.chapter.id) {
+          <li class="latest-chapter">
+            <a [routerLink]="['/read', row.chapter.id]" i18n="@@community.team.seriesChapter">{{ row.seriesTitle }}, chapter {{ row.chapter.chapterNumber }}</a>
+            <span class="muted">{{ row.chapter.title }}</span>
+          </li>
         }
       </ul>
     }

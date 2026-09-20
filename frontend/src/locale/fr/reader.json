@@ -53,7 +53,7 @@
     "reader.settings.dataSaver": "Économie de données (images plus légères, de moindre qualité)",
     "reader.page.altDescribed": "Page {$page} : {$description}",
     "reader.page.alt": "Page {$page}",
-    "reader.toolbar.team": "Équipe de traduction",
+    "reader.toolbar.translatedBy": "Traduit par",
     "reader.toolbar.noChapter": "Aucun chapitre chargé",
     "reader.toolbar.pageIndicator": "Page {$INTERPOLATION} / {$INTERPOLATION_1}",
     "reader.toolbar.pageAnnouncement": "Page {$INTERPOLATION} sur {$INTERPOLATION_1}",

@@ -37,7 +37,7 @@ export const routes: Routes = [
     loadComponent: () => import('@app/features/community/public-profile-page/public-profile-page').then((m) => m.PublicProfilePage)
   },
   {
-    path: 'teams/:projectId',
+    path: 'teams/:teamId',
     loadComponent: () => import('@app/features/community/team-page/team-page').then((m) => m.TeamPage)
   },
   {

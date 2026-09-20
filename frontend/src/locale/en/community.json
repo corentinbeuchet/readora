@@ -18,12 +18,14 @@
     "community.team.followers": "{VAR_PLURAL, plural, =1 {1 follower} other {{INTERPOLATION} followers}}",
     "community.team.following": "Following",
     "community.team.follow": "Follow",
-    "community.team.series": "Translates",
+    "community.team.series": "Series",
+    "community.team.seriesNone": "This team has not started a series yet.",
+    "community.team.seriesChapters": "{VAR_PLURAL, plural, =0 {No chapter yet} =1 {1 chapter} other {{INTERPOLATION} chapters}}",
     "community.team.members": "Members",
     "community.team.latest": "Latest chapters",
     "community.team.latestNone": "No chapters published yet.",
-    "community.team.chapter": "Chapter {$INTERPOLATION}",
+    "community.team.seriesChapter": "{$INTERPOLATION}, chapter {$INTERPOLATION_1}",
     "community.team.seoTitle": "{$name} — scanlation team",
-    "community.team.seoDescription": "{$name} translates {$series}."
+    "community.team.seoDescriptionSeries": "{$name} translates {$series}."
   }
 }

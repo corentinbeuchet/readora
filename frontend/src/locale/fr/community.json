@@ -15,15 +15,17 @@
     "community.team.notFound": "Cette équipe est introuvable.",
     "community.team.loadError": "Impossible de charger l'équipe.",
     "community.team.browse": "Parcourir le catalogue",
-    "community.team.series": "Traduit",
+    "community.team.series": "Séries",
+    "community.team.seriesNone": "Cette équipe n'a pas encore commencé de série.",
+    "community.team.seriesChapters": "{VAR_PLURAL, plural, =0 {Aucun chapitre pour l'instant} =1 {1 chapitre} other {{INTERPOLATION} chapitres}}",
     "community.team.followers": "{VAR_PLURAL, plural, =0 {0 abonné} =1 {1 abonné} other {{INTERPOLATION} abonnés}}",
     "community.team.following": "Abonné",
     "community.team.follow": "Suivre",
     "community.team.members": "Membres",
     "community.team.latest": "Derniers chapitres",
     "community.team.latestNone": "Aucun chapitre publié pour l'instant.",
-    "community.team.chapter": "Chapitre {$INTERPOLATION}",
+    "community.team.seriesChapter": "{$INTERPOLATION}, chapitre {$INTERPOLATION_1}",
     "community.team.seoTitle": "{$name} — équipe de scantrad",
-    "community.team.seoDescription": "{$name} traduit {$series}."
+    "community.team.seoDescriptionSeries": "{$name} traduit {$series}."
   }
 }

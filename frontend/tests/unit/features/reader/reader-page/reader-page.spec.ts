@@ -18,6 +18,7 @@ const MOCK_CHAPTER: Chapter = {
   title: 'Chapter 10',
   status: 'PUBLISHED',
   scanlationProjectId: null,
+  team: null,
   work: null,
   previousChapterId: null,
   nextChapterId: null,

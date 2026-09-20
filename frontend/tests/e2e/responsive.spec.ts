@@ -86,7 +86,7 @@ async function whenIVisit(page: Page, url: string): Promise<void> {
 async function whenIOpenTheChapter(page: Page, chapter: { chapterId: string; workId: string }): Promise<void> {
   await page.goto(`/read/${chapter.chapterId}`);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('The beginning');
-  await expect(page.getByRole('link', { name: 'Translation team' }).or(page.locator(`a[href="/works/${chapter.workId}"]`)).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: /^Translated by/ }).or(page.locator(`a[href="/works/${chapter.workId}"]`)).first()).toBeVisible();
 }
 
 async function whenIChooseTheLink(page: Page, name: string): Promise<void> {

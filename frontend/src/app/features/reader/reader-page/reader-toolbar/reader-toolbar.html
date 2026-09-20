@@ -3,8 +3,8 @@
     @if (state.currentChapter(); as chapter) {
       @if (chapter.work; as work) {
         <a class="series-link" [routerLink]="['/works', work.id]">{{ work.title }}</a>
-        @if (chapter.scanlationProjectId; as teamId) {
-          <a class="series-link team-link" [routerLink]="['/teams', teamId]" i18n="@@reader.toolbar.team">Translation team</a>
+        @if (chapter.team; as team) {
+          <a class="series-link team-link" [routerLink]="['/teams', team.id]"><span class="sr-only" i18n="@@reader.toolbar.translatedBy">Translated by</span> {{ team.name }}</a>
         }
       }
     }

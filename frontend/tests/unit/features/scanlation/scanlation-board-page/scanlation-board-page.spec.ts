@@ -17,6 +17,8 @@ const PROJECT: ScanlationProject = {
   id: PROJECT_ID,
   name: 'FlameScans Solo Leveling',
   workId: 'work-1',
+  teamId: 'team-1',
+  teamName: 'Shadow Scans',
   members: [{ userId: 'user-1', roles: ['CLEANER_REDRAWER', 'QUALITY_CHECKER'] }],
   tasks: [RAW_TASK, MY_TASK, QC_TASK]
 };

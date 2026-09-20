@@ -45,6 +45,8 @@ export interface Chapter {
   scanlationProjectId: string | null;
   /** Reader view only (`GET /chapters/{id}`): the series, for its title and default reading mode. */
   work: { id: string; title: string; type: WorkType } | null;
+  /** Reader view only: the team credited for the chapter, `null` when it has none. */
+  team: { id: string; name: string } | null;
   /** Reader view only: published neighbours, `null` at either end. */
   previousChapterId: string | null;
   nextChapterId: string | null;

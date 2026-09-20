@@ -27,6 +27,12 @@ Feature: Community and scanlation teams
     When a reader opens the page of the team "Shadow Scans"
     Then they see its members, every series it translates and its latest chapters
 
+  @could @ui
+  Scenario: The team page lists every series as a card
+    Given the team "Shadow Scans" translates "Solo Leveling" and "Omniscient Reader"
+    When a reader opens the page of the team "Shadow Scans"
+    Then each series is a card with the number of chapters the team published
+
   # Inspired by: MangaDex
   @could @wip
   Scenario: Several teams translated the same chapter

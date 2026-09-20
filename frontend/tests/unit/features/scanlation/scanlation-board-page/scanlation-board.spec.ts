@@ -5,6 +5,8 @@ const PROJECT: ScanlationProject = {
   id: 'proj-1-uuid',
   name: 'FlameScans Solo Leveling',
   workId: 'work-1-uuid',
+  teamId: 'team-1',
+  teamName: 'Shadow Scans',
   members: [{ userId: 'Alice', roles: ['CLEANER_REDRAWER'] }],
   tasks: [
     { id: 't1', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, assetPackageUrl: null, pageCount: 22, updatedAt: '2026-09-13T00:00:00Z' },

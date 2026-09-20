@@ -25,6 +25,9 @@ export interface ScanlationProject {
   id: string;
   name: string;
   workId: string;
+  teamId: string;
+  teamName: string;
+  /** The roster of the project's team: roles apply to every series the team works on. */
   members: { userId: string; roles: ScanlationRole[] }[];
   tasks: WorkflowTask[];
 }
