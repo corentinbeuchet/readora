@@ -16,6 +16,34 @@ export const test = base.extend<{
   /** An axe scan of the current page against WCAG 2.0/2.1/2.2 A and AA (`await axe().analyze()`). */
   axe: () => AxeBuilder;
 }>({
+  /**
+   * Playwright's WebKit for Windows crashes the page ("Page crashed") when the vertical scrollbar appears after the
+   * first layout: a client-rendered page that is short while loading and grows past the screen once its data arrives
+   * (`/works/:id`, `/teams/:id`; found by bisection, review-2026-09-19/R27). Safari has overlay scrollbars and no such
+   * relayout, so the site is left alone: the `webkit` and `Mobile Safari` projects get the scrollbar from the start.
+   */
+  context: async ({ context, browserName }, use) => {
+    if (browserName === 'webkit') {
+      await context.addInitScript(() => {
+        const keepTheScrollbar = (): void => {
+          const style = document.createElement('style');
+          style.textContent = 'html { overflow-y: scroll; }';
+          document.documentElement.appendChild(style);
+        };
+        if (document.documentElement) {
+          keepTheScrollbar();
+        } else {
+          new MutationObserver((_, observer) => {
+            if (document.documentElement) {
+              observer.disconnect();
+              keepTheScrollbar();
+            }
+          }).observe(document, { childList: true });
+        }
+      });
+    }
+    await use(context);
+  },
   publishedChapter: async ({ request }, use) => {
     await use(await publishChapter(request));
   },

@@ -419,10 +419,14 @@ Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = repor
 - R17 `PlansPage` hand-rolls busy/error (`asyncAction()` exists) and confirms the cancellation with `window.confirm` (`app-dialog` exists).
 - R18 The kanban shows the raw `assigneeId` UUID: the task DTO has no assignee name (backend + frontend).
 - R26 (survey) Axe and responsive e2e only scan public pages: no signed-in page, no open dialog.
-- R27 (2026-09-20, open) Playwright's WebKit (`webkit`, `Mobile Safari`, on Windows) reports "Page crashed" about 4
-  loads in 5 on `/works/:id` and `/teams/:id` served by `ng serve`, existing tests included; never with JavaScript
-  off, never on `/`, `/works`, `/updates`, `/rankings`, `/lists`, `/u/:name`. Cause unknown (not the `:has()` rule of
-  the chapter list). Next checks: the production build, a real Safari, then bisect the two templates.
+- R27 (2026-09-20) Playwright's WebKit for Windows (`webkit`, `Mobile Safari`) reported "Page crashed" on `/works/:id`
+  and `/teams/:id`, on the dev server and on a static build. Cause (bisected): the vertical scrollbar appearing after
+  the first layout, when a client-rendered page that is short while loading grows past the screen (with
+  `html, body { margin: 0 }`; `scrollbar-gutter` does not help, `html { overflow-y: scroll }` does). Safari has overlay
+  scrollbars, so the site is unchanged: `tests/e2e/support/fixtures.ts` gives the WebKit projects the scrollbar from
+  the start (a context made with `browser.newContext()` does not get it). Still failing on `Mobile Safari` only, not
+  looked into: the sign-up tests of `scanlation-pipeline.spec.ts`, the signed-in header axe test and the dark `/` axe
+  test. Check the series and team pages once on a real iPhone before a release.
 - Smaller (survey): `noUncheckedIndexedAccess` off; 8 `(event.target as …)` casts; silent upvote failure
   (`chapter-comments.ts`); unused `requirePermission()`; footer year baked at prerender; identical "Show Spoiler"
   names; `app.routes.server.ts` reads `environment`; hand-rolled omnisearch combobox vs `@angular/aria`.
