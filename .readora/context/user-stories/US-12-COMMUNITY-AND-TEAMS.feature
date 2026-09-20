@@ -33,12 +33,56 @@ Feature: Community and scanlation teams
     When a reader opens the page of the team "Shadow Scans"
     Then each series is a card with the number of chapters the team published
 
-  # Inspired by: comix.to and MangaDex chapter lists
+  # Inspired by: comix.to and MangaDex chapter lists. One row per chapter number, the teams inside (decided 2026-09-20):
+  # read marks and "Next up" are per number, so a flat list of versions would show one chapter as read and unread.
   @should @ui
   Scenario: Each chapter of a series names the team that translated it
     Given "Shadow Scans" published chapter 5 of "Solo Leveling"
     When a reader opens the series "Solo Leveling"
-    Then chapter 5 shows a link to the team "Shadow Scans"
+    Then the row of chapter 5 names the team "Shadow Scans"
+
+  @should @ui
+  Scenario: One row per chapter number with its versions
+    Given "Shadow Scans" and "Moon Scans" both published chapter 5 of "Solo Leveling"
+    When a reader opens the series "Solo Leveling"
+    Then chapter 5 appears once, by "Shadow Scans", with a link to the version by "Moon Scans"
+
+  @should @ui
+  Scenario: Filtering the chapter list by team
+    Given "Shadow Scans" published chapters 5 and 6 of "Solo Leveling" and "Moon Scans" only chapter 5
+    When a reader filters the chapters by "Moon Scans"
+    Then only chapter 5 is listed, in the version by "Moon Scans"
+
+  @could @ui
+  Scenario: Sorting chapters newest or oldest first
+    When a reader chooses "Newest first" on the series "Solo Leveling"
+    Then the last chapter comes first
+
+  @should @ui
+  Scenario: Translated by lists each team
+    Given "Shadow Scans" published 2 chapters of "Solo Leveling" and "Moon Scans" 1
+    When a reader opens the series "Solo Leveling"
+    Then "Translated by" lists "Shadow Scans" with 2 chapters and "Moon Scans" with 1 chapter, each linking to its team page
+
+  # The reader's choice of team lives in the browser (guests too); the server already stays with the team being read.
+  @should @ui
+  Scenario: Switching version in the reader keeps my team for the next chapters
+    Given "Kenji" reads chapter 5 of "Solo Leveling" by "Shadow Scans"
+    When he switches to the version by "Moon Scans"
+    Then "Next chapter" opens chapter 6 by "Moon Scans"
+
+  @should @ui
+  Scenario: The series page opens the chapters in the versions by my team
+    Given "Kenji" prefers "Moon Scans" for "Solo Leveling"
+    And "Shadow Scans" and "Moon Scans" both published chapter 5 of "Solo Leveling"
+    When he opens the series "Solo Leveling"
+    Then chapter 5 opens in the version by "Moon Scans", with a link to the version by "Shadow Scans"
+
+  @should @ui
+  Scenario: The next chapter falls back when my team has not released it
+    Given "Kenji" prefers "Moon Scans" for "Solo Leveling" and only "Shadow Scans" published chapter 6
+    When he reaches the end of chapter 5
+    Then "Next chapter" opens chapter 6 by "Shadow Scans"
 
   @should
   Scenario: A team only publishes into a series it works on

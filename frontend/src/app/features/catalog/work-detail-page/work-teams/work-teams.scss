@@ -1,0 +1,30 @@
+.work-teams {
+  margin-block-end: var(--space-6);
+}
+
+.team-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+  padding: 0;
+}
+
+.team {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 1.5rem;
+    font-weight: var(--fw-semibold);
+  }
+}
+
+.team-count {
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}

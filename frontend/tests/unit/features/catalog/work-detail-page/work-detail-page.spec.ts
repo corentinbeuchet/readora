@@ -84,16 +84,24 @@ describe('WorkDetailPage', () => {
     it('Each chapter of a series names the team that translated it', async () => {
       await givenIAmOnTheWorkPage({ inLibrary: false, finished: [], next: 'c-1' });
 
-      thenChapterIsCreditedTo(3, 'Chapter 3 translated by Shadow Scans', '/teams/t-shadow');
+      thenTheRowNamesTheTeam(3, 'Shadow Scans');
     });
 
     it('a chapter finished in the version of one team is read in the version of the other team too', async () => {
       await givenIAmOnTheWorkPage({ inLibrary: true, finished: ['c-1'], next: 'c-2', otherVersions: [{ id: 'c-1-moon', number: '1', team: 'Moon Scans' }] });
 
-      thenTheRowsAre(['Ch. 1', 'Ch. 1', 'Ch. 2', 'Ch. 3']);
+      thenTheRowsAre(['Ch. 1', 'Ch. 2', 'Ch. 3']);
       thenRowIsRead(1);
-      thenRowIsRead(2);
-      thenRowIsCreditedTo(2, 'Moon Scans');
+      thenRowAlsoOffersTheVersionBy(1, 'Moon Scans');
+    });
+
+    it('Translated by lists each team', async () => {
+      await givenIAmOnTheWorkPage({ inLibrary: false, finished: [], next: 'c-1', otherVersions: [{ id: 'c-1-moon', number: '1', team: 'Moon Scans' }] });
+
+      thenTranslatedByLists([
+        { team: 'Shadow Scans', chapters: '3 chapters', href: '/teams/t-shadow' },
+        { team: 'Moon Scans', chapters: '1 chapter', href: '/teams/t-moon-scans' }
+      ]);
     });
 
     it('another version of the first chapter has nothing before it to mark as read', async () => {
@@ -134,7 +142,7 @@ describe('WorkDetailPage', () => {
       next: string;
       otherVersions?: { id: string; number: string; team: string }[];
     }): Promise<void> {
-      const versions = (state.otherVersions ?? []).map((v) => ({ ...CHAPTERS[0], id: v.id, chapterNumber: v.number, team: { id: `t-${v.team}`, name: v.team } }));
+      const versions = (state.otherVersions ?? []).map((v) => ({ ...CHAPTERS[0], id: v.id, chapterNumber: v.number, team: { id: `t-${v.team.toLowerCase().replaceAll(' ', '-')}`, name: v.team } }));
       // The API lists versions of a number next to each other, the first published first.
       const listed = [...CHAPTERS, ...versions].sort((a, b) => Number(a.chapterNumber) - Number(b.chapterNumber));
       await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: ['LIBRARY_USE'] }));
@@ -196,8 +204,19 @@ describe('WorkDetailPage', () => {
       expect(chapterLink(row).classList).toContain('chapter-read');
     }
 
-    function thenRowIsCreditedTo(row: number, team: string): void {
-      expect(fixture.nativeElement.querySelectorAll('.chapter-row')[row - 1].querySelector('a.chapter-team').textContent).toContain(team);
+    function thenRowAlsoOffersTheVersionBy(row: number, team: string): void {
+      expect(fixture.nativeElement.querySelectorAll('.chapter-row')[row - 1].querySelector('.version-list a').textContent).toContain(team);
+    }
+
+    function thenTranslatedByLists(expected: { team: string; chapters: string; href: string }[]): void {
+      const teams: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('app-work-teams .team'));
+      expect(
+        teams.map((team) => ({
+          team: team.querySelector('a')!.textContent!.trim(),
+          chapters: team.querySelector('.team-count')!.textContent!.trim(),
+          href: team.querySelector('a')!.getAttribute('href')
+        }))
+      ).toEqual(expected);
     }
 
     function thenChapterIsRead(chapter: number): void {
@@ -245,10 +264,8 @@ describe('WorkDetailPage', () => {
       if (body !== undefined) expect(lastRequest.request.body).toEqual(body);
     }
 
-    function thenChapterIsCreditedTo(chapter: number, name: string, href: string): void {
-      const link = fixture.nativeElement.querySelectorAll('.chapter-row')[chapter - 1].querySelector('a.chapter-team') as HTMLAnchorElement;
-      expect(link.textContent!.replace(/\s+/g, ' ').trim()).toBe(name);
-      expect(link.getAttribute('href')).toBe(href);
+    function thenTheRowNamesTheTeam(chapter: number, team: string): void {
+      expect(chapterLink(chapter).querySelector('.chapter-team')!.textContent!.trim()).toBe(`by ${team}`);
     }
 
     function chapterLink(chapter: number): HTMLElement {

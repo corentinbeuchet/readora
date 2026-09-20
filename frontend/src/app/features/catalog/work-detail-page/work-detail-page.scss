@@ -35,64 +35,6 @@
   margin-bottom: 1.25rem;
 }
 
-.chapter-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.chapter-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.25rem 0.75rem;
-}
-
-.mark-previous,
-.chapter-team {
-  font-size: var(--fs-sm);
-}
-
-// Its own link beside the row (a link cannot sit inside the chapter link); 24px tall for touch.
-.chapter-team {
-  flex: 0 0 10rem;
-  display: block;
-  min-block-size: 1.5rem;
-  line-height: 1.5rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.chapter-link {
-  flex: 1 1 20rem;
-  display: grid;
-  grid-template-columns: 5rem 1fr auto;
-  gap: 1rem;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: inherit;
-  text-decoration: none;
-
-  &:hover {
-    border-color: var(--accent);
-  }
-}
-
-.chapter-number {
-  font-weight: var(--fw-bold);
-  color: var(--accent);
-}
-
-.chapter-info {
-  font-size: var(--fs-sm);
-}
-
 .work-actions {
   display: flex;
   flex-wrap: wrap;
@@ -102,28 +44,4 @@
 
 .library-status {
   margin: 0;
-}
-
-// Read chapters are muted (still AA contrast) and labelled "✓ Read"; the next one is outlined and labelled.
-.chapter-read {
-  .chapter-number,
-  .chapter-title {
-    color: var(--muted);
-    font-weight: var(--fw-regular);
-  }
-}
-
-.chapter-next {
-  border-color: var(--accent);
-}
-
-.chapter-state {
-  margin-left: 0.5rem;
-  font-size: var(--fs-sm);
-  color: var(--muted);
-}
-
-.chapter-state-next {
-  color: var(--accent);
-  font-weight: var(--fw-semibold);
 }

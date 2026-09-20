@@ -58,6 +58,10 @@
       </div>
     </article>
 
+    @if (teams().length > 0) {
+      <app-work-teams [teams]="teams()" />
+    }
+
     <section id="chapters" class="chapters" aria-labelledby="chapters-heading">
       <h2 id="chapters-heading" i18n="@@catalog.work.chapters.heading">Chapters</h2>
       @if (chapters.isLoading()) {
@@ -67,38 +71,8 @@
       } @else if (!chapters.value() || chapters.value().length === 0) {
         <p class="muted" i18n="@@catalog.work.chapters.empty">No chapters have been published yet.</p>
       } @else {
-        <ol class="chapter-list">
-          @for (row of chapterRows(); track row.chapter.id) {
-            @let chapter = row.chapter;
-            @let read = row.read;
-            @let next = row.next;
-            <li class="chapter-row">
-              <a [routerLink]="['/read', chapter.id]" class="chapter-link" [class.chapter-read]="read" [class.chapter-next]="next">
-                <span class="chapter-number" i18n="@@catalog.work.chapters.number">Ch. {{ chapter.chapterNumber }}</span>
-                <span class="chapter-title">
-                  {{ chapter.title }}
-                  @if (read) {
-                    <span class="chapter-state" i18n="@@catalog.work.chapters.read">✓ Read</span>
-                  } @else if (next) {
-                    <span class="chapter-state chapter-state-next" i18n="@@catalog.work.chapters.nextUp">Next up</span>
-                  }
-                </span>
-                <span class="muted chapter-info">
-                  <ng-container i18n="@@catalog.work.chapters.pages">{chapter.pageCount, plural, =1 {1 page} other {{{ chapter.pageCount }} pages}}</ng-container>
-                  @if (chapter.publishedAt) {
-                    · {{ chapter.publishedAt | date: 'mediumDate' }}
-                  }
-                </span>
-              </a>
-              <a class="chapter-team" [routerLink]="['/teams', chapter.team.id]"><span class="sr-only" i18n="@@catalog.work.chapters.teamOf">Chapter {{ chapter.chapterNumber }} translated by</span> {{ chapter.team.name }}</a>
-              @if (row.canMarkPrevious) {
-                <button type="button" class="btn btn-sm btn-link mark-previous" [disabled]="library.busy()" (click)="markPreviousAsRead(chapter.id)" i18n="@@catalog.work.chapters.markPrevious">
-                  Mark all previous as read<span class="sr-only"> (before chapter {{ chapter.chapterNumber }})</span>
-                </button>
-              }
-            </li>
-          }
-        </ol>
+        <app-chapter-list [workId]="w.id" [chapters]="published()" [progress]="progress()" [canMark]="canUseLibrary()" [busy]="library.busy()"
+                          [team]="team()" [order]="order()" (markPrevious)="markPreviousAsRead($event)" />
       }
     </section>
 

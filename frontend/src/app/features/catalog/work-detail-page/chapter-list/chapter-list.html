@@ -1,0 +1,74 @@
+<div class="list-tools">
+  @if (teams().length > 1) {
+    <label class="field team-filter">
+      <span i18n="@@catalog.work.chapters.filter.label">Translated by</span>
+      <select #teamFilter (change)="filterByTeam(teamFilter.value)">
+        <option value="" [selected]="!filteredTeam()" i18n="@@catalog.work.chapters.filter.all">All teams</option>
+        @for (share of teams(); track share.team.id) {
+          <option [value]="share.team.id" [selected]="filteredTeam()?.id === share.team.id">{{ share.team.name }}</option>
+        }
+      </select>
+    </label>
+  }
+  <div class="sort" role="group" aria-label="Order of the chapters" i18n-aria-label="@@catalog.work.chapters.sort.label">
+    <button type="button" class="btn btn-sm" [attr.aria-pressed]="!newestFirst()" (click)="sort(null)" i18n="@@catalog.work.chapters.sort.oldest">Oldest first</button>
+    <button type="button" class="btn btn-sm" [attr.aria-pressed]="newestFirst()" (click)="sort('newest')" i18n="@@catalog.work.chapters.sort.newest">Newest first</button>
+  </div>
+</div>
+
+<ol class="chapter-list">
+  @for (row of rows(); track row.number) {
+    @let chapter = row.opens;
+    <li class="chapter-row">
+      <a [routerLink]="['/read', chapter.id]" class="chapter-link" [class.chapter-read]="row.read" [class.chapter-next]="row.next">
+        <span class="chapter-number" i18n="@@catalog.work.chapters.number">Ch. {{ row.number }}</span>
+        <span class="chapter-title">
+          {{ chapter.title }}
+          @if (row.read) {
+            <span class="chapter-state" i18n="@@catalog.work.chapters.read">✓ Read</span>
+          } @else if (row.next) {
+            <span class="chapter-state chapter-state-next" i18n="@@catalog.work.chapters.nextUp">Next up</span>
+          }
+        </span>
+        <span class="muted chapter-info">
+          <span class="chapter-team" i18n="@@catalog.work.chapters.by">by {{ chapter.team.name }}</span>
+          <span i18n="@@catalog.work.chapters.pages">{chapter.pageCount, plural, =1 {1 page} other {{{ chapter.pageCount }} pages}}</span>
+          @if (chapter.publishedAt) {
+            <time [attr.datetime]="chapter.publishedAt">{{ chapter.publishedAt | date: 'mediumDate' }}</time>
+          }
+        </span>
+      </a>
+      @if (row.others.length > 0 || row.canMarkPrevious) {
+        <div class="chapter-side">
+          @if (row.others.length > 0) {
+            <span class="versions-label" [id]="`versions-${row.number}`" i18n="@@catalog.work.chapters.versions.label">Also by</span>
+            <ul class="version-list" [id]="`version-list-${row.number}`" [attr.aria-labelledby]="`versions-${row.number}`">
+              @for (version of row.others; track version.id) {
+                <li>
+                  <a [routerLink]="['/read', version.id]" (click)="rememberTeam(version)"><span class="sr-only" i18n="@@catalog.work.chapters.versions.read">Read chapter {{ row.number }} by</span> {{ version.team.name }}</a>
+                </li>
+              }
+            </ul>
+            @if (row.hidden > 0 || row.expanded) {
+              <button type="button" class="btn btn-sm btn-link" [attr.aria-expanded]="row.expanded" [attr.aria-controls]="`version-list-${row.number}`" (click)="toggleTeams(row.number)">
+                @if (row.expanded) {
+                  <span i18n="@@catalog.work.chapters.versions.fewer">Fewer teams</span>
+                } @else {
+                  <span i18n="@@catalog.work.chapters.versions.more">{row.hidden, plural, =1 {1 more team} other {{{ row.hidden }} more teams}}</span>
+                }
+                <span class="sr-only">&nbsp;<ng-container i18n="@@catalog.work.chapters.versions.ofChapter">for chapter {{ row.number }}</ng-container></span>
+              </button>
+            }
+          }
+          @if (row.canMarkPrevious) {
+            <button type="button" class="btn btn-sm btn-link mark-previous" [disabled]="busy()" (click)="markPrevious.emit(chapter.id)" i18n="@@catalog.work.chapters.markPrevious">
+              Mark all previous as read<span class="sr-only"> (before chapter {{ row.number }})</span>
+            </button>
+          }
+        </div>
+      }
+    </li>
+  } @empty {
+    <li class="muted" i18n="@@catalog.work.chapters.filter.none">This team has not translated a chapter of this series yet.</li>
+  }
+</ol>

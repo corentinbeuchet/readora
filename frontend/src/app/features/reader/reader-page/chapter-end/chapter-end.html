@@ -3,15 +3,15 @@
     <nav class="chapter-end" aria-label="Chapter navigation" i18n-aria-label="@@reader.chapterEnd.nav">
       <p class="chapter-end-title" i18n="@@reader.chapterEnd.title">End of chapter {{ current.chapterNumber }}</p>
       <div class="chapter-end-actions">
-        @if (current.previousChapterId) {
-          <a class="btn" [routerLink]="['/read', current.previousChapterId]" i18n="@@reader.chapterEnd.previous">Previous chapter</a>
+        @if (previousId(); as previous) {
+          <a class="btn" [routerLink]="['/read', previous]" i18n="@@reader.chapterEnd.previous">Previous chapter</a>
         }
         <a class="btn" [routerLink]="['/works', current.workId]" fragment="chapters" i18n="@@reader.chapterEnd.chapterList">Chapter list</a>
-        @if (current.nextChapterId) {
-          <a class="btn btn-primary" [routerLink]="['/read', current.nextChapterId]" i18n="@@reader.chapterEnd.next">Next chapter</a>
+        @if (nextId(); as next) {
+          <a class="btn btn-primary" [routerLink]="['/read', next]" i18n="@@reader.chapterEnd.next">Next chapter</a>
         }
       </div>
-      @if (!current.nextChapterId) {
+      @if (!nextId()) {
         <p class="muted" i18n="@@reader.chapterEnd.upToDate">You're up to date: no newer chapter yet.</p>
       }
     </nav>

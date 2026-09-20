@@ -76,6 +76,9 @@
     "reader.report.cancel": "Annuler",
     "reader.report.sending": "Envoi…",
     "reader.report.send": "Envoyer le signalement",
-    "reader.report.error": "Impossible d'envoyer le signalement. Veuillez réessayer."
+    "reader.report.error": "Impossible d'envoyer le signalement. Veuillez réessayer.",
+    "reader.chapterList.by": "par {$INTERPOLATION}",
+    "reader.toolbar.versions": "Aussi par",
+    "reader.toolbar.readVersion": "Lire ce chapitre par"
   }
 }

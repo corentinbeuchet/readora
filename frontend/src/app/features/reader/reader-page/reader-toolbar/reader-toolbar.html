@@ -2,10 +2,24 @@
   <div class="chapter-info">
     @if (state.currentChapter(); as chapter) {
       @if (chapter.work; as work) {
-        <a class="series-link" [routerLink]="['/works', work.id]">{{ work.title }}</a>
-        @if (chapter.team; as team) {
-          <a class="series-link team-link" [routerLink]="['/teams', team.id]"><span class="sr-only" i18n="@@reader.toolbar.translatedBy">Translated by</span> {{ team.name }}</a>
-        }
+        <div class="chapter-links">
+          <a class="series-link" [routerLink]="['/works', work.id]">{{ work.title }}</a>
+          @if (chapter.team; as team) {
+            <a class="series-link team-link" [routerLink]="['/teams', team.id]"><span class="sr-only" i18n="@@reader.toolbar.translatedBy">Translated by</span> {{ team.name }}</a>
+          }
+          @if (otherVersions().length > 0) {
+            <span class="version-switch">
+              <span id="other-versions" class="version-switch-label" i18n="@@reader.toolbar.versions">Also by</span>
+              <ul aria-labelledby="other-versions">
+                @for (version of otherVersions(); track version.chapterId) {
+                  <li>
+                    <a class="series-link" [routerLink]="['/read', version.chapterId]" (click)="chooseVersion(version)"><span class="sr-only" i18n="@@reader.toolbar.readVersion">Read this chapter by</span> {{ version.team.name }}</a>
+                  </li>
+                }
+              </ul>
+            </span>
+          }
+        </div>
       }
     }
     <h1 class="chapter-title">

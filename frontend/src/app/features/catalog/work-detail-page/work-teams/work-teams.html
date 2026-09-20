@@ -1,0 +1,11 @@
+<section class="work-teams" aria-labelledby="translated-by">
+  <app-section-header heading="Translated by" i18n-heading="@@catalog.work.teams.heading" headingId="translated-by" />
+  <ul class="team-list">
+    @for (share of teams(); track share.team.id) {
+      <li class="team">
+        <a [routerLink]="['/teams', share.team.id]">{{ share.team.name }}</a>
+        <span class="muted team-count" i18n="@@catalog.work.teams.chapters">{share.chapterCount, plural, =1 {1 chapter} other {{{ share.chapterCount }} chapters}}</span>
+      </li>
+    }
+  </ul>
+</section>

@@ -11,6 +11,9 @@
              [attr.aria-current]="row.current ? 'page' : null" (click)="chosen.emit()">
             <span class="reader-chapter-number" i18n="@@reader.chapterList.number">Ch. {{ row.chapter.chapterNumber }}</span>
             <span class="reader-chapter-title">{{ row.chapter.title }}</span>
+            @if (row.team; as team) {
+              <span class="reader-chapter-team" i18n="@@reader.chapterList.by">by {{ team }}</span>
+            }
             @if (row.read) {
               <span class="reader-chapter-state" i18n="@@reader.chapterList.read">✓ Read</span>
             }

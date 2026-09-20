@@ -38,8 +38,35 @@
   color: var(--accent);
 }
 
-.team-link {
-  margin-inline-start: 0.75rem;
+// The series, the team and the other teams' versions: one line when there is room, wrapping without indents.
+.chapter-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--space-3);
+  margin: 0;
+}
+
+// Other teams' versions of the chapter: a labelled list of links, on the same line when there is room.
+.version-switch {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--space-3);
+  font-size: var(--fs-sm);
+
+  ul {
+    list-style: none;
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-3);
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.version-switch-label {
+  color: var(--muted);
 }
 
 .viewer-actions {

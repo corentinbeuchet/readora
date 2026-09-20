@@ -3,6 +3,8 @@ import { RouterLink } from '@angular/router';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { ReadingApi } from '@app/core/api/reading-api';
 import { AuthStore } from '@app/core/auth/auth-store';
+import { groupByNumber, pickVersion } from '@app/core/models/chapter';
+import { PreferredTeamStore } from '@app/core/reading/preferred-team-store';
 import { LoadError } from '@app/shared/ui/load-error';
 
 /**
@@ -17,6 +19,7 @@ import { LoadError } from '@app/shared/ui/load-error';
 })
 export class ReaderChapterList {
   private readonly auth = inject(AuthStore);
+  private readonly preferredTeam = inject(PreferredTeamStore);
 
   readonly open = input(false);
   readonly workId = input<string>();
@@ -34,14 +37,24 @@ export class ReaderChapterList {
     this.listedWorkId,
     computed(() => this.auth.can('LIBRARY_USE'))
   );
-  /** One row per chapter, computed once (not per template call). */
+  /**
+   * One row per chapter number (US-12), computed once: it opens the version by the team being read when that team has
+   * the chapter, else by my team, else the first one published. Read marks follow the number.
+   */
   protected readonly rows = computed(() => {
     const finished = new Set(this.progress.hasValue() ? (this.progress.value()?.finishedChapterNumbers ?? []) : []);
-    const current = this.currentChapterId();
-    return (this.chapters.hasValue() ? this.chapters.value() : []).map((chapter) => ({
-      chapter,
-      current: chapter.id === current,
-      read: finished.has(chapter.chapterNumber)
-    }));
+    const chapters = this.chapters.hasValue() ? this.chapters.value() : [];
+    const current = chapters.find((chapter) => chapter.id === this.currentChapterId());
+    const team = current?.team.id ?? this.preferredTeam.teamFor(this.listedWorkId() ?? '');
+    const severalTeams = new Set(chapters.map((chapter) => chapter.team.id)).size > 1;
+    return groupByNumber(chapters).map((group) => {
+      const chapter = group.versions.find((version) => version.id === current?.id) ?? pickVersion(group.versions, team) ?? group.versions[0];
+      return {
+        chapter,
+        current: chapter.id === current?.id,
+        read: finished.has(group.chapterNumber),
+        team: severalTeams ? chapter.team.name : null
+      };
+    });
   });
 }

@@ -87,3 +87,47 @@ export interface ChapterSummary {
   /** The team that translated this version of the chapter. */
   team: TeamRef;
 }
+
+/** A chapter number with every team's version of it, the first one published first (the order of the API). */
+export interface ChapterGroup {
+  chapterNumber: string;
+  versions: ChapterSummary[];
+}
+
+/**
+ * Groups the chapter list of a series by number. `GET /works/{id}/chapters` lists the versions of one number next
+ * to each other, so consecutive equal numbers form a group and the reading order is kept.
+ */
+export function groupByNumber(chapters: readonly ChapterSummary[]): ChapterGroup[] {
+  const groups: ChapterGroup[] = [];
+  for (const chapter of chapters) {
+    const last = groups.at(-1);
+    if (last?.chapterNumber === chapter.chapterNumber) {
+      last.versions.push(chapter);
+    } else {
+      groups.push({ chapterNumber: chapter.chapterNumber, versions: [chapter] });
+    }
+  }
+  return groups;
+}
+
+/** The version to open: the preferred team's when it has one, otherwise the first one published. */
+export function pickVersion<T extends { team: TeamRef }>(versions: readonly T[], preferredTeamId: string | null): T | undefined {
+  return versions.find((version) => version.team.id === preferredTeamId) ?? versions[0];
+}
+
+/** A team with the number of chapters of the series it translated. */
+export interface TeamShare {
+  team: TeamRef;
+  chapterCount: number;
+}
+
+/** The teams of a chapter list, the one with the most chapters first (then by name). */
+export function teamsOf(chapters: readonly ChapterSummary[]): TeamShare[] {
+  const shares = new Map<string, TeamShare>();
+  for (const chapter of chapters) {
+    const share = shares.get(chapter.team.id) ?? { team: chapter.team, chapterCount: 0 };
+    shares.set(chapter.team.id, { ...share, chapterCount: share.chapterCount + 1 });
+  }
+  return [...shares.values()].sort((a, b) => b.chapterCount - a.chapterCount || a.team.name.localeCompare(b.team.name));
+}

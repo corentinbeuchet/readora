@@ -1,5 +1,4 @@
 import { Component, computed, effect, inject, input, linkedSignal } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { firstValueFrom } from 'rxjs';
@@ -9,9 +8,13 @@ import { LibraryApi } from '@app/core/api/library-api';
 import { ReadingApi } from '@app/core/api/reading-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
+import { ChapterList } from './chapter-list/chapter-list';
 import { WorkRatings } from './work-ratings/work-ratings';
+import { WorkTeams } from './work-teams/work-teams';
 import { AddToList } from './add-to-list/add-to-list';
+import { groupByNumber, pickVersion, teamsOf } from '@app/core/models/chapter';
 import { READING_STATUS_LABELS, ReadingStatus } from '@app/core/models/library';
+import { PreferredTeamStore } from '@app/core/reading/preferred-team-store';
 import { SeoService } from '@app/core/seo/seo.service';
 import { LoadError } from '@app/shared/ui/load-error';
 import { WorkCover } from '@app/shared/ui/work-cover/work-cover';
@@ -19,7 +22,7 @@ import { WORK_STATUS_LABELS, WORK_TYPE_LABELS } from '@app/core/models/catalog';
 
 @Component({
   selector: 'app-work-detail-page',
-  imports: [WorkCover, LoadError, RouterLink, DatePipe, HasPermissionDirective, WorkRatings, AddToList],
+  imports: [WorkCover, LoadError, RouterLink, HasPermissionDirective, WorkRatings, AddToList, ChapterList, WorkTeams],
   templateUrl: './work-detail-page.html',
   styleUrl: './work-detail-page.scss'
 })
@@ -30,9 +33,13 @@ export class WorkDetailPage {
   private readonly readingApi = inject(ReadingApi);
   private readonly seo = inject(SeoService);
   protected readonly auth = inject(AuthStore);
+  private readonly preferredTeam = inject(PreferredTeamStore);
 
   /** Bound from the `works/:workId` route. */
   readonly workId = input.required<string>();
+  /** `?team=` and `?order=`: the chapter list's filter and sort. */
+  readonly team = input<string>();
+  readonly order = input<string>();
 
   protected readonly work = this.catalogApi.workResource(this.workId);
   protected readonly chapters = this.catalogApi.chaptersResource(this.workId);
@@ -42,14 +49,12 @@ export class WorkDetailPage {
   private readonly bookmarkEntry = this.bookmarksApi.forWorkResource(this.workId, this.canReadBookmark);
   protected readonly bookmark = computed(() => (this.bookmarkEntry.hasValue() ? this.bookmarkEntry.value() : null) ?? null);
 
-  protected readonly firstChapterId = computed(() => (this.chapters.hasValue() ? this.chapters.value()[0]?.id : null) ?? null);
-
   // Library and read markers (free with LIBRARY_USE).
   protected readonly statuses = Object.keys(READING_STATUS_LABELS) as ReadingStatus[];
   protected readonly statusLabels = READING_STATUS_LABELS;
   protected readonly typeLabels = WORK_TYPE_LABELS;
   protected readonly workStatusLabels = WORK_STATUS_LABELS;
-  private readonly canUseLibrary = computed(() => this.auth.can('LIBRARY_USE'));
+  protected readonly canUseLibrary = computed(() => this.auth.can('LIBRARY_USE'));
   private readonly libraryEntry = this.libraryApi.entryResource(this.workId, this.canUseLibrary);
   private readonly entry = computed(() => (this.libraryEntry.hasValue() ? this.libraryEntry.value() : null));
   /** This series' status in my library (`null` = not in it); updated locally after each change. */
@@ -59,37 +64,23 @@ export class WorkDetailPage {
   /** Library, notification and read-marker changes: one busy/error state. */
   protected readonly library = asyncAction($localize`:@@catalog.work.libraryError:Could not update your library. Please try again.`);
 
-  private readonly progress = this.readingApi.progressResource(this.workId, this.canUseLibrary);
-  /** Read marks follow the chapter number: a chapter read in one team's version is read in every version. */
-  private readonly finished = computed(() => new Set(this.progress.hasValue() ? (this.progress.value()?.finishedChapterNumbers ?? []) : []));
-  /**
-   * One row per chapter with its read marks, computed in a single pass: "Mark all previous as read" is offered only
-   * on an unread chapter that has unread chapter numbers before it (where it would change something). Several
-   * teams' versions of one number follow each other in the list and count as one chapter.
-   */
-  protected readonly chapterRows = computed(() => {
-    const finished = this.finished();
-    const next = this.nextChapterId();
-    const canMark = this.canUseLibrary() && this.progress.hasValue();
-    let unreadBefore = false;
-    let number: string | null = null;
-    let numberIsUnread = false;
-    return (this.chapters.hasValue() ? this.chapters.value() : []).map((chapter) => {
-      if (chapter.chapterNumber !== number) {
-        unreadBefore ||= numberIsUnread;
-        number = chapter.chapterNumber;
-      }
-      const read = finished.has(chapter.chapterNumber);
-      numberIsUnread = !read;
-      return { chapter, read, next: chapter.id === next, canMarkPrevious: canMark && !read && unreadBefore };
-    });
-  });
-  protected readonly nextChapterId = computed(() => (this.progress.hasValue() ? (this.progress.value()?.nextChapterId ?? null) : null));
-  /** "Continue" for a free reader who already finished chapters here. */
+  private readonly progressEntry = this.readingApi.progressResource(this.workId, this.canUseLibrary);
+  /** My progress in the series: read marks and "Next up" follow the chapter number, whichever team's version I read. */
+  protected readonly progress = computed(() => (this.progressEntry.hasValue() ? (this.progressEntry.value() ?? null) : null));
+  protected readonly published = computed(() => (this.chapters.hasValue() ? this.chapters.value() : []));
+  protected readonly teams = computed(() => teamsOf(this.published()));
+  private readonly groups = computed(() => groupByNumber(this.published()));
+  private readonly myTeam = computed(() => this.preferredTeam.teamFor(this.workId()));
+
+  /** "Start reading": the first chapter, in my team's version when it has one. */
+  protected readonly firstChapterId = computed(() => pickVersion(this.groups()[0]?.versions ?? [], this.myTeam())?.id ?? null);
+  /** "Continue" for a free reader who already finished chapters here: my team's version, else the server's choice. */
   protected readonly continueChapter = computed(() => {
-    const next = this.nextChapterId();
-    if (!next || this.finished().size === 0 || !this.chapters.hasValue()) return null;
-    return this.chapters.value().find((chapter) => chapter.id === next) ?? null;
+    const progress = this.progress();
+    if (!progress?.nextChapterNumber || progress.finishedChapterNumbers.length === 0) return null;
+    const versions = this.groups().find((group) => group.chapterNumber === progress.nextChapterNumber)?.versions ?? [];
+    const mine = this.myTeam();
+    return (mine ? pickVersion(versions, mine) : versions.find((version) => version.id === progress.nextChapterId)) ?? versions[0] ?? null;
   });
 
   constructor() {
@@ -112,7 +103,7 @@ export class WorkDetailPage {
   }
 
   protected async markPreviousAsRead(chapterId: string): Promise<void> {
-    await this.library.run(async () => this.progress.set(await firstValueFrom(this.readingApi.markReadUpTo(chapterId))), {
+    await this.library.run(async () => this.progressEntry.set(await firstValueFrom(this.readingApi.markReadUpTo(chapterId))), {
       fallback: $localize`:@@catalog.work.readMarkError:Could not update your read chapters. Please try again.`
     });
   }

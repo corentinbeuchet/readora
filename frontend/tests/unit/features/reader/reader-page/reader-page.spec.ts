@@ -5,7 +5,8 @@ import { PROGRESS_SYNC_DEBOUNCE_MS, ReaderPage, ZEN_CONTROLS_HIDE_MS } from '@ap
 import { ReaderState } from '@app/features/reader/reader-page/reader-state';
 import { ReaderPreferencesStore } from '@app/features/reader/reader-page/reader-preferences-store';
 import { LayoutStore } from '@app/core/layout/layout-store';
-import { Chapter } from '@app/core/models/chapter';
+import { Chapter, TeamRef } from '@app/core/models/chapter';
+import { PreferredTeamStore } from '@app/core/reading/preferred-team-store';
 import { ChapterComment } from '@app/core/models/comments';
 import { Permission } from '@app/core/models/identity';
 import { givenIAmSignedInWith } from '../../../core/auth/auth-fixtures';
@@ -52,6 +53,25 @@ function soloLeveling(chapterNumber: number, links: { previous: string; next: st
     chapterNumber: `${chapterNumber}`,
     previousChapterId: links.previous,
     nextChapterId: links.next
+  };
+}
+
+const SHADOW_SCANS: TeamRef = { id: 'shadow', name: 'Shadow Scans' };
+const MOON_SCANS: TeamRef = { id: 'moon', name: 'Moon Scans' };
+
+/** Chapter `n` of Solo Leveling in one team's version (`sl-<n>-<team>`), with another version and the teams that have chapter n+1. */
+function soloLevelingBy(team: TeamRef, chapterNumber: number, others: { otherVersion: TeamRef; next: TeamRef[] }): Chapter {
+  const id = (n: number, by: TeamRef): string => `sl-${n}-${by.id}`;
+  const nextVersions = others.next.map((by) => ({ chapterId: id(chapterNumber + 1, by), team: by }));
+  // Like the server: the next chapter opens with the team being read when it has it, else the first version.
+  const serverChoice = nextVersions.find((version) => version.team.id === team.id) ?? nextVersions[0];
+  return {
+    ...chapterOf(id(chapterNumber, team), 'solo-leveling', 'MANHWA'),
+    chapterNumber: `${chapterNumber}`,
+    team,
+    versions: [team, others.otherVersion].map((by) => ({ chapterId: id(chapterNumber, by), team: by })),
+    next: { chapterNumber: `${chapterNumber + 1}`, versions: nextVersions },
+    nextChapterId: serverChoice.chapterId
   };
 }
 
@@ -488,6 +508,31 @@ describe('ReaderPage (API-driven)', () => {
     thenTheChapterEndSays("You're up to date");
   });
 
+  it('Switching version in the reader keeps my team for the next chapters', async () => {
+    await givenIAmReading(soloLevelingBy(SHADOW_SCANS, 5, { otherVersion: MOON_SCANS, next: [SHADOW_SCANS, MOON_SCANS] }));
+
+    thenTheOtherVersionsAre([['Read this chapter by Moon Scans', '/read/sl-5-moon']]);
+    thenTheNextChapterLinkIs('/read/sl-6-shadow');
+
+    await whenISwitchToTheVersionBy('Moon Scans');
+
+    thenTheNextChapterLinkIs('/read/sl-6-moon');
+  });
+
+  it('The next chapter falls back when my team has not released it', async () => {
+    givenMyTeamFor('solo-leveling', MOON_SCANS);
+
+    await givenIAmReading(soloLevelingBy(MOON_SCANS, 5, { otherVersion: SHADOW_SCANS, next: [SHADOW_SCANS] }));
+
+    thenTheNextChapterLinkIs('/read/sl-6-shadow');
+  });
+
+  it('a chapter with a single version offers no other version', async () => {
+    await givenIAmReading(soloLeveling(5, { previous: 'sl-4', next: 'sl-6' }));
+
+    thenTheOtherVersionsAre([]);
+  });
+
   it('Opening the chapter list inside the reader', async () => {
     await givenIAmSignedInWith(['LIBRARY_USE']);
     await givenIAmReading(chapter({ id: 'c-5', chapterNumber: '5' }));
@@ -789,6 +834,27 @@ describe('ReaderPage (API-driven)', () => {
     thenTheReadingHistoryWasNotUpdated();
   });
 
+  function givenMyTeamFor(workId: string, team: TeamRef): void {
+    TestBed.inject(PreferredTeamStore).remember(workId, team.id);
+  }
+
+  async function whenISwitchToTheVersionBy(team: string): Promise<void> {
+    otherVersionLinks().find((a) => a.textContent!.includes(team))!.click();
+    await settle(fixture);
+  }
+
+  function thenTheOtherVersionsAre(versions: [string, string][]): void {
+    expect(otherVersionLinks().map((a) => [a.textContent!.replace(/\s+/g, ' ').trim(), a.getAttribute('href')])).toEqual(versions);
+  }
+
+  function thenTheNextChapterLinkIs(href: string): void {
+    expect(fixture.nativeElement.querySelector('.chapter-end a.btn-primary').getAttribute('href')).toBe(href);
+  }
+
+  function otherVersionLinks(): HTMLAnchorElement[] {
+    return Array.from(fixture.nativeElement.querySelectorAll('.version-switch a'));
+  }
+
   async function givenIAmReading(opened: Chapter, at: { page?: string } = {}): Promise<void> {
     await openChapter(opened, at.page);
   }
@@ -992,7 +1058,9 @@ describe('ReaderPage (API-driven)', () => {
       chapterNumber: `${i + 1}`,
       title: `Chapter ${i + 1}`,
       status: 'PUBLISHED',
-      pageCount: 3
+      pageCount: 3,
+      publishedAt: null,
+      team: SHADOW_SCANS
     }));
     http.expectOne(`${API}/works/${MOCK_CHAPTER.workId}/chapters`).flush(ok(chapters));
     http.expectOne(`${API}/reading/works/${MOCK_CHAPTER.workId}`).flush(ok({

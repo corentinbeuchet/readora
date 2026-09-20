@@ -86,6 +86,19 @@
     "catalog.works.seoTitle": "Catalogue — mangas, manhwas et comics",
     "catalog.works.seoDescription": "Parcourez tous les mangas, manhwas, manhuas et comics publiés sur Readora par les équipes de scantrad.",
     "catalog.works.surpriseNoMatch": "Aucune série ne correspond à ces filtres.",
-    "catalog.work.chapters.teamOf": "Chapitre {$INTERPOLATION} traduit par"
+    "catalog.work.chapters.filter.label": "Traduit par",
+    "catalog.work.chapters.filter.all": "Toutes les équipes",
+    "catalog.work.chapters.sort.label": "Ordre des chapitres",
+    "catalog.work.chapters.sort.oldest": "Les plus anciens d'abord",
+    "catalog.work.chapters.sort.newest": "Les plus récents d'abord",
+    "catalog.work.chapters.by": "par {$INTERPOLATION}",
+    "catalog.work.chapters.versions.label": "Aussi par",
+    "catalog.work.chapters.versions.read": "Lire le chapitre {$INTERPOLATION} par",
+    "catalog.work.chapters.versions.fewer": "Moins d'équipes",
+    "catalog.work.chapters.versions.more": "{VAR_PLURAL, plural, =0 {aucune autre équipe} =1 {1 autre équipe} other {{INTERPOLATION} autres équipes}}",
+    "catalog.work.chapters.versions.ofChapter": "pour le chapitre {$INTERPOLATION}",
+    "catalog.work.chapters.filter.none": "Cette équipe n'a encore traduit aucun chapitre de cette série.",
+    "catalog.work.teams.heading": "Traduit par",
+    "catalog.work.teams.chapters": "{VAR_PLURAL, plural, =0 {0 chapitre} =1 {1 chapitre} other {{INTERPOLATION} chapitres}}"
   }
 }
