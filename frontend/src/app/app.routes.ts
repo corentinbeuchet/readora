@@ -57,7 +57,7 @@ export const routes: Routes = [
   },
   {
     path: 'scanlation',
-    loadComponent: () => import('@app/features/scanlation/scanlation-board-page/scanlation-board-page').then((m) => m.ScanlationBoardPage),
+    loadComponent: () => import('@app/features/scanlation/my-teams-page/my-teams-page').then((m) => m.MyTeamsPage),
     canActivate: [permissionGuard],
     data: { permission: 'PROJECT_VIEW' }
   },

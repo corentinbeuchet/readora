@@ -40,6 +40,12 @@
     "pageReport.reason.lowQuality": "Mauvaise qualité / illisible",
     "taskStatus.pending": "À faire",
     "taskStatus.inProgress": "En cours",
-    "taskStatus.completed": "Terminée"
+    "taskStatus.completed": "Terminée",
+    "scanlationRole.leader": "Responsable",
+    "scanlationRole.cleaner": "Nettoyeur",
+    "scanlationRole.translator": "Traducteur",
+    "scanlationRole.typesetter": "Lettreur",
+    "scanlationRole.proofreader": "Relecteur",
+    "scanlationRole.qualityChecker": "Contrôle qualité"
   }
 }

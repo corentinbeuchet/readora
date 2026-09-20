@@ -1,5 +1,6 @@
 import { WorkSummary } from '@app/core/models/catalog';
 import { ChapterSummary } from '@app/core/models/chapter';
+import { ScanlationRole } from '@app/core/models/scanlation';
 
 export interface PublicProfile {
   username: string;
@@ -24,7 +25,7 @@ export interface TeamProfile {
   description: string | null;
   /** Every series the team works on, the one with the most chapters first. */
   series: TeamSeries[];
-  members: { username: string; roles: string[] }[];
+  members: { username: string; roles: ScanlationRole[] }[];
   /** The team's latest chapters across its series, newest first. */
   latestChapters: ChapterSummary[];
   followers: number;

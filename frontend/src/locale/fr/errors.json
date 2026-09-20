@@ -26,6 +26,9 @@
     "error.alreadyHandled": "Cela a déjà été traité.",
     "error.noActiveSubscription": "Vous n'avez aucun abonnement actif à résilier.",
     "error.cancellationAlreadyScheduled": "Votre abonnement prend déjà fin à la fin de cette période.",
-    "error.chapterNotPublished": "Ce chapitre n'est pas encore publié."
+    "error.chapterNotPublished": "Ce chapitre n'est pas encore publié.",
+    "error.teamNameTaken": "Une équipe porte déjà ce nom. Choisissez-en un autre.",
+    "error.seriesAlreadyInTeam": "Votre équipe travaille déjà sur cette série.",
+    "error.lastLeader": "Une équipe a besoin d'au moins un responsable. Nommez-en un autre d'abord."
   }
 }

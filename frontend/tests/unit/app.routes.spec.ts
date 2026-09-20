@@ -3,6 +3,7 @@ import { routes } from '@app/app.routes';
 import { serverRoutes } from '@app/app.routes.server';
 import { PrerenderFallback, RenderMode } from '@angular/ssr';
 import { ReaderPage } from '@app/features/reader/reader-page/reader-page';
+import { MyTeamsPage } from '@app/features/scanlation/my-teams-page/my-teams-page';
 import { ScanlationBoardPage } from '@app/features/scanlation/scanlation-board-page/scanlation-board-page';
 
 describe('app routes', () => {
@@ -14,7 +15,7 @@ describe('app routes', () => {
 
   it('resolve the reader and the scanlation board lazily', async () => {
     await thenThePathLoads('read/:chapterId', ReaderPage);
-    await thenThePathLoads('scanlation', ScanlationBoardPage);
+    await thenThePathLoads('scanlation', MyTeamsPage);
     await thenThePathLoads('scanlation/:projectId', ScanlationBoardPage);
   });
 

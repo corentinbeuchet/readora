@@ -1,4 +1,17 @@
+import { WorkSummary } from '@app/core/models/catalog';
+
 export type ScanlationRole = 'LEADER' | 'CLEANER_REDRAWER' | 'TRANSLATOR' | 'TYPESETTER' | 'PROOFREADER' | 'QUALITY_CHECKER';
+
+export const SCANLATION_ROLES: readonly ScanlationRole[] = ['LEADER', 'CLEANER_REDRAWER', 'TRANSLATOR', 'TYPESETTER', 'PROOFREADER', 'QUALITY_CHECKER'];
+
+export const SCANLATION_ROLE_LABELS: Record<ScanlationRole, string> = {
+  LEADER: $localize`:@@scanlationRole.leader:Leader`,
+  CLEANER_REDRAWER: $localize`:@@scanlationRole.cleaner:Cleaner`,
+  TRANSLATOR: $localize`:@@scanlationRole.translator:Translator`,
+  TYPESETTER: $localize`:@@scanlationRole.typesetter:Typesetter`,
+  PROOFREADER: $localize`:@@scanlationRole.proofreader:Proofreader`,
+  QUALITY_CHECKER: $localize`:@@scanlationRole.qualityChecker:Quality checker`
+};
 
 export type WorkflowStage = 'RAW_UPLOADED' | 'CLEANING' | 'TRANSLATING' | 'TYPESETTING' | 'PROOFREADING' | 'QC_REVIEW' | 'PUBLISHED';
 
@@ -30,6 +43,26 @@ export interface ScanlationProject {
   /** The roster of the project's team: roles apply to every series the team works on. */
   members: { userId: string; roles: ScanlationRole[] }[];
   tasks: WorkflowTask[];
+}
+
+/** One of a team's task boards, with the series it is for. */
+export interface TeamBoard {
+  projectId: string;
+  work: WorkSummary;
+}
+
+/** A team I belong to (`GET /teams/mine`), with my roles in it. */
+export interface MyTeam {
+  id: string;
+  name: string;
+  description: string | null;
+  myRoles: ScanlationRole[];
+  boards: TeamBoard[];
+}
+
+/** Leaders add series and members; the server enforces it too. */
+export function leadsTeam(team: MyTeam): boolean {
+  return team.myRoles.includes('LEADER');
 }
 
 export interface SubmitTaskRequest {

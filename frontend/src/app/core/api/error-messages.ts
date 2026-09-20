@@ -23,6 +23,12 @@ export function errorMessageForCode(code: string | null): string | undefined {
       return $localize`:@@error.rateLimited:Too many attempts. Please wait a moment and try again.`;
     case 'MALFORMED_REQUEST':
       return $localize`:@@error.malformedRequest:The request was not valid. Check the form and try again.`;
+    case 'TEAM_NAME_TAKEN':
+      return $localize`:@@error.teamNameTaken:A team already has this name. Choose another one.`;
+    case 'SERIES_ALREADY_IN_TEAM':
+      return $localize`:@@error.seriesAlreadyInTeam:Your team already works on this series.`;
+    case 'LAST_LEADER':
+      return $localize`:@@error.lastLeader:A team needs at least one leader. Name another leader first.`;
     case 'FILE_TOO_LARGE':
       return $localize`:@@error.fileTooLarge:This file is too large.`;
     case 'UNSUPPORTED_FILE_FORMAT':

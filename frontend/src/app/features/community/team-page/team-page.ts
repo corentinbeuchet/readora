@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { CommunityApi } from '@app/core/api/community-api';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
+import { SCANLATION_ROLE_LABELS } from '@app/core/models/scanlation';
 import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
 import { EmptyState } from '@app/shared/ui/empty-state/empty-state';
@@ -28,7 +29,7 @@ export class TeamPage {
   protected readonly following = linkedSignal(() => (this.team.hasValue() ? (this.team.value()?.following ?? false) : false));
   protected readonly followers = linkedSignal(() => (this.team.hasValue() ? (this.team.value()?.followers ?? 0) : 0));
   protected readonly members = computed(() =>
-    (this.team.hasValue() ? (this.team.value()?.members ?? []) : []).map((m) => ({ username: m.username, roles: m.roles.join(', ') }))
+    (this.team.hasValue() ? (this.team.value()?.members ?? []) : []).map((m) => ({ username: m.username, roles: m.roles.map((role) => SCANLATION_ROLE_LABELS[role]) }))
   );
   /** The latest chapters with the title of their series: the team may translate several. */
   protected readonly latestChapters = computed(() => {

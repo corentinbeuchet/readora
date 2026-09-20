@@ -36,6 +36,7 @@ const FILE_OF_PREFIX = {
   workStatus: 'labels',
   demographic: 'labels',
   taskStatus: 'labels',
+  scanlationRole: 'labels',
   role: 'labels',
   subscriptionPlan: 'labels',
   subscriptionStatus: 'labels',

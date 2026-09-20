@@ -38,6 +38,12 @@
     "pageReport.reason.missingPage": "A page is missing",
     "pageReport.reason.wrongOrder": "Pages are in the wrong order",
     "pageReport.reason.lowQuality": "Low quality / unreadable",
+    "scanlationRole.leader": "Leader",
+    "scanlationRole.cleaner": "Cleaner",
+    "scanlationRole.translator": "Translator",
+    "scanlationRole.typesetter": "Typesetter",
+    "scanlationRole.proofreader": "Proofreader",
+    "scanlationRole.qualityChecker": "Quality checker",
     "taskStatus.pending": "Pending",
     "taskStatus.inProgress": "In progress",
     "taskStatus.completed": "Completed"

@@ -51,6 +51,7 @@ describe('TeamPage (US-12)', () => {
     thenICanSee('We translate action series.');
     thenICanSee('3 followers');
     thenThereIsALinkTo('/u/leader');
+    thenICanSee('Translator');
     thenTheLatestChaptersAre(['Solo Leveling, chapter 5', 'Omniscient Reader, chapter 1']);
     thenThereIsALinkTo('/read/c-9');
   });

@@ -1,0 +1,43 @@
+<section class="page">
+  <h1 i18n="@@scanlation.teams.heading">My teams</h1>
+
+  @if (teams.status() === 'loading') {
+    <p class="muted" role="status" i18n="@@scanlation.teams.loading">Loading your teams…</p>
+  } @else if (teams.error()) {
+    <app-load-error [error]="teams.error()" (retry)="teams.reload()">
+      <ng-container i18n="@@scanlation.teams.loadError">Could not load your teams.</ng-container>
+    </app-load-error>
+  } @else if (teams.value().length === 0) {
+    <app-empty-state>
+      <ng-container i18n="@@scanlation.teams.empty">You are not on a team yet. Create one below, or ask a team leader to add you.</ng-container>
+    </app-empty-state>
+  } @else {
+    <ul class="team-list">
+      @for (team of teams.value(); track team.id) {
+        <li><app-team-panel [team]="team" (changed)="teams.reload()" /></li>
+      }
+    </ul>
+  }
+
+  <ng-container *appHasPermission="'WORK_CREATE'">
+    <form class="card form new-team" (submit)="create($event)" novalidate>
+      <h2 i18n="@@scanlation.teams.new.heading">New team</h2>
+      <div class="field">
+        <label for="new-team-name" i18n="@@scanlation.teams.new.name">Name</label>
+        <input id="new-team-name" type="text" [formField]="newTeamForm.name"
+               [appAriaInvalid]="newTeamForm.name" aria-describedby="new-team-name-error" />
+        <app-field-errors id="new-team-name-error" [field]="newTeamForm.name" />
+      </div>
+      <div class="field">
+        <label for="new-team-description" i18n="@@scanlation.teams.new.description">What the team translates</label>
+        <textarea id="new-team-description" rows="2" [formField]="newTeamForm.description"
+                  [appAriaInvalid]="newTeamForm.description" aria-describedby="new-team-description-error"></textarea>
+        <app-field-errors id="new-team-description-error" [field]="newTeamForm.description" />
+      </div>
+      @if (creating.error(); as message) {
+        <p class="form-error" role="alert">{{ message }}</p>
+      }
+      <button type="submit" class="btn btn-primary" [disabled]="creating.busy()" i18n="@@scanlation.teams.new.submit">Create team</button>
+    </form>
+  </ng-container>
+</section>

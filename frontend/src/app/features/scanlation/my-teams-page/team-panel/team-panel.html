@@ -1,0 +1,91 @@
+<article class="card team-panel" [attr.aria-labelledby]="`team-${team().id}`">
+  <header class="team-header">
+    <h2 [id]="`team-${team().id}`"><a [routerLink]="['/teams', team().id]">{{ team().name }}</a></h2>
+    <ul class="role-list" aria-label="My roles" i18n-aria-label="@@scanlation.teams.myRoles">
+      @for (role of myRoles(); track role) {
+        <li class="badge">{{ role }}</li>
+      }
+    </ul>
+  </header>
+  @if (team().description; as description) {
+    <p class="muted team-description">{{ description }}</p>
+  }
+
+  <h3 i18n="@@scanlation.teams.boards">Task boards</h3>
+  @if (team().boards.length === 0) {
+    <p class="muted" i18n="@@scanlation.teams.boardsNone">No series yet. A leader adds the first one.</p>
+  } @else {
+    <ul class="board-list">
+      @for (board of team().boards; track board.projectId) {
+        <li><a [routerLink]="['/scanlation', board.projectId]">{{ board.work.title }}</a></li>
+      }
+    </ul>
+  }
+
+  @if (leads()) {
+    <details class="team-tool">
+      <summary i18n="@@scanlation.teams.series.summary">Add a series</summary>
+      <form class="form tool-form" (submit)="search($event)" novalidate>
+        <div class="field">
+          <label [for]="`series-search-${team().id}`" i18n="@@scanlation.teams.series.label">Series title</label>
+          <input [id]="`series-search-${team().id}`" type="search" [formField]="searchForm.text"
+                 [appAriaInvalid]="searchForm.text" [attr.aria-describedby]="`series-search-error-${team().id}`" />
+          <app-field-errors [id]="`series-search-error-${team().id}`" [field]="searchForm.text" />
+        </div>
+        <button type="submit" class="btn" [disabled]="searching.busy()" i18n="@@scanlation.teams.series.search">Search the catalog</button>
+      </form>
+      @if (searching.error(); as message) {
+        <p class="form-error" role="alert">{{ message }}</p>
+      }
+      <div role="status">
+        @if (found(); as works) {
+          @if (works.length === 0) {
+            <p class="muted" i18n="@@scanlation.teams.series.none">No series matches. Check the title: a series that is not in the catalog yet is created in the upload studio.</p>
+          } @else {
+            <ul class="found-list">
+              @for (work of works; track work.id) {
+                <li>
+                  <span>{{ work.title }}</span>
+                  <button type="button" class="btn btn-primary" [disabled]="adding.busy()" (click)="addSeries(work)"
+                          i18n="@@scanlation.teams.series.add">Add <span class="sr-only">{{ work.title }}</span></button>
+                </li>
+              }
+            </ul>
+          }
+        }
+      </div>
+      @if (adding.error(); as message) {
+        <p class="form-error" role="alert">{{ message }}</p>
+      }
+    </details>
+
+    <details class="team-tool">
+      <summary i18n="@@scanlation.teams.member.summary">Add a member</summary>
+      <form class="form tool-form" (submit)="addMember($event)" novalidate>
+        <div class="field">
+          <label [for]="`member-username-${team().id}`" i18n="@@scanlation.teams.member.username">Username</label>
+          <input [id]="`member-username-${team().id}`" type="text" autocomplete="off" [formField]="memberForm.username"
+                 [appAriaInvalid]="memberForm.username" [attr.aria-describedby]="`member-username-error-${team().id}`" />
+          <app-field-errors [id]="`member-username-error-${team().id}`" [field]="memberForm.username" />
+        </div>
+        <div class="field">
+          <label [for]="`member-role-${team().id}`" i18n="@@scanlation.teams.member.role">Role</label>
+          <select [id]="`member-role-${team().id}`" [formField]="memberForm.role">
+            @for (option of roles; track option.role) {
+              <option [value]="option.role">{{ option.label }}</option>
+            }
+          </select>
+        </div>
+        <button type="submit" class="btn" [disabled]="memberSaving.busy()" i18n="@@scanlation.teams.member.submit">Add to the team</button>
+      </form>
+      @if (memberSaving.error(); as message) {
+        <p class="form-error" role="alert">{{ message }}</p>
+      }
+      <p class="muted" role="status">
+        @if (memberAdded(); as username) {
+          <ng-container i18n="@@scanlation.teams.member.added">{{ username }} is on the team.</ng-container>
+        }
+      </p>
+    </details>
+  }
+</article>
