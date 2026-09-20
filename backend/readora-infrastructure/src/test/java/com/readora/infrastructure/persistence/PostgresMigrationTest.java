@@ -143,6 +143,33 @@ class PostgresMigrationTest {
         assertThat(chapterReads.findLatestPerWork(kenji, 10)).singleElement().extracting(ChapterRead::chapterId).isEqualTo(one.getId());
         assertThat(chapterReads.countChaptersPublishedSinceLastRead(kenji, List.of(work.getId()))).containsEntry(work.getId(), 1L);
         assertThat(library.findByUser(kenji, ReadingStatus.READING)).hasSize(1);
+
+        // US-12: other teams' versions of chapter 1 (already read) and of chapter 2 (already counted) add nothing new.
+        for (String number : List.of("1", "2")) {
+            Chapter version = Chapter.createDraft(work.getId(), ChapterNumber.of(number), "Ch " + number + " again", anyTeam());
+            version.updatePages(List.of(PageAsset.create(1, "p1.webp", null)));
+            version.publish(UserId.of("qc"));
+            chapterRepository.save(version);
+        }
+
+        assertThat(chapterRepository.findPublishedRefsByWorkId(work.getId())).hasSize(4);
+        assertThat(chapterRepository.findPublishedByWorkId(work.getId())).extracting(c -> c.getChapterNumber().value()).containsExactly("1", "1", "2", "2");
+        assertThat(chapterReads.countChaptersPublishedSinceLastRead(kenji, List.of(work.getId()))).containsEntry(work.getId(), 1L);
+        assertThat(community.readingStats(kenji, 3).chaptersRead()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("A team has one chapter per number; another team can publish the same number")
+    void oneVersionPerTeam() {
+        Work work = workRepository.save(Work.create("PG Versions", "", WorkType.MANGA, "c.png", Set.of("Action")));
+        com.readora.domain.scanlation.TeamId shadow = anyTeam();
+        chapterRepository.save(Chapter.createDraft(work.getId(), ChapterNumber.of("5"), "Shadow", shadow));
+        chapterRepository.save(Chapter.createDraft(work.getId(), ChapterNumber.of("5"), "Moon", anyTeam()));
+
+        assertThat(chapterRepository.findByWorkIdAndChapterNumberAndTeam(work.getId(), ChapterNumber.of("5"), shadow))
+                .hasValueSatisfying(chapter -> assertThat(chapter.getTitle()).isEqualTo("Shadow"));
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> chapterRepository.save(Chapter.createDraft(work.getId(), ChapterNumber.of("5"), "Shadow again", shadow)))
+                .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
     }
 
     @Autowired

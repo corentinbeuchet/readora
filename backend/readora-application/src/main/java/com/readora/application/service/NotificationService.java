@@ -15,6 +15,7 @@ import com.readora.domain.social.ChapterComment;
 import com.readora.domain.social.CommentId;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
+import com.readora.domain.work.ReadingOrder;
 import com.readora.domain.work.WorkId;
 
 import java.time.Clock;
@@ -45,6 +46,10 @@ public class NotificationService implements NotifyUseCase {
     public void notifyNewChapter(ChapterId chapterId) {
         Chapter chapter = chapters.findById(chapterId).filter(Chapter::isPublished).orElse(null);
         if (chapter == null) {
+            return;
+        }
+        // Another team's version of a number that is already out is not news (US-12).
+        if (!ReadingOrder.of(chapters.findPublishedRefsByWorkId(chapter.getWorkId())).isFirstVersion(chapterId)) {
             return;
         }
         String title = works.findById(chapter.getWorkId()).map(work -> work.getTitle()).orElse("A series in your library");

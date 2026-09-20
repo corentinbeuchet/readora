@@ -3,6 +3,7 @@ package com.readora.acceptance.fakes;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
+import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.WorkId;
 
 import java.util.List;
@@ -13,6 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class InMemoryChapterRepository implements ChapterRepositoryPort {
 
     private final Map<ChapterId, Chapter> chapters = new ConcurrentHashMap<>();
+
+    /// The first version published of a chapter number: what scenarios with a single team mean by "chapter N".
+    public Optional<Chapter> firstVersion(WorkId workId, ChapterNumber number) {
+        return findPublishedByWorkId(workId).stream().filter(c -> c.getChapterNumber().equals(number)).findFirst();
+    }
 
     public List<Chapter> all() {
         return List.copyOf(chapters.values());

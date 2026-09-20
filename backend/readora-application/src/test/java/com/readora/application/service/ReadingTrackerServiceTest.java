@@ -10,6 +10,7 @@ import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.PageAsset;
+import com.readora.domain.work.ReadingOrder;
 import com.readora.domain.work.WorkId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -55,6 +56,12 @@ class ReadingTrackerServiceTest {
         service = new ReadingTrackerService(reads, chapters, works, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
+    private static List<ReadingOrder.Version> refs(Chapter... chapters) {
+        return java.util.Arrays.stream(chapters)
+                .map(c -> new ReadingOrder.Version(c.getId(), c.getChapterNumber(), c.getTeamId(), c.getPublishedAt()))
+                .toList();
+    }
+
     private Chapter published(String number) {
         Chapter chapter = Chapter.createDraft(work, ChapterNumber.of(number), "Ch " + number, TeamId.generate());
         chapter.updatePages(List.of(PageAsset.create(1, "p.webp", null)));
@@ -92,7 +99,7 @@ class ReadingTrackerServiceTest {
     void nextToReadAtTheEdges() {
         Chapter one = published("1");
         Chapter two = published("2");
-        when(chapters.findPublishedByWorkId(work)).thenReturn(List.of(one, two));
+        when(chapters.findPublishedRefsByWorkId(work)).thenReturn(refs(one, two));
 
         when(reads.findByUserAndWork(kenji, work)).thenReturn(List.of());
         assertThat(service.progress(kenji, work).nextToRead()).isEqualTo(one.getId());
@@ -107,7 +114,7 @@ class ReadingTrackerServiceTest {
     @DisplayName("Progress: an opened but unfinished chapter is not marked as read")
     void openedIsNotFinished() {
         Chapter one = published("1");
-        when(chapters.findPublishedByWorkId(work)).thenReturn(List.of(one));
+        when(chapters.findPublishedRefsByWorkId(work)).thenReturn(refs(one));
         when(reads.findByUserAndWork(kenji, work)).thenReturn(List.of(new ChapterRead(kenji, work, one.getId(), one.getChapterNumber(), NOW, false)));
 
         var progress = service.progress(kenji, work);

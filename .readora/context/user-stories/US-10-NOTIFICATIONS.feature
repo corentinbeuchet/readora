@@ -17,6 +17,13 @@ Feature: Notifications
     Then "Kenji" gets a notification "Solo Leveling: chapter 7 is out"
     And clicking it opens chapter 7
 
+  # Several teams may translate the same chapter (US-12): only the first version is news.
+  @should
+  Scenario: Another team's version of a chapter is not announced again
+    Given chapter 7 of "Solo Leveling" is published
+    When another team publishes its own version of chapter 7 of "Solo Leveling"
+    Then "Kenji" has 1 notification
+
   @must
   Scenario: The notification bell
     Given "Kenji" has 3 unread notifications

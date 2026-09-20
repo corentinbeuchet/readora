@@ -1,7 +1,7 @@
 # From docs/use-cases (2026-09): UC-25 profiles, UC-26 follows, UC-30 team pages, UC-31 chapter versions,
 # UC-19 library export. Nice-to-haves, all @could.
-# @wip = not built yet: several teams' versions of one chapter needs chapters unique per team rather than per number
-# (publishing, reading history, next/previous chapter and the reader all assume one chapter per number).
+# A chapter number can exist in several teams' versions: reading any version counts as reading the chapter, and
+# next/previous stay with the same team when it has the chapter (lesson from MangaDex, where the reader jumps groups).
 
 Feature: Community and scanlation teams
   As a reader
@@ -87,12 +87,25 @@ Feature: Community and scanlation teams
     Then the team refuses because it would have no leader
 
   # Inspired by: MangaDex
-  @could @wip
+  @could
   Scenario: Several teams translated the same chapter
-    Given "Shadow Scans" and "Moon Scans" both published chapter 5 of "Solo Leveling"
-    When "Kenji" opens chapter 5
-    Then he can switch between the two versions
-    And his choice is kept for the next chapters
+    Given "Shadow Scans" and "Moon Scans" both published chapters 5 and 6 of "Solo Leveling"
+    When "Kenji" opens chapter 5 by "Moon Scans"
+    Then he can switch to the version by "Shadow Scans"
+    And the next chapter is chapter 6 by "Moon Scans"
+
+  @could
+  Scenario: The next chapter falls back to another team
+    Given "Shadow Scans" and "Moon Scans" both published chapters 5 and 6 of "Solo Leveling"
+    And only "Shadow Scans" published chapter 7 of "Solo Leveling"
+    When "Kenji" opens chapter 6 by "Moon Scans"
+    Then the next chapter is chapter 7 by "Shadow Scans"
+
+  @could
+  Scenario: A team cannot publish the same chapter twice
+    Given "Shadow Scans" and "Moon Scans" both published chapters 5 and 6 of "Solo Leveling"
+    When "Moon Scans" publishes chapter 5 of "Solo Leveling" again
+    Then the chapter is refused because the team already published it
 
   # Avoids lock-in (import from MyAnimeList needs their permission, so only export here).
   @could

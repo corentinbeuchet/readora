@@ -95,8 +95,9 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
         }
 
         ChapterNumber chapterNumber = ChapterNumber.of(chapterNumberStr.trim());
-        if (chapterRepository.findByWorkIdAndChapterNumber(workId, chapterNumber).isPresent()) {
-            throw new DomainValidationException("Chapter " + chapterNumberStr + " already exists for this work");
+        if (chapterRepository.findByWorkIdAndChapterNumberAndTeam(workId, chapterNumber, teamId).isPresent()) {
+            throw DomainValidationException.withCode(ErrorCodes.CHAPTER_ALREADY_EXISTS,
+                    "This team already has a chapter " + chapterNumber.value() + " of this series");
         }
 
         if (pages == null || pages.isEmpty()) {

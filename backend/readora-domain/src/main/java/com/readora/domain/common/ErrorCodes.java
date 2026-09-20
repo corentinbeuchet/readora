@@ -41,6 +41,7 @@ public final class ErrorCodes {
     public static final String SERIES_ALREADY_IN_TEAM = "SERIES_ALREADY_IN_TEAM";
     public static final String LAST_LEADER = "LAST_LEADER";
     public static final String TEAM_NOT_ON_SERIES = "TEAM_NOT_ON_SERIES";
+    public static final String CHAPTER_ALREADY_EXISTS = "CHAPTER_ALREADY_EXISTS";
 
     private ErrorCodes() {
     }

@@ -125,19 +125,18 @@ class WorkManagementServiceTest {
     }
 
     @Test
-    @DisplayName("Directly publishing duplicate chapter number throws exception")
+    @DisplayName("A team cannot publish the same chapter number twice")
     void directPublishDuplicateChapterThrowsException() {
         UserId publisherId = UserId.of("pub-1");
         Work work = Work.create("One Piece", "Pirates", WorkType.MANGA, "op.jpg", Set.of("Adventure"));
         Team team = givenATeamWorkingOn(work, publisherId);
         Chapter existing = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Existing", team.getId());
-        when(chapterRepository.findByWorkIdAndChapterNumber(work.getId(), ChapterNumber.of("1"))).thenReturn(Optional.of(existing));
+        when(chapterRepository.findByWorkIdAndChapterNumberAndTeam(work.getId(), ChapterNumber.of("1"), team.getId())).thenReturn(Optional.of(existing));
 
         List<PageAsset> pages = List.of(PageAsset.create(1, "c1/p1.webp", "https://cdn.readora.com/c1/p1.webp"));
 
         assertThatThrownBy(() -> service.directPublishChapter(work.getId(), team.getId(), "1", "Duplicate", pages, publisherId))
-                .isInstanceOf(DomainValidationException.class)
-                .hasMessageContaining("already exists");
+                .isInstanceOfSatisfying(DomainValidationException.class, e -> assertThat(e.code()).isEqualTo(ErrorCodes.CHAPTER_ALREADY_EXISTS));
     }
 
     @Test

@@ -2,22 +2,29 @@ package com.readora.application.service;
 
 import com.readora.application.port.in.ReadChapterUseCase;
 import com.readora.application.port.out.ChapterRepositoryPort;
-import com.readora.application.port.out.ChapterRepositoryPort.PublishedChapterRef;
 import com.readora.application.port.out.StoragePort;
 import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.NotFoundException;
+import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamCredit;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
+import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.PageAsset;
+import com.readora.domain.work.ReadingOrder;
 import com.readora.domain.work.Work;
 import com.readora.domain.common.UserId;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ChapterReadingService implements ReadChapterUseCase {
     private final ChapterRepositoryPort chapterRepository;
@@ -59,24 +66,34 @@ public class ChapterReadingService implements ReadChapterUseCase {
         Work work = workRepository.findById(chapter.getWorkId())
                 .orElseThrow(() -> new NotFoundException("Work", chapter.getWorkId()));
 
-        List<PublishedChapterRef> published = chapterRepository.findPublishedRefsByWorkId(chapter.getWorkId());
-        int index = indexOf(published, chapterId);
-        ChapterId previous = index > 0 ? published.get(index - 1).id() : null;
-        ChapterId next = index >= 0 && index + 1 < published.size() ? published.get(index + 1).id() : null;
-        return new ChapterReading(view, work, creditedTeam(chapter), previous, next);
+        ReadingOrder order = ReadingOrder.of(chapterRepository.findPublishedRefsByWorkId(chapter.getWorkId()));
+        ChapterNumber number = chapter.getChapterNumber();
+        List<ChapterNumber> shown = java.util.stream.Stream.of(order.numberBefore(number), Optional.of(number), order.numberAfter(number))
+                .flatMap(Optional::stream)
+                .toList();
+        Map<TeamId, TeamCredit> credits = credits(shown.stream().flatMap(n -> order.versionsOf(n).stream()).map(ReadingOrder.Version::teamId)
+                .collect(Collectors.toSet()), chapter);
+        TeamCredit team = Optional.ofNullable(credits.get(chapter.getTeamId())).orElseThrow(() -> new NotFoundException("Team", chapter.getTeamId()));
+        return new ChapterReading(view, work, team, versions(order, number, credits),
+                order.numberBefore(number).map(n -> neighbour(order, n, chapter.getTeamId(), credits)).orElse(null),
+                order.numberAfter(number).map(n -> neighbour(order, n, chapter.getTeamId(), credits)).orElse(null));
     }
 
-    private TeamCredit creditedTeam(Chapter chapter) {
-        return teamRepository.findById(chapter.getTeamId()).map(TeamCredit::of)
-                .orElseThrow(() -> new NotFoundException("Team", chapter.getTeamId()));
+    /// Staying with the team being read is what keeps a reader from jumping between teams at every chapter.
+    private static Neighbour neighbour(ReadingOrder order, ChapterNumber number, TeamId readingTeam, Map<TeamId, TeamCredit> credits) {
+        ChapterId opens = order.pick(number, readingTeam).orElseThrow().id();
+        return new Neighbour(number, opens, versions(order, number, credits));
     }
 
-    private static int indexOf(List<PublishedChapterRef> published, ChapterId chapterId) {
-        for (int i = 0; i < published.size(); i++) {
-            if (published.get(i).id().equals(chapterId)) {
-                return i;
-            }
-        }
-        return -1;
+    private static List<ChapterVersion> versions(ReadingOrder order, ChapterNumber number, Map<TeamId, TeamCredit> credits) {
+        return order.versionsOf(number).stream()
+                .flatMap(version -> Optional.ofNullable(credits.get(version.teamId())).map(team -> new ChapterVersion(version.id(), team)).stream())
+                .toList();
+    }
+
+    private Map<TeamId, TeamCredit> credits(Set<TeamId> teamIds, Chapter chapter) {
+        Set<TeamId> wanted = new java.util.HashSet<>(teamIds);
+        wanted.add(chapter.getTeamId());
+        return teamRepository.findAllById(wanted).stream().collect(Collectors.toMap(Team::getId, TeamCredit::of));
     }
 }

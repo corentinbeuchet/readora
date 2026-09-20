@@ -124,6 +124,20 @@ Feature: A reading experience as good as the best manga and webtoon apps
     When chapters 6 and 7 are published
     Then his library shows a "2 new" badge on "Solo Leveling"
 
+  # Several teams may translate the same chapter (US-12): progress follows the chapter number, not the version.
+  @should
+  Scenario: A chapter read in any version is read
+    Given two teams published chapter 5 of "Solo Leveling", and one of them chapter 6
+    When "Kenji" finishes the second team's version of chapter 5
+    Then chapter 5 counts as read
+    And chapter 6 is next to read
+
+  @should
+  Scenario: A second version is not a new chapter
+    Given "Kenji" has "Solo Leveling" in his library and read up to chapter 5
+    When another team publishes its own version of chapter 5
+    Then his library shows no new chapter on "Solo Leveling"
+
   # Inspired by: MangaDex
   @should
   Scenario: Saving mobile data

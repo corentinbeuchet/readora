@@ -19,6 +19,7 @@ import com.readora.application.service.ChapterReadingService;
 import com.readora.application.service.LibraryService;
 import com.readora.application.service.ReadingTrackerService;
 import com.readora.domain.common.UserId;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.ChapterNumber;
@@ -63,6 +64,7 @@ public class ReadingExperienceStepDefinitions {
     private InMemoryCommentRepository comments;
     private FakeStorage storage;
     private InMemoryTeamRepository teams;
+    private TeamId secondTeam;
     private AssetService assets;
     private boolean dataSaver;
     private ReaderSocialService social;
@@ -108,17 +110,16 @@ public class ReadingExperienceStepDefinitions {
 
     @Then("he sees a {string} button, a {string} button and the chapter list")
     public void heSeesNavigation(String next, String previous) {
-        assertThat(opened.nextChapterId()).as(next).isNotNull();
-        assertThat(opened.previousChapterId()).as(previous).isNotNull();
+        assertThat(opened.next()).as(next).isNotNull();
+        assertThat(opened.previous()).as(previous).isNotNull();
         assertThat(opened.work().getId()).as("chapter list of the series").isEqualTo(opened.chapter().getWorkId());
     }
 
     @When("he clicks {string}")
     public void heClicks(String button) {
         assertThat(button).isEqualTo("Next chapter");
-        ChapterId next = opened.nextChapterId();
-        assertThat(next).isNotNull();
-        opened = chapterReader.readChapter(next, reader, "PAGED");
+        assertThat(opened.next()).isNotNull();
+        opened = chapterReader.readChapter(opened.next().defaultChapterId(), reader, "PAGED");
     }
 
     @Then("chapter {int} opens on its first page")
@@ -154,7 +155,7 @@ public class ReadingExperienceStepDefinitions {
     public void readChaptersOnAnotherSite(String name, int from, int to, String title) {
         WorkId workId = works.byTitle(title).getId();
         for (int n = from; n <= to + 1; n++) {
-            if (chapters.findByWorkIdAndChapterNumber(workId, ChapterNumber.of(String.valueOf(n))).isEmpty()) {
+            if (chapters.firstVersion(workId, ChapterNumber.of(String.valueOf(n))).isEmpty()) {
                 publish(workId, n, START.minus(Duration.ofDays(1)));
             }
         }
@@ -208,6 +209,47 @@ public class ReadingExperienceStepDefinitions {
         WorkId workId = works.byTitle("Solo Leveling").getId();
         publish(workId, first, clock.instant());
         publish(workId, second, clock.instant());
+    }
+
+    @Given("two teams published chapter {int} of {string}, and one of them chapter {int}")
+    public void twoTeamsPublished(int number, String title, int next) {
+        WorkId workId = works.byTitle(title).getId();
+        TeamId firstTeam = teams.anyTeam();
+        secondTeam = teams.anyTeam();
+        publish(workId, number, START, firstTeam);
+        publish(workId, number, START.plus(Duration.ofHours(1)), secondTeam);
+        publish(workId, next, START.plus(Duration.ofHours(2)), firstTeam);
+    }
+
+    @When("{string} finishes the second team's version of chapter {int}")
+    public void finishesTheSecondTeamsVersion(String name, int number) {
+        Chapter version = chapters.findByWorkIdAndChapterNumberAndTeam(works.byTitle("Solo Leveling").getId(), ChapterNumber.of(String.valueOf(number)), secondTeam)
+                .orElseThrow();
+        reading.recordRead(reader, version.getId(), true);
+    }
+
+    @Then("chapter {int} counts as read")
+    public void chapterCountsAsRead(int number) {
+        assertThat(reading.progress(reader, works.byTitle("Solo Leveling").getId()).finishedNumbers()).containsExactly(ChapterNumber.of(String.valueOf(number)));
+    }
+
+    @Then("chapter {int} is next to read")
+    public void chapterIsNextToRead(int number) {
+        assertThat(reading.progress(reader, works.byTitle("Solo Leveling").getId()).nextNumber()).isEqualTo(ChapterNumber.of(String.valueOf(number)));
+    }
+
+    @When("another team publishes its own version of chapter {int}")
+    public void anotherTeamPublishesItsOwnVersion(int number) {
+        clock.advance(Duration.ofHours(2));
+        publish(works.byTitle("Solo Leveling").getId(), number, clock.instant(), teams.anyTeam());
+    }
+
+    @Then("his library shows no new chapter on {string}")
+    public void hisLibraryShowsNoNewChapterOn(String title) {
+        assertThat(library.list(reader, null))
+                .filteredOn(item -> item.work().getTitle().equals(title))
+                .singleElement()
+                .satisfies(item -> assertThat(item.newChapters()).isZero());
     }
 
     @Then("his library shows a {string} badge on {string}")
@@ -276,12 +318,16 @@ public class ReadingExperienceStepDefinitions {
     }
 
     private Chapter chapter(String title, int number) {
-        return chapters.findByWorkIdAndChapterNumber(works.byTitle(title).getId(), ChapterNumber.of(String.valueOf(number)))
+        return chapters.firstVersion(works.byTitle(title).getId(), ChapterNumber.of(String.valueOf(number)))
                 .orElseThrow();
     }
 
     private void publish(WorkId workId, int number, Instant at) {
+        publish(workId, number, at, teams.anyTeam());
+    }
+
+    private void publish(WorkId workId, int number, Instant at, TeamId team) {
         chapters.save(new Chapter(ChapterId.generate(), workId, ChapterNumber.of(String.valueOf(number)), "Chapter " + number,
-                ChapterStatus.PUBLISHED, List.of(PageAsset.create(1, "p1.webp", null)), teams.anyTeam(), at, at, at));
+                ChapterStatus.PUBLISHED, List.of(PageAsset.create(1, "p1.webp", null)), team, at, at, at));
     }
 }

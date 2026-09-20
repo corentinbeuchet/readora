@@ -27,12 +27,21 @@ public interface SpringDataChapterReadRepository extends JpaRepository<ChapterRe
             """)
     List<ChapterReadJpaEntity> findLatestPerWork(@Param("userId") String userId, Pageable page);
 
-    /// Rows of `[workId, count]`: chapters published after the user's last read of each work.
+    /// Rows of `[workId, count]`: chapter numbers that are new since the user's last read of each work. A number counts
+    /// once whatever its versions, only when its first version came out after that read, and not when the user has
+    /// finished a version of it.
     @Query("""
-            select c.workId, count(c) from ChapterJpaEntity c
+            select c.workId, count(distinct c.chapterNumber) from ChapterJpaEntity c
             where c.status = 'PUBLISHED' and c.workId in :workIds
               and c.publishedAt > (select max(r.readAt) from ChapterReadJpaEntity r
                                    where r.id.userId = :userId and r.workId = c.workId)
+              and not exists (select 1 from ChapterJpaEntity older
+                              where older.workId = c.workId and older.chapterNumber = c.chapterNumber and older.status = 'PUBLISHED'
+                                and older.publishedAt <= (select max(r2.readAt) from ChapterReadJpaEntity r2
+                                                          where r2.id.userId = :userId and r2.workId = c.workId))
+              and not exists (select 1 from ChapterReadJpaEntity done
+                              where done.id.userId = :userId and done.workId = c.workId
+                                and done.chapterNumber = c.chapterNumber and done.finished = true)
             group by c.workId
             """)
     List<Object[]> countPublishedSinceLastRead(@Param("userId") String userId, @Param("workIds") Collection<UUID> workIds);

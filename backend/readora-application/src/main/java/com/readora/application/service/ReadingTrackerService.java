@@ -8,12 +8,17 @@ import com.readora.domain.common.NotFoundException;
 import com.readora.domain.common.UserId;
 import com.readora.domain.library.ChapterRead;
 import com.readora.domain.work.Chapter;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.ChapterId;
+import com.readora.domain.work.ChapterNumber;
+import com.readora.domain.work.ReadingOrder;
 import com.readora.domain.work.Work;
 import com.readora.domain.work.WorkId;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -69,21 +74,26 @@ public class ReadingTrackerService implements TrackReadingUseCase {
         Chapter chapter = chapterRepository.findById(chapterId)
                 .filter(Chapter::isPublished)
                 .orElseThrow(() -> new NotFoundException("Chapter", chapterId));
-        List<ChapterRepositoryPort.PublishedChapterRef> earlier = chapterRepository.findPublishedRefsByWorkId(chapter.getWorkId()).stream()
-                .takeWhile(ref -> !ref.id().equals(chapterId))
-                .toList();
-        Map<ChapterId, ChapterRead> existing = chapterReadRepository.findByUserAndWork(userId, chapter.getWorkId()).stream()
+        ReadingOrder order = ReadingOrder.of(chapterRepository.findPublishedRefsByWorkId(chapter.getWorkId()));
+        Map<ChapterId, ChapterRead> reads = chapterReadRepository.findByUserAndWork(userId, chapter.getWorkId()).stream()
                 .collect(Collectors.toMap(ChapterRead::chapterId, Function.identity()));
+        List<ChapterNumber> earlier = order.numbers().stream()
+                .takeWhile(number -> !number.equals(chapter.getChapterNumber()))
+                .filter(number -> order.versionsOf(number).stream().noneMatch(version -> isFinished(reads.get(version.id()))))
+                .toList();
         Instant now = clock.instant();
         for (int i = 0; i < earlier.size(); i++) {
-            var ref = earlier.get(i);
-            ChapterRead read = existing.get(ref.id());
-            if (read == null) {
+            ChapterNumber number = earlier.get(i);
+            // A version the reader already opened is the one they were reading; otherwise the same team's, else the oldest.
+            Optional<ChapterRead> started = order.versionsOf(number).stream().map(version -> reads.get(version.id())).filter(Objects::nonNull).findFirst();
+            if (started.isPresent()) {
+                ChapterRead read = started.get();
+                chapterReadRepository.save(new ChapterRead(userId, read.workId(), read.chapterId(), read.chapterNumber(), read.readAt(), true));
+            } else {
                 // Staggered by a millisecond so the history's "Continue" points at the highest chapter marked.
                 Instant at = now.minusMillis(earlier.size() - i);
-                chapterReadRepository.save(new ChapterRead(userId, chapter.getWorkId(), ref.id(), ref.number(), at, true));
-            } else if (!read.finished()) {
-                chapterReadRepository.save(new ChapterRead(userId, read.workId(), read.chapterId(), read.chapterNumber(), read.readAt(), true));
+                ChapterId version = order.pick(number, chapter.getTeamId()).orElseThrow().id();
+                chapterReadRepository.save(new ChapterRead(userId, chapter.getWorkId(), version, number, at, true));
             }
         }
         return progress(userId, chapter.getWorkId());
@@ -91,19 +101,33 @@ public class ReadingTrackerService implements TrackReadingUseCase {
 
     @Override
     public WorkProgress progress(UserId userId, WorkId workId) {
-        List<Chapter> published = chapterRepository.findPublishedByWorkId(workId);
-        Set<ChapterId> finished = chapterReadRepository.findByUserAndWork(userId, workId).stream()
-                .filter(ChapterRead::finished)
-                .map(ChapterRead::chapterId)
+        ReadingOrder order = ReadingOrder.of(chapterRepository.findPublishedRefsByWorkId(workId));
+        List<ChapterRead> reads = chapterReadRepository.findByUserAndWork(userId, workId).stream()
+                .filter(read -> order.find(read.chapterId()).isPresent())
+                .toList();
+        Set<ChapterId> finished = reads.stream().filter(ChapterRead::finished).map(ChapterRead::chapterId).collect(Collectors.toSet());
+        Set<ChapterNumber> finishedNumbers = finished.stream()
+                .flatMap(id -> order.find(id).stream())
+                .map(ReadingOrder.Version::number)
                 .collect(Collectors.toSet());
+
+        List<ChapterNumber> numbers = order.numbers();
         int lastFinished = -1;
-        for (int i = 0; i < published.size(); i++) {
-            if (finished.contains(published.get(i).getId())) {
+        for (int i = 0; i < numbers.size(); i++) {
+            if (finishedNumbers.contains(numbers.get(i))) {
                 lastFinished = i;
             }
         }
-        ChapterId next = lastFinished + 1 < published.size() ? published.get(lastFinished + 1).getId() : null;
-        Set<ChapterId> publishedFinished = published.stream().map(Chapter::getId).filter(finished::contains).collect(Collectors.toSet());
-        return new WorkProgress(workId, publishedFinished, next);
+        ChapterNumber nextNumber = lastFinished + 1 < numbers.size() ? numbers.get(lastFinished + 1) : null;
+        TeamId lastTeam = reads.stream().max(Comparator.comparing(ChapterRead::readAt))
+                .flatMap(read -> order.find(read.chapterId()))
+                .map(ReadingOrder.Version::teamId)
+                .orElse(null);
+        ChapterId next = nextNumber != null ? order.pick(nextNumber, lastTeam).map(ReadingOrder.Version::id).orElse(null) : null;
+        return new WorkProgress(workId, finished, finishedNumbers, nextNumber, next);
+    }
+
+    private static boolean isFinished(@Nullable ChapterRead read) {
+        return read != null && read.finished();
     }
 }

@@ -73,6 +73,19 @@ public class NotificationsStepDefinitions {
         notifications.notifyNewChapter(chapter.getId());
     }
 
+    @When("another team publishes its own version of chapter {int} of {string}")
+    public void anotherTeamPublishesItsOwnVersion(int number, String title) {
+        Instant later = Instant.now().plusSeconds(60);
+        Chapter version = chapters.save(new Chapter(ChapterId.generate(), work(title), ChapterNumber.of(String.valueOf(number)), "Chapter " + number,
+                ChapterStatus.PUBLISHED, List.of(PageAsset.create(1, "p1.webp", null)), TeamId.generate(), later, later, later));
+        notifications.notifyNewChapter(version.getId());
+    }
+
+    @Then("{string} has {int} notification")
+    public void hasNotifications(String reader, int count) {
+        assertThat(notifications.recent(UserId.of(reader))).hasSize(count);
+    }
+
     @Then("{string} gets a notification {string}")
     public void getsANotification(String reader, String message) {
         assertThat(latest(reader).message()).isEqualTo(message);
@@ -148,7 +161,7 @@ public class NotificationsStepDefinitions {
     }
 
     private ChapterId chapter(String title, int number) {
-        return chapters.findByWorkIdAndChapterNumber(work(title), ChapterNumber.of(String.valueOf(number))).orElseThrow().getId();
+        return chapters.firstVersion(work(title), ChapterNumber.of(String.valueOf(number))).orElseThrow().getId();
     }
 
     private Chapter publish(String title, int number) {

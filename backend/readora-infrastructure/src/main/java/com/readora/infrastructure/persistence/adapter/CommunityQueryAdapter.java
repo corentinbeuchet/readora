@@ -32,10 +32,13 @@ public class CommunityQueryAdapter implements CommunityQueryPort {
     @Override
     @Transactional(readOnly = true)
     public ReadingStats readingStats(UserId userId, int topGenres) {
-        long chaptersRead = entityManager.createQuery(
-                        "select count(r) from ChapterReadJpaEntity r where r.id.userId = :userId and r.finished = true", Long.class)
+        // Two versions of one chapter are one chapter read (US-12). Native: JPQL cannot count distinct pairs.
+        long chaptersRead = ((Number) entityManager.createNativeQuery("""
+                        select count(*) from (select distinct work_id, chapter_number from chapter_reads
+                                              where user_id = :userId and finished = true) read_chapters
+                        """)
                 .setParameter("userId", userId.value())
-                .getSingleResult();
+                .getSingleResult()).longValue();
         List<String> genres = entityManager.createQuery("""
                         select g from ChapterReadJpaEntity r, WorkJpaEntity w join w.genres g
                         where r.id.userId = :userId and r.finished = true and w.id = r.workId

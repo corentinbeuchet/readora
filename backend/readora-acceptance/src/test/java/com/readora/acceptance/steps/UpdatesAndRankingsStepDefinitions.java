@@ -229,7 +229,7 @@ public class UpdatesAndRankingsStepDefinitions {
     }
 
     private ChapterId chapter(String title, int number) {
-        return chapters.findByWorkIdAndChapterNumber(work(title), ChapterNumber.of(String.valueOf(number))).orElseThrow().getId();
+        return chapters.firstVersion(work(title), ChapterNumber.of(String.valueOf(number))).orElseThrow().getId();
     }
 
     private void publish(String title, int number, Instant at) {

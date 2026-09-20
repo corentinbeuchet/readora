@@ -9,6 +9,7 @@ import com.readora.infrastructure.persistence.repository.SpringDataChapterReposi
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -29,8 +30,8 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Chapter> findByWorkIdAndChapterNumber(WorkId workId, ChapterNumber chapterNumber) {
-        return springDataRepository.findByWorkIdAndChapterNumber(workId.value(), chapterNumber.value()).map(this::toDomain);
+    public Optional<Chapter> findByWorkIdAndChapterNumberAndTeam(WorkId workId, ChapterNumber chapterNumber, TeamId teamId) {
+        return springDataRepository.findByWorkIdAndChapterNumberAndTeamId(workId.value(), chapterNumber.value(), teamId.value()).map(this::toDomain);
     }
 
     @Override
@@ -38,16 +39,16 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
     public List<Chapter> findPublishedByWorkId(WorkId workId) {
         return springDataRepository.findByWorkIdAndStatus(workId.value(), ChapterStatus.PUBLISHED.name()).stream()
                 .map(this::toDomain)
-                .sorted(Comparator.comparing(Chapter::getChapterNumber))
+                .sorted(READING_ORDER)
                 .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<PublishedChapterRef> findPublishedRefsByWorkId(WorkId workId) {
+    public List<ReadingOrder.Version> findPublishedRefsByWorkId(WorkId workId) {
         return springDataRepository.findRefsByWorkIdAndStatus(workId.value(), ChapterStatus.PUBLISHED.name()).stream()
-                .map(row -> new PublishedChapterRef(ChapterId.of((UUID) row[0]), ChapterNumber.of((String) row[1])))
-                .sorted(Comparator.comparing(PublishedChapterRef::number))
+                .map(row -> new ReadingOrder.Version(ChapterId.of((UUID) row[0]), ChapterNumber.of((String) row[1]),
+                        TeamId.of((UUID) row[2]), (Instant) row[3]))
                 .toList();
     }
 

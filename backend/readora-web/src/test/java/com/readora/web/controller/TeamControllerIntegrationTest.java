@@ -140,6 +140,61 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
         mockMvc.perform(get("/api/v1/teams/" + moonScans)).andExpect(jsonPath("$.data.series[0].work.id").value(workId));
     }
 
+    @Test
+    @DisplayName("Two teams publish the same chapter: one row per version, next stays with the team, progress follows the number")
+    void twoTeamsPublishTheSameChapter() throws Exception {
+        Session shadowLeader = registerScanlator();
+        String workId = givenASeriesCreatedBy(shadowLeader);
+        String shadow = teamOf(shadowLeader, workId);
+        Session mina = registerScanlator();
+        String moon = givenATeamLedBy(mina);
+        whenIAddTheSeries(mina, moon, workId).andExpect(status().isCreated());
+
+        String shadow5 = whenIPublish(shadowLeader, workId, shadow, "5").andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String moon5 = idOf(whenIPublish(mina, workId, moon, "5").andExpect(status().isCreated()).andReturn());
+        String moon6 = idOf(whenIPublish(mina, workId, moon, "6").andExpect(status().isCreated()).andReturn());
+        whenIPublish(mina, workId, moon, "5")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("CHAPTER_ALREADY_EXISTS"));
+
+        mockMvc.perform(get("/api/v1/works/" + workId + "/chapters"))
+                .andExpect(jsonPath("$.data.length()").value(3))
+                .andExpect(jsonPath("$.data[0].chapterNumber").value("5"))
+                .andExpect(jsonPath("$.data[0].team.id").value(shadow))
+                .andExpect(jsonPath("$.data[1].chapterNumber").value("5"))
+                .andExpect(jsonPath("$.data[1].team.id").value(moon))
+                .andExpect(jsonPath("$.data[2].chapterNumber").value("6"));
+        mockMvc.perform(get("/api/v1/chapters/" + moon5))
+                .andExpect(jsonPath("$.data.versions.length()").value(2))
+                .andExpect(jsonPath("$.data.versions[0].team.id").value(shadow))
+                .andExpect(jsonPath("$.data.versions[1].chapterId").value(moon5))
+                .andExpect(jsonPath("$.data.next.chapterNumber").value("6"))
+                .andExpect(jsonPath("$.data.nextChapterId").value(moon6))
+                .andExpect(jsonPath("$.data.previous").doesNotExist());
+        org.assertj.core.api.Assertions.assertThat(shadow5).contains("\"chapterNumber\":\"5\"");
+
+        Session kenji = register();
+        mockMvc.perform(put("/api/v1/reading/chapters/" + moon5).header("Authorization", kenji.bearer())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"finished\":true}"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/reading/works/" + workId).header("Authorization", kenji.bearer()))
+                .andExpect(jsonPath("$.data.finishedChapterNumbers[0]").value("5"))
+                .andExpect(jsonPath("$.data.finishedChapterNumbers.length()").value(1))
+                .andExpect(jsonPath("$.data.nextChapterNumber").value("6"))
+                .andExpect(jsonPath("$.data.nextChapterId").value(moon6));
+    }
+
+    private ResultActions whenIPublish(Session publisher, String workId, String teamId, String number) throws Exception {
+        return mockMvc.perform(post("/api/v1/works/" + workId + "/chapters/direct").header("Authorization", publisher.bearer())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"teamId\":\"" + teamId + "\",\"chapterNumber\":\"" + number + "\",\"title\":\"Ch\",\"pages\":"
+                        + "[{\"pageNumber\":1,\"storageKey\":\"t/p1.webp\",\"cdnUrl\":\"https://cdn.readora.com/t/p1.webp\",\"width\":800,\"height\":1200}]}"));
+    }
+
+    private String idOf(org.springframework.test.web.servlet.MvcResult result) throws Exception {
+        return json(result).path("data").path("id").asString();
+    }
+
     private ResultActions whenICreateASeriesFor(Session scanlator, String teamId) throws Exception {
         return mockMvc.perform(post("/api/v1/works").header("Authorization", scanlator.bearer()).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"title\":\"Team Series " + UUID.randomUUID() + "\",\"type\":\"MANHWA\",\"genres\":[\"Action\"],\"teamId\":\"" + teamId + "\"}"));

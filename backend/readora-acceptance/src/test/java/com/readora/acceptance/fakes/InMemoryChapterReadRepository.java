@@ -5,6 +5,8 @@ import com.readora.domain.common.UserId;
 import com.readora.domain.library.ChapterRead;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
+import com.readora.domain.work.ReadingOrder;
+import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.WorkId;
 
 import java.time.Instant;
@@ -14,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -60,9 +63,13 @@ public class InMemoryChapterReadRepository implements ChapterReadRepositoryPort 
         for (WorkId workId : workIds) {
             Optional<Instant> lastRead = findByUserAndWork(userId, workId).stream().map(ChapterRead::readAt).max(Comparator.naturalOrder());
             lastRead.ifPresent(since -> {
-                long count = chapters.findPublishedByWorkId(workId).stream()
-                        .map(Chapter::getPublishedAt)
-                        .filter(at -> at != null && at.isAfter(since))
+                // Like the SQL: numbers whose first version is newer than the last read, not finished in any version.
+                ReadingOrder order = ReadingOrder.of(chapters.findPublishedRefsByWorkId(workId));
+                Set<ChapterNumber> finished = findByUserAndWork(userId, workId).stream().filter(ChapterRead::finished)
+                        .map(ChapterRead::chapterNumber).collect(Collectors.toSet());
+                long count = order.numbers().stream()
+                        .filter(number -> order.versionsOf(number).getFirst().publishedAt().isAfter(since))
+                        .filter(number -> !finished.contains(number))
                         .count();
                 if (count > 0) {
                     counts.put(workId, count);
