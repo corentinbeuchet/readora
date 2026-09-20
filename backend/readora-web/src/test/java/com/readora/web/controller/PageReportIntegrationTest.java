@@ -2,9 +2,11 @@ package com.readora.web.controller;
 
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
+import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.Team;
 import com.readora.domain.work.*;
 import com.readora.web.ReadoraApplication;
 import org.junit.jupiter.api.Test;
@@ -38,6 +40,9 @@ class PageReportIntegrationTest extends AuthTestSupport {
     @Autowired
     private ScanlationProjectRepositoryPort projectRepository;
 
+    @Autowired
+    private TeamRepositoryPort teamRepository;
+
     private static final String BODY = "{\"reason\":\"IMAGE_CORRUPTED\"}";
 
     @Test
@@ -47,7 +52,8 @@ class PageReportIntegrationTest extends AuthTestSupport {
         Session outsider = registerScanlator();
         Session kenji = register();
         Work work = workRepository.save(Work.create("Report Work", "S", WorkType.MANHWA, "c.webp", Set.of("Action")));
-        ScanlationProject team = projectRepository.save(ScanlationProject.create("Shadow Scans", work.getId(), UserId.of(leader.userId())));
+        Team shadowScans = teamRepository.save(Team.create("Shadow Scans", null, UserId.of(leader.userId())));
+        ScanlationProject team = projectRepository.save(ScanlationProject.create("Shadow Scans", work.getId(), shadowScans.getId()));
         Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", team.getId());
         chapter.updatePages(List.of(PageAsset.create(1, "r/p1.webp", null), PageAsset.create(2, "r/p2.webp", null)));
         chapter.publish(UserId.of(leader.userId()));

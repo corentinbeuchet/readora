@@ -6,7 +6,6 @@ import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.common.UserId;
 import com.readora.domain.work.WorkId;
 import com.readora.infrastructure.persistence.entity.ScanlationProjectJpaEntity;
-import com.readora.infrastructure.persistence.entity.TeamMemberJpaEntity;
 import com.readora.infrastructure.persistence.entity.WorkflowTaskJpaEntity;
 import com.readora.infrastructure.persistence.repository.SpringDataScanlationProjectRepository;
 import org.springframework.stereotype.Component;
@@ -39,6 +38,14 @@ public class ScanlationProjectRepositoryAdapter implements ScanlationProjectRepo
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<ScanlationProject> findByTeamId(TeamId teamId) {
+        return springDataRepository.findByTeamId(teamId.value()).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     @Transactional
     public ScanlationProject save(ScanlationProject project) {
         ScanlationProjectJpaEntity existing = springDataRepository.findById(project.getId().value()).orElse(null);
@@ -47,23 +54,6 @@ public class ScanlationProjectRepositoryAdapter implements ScanlationProjectRepo
             existing.setName(project.getName());
             existing.setWorkId(project.getWorkId().value());
             existing.setUpdatedAt(project.getUpdatedAt());
-
-            // Update members in place
-            Map<String, TeamMemberJpaEntity> existingMembersByUserId = existing.getMembers().stream()
-                    .collect(Collectors.toMap(TeamMemberJpaEntity::getUserId, m -> m));
-
-            existing.getMembers().removeIf(em -> project.getMembers().stream().noneMatch(m -> m.userId().value().equals(em.getUserId())));
-
-            for (TeamMember m : project.getMembers()) {
-                TeamMemberJpaEntity memberEntity = existingMembersByUserId.get(m.userId().value());
-                List<String> roles = m.roles().stream().map(Enum::name).toList();
-                if (memberEntity != null) {
-                    memberEntity.setRoles(new ArrayList<>(roles));
-                    memberEntity.setJoinedAt(m.joinedAt());
-                } else {
-                    existing.getMembers().add(new TeamMemberJpaEntity(existing, m.userId().value(), new ArrayList<>(roles), m.joinedAt()));
-                }
-            }
 
             // Update tasks in place
             Map<UUID, WorkflowTaskJpaEntity> existingTasksById = existing.getTasks().stream()
@@ -112,14 +102,6 @@ public class ScanlationProjectRepositoryAdapter implements ScanlationProjectRepo
     }
 
     private ScanlationProject toDomainState(ScanlationProjectJpaEntity entity) {
-        Set<TeamMember> members = entity.getMembers() != null ?
-                entity.getMembers().stream()
-                        .map(m -> new TeamMember(
-                                UserId.of(m.getUserId()),
-                                m.getRoles().stream().map(ScanlationRole::valueOf).collect(Collectors.toSet()),
-                                m.getJoinedAt()
-                        )).collect(Collectors.toSet()) : new HashSet<>();
-
         List<WorkflowTask> tasks = entity.getTasks() != null ?
                 entity.getTasks().stream()
                         .map(t -> new WorkflowTask(
@@ -137,7 +119,7 @@ public class ScanlationProjectRepositoryAdapter implements ScanlationProjectRepo
                 ProjectId.of(entity.getId()),
                 entity.getName(),
                 WorkId.of(entity.getWorkId()),
-                members,
+                TeamId.of(entity.getTeamId()),
                 tasks,
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
@@ -149,18 +131,10 @@ public class ScanlationProjectRepositoryAdapter implements ScanlationProjectRepo
                 project.getId().value(),
                 project.getName(),
                 project.getWorkId().value(),
+                project.getTeamId().value(),
                 project.getCreatedAt(),
                 project.getUpdatedAt()
         );
-
-        List<TeamMemberJpaEntity> memberEntities = new ArrayList<>();
-        if (project.getMembers() != null) {
-            for (TeamMember m : project.getMembers()) {
-                List<String> roles = m.roles().stream().map(Enum::name).toList();
-                memberEntities.add(new TeamMemberJpaEntity(entity, m.userId().value(), roles, m.joinedAt()));
-            }
-        }
-        entity.setMembers(memberEntities);
 
         List<WorkflowTaskJpaEntity> taskEntities = new ArrayList<>();
         if (project.getTasks() != null) {

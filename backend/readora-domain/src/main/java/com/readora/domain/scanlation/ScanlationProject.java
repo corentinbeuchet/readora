@@ -12,22 +12,22 @@ import org.jspecify.annotations.Nullable;
 import java.time.Instant;
 import java.util.*;
 
+/// A team's task board for one series. The roster lives on the [Team]: operations that need a member take the
+/// project's own team and check roles there.
 public class ScanlationProject extends AggregateRoot<ProjectId> {
     private final String name;
     private final WorkId workId;
-    private final Set<TeamMember> members = new HashSet<>();
+    private final TeamId teamId;
     private final List<WorkflowTask> tasks = new ArrayList<>();
     private final Instant createdAt;
     private Instant updatedAt;
 
-    public ScanlationProject(ProjectId id, String name, WorkId workId, @Nullable Set<TeamMember> members,
+    public ScanlationProject(ProjectId id, String name, WorkId workId, TeamId teamId,
                              @Nullable List<WorkflowTask> tasks, @Nullable Instant createdAt, @Nullable Instant updatedAt) {
         super(id);
         this.name = validateName(name);
         this.workId = Objects.requireNonNull(workId, "WorkId cannot be null");
-        if (members != null) {
-            this.members.addAll(members);
-        }
+        this.teamId = Objects.requireNonNull(teamId, "TeamId cannot be null");
         if (tasks != null) {
             this.tasks.addAll(tasks);
         }
@@ -35,11 +35,9 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
         this.updatedAt = updatedAt != null ? updatedAt : this.createdAt;
     }
 
-    public static ScanlationProject create(String name, WorkId workId, UserId leaderId) {
+    public static ScanlationProject create(String name, WorkId workId, TeamId teamId) {
         Instant now = Instant.now();
-        ScanlationProject project = new ScanlationProject(ProjectId.generate(), name, workId, Set.of(), List.of(), now, now);
-        project.addMember(TeamMember.of(leaderId, ScanlationRole.LEADER));
-        return project;
+        return new ScanlationProject(ProjectId.generate(), name, workId, teamId, List.of(), now, now);
     }
 
     private static String validateName(String name) {
@@ -49,15 +47,13 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
         return name.trim();
     }
 
-    public void addMember(TeamMember member) {
-        Objects.requireNonNull(member, "TeamMember cannot be null");
-        this.members.remove(member);
-        this.members.add(member);
-        this.updatedAt = Instant.now();
-    }
-
-    public Optional<TeamMember> findMember(UserId userId) {
-        return this.members.stream().filter(m -> m.userId().equals(userId)).findFirst();
+    /// @throws DomainValidationException if the user is not on the project's team
+    public TeamMember requireMember(Team team, UserId userId) {
+        if (!team.getId().equals(teamId)) {
+            throw new IllegalArgumentException("Team " + team.getId() + " does not own project " + name);
+        }
+        return team.findMember(userId)
+                .orElseThrow(() -> new DomainValidationException("User " + userId + " is not a member of project " + name));
     }
 
     public WorkflowTask addChapterTask(ChapterNumber chapterNumber) {
@@ -82,9 +78,8 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
         return this.tasks.stream().filter(t -> t.getChapterNumber().equals(chapterNumber)).findFirst();
     }
 
-    public void claimTask(TaskId taskId, UserId userId) {
-        TeamMember member = findMember(userId)
-                .orElseThrow(() -> new DomainValidationException("User " + userId + " is not a member of project " + name));
+    public void claimTask(Team team, TaskId taskId, UserId userId) {
+        TeamMember member = requireMember(team, userId);
 
         WorkflowTask task = findTask(taskId)
                 .orElseThrow(() -> new NotFoundException("Task", taskId));
@@ -103,7 +98,7 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
         registerEvent(TaskAssignedEvent.now(this.id, taskId, userId, task.getStage()));
     }
 
-    public void submitTaskWork(TaskId taskId, UserId userId, @Nullable String assetUrl, int pageCount) {
+    public void submitTaskWork(Team team, TaskId taskId, UserId userId, @Nullable String assetUrl, int pageCount) {
         WorkflowTask task = findTask(taskId)
                 .orElseThrow(() -> new NotFoundException("Task", taskId));
 
@@ -113,8 +108,7 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
         }
         if (task.getAssigneeId() == null || !task.getAssigneeId().equals(userId)) {
             // Unassigned: any member with the stage role may submit directly. Assigned to someone else: leader override only.
-            TeamMember member = findMember(userId)
-                    .orElseThrow(() -> new DomainValidationException("User is not a member of project: " + name));
+            TeamMember member = requireMember(team, userId);
             if (!member.hasRole(task.getStage().requiredRole())) {
                 throw new DomainValidationException("User lacks required role: " + task.getStage().requiredRole());
             }
@@ -143,9 +137,8 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
     ///
     /// @throws DomainValidationException if the user is not a member with the `QUALITY_CHECKER` role (leaders
     ///         qualify), or if the task is not in `QC_REVIEW` — translation, typesetting and proofreading can't be skipped
-    public WorkflowTask approveQualityCheck(TaskId taskId, UserId userId) {
-        TeamMember member = findMember(userId)
-                .orElseThrow(() -> new DomainValidationException("User " + userId + " is not a member of project " + name));
+    public WorkflowTask approveQualityCheck(Team team, TaskId taskId, UserId userId) {
+        TeamMember member = requireMember(team, userId);
         WorkflowTask task = findTask(taskId)
                 .orElseThrow(() -> new NotFoundException("Task", taskId));
 
@@ -185,8 +178,8 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
         return workId;
     }
 
-    public Set<TeamMember> getMembers() {
-        return Collections.unmodifiableSet(members);
+    public TeamId getTeamId() {
+        return teamId;
     }
 
     public List<WorkflowTask> getTasks() {

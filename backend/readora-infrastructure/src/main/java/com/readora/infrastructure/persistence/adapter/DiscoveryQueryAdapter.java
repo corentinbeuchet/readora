@@ -29,7 +29,8 @@ public class DiscoveryQueryAdapter implements DiscoveryQueryPort {
             """;
     private static final String ONLY_FOR_READER = """
             and (c.workId in (select l.id.workId from LibraryEntryJpaEntity l where l.id.userId = :userId)
-                 or c.scanlationProjectId in (select f.id.projectId from TeamFollowJpaEntity f where f.id.userId = :userId))
+                 or c.scanlationProjectId in (select p.id from ScanlationProjectJpaEntity p
+                                              where p.teamId in (select f.id.teamId from TeamFollowJpaEntity f where f.id.userId = :userId)))
             """;
 
     private final EntityManager entityManager;

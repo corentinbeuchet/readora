@@ -2,6 +2,7 @@ package com.readora.application.port.in;
 
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.Team;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.Demographic;
 import com.readora.domain.work.Work;
@@ -53,6 +54,10 @@ public interface BrowseCatalogUseCase {
 
     Optional<Work> getWork(WorkId workId);
     List<Chapter> listPublishedChapters(WorkId workId);
-    Optional<ScanlationProject> getProject(ProjectId projectId);
-    List<ScanlationProject> listProjectsByWork(WorkId workId);
+    /// A team's task board for one series, with the team whose roster works on it.
+    record ProjectBoard(ScanlationProject project, Team team) {
+    }
+
+    Optional<ProjectBoard> getProject(ProjectId projectId);
+    List<ProjectBoard> listProjectsByWork(WorkId workId);
 }

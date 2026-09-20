@@ -2,6 +2,9 @@ package com.readora.application.port.out;
 
 import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.ProjectId;
+import com.readora.domain.scanlation.TeamId;
+import com.readora.domain.work.ChapterId;
+import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.WorkId;
 
 import java.time.Instant;
@@ -25,13 +28,23 @@ public interface CommunityQueryPort {
     /// Usernames of the given users that exist.
     Map<UserId, String> usernames(Collection<UserId> userIds);
 
+    /// A published chapter as a team page lists it: no pages are loaded.
+    record PublishedChapter(ChapterId id, WorkId workId, ChapterNumber number, String title, int pageCount, Instant publishedAt) {
+    }
+
+    /// Published chapter count of each of the given projects that has at least one.
+    Map<ProjectId, Long> countPublishedChapters(Collection<ProjectId> projectIds);
+
+    /// The most recently published chapters of the given projects, newest first.
+    List<PublishedChapter> latestPublishedChapters(Collection<ProjectId> projectIds, int limit);
+
     /// @return whether this call created the follow (following twice is harmless)
-    boolean follow(UserId userId, ProjectId projectId, Instant at);
+    boolean follow(UserId userId, TeamId teamId, Instant at);
 
     /// @return whether a follow was removed
-    boolean unfollow(UserId userId, ProjectId projectId);
+    boolean unfollow(UserId userId, TeamId teamId);
 
-    boolean isFollowing(UserId userId, ProjectId projectId);
+    boolean isFollowing(UserId userId, TeamId teamId);
 
-    long countFollowers(ProjectId projectId);
+    long countFollowers(TeamId teamId);
 }

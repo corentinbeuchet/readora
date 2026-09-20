@@ -3,9 +3,11 @@ package com.readora.infrastructure.persistence;
 import com.readora.domain.common.UserId;
 import com.readora.domain.common.ConcurrentModificationDomainException;
 import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.Team;
 import com.readora.domain.work.*;
 import com.readora.infrastructure.config.UseCaseTransactions;
 import com.readora.infrastructure.persistence.adapter.ScanlationProjectRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.TeamRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.WorkRepositoryAdapter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -52,6 +54,9 @@ class UseCaseTransactionsTest {
     private ScanlationProjectRepositoryAdapter projectRepository;
 
     @Autowired
+    private TeamRepositoryAdapter teamRepository;
+
+    @Autowired
     private PlatformTransactionManager transactionManager;
 
     @Test
@@ -91,7 +96,9 @@ class UseCaseTransactionsTest {
     void staleWriteInsideTransactionIsRejected() {
         Work work = Work.create("Tx Lock Work", "Synopsis", WorkType.MANGA, "c.png", Set.of("Action"));
         workRepository.save(work);
-        ScanlationProject project = ScanlationProject.create("Tx Lock Group", work.getId(), UserId.of("leader_tx"));
+        Team team = Team.create("Tx Lock Group", null, UserId.of("leader_tx"));
+        teamRepository.save(team);
+        ScanlationProject project = ScanlationProject.create("Tx Lock Group", work.getId(), team.getId());
         projectRepository.save(project);
 
         TransactionTemplate outer = new TransactionTemplate(transactionManager);

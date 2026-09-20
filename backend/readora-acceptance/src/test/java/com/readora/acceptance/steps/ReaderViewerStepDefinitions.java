@@ -1,6 +1,8 @@
 package com.readora.acceptance.steps;
 
 import com.readora.domain.common.UserId;
+import com.readora.acceptance.fakes.InMemoryProjectRepository;
+import com.readora.acceptance.fakes.InMemoryTeamRepository;
 import com.readora.acceptance.fakes.InMemoryWorkRepository;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.StoragePort;
@@ -87,7 +89,8 @@ public class ReaderViewerStepDefinitions {
             }
         };
 
-        chapterReadingService = new ChapterReadingService(chapterRepo, new InMemoryWorkRepository(workStore), storagePort);
+        chapterReadingService = new ChapterReadingService(chapterRepo, new InMemoryWorkRepository(workStore), new InMemoryProjectRepository(),
+                new InMemoryTeamRepository(), storagePort);
     }
 
     @Given("the reader {string} is registered on Readora")

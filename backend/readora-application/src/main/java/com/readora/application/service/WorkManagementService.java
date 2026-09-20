@@ -6,6 +6,7 @@ import com.readora.application.port.in.ManageWorkUseCase;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
+import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.AccessDeniedDomainException;
@@ -15,29 +16,35 @@ import com.readora.domain.identity.Permission;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.ScanlationRole;
+import com.readora.domain.scanlation.Team;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.*;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class WorkManagementService implements ManageWorkUseCase, DirectPublishChapterUseCase {
 
     private final WorkRepositoryPort workRepository;
     private final ChapterRepositoryPort chapterRepository;
     private final ScanlationProjectRepositoryPort projectRepository;
+    private final TeamRepositoryPort teamRepository;
     private final UserAccountRepositoryPort userRepository;
     private final EventPublisherPort eventPublisher;
 
     public WorkManagementService(WorkRepositoryPort workRepository,
                                  ChapterRepositoryPort chapterRepository,
                                  ScanlationProjectRepositoryPort projectRepository,
+                                 TeamRepositoryPort teamRepository,
                                  UserAccountRepositoryPort userRepository,
                                  EventPublisherPort eventPublisher) {
         this.workRepository = Objects.requireNonNull(workRepository, "WorkRepositoryPort cannot be null");
         this.chapterRepository = Objects.requireNonNull(chapterRepository, "ChapterRepositoryPort cannot be null");
         this.projectRepository = Objects.requireNonNull(projectRepository, "ScanlationProjectRepositoryPort cannot be null");
+        this.teamRepository = Objects.requireNonNull(teamRepository, "TeamRepositoryPort cannot be null");
         this.userRepository = Objects.requireNonNull(userRepository, "UserAccountRepositoryPort cannot be null");
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "EventPublisherPort cannot be null");
     }
@@ -62,9 +69,10 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
         Work savedWork = workRepository.save(work);
 
         if (creatorId != null) {
-            String projectName = savedWork.getTitle() + " Workspace";
-            ScanlationProject project = ScanlationProject.create(projectName, savedWork.getId(), creatorId);
-            projectRepository.save(project);
+            String name = savedWork.getTitle() + " Workspace";
+            Team team = Team.create(name, null, creatorId);
+            teamRepository.save(team);
+            projectRepository.save(ScanlationProject.create(name, savedWork.getId(), team.getId()));
         }
 
         return savedWork;
@@ -105,9 +113,11 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
     /// @throws AccessDeniedDomainException for anyone else — the global `CHAPTER_PUBLISH` permission is not enough
     private @Nullable ProjectId authorizePublisher(WorkId workId, UserId publisherId) {
         List<ScanlationProject> projects = projectRepository.findByWorkId(workId);
-        var memberProject = projects.stream()
-                .filter(p -> p.findMember(publisherId).filter(m -> m.hasRole(ScanlationRole.QUALITY_CHECKER)).isPresent())
-                .findFirst();
+        Set<TeamId> publisherTeams = teamRepository.findAllById(projects.stream().map(ScanlationProject::getTeamId).toList()).stream()
+                .filter(team -> team.findMember(publisherId).filter(m -> m.hasRole(ScanlationRole.QUALITY_CHECKER)).isPresent())
+                .map(Team::getId)
+                .collect(Collectors.toSet());
+        var memberProject = projects.stream().filter(p -> publisherTeams.contains(p.getTeamId())).findFirst();
         if (memberProject.isPresent()) {
             return memberProject.get().getId();
         }

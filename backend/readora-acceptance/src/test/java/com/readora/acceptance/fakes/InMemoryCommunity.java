@@ -5,11 +5,14 @@ import com.readora.domain.common.UserId;
 import com.readora.domain.library.ChapterRead;
 import com.readora.domain.library.LibraryEntry;
 import com.readora.domain.scanlation.ProjectId;
+import com.readora.domain.scanlation.TeamId;
+import com.readora.domain.work.Chapter;
 import com.readora.domain.social.ReadingStatus;
 import com.readora.domain.work.WorkId;
 
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,17 +28,19 @@ public class InMemoryCommunity implements CommunityQueryPort {
     private final InMemoryChapterReadRepository reads;
     private final InMemoryLibraryRepository library;
     private final InMemoryUserAccounts users;
-    private final Map<UserId, Set<ProjectId>> follows = new ConcurrentHashMap<>();
+    private final InMemoryChapterRepository chapters;
+    private final Map<UserId, Set<TeamId>> follows = new ConcurrentHashMap<>();
 
     public InMemoryCommunity(InMemoryWorkRepository works, InMemoryChapterReadRepository reads, InMemoryLibraryRepository library,
-                             InMemoryUserAccounts users) {
+                             InMemoryUserAccounts users, InMemoryChapterRepository chapters) {
+        this.chapters = chapters;
         this.works = works;
         this.reads = reads;
         this.library = library;
         this.users = users;
     }
 
-    public Set<ProjectId> followedBy(UserId userId) {
+    public Set<TeamId> followedBy(UserId userId) {
         return follows.getOrDefault(userId, Set.of());
     }
 
@@ -61,22 +66,42 @@ public class InMemoryCommunity implements CommunityQueryPort {
     }
 
     @Override
-    public boolean follow(UserId userId, ProjectId projectId, Instant at) {
-        return follows.computeIfAbsent(userId, id -> ConcurrentHashMap.newKeySet()).add(projectId);
+    public Map<ProjectId, Long> countPublishedChapters(Collection<ProjectId> projectIds) {
+        return publishedBy(projectIds).collect(Collectors.groupingBy(Chapter::getScanlationProjectId, Collectors.counting()));
     }
 
     @Override
-    public boolean unfollow(UserId userId, ProjectId projectId) {
-        return follows.getOrDefault(userId, Set.of()).remove(projectId);
+    public List<PublishedChapter> latestPublishedChapters(Collection<ProjectId> projectIds, int limit) {
+        return publishedBy(projectIds)
+                .sorted(Comparator.comparing(Chapter::getPublishedAt).reversed())
+                .limit(limit)
+                .map(c -> new PublishedChapter(c.getId(), c.getWorkId(), c.getChapterNumber(), c.getTitle(), c.getPages().size(), c.getPublishedAt()))
+                .toList();
+    }
+
+    private java.util.stream.Stream<Chapter> publishedBy(Collection<ProjectId> projectIds) {
+        return chapters.all().stream()
+                .filter(Chapter::isPublished)
+                .filter(c -> c.getScanlationProjectId() != null && projectIds.contains(c.getScanlationProjectId()));
     }
 
     @Override
-    public boolean isFollowing(UserId userId, ProjectId projectId) {
-        return followedBy(userId).contains(projectId);
+    public boolean follow(UserId userId, TeamId teamId, Instant at) {
+        return follows.computeIfAbsent(userId, id -> ConcurrentHashMap.newKeySet()).add(teamId);
     }
 
     @Override
-    public long countFollowers(ProjectId projectId) {
-        return follows.values().stream().filter(set -> set.contains(projectId)).count();
+    public boolean unfollow(UserId userId, TeamId teamId) {
+        return follows.getOrDefault(userId, Set.of()).remove(teamId);
+    }
+
+    @Override
+    public boolean isFollowing(UserId userId, TeamId teamId) {
+        return followedBy(userId).contains(teamId);
+    }
+
+    @Override
+    public long countFollowers(TeamId teamId) {
+        return follows.values().stream().filter(set -> set.contains(teamId)).count();
     }
 }

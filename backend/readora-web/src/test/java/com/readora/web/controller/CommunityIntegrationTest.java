@@ -39,24 +39,30 @@ class CommunityIntegrationTest extends AuthTestSupport {
                 .andExpect(status().isCreated()).andReturn();
         String workId = json(work).path("data").path("id").asString();
         var projects = mockMvc.perform(get("/api/v1/works/" + workId + "/projects").header("Authorization", leader.bearer())).andReturn();
-        String projectId = json(projects).path("data").path(0).path("id").asString();
+        String teamId = json(projects).path("data").path(0).path("teamId").asString();
         var chapter = mockMvc.perform(post("/api/v1/works/" + workId + "/chapters/direct").header("Authorization", leader.bearer())
                         .contentType(MediaType.APPLICATION_JSON).content("{\"chapterNumber\":\"1\",\"title\":\"Ch\",\"pages\":[" + PAGE + "]}"))
                 .andExpect(status().isCreated()).andReturn();
         String chapterId = json(chapter).path("data").path("id").asString();
 
         Session kenji = register();
-        mockMvc.perform(put("/api/v1/teams/" + projectId + "/follow")).andExpect(status().isUnauthorized());
-        mockMvc.perform(put("/api/v1/teams/" + projectId + "/follow").header("Authorization", kenji.bearer())).andExpect(status().isOk());
-        mockMvc.perform(put("/api/v1/teams/" + projectId + "/follow").header("Authorization", kenji.bearer())).andExpect(status().isOk());
-        mockMvc.perform(get("/api/v1/teams/" + projectId).header("Authorization", kenji.bearer()))
+        mockMvc.perform(put("/api/v1/teams/" + teamId + "/follow")).andExpect(status().isUnauthorized());
+        mockMvc.perform(put("/api/v1/teams/" + teamId + "/follow").header("Authorization", kenji.bearer())).andExpect(status().isOk());
+        mockMvc.perform(put("/api/v1/teams/" + teamId + "/follow").header("Authorization", kenji.bearer())).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/teams/" + teamId).header("Authorization", kenji.bearer()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.series.title").value(title))
+                .andExpect(jsonPath("$.data.name").value(title + " Workspace"))
+                .andExpect(jsonPath("$.data.series.length()").value(1))
+                .andExpect(jsonPath("$.data.series[0].work.title").value(title))
+                .andExpect(jsonPath("$.data.series[0].chapterCount").value(1))
                 .andExpect(jsonPath("$.data.members[0].username").value(leader.username()))
                 .andExpect(jsonPath("$.data.latestChapters[0].id").value(chapterId))
                 .andExpect(jsonPath("$.data.followers").value(1))
                 .andExpect(jsonPath("$.data.following").value(true));
-        mockMvc.perform(get("/api/v1/teams/" + projectId)).andExpect(jsonPath("$.data.following").value(false));
+        mockMvc.perform(get("/api/v1/teams/" + teamId)).andExpect(jsonPath("$.data.following").value(false));
+        mockMvc.perform(get("/api/v1/chapters/" + chapterId))
+                .andExpect(jsonPath("$.data.team.id").value(teamId))
+                .andExpect(jsonPath("$.data.team.name").value(title + " Workspace"));
         mockMvc.perform(get("/api/v1/updates").param("mine", "true").header("Authorization", kenji.bearer()))
                 .andExpect(jsonPath("$.data[*].chapterId", hasItem(chapterId)));
 
@@ -78,8 +84,8 @@ class CommunityIntegrationTest extends AuthTestSupport {
                 .andExpect(jsonPath("$[0].title").value(title))
                 .andExpect(jsonPath("$[0].lastChapterRead").value("1"));
 
-        mockMvc.perform(delete("/api/v1/teams/" + projectId + "/follow").header("Authorization", kenji.bearer())).andExpect(status().isOk());
-        mockMvc.perform(get("/api/v1/teams/" + projectId)).andExpect(jsonPath("$.data.followers").value(0));
+        mockMvc.perform(delete("/api/v1/teams/" + teamId + "/follow").header("Authorization", kenji.bearer())).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/teams/" + teamId)).andExpect(jsonPath("$.data.followers").value(0));
         mockMvc.perform(put("/api/v1/teams/" + UUID.randomUUID() + "/follow").header("Authorization", kenji.bearer()))
                 .andExpect(status().isNotFound());
     }

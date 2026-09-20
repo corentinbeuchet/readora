@@ -5,6 +5,7 @@ import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.PageReportRepositoryPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
+import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.domain.common.AccessDeniedDomainException;
 import com.readora.domain.common.DomainValidationException;
@@ -29,16 +30,19 @@ public class PageReportService implements ReportPageUseCase {
     private final PageReportRepositoryPort reportRepository;
     private final ChapterRepositoryPort chapterRepository;
     private final ScanlationProjectRepositoryPort projectRepository;
+    private final TeamRepositoryPort teamRepository;
     private final UserAccountRepositoryPort userRepository;
     private final EventPublisherPort eventPublisher;
     private final Clock clock;
 
     public PageReportService(PageReportRepositoryPort reportRepository, ChapterRepositoryPort chapterRepository,
-                             ScanlationProjectRepositoryPort projectRepository, UserAccountRepositoryPort userRepository,
+                             ScanlationProjectRepositoryPort projectRepository, TeamRepositoryPort teamRepository,
+                             UserAccountRepositoryPort userRepository,
                              EventPublisherPort eventPublisher, Clock clock) {
         this.reportRepository = Objects.requireNonNull(reportRepository, "PageReportRepositoryPort cannot be null");
         this.chapterRepository = Objects.requireNonNull(chapterRepository, "ChapterRepositoryPort cannot be null");
         this.projectRepository = Objects.requireNonNull(projectRepository, "ScanlationProjectRepositoryPort cannot be null");
+        this.teamRepository = Objects.requireNonNull(teamRepository, "TeamRepositoryPort cannot be null");
         this.userRepository = Objects.requireNonNull(userRepository, "UserAccountRepositoryPort cannot be null");
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "EventPublisherPort cannot be null");
         this.clock = Objects.requireNonNull(clock, "Clock cannot be null");
@@ -67,7 +71,7 @@ public class PageReportService implements ReportPageUseCase {
     public List<PageReport> openReports(UserId actorId, ProjectId projectId) {
         ScanlationProject project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new NotFoundException("Project", projectId));
-        if (project.findMember(actorId).isEmpty() && !isAdmin(actorId)) {
+        if (!isOnTeam(actorId, project) && !isAdmin(actorId)) {
             throw new AccessDeniedDomainException("Only the project's team can see its page reports");
         }
         return reportRepository.findOpenByProject(projectId);
@@ -85,9 +89,11 @@ public class PageReportService implements ReportPageUseCase {
     }
 
     private boolean isOnTeam(UserId actorId, @Nullable ProjectId projectId) {
-        return projectId != null && projectRepository.findById(projectId)
-                .flatMap(project -> project.findMember(actorId))
-                .isPresent();
+        return projectId != null && projectRepository.findById(projectId).filter(project -> isOnTeam(actorId, project)).isPresent();
+    }
+
+    private boolean isOnTeam(UserId actorId, ScanlationProject project) {
+        return teamRepository.findById(project.getTeamId()).flatMap(team -> team.findMember(actorId)).isPresent();
     }
 
     private boolean isAdmin(UserId actorId) {

@@ -20,9 +20,8 @@ public class ScanlationProjectJpaEntity {
     @Column(name = "work_id", nullable = false)
     private UUID workId;
 
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @BatchSize(size = 64)
-    private List<TeamMemberJpaEntity> members = new ArrayList<>();
+    @Column(name = "team_id", nullable = false)
+    private UUID teamId;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @BatchSize(size = 64)
@@ -44,10 +43,11 @@ public class ScanlationProjectJpaEntity {
 
     public ScanlationProjectJpaEntity() {}
 
-    public ScanlationProjectJpaEntity(UUID id, String name, UUID workId, Instant createdAt, Instant updatedAt) {
+    public ScanlationProjectJpaEntity(UUID id, String name, UUID workId, UUID teamId, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.name = name;
         this.workId = workId;
+        this.teamId = teamId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -58,8 +58,7 @@ public class ScanlationProjectJpaEntity {
     public void setName(String name) { this.name = name; }
     public UUID getWorkId() { return workId; }
     public void setWorkId(UUID workId) { this.workId = workId; }
-    public List<TeamMemberJpaEntity> getMembers() { return members; }
-    public void setMembers(List<TeamMemberJpaEntity> members) { this.members = members; }
+    public UUID getTeamId() { return teamId; }
     public List<WorkflowTaskJpaEntity> getTasks() { return tasks; }
     public void setTasks(List<WorkflowTaskJpaEntity> tasks) { this.tasks = tasks; }
     public Instant getCreatedAt() { return createdAt; }

@@ -3,10 +3,12 @@ package com.readora.application.service;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
+import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.TaskAssignedEvent;
+import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TaskStageAdvancedEvent;
 import com.readora.domain.scanlation.WorkflowStage;
 import com.readora.domain.scanlation.WorkflowTask;
@@ -37,6 +39,9 @@ class ScanlationTaskServiceTest {
     private ScanlationProjectRepositoryPort projectRepository;
 
     @Mock
+    private TeamRepositoryPort teamRepository;
+
+    @Mock
     private ChapterRepositoryPort chapterRepository;
 
     @Mock
@@ -46,7 +51,7 @@ class ScanlationTaskServiceTest {
 
     @BeforeEach
     void setUp() {
-        taskService = new ScanlationTaskService(projectRepository, chapterRepository, eventPublisher);
+        taskService = new ScanlationTaskService(projectRepository, teamRepository, chapterRepository, eventPublisher);
     }
 
     @Test
@@ -54,10 +59,12 @@ class ScanlationTaskServiceTest {
     void uploadChapterTaskAsMemberSucceeds() {
         UserId leaderId = UserId.of("leader-1");
         WorkId workId = WorkId.generate();
-        ScanlationProject project = ScanlationProject.create("Asura Scans", workId, leaderId);
+        Team team = Team.create("Asura Scans", null, leaderId);
+        ScanlationProject project = ScanlationProject.create("Asura Scans", workId, team.getId());
         ProjectId projectId = project.getId();
 
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
         when(projectRepository.save(any(ScanlationProject.class))).thenAnswer(i -> i.getArgument(0));
         when(chapterRepository.save(any(Chapter.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -88,10 +95,12 @@ class ScanlationTaskServiceTest {
     void uploadChapterTaskAsNonMemberThrows() {
         UserId leaderId = UserId.of("leader-1");
         UserId nonMemberId = UserId.of("stranger-1");
-        ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), leaderId);
+        Team team = Team.create("Asura Scans", null, leaderId);
+        ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), team.getId());
         ProjectId projectId = project.getId();
 
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
 
         assertThatThrownBy(() -> taskService.uploadChapterTask(
                 projectId,
@@ -110,11 +119,13 @@ class ScanlationTaskServiceTest {
     @DisplayName("Claiming a task publishes TaskAssignedEvent even though save returns a rebuilt copy")
     void claimPublishesEventsFromMutatedAggregate() {
         UserId leaderId = UserId.of("leader-1");
-        ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), leaderId);
+        Team team = Team.create("Asura Scans", null, leaderId);
+        ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), team.getId());
         WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"));
         project.pollDomainEvents();
 
         when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
         when(projectRepository.save(any(ScanlationProject.class))).thenAnswer(i -> rebuilt(i.getArgument(0)));
 
         WorkflowTask claimed = taskService.claimTask(project.getId(), task.getId(), leaderId);
@@ -127,11 +138,13 @@ class ScanlationTaskServiceTest {
     @DisplayName("Submitting work publishes TaskStageAdvancedEvent even though save returns a rebuilt copy")
     void submitPublishesEventsFromMutatedAggregate() {
         UserId leaderId = UserId.of("leader-1");
-        ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), leaderId);
+        Team team = Team.create("Asura Scans", null, leaderId);
+        ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), team.getId());
         WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"));
         project.pollDomainEvents();
 
         when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
         when(projectRepository.save(any(ScanlationProject.class))).thenAnswer(i -> rebuilt(i.getArgument(0)));
 
         taskService.submitWork(project.getId(), task.getId(), leaderId, "scans/1/clean.zip", 20);
@@ -143,11 +156,13 @@ class ScanlationTaskServiceTest {
     @DisplayName("Publishing from QC a task still in translation is rejected and nothing is saved")
     void publishFromQcBeforeQcReviewSavesNothing() {
         UserId leaderId = UserId.of("leader-1");
-        ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), leaderId);
+        Team team = Team.create("Asura Scans", null, leaderId);
+        ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), team.getId());
         WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"), "scans/1/raw.zip", 20);
         task.advanceStage(WorkflowStage.TRANSLATING);
 
         when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
 
         assertThatThrownBy(() -> taskService.publishChapterFromQC(project.getId(), task.getId(), leaderId))
                 .isInstanceOf(DomainValidationException.class)
@@ -159,7 +174,7 @@ class ScanlationTaskServiceTest {
 
     /// Mimics the JPA adapter: `save` returns a new instance rebuilt from state, without pending events.
     private static ScanlationProject rebuilt(ScanlationProject source) {
-        return new ScanlationProject(source.getId(), source.getName(), source.getWorkId(), source.getMembers(),
+        return new ScanlationProject(source.getId(), source.getName(), source.getWorkId(), source.getTeamId(),
                 source.getTasks(), source.getCreatedAt(), source.getUpdatedAt());
     }
 
@@ -167,11 +182,13 @@ class ScanlationTaskServiceTest {
     @DisplayName("Upload chapter task with duplicate chapter throws DomainValidationException")
     void uploadDuplicateChapterThrows() {
         UserId leaderId = UserId.of("leader-1");
-        ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), leaderId);
+        Team team = Team.create("Asura Scans", null, leaderId);
+        ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), team.getId());
         project.addChapterTask(ChapterNumber.of("1"));
         ProjectId projectId = project.getId();
 
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
 
         assertThatThrownBy(() -> taskService.uploadChapterTask(
                 projectId,

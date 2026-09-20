@@ -1,6 +1,7 @@
 package com.readora.application.port.in;
 
 import com.readora.domain.common.UserId;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.Work;
@@ -8,9 +9,14 @@ import org.jspecify.annotations.Nullable;
 
 public interface ReadChapterUseCase {
 
-    /// A published chapter with public page URLs, its series, and its published neighbours in reading order
-    /// (`null` at either end).
-    record ChapterReading(Chapter chapter, Work work, @Nullable ChapterId previousChapterId, @Nullable ChapterId nextChapterId) {
+    /// The team credited for a chapter.
+    record TeamRef(TeamId id, String name) {
+    }
+
+    /// A published chapter with public page URLs, its series, the team that translated it (`null` when it was
+    /// published outside any team) and its published neighbours in reading order (`null` at either end).
+    record ChapterReading(Chapter chapter, Work work, @Nullable TeamRef team, @Nullable ChapterId previousChapterId,
+                          @Nullable ChapterId nextChapterId) {
     }
 
     /// @throws com.readora.domain.common.NotFoundException if the chapter or its work doesn't exist

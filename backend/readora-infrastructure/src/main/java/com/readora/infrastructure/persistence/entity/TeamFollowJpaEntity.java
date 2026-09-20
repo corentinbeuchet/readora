@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-/// A reader follows a scanlation team (project): its chapters appear in their "My library" updates (US-12, US-08).
+/// A reader follows a scanlation team: its chapters appear in their "My library" updates (US-12, US-08).
 @Entity
 @Table(name = "team_follows")
 public class TeamFollowJpaEntity {
@@ -21,8 +21,8 @@ public class TeamFollowJpaEntity {
     protected TeamFollowJpaEntity() {
     }
 
-    public TeamFollowJpaEntity(String userId, UUID projectId, Instant followedAt) {
-        this.id = new Key(userId, projectId);
+    public TeamFollowJpaEntity(String userId, UUID teamId, Instant followedAt) {
+        this.id = new Key(userId, teamId);
         this.followedAt = followedAt;
     }
 
@@ -34,28 +34,28 @@ public class TeamFollowJpaEntity {
         @Column(name = "user_id", nullable = false, length = 100)
         private String userId;
 
-        @Column(name = "project_id", nullable = false)
-        private UUID projectId;
+        @Column(name = "team_id", nullable = false)
+        private UUID teamId;
 
         protected Key() {
         }
 
-        public Key(String userId, UUID projectId) {
+        public Key(String userId, UUID teamId) {
             this.userId = userId;
-            this.projectId = projectId;
+            this.teamId = teamId;
         }
 
         public String getUserId() { return userId; }
-        public UUID getProjectId() { return projectId; }
+        public UUID getTeamId() { return teamId; }
 
         @Override
         public boolean equals(Object o) {
-            return o instanceof Key other && Objects.equals(userId, other.userId) && Objects.equals(projectId, other.projectId);
+            return o instanceof Key other && Objects.equals(userId, other.userId) && Objects.equals(teamId, other.teamId);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(userId, projectId);
+            return Objects.hash(userId, teamId);
         }
     }
 }

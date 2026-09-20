@@ -5,6 +5,7 @@ import com.readora.application.port.in.ManageWorkUseCase;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
+import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.AccessDeniedDomainException;
@@ -12,6 +13,8 @@ import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.identity.UserAccount;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.ScanlationRole;
+import com.readora.domain.scanlation.Team;
 import com.readora.domain.work.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,6 +35,7 @@ class WorkManagementServiceTest {
     private WorkRepositoryPort workRepository;
     private ChapterRepositoryPort chapterRepository;
     private ScanlationProjectRepositoryPort projectRepository;
+    private TeamRepositoryPort teamRepository;
     private UserAccountRepositoryPort userRepository;
     private EventPublisherPort eventPublisher;
     private WorkManagementService service;
@@ -41,9 +45,10 @@ class WorkManagementServiceTest {
         workRepository = mock(WorkRepositoryPort.class);
         chapterRepository = mock(ChapterRepositoryPort.class);
         projectRepository = mock(ScanlationProjectRepositoryPort.class);
+        teamRepository = mock(TeamRepositoryPort.class);
         userRepository = mock(UserAccountRepositoryPort.class);
         eventPublisher = mock(EventPublisherPort.class);
-        service = new WorkManagementService(workRepository, chapterRepository, projectRepository, userRepository, eventPublisher);
+        service = new WorkManagementService(workRepository, chapterRepository, projectRepository, teamRepository, userRepository, eventPublisher);
     }
 
     @Test
@@ -76,6 +81,13 @@ class WorkManagementServiceTest {
         ScanlationProject project = projectCaptor.getValue();
         assertThat(project.getName()).isEqualTo("Solo Leveling Workspace");
         assertThat(project.getWorkId()).isEqualTo(work.getId());
+
+        ArgumentCaptor<Team> teamCaptor = ArgumentCaptor.forClass(Team.class);
+        verify(teamRepository).save(teamCaptor.capture());
+        Team team = teamCaptor.getValue();
+        assertThat(team.getName()).isEqualTo("Solo Leveling Workspace");
+        assertThat(team.findMember(creatorId)).hasValueSatisfying(member -> assertThat(member.roles()).containsExactly(ScanlationRole.LEADER));
+        assertThat(project.getTeamId()).isEqualTo(team.getId());
     }
 
     @Test
@@ -93,9 +105,11 @@ class WorkManagementServiceTest {
     void directPublishChapterSuccess() {
         UserId publisherId = UserId.of("pub-1");
         Work work = Work.create("One Piece", "Pirates", WorkType.MANGA, "op.jpg", Set.of("Adventure"));
-        ScanlationProject project = ScanlationProject.create("One Piece Workspace", work.getId(), publisherId);
+        Team team = Team.create("One Piece Workspace", null, publisherId);
+        ScanlationProject project = ScanlationProject.create("One Piece Workspace", work.getId(), team.getId());
         when(workRepository.findById(work.getId())).thenReturn(Optional.of(work));
         when(projectRepository.findByWorkId(work.getId())).thenReturn(List.of(project));
+        when(teamRepository.findAllById(List.of(team.getId()))).thenReturn(List.of(team));
         when(chapterRepository.save(any(Chapter.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         List<PageAsset> pages = List.of(
@@ -120,8 +134,10 @@ class WorkManagementServiceTest {
         Chapter existing = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Existing", null);
 
         when(workRepository.findById(work.getId())).thenReturn(Optional.of(work));
+        Team team = Team.create("One Piece Workspace", null, publisherId);
         when(projectRepository.findByWorkId(work.getId()))
-                .thenReturn(List.of(ScanlationProject.create("One Piece Workspace", work.getId(), publisherId)));
+                .thenReturn(List.of(ScanlationProject.create("One Piece Workspace", work.getId(), team.getId())));
+        when(teamRepository.findAllById(List.of(team.getId()))).thenReturn(List.of(team));
         when(chapterRepository.findByWorkIdAndChapterNumber(work.getId(), ChapterNumber.of("1"))).thenReturn(Optional.of(existing));
 
         List<PageAsset> pages = List.of(PageAsset.create(1, "c1/p1.webp", "https://cdn.readora.com/c1/p1.webp"));
@@ -135,10 +151,12 @@ class WorkManagementServiceTest {
     @DisplayName("A scanlator who is not a leader or quality checker of the work's project cannot publish into it")
     void directPublishByOutsiderIsDenied() {
         Work work = Work.create("One Piece", "Pirates", WorkType.MANGA, "op.jpg", Set.of("Adventure"));
-        ScanlationProject project = ScanlationProject.create("One Piece Workspace", work.getId(), UserId.of("owner"));
+        Team team = Team.create("One Piece Workspace", null, UserId.of("owner"));
+        ScanlationProject project = ScanlationProject.create("One Piece Workspace", work.getId(), team.getId());
         UserId outsider = UserId.of("outsider");
         when(workRepository.findById(work.getId())).thenReturn(Optional.of(work));
         when(projectRepository.findByWorkId(work.getId())).thenReturn(List.of(project));
+        when(teamRepository.findAllById(List.of(team.getId()))).thenReturn(List.of(team));
         when(userRepository.findById(outsider)).thenReturn(Optional.empty());
 
         List<PageAsset> pages = List.of(PageAsset.create(1, "c1/p1.webp", null));

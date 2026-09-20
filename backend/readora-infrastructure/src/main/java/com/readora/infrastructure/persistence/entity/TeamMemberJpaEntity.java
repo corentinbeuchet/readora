@@ -15,8 +15,8 @@ public class TeamMemberJpaEntity {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id", nullable = false)
-    private ScanlationProjectJpaEntity project;
+    @JoinColumn(name = "team_id", nullable = false)
+    private TeamJpaEntity team;
 
     @Column(name = "user_id", nullable = false)
     private String userId;
@@ -32,16 +32,15 @@ public class TeamMemberJpaEntity {
 
     public TeamMemberJpaEntity() {}
 
-    public TeamMemberJpaEntity(ScanlationProjectJpaEntity project, String userId, List<String> roles, Instant joinedAt) {
-        this.project = project;
+    public TeamMemberJpaEntity(TeamJpaEntity team, String userId, List<String> roles, Instant joinedAt) {
+        this.team = team;
         this.userId = userId;
         this.roles = roles;
         this.joinedAt = joinedAt;
     }
 
     public UUID getId() { return id; }
-    public ScanlationProjectJpaEntity getProject() { return project; }
-    public void setProject(ScanlationProjectJpaEntity project) { this.project = project; }
+    public TeamJpaEntity getTeam() { return team; }
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }
     public List<String> getRoles() { return roles; }

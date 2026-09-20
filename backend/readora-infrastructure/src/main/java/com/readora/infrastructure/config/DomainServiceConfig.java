@@ -66,9 +66,10 @@ public class DomainServiceConfig {
             WorkRepositoryPort workRepository,
             ChapterRepositoryPort chapterRepository,
             ScanlationProjectRepositoryPort projectRepository,
+            TeamRepositoryPort teamRepository,
             UserAccountRepositoryPort userRepository,
             EventPublisherPort eventPublisher) {
-        return new WorkManagementService(workRepository, chapterRepository, projectRepository, userRepository, eventPublisher);
+        return new WorkManagementService(workRepository, chapterRepository, projectRepository, teamRepository, userRepository, eventPublisher);
     }
 
     @Bean
@@ -85,17 +86,20 @@ public class DomainServiceConfig {
     public ReadChapterUseCase readChapterUseCase(
             ChapterRepositoryPort chapterRepository,
             WorkRepositoryPort workRepository,
+            ScanlationProjectRepositoryPort projectRepository,
+            TeamRepositoryPort teamRepository,
             StoragePort storagePort) {
-        return transactional(new ChapterReadingService(chapterRepository, workRepository, storagePort),
+        return transactional(new ChapterReadingService(chapterRepository, workRepository, projectRepository, teamRepository, storagePort),
                 ReadChapterUseCase.class, transactionManager);
     }
 
     @Bean
     public ManageScanlationTaskUseCase manageScanlationTaskUseCase(
             ScanlationProjectRepositoryPort projectRepository,
+            TeamRepositoryPort teamRepository,
             ChapterRepositoryPort chapterRepository,
             EventPublisherPort eventPublisher) {
-        return transactional(new ScanlationTaskService(projectRepository, chapterRepository, eventPublisher),
+        return transactional(new ScanlationTaskService(projectRepository, teamRepository, chapterRepository, eventPublisher),
                 ManageScanlationTaskUseCase.class, transactionManager);
     }
 
@@ -176,9 +180,10 @@ public class DomainServiceConfig {
             PageReportRepositoryPort reportRepository,
             ChapterRepositoryPort chapterRepository,
             ScanlationProjectRepositoryPort projectRepository,
+            TeamRepositoryPort teamRepository,
             UserAccountRepositoryPort userRepository,
             EventPublisherPort eventPublisher) {
-        return transactional(new PageReportService(reportRepository, chapterRepository, projectRepository, userRepository,
+        return transactional(new PageReportService(reportRepository, chapterRepository, projectRepository, teamRepository, userRepository,
                         eventPublisher, Clock.systemUTC()),
                 ReportPageUseCase.class, transactionManager);
     }
@@ -211,8 +216,8 @@ public class DomainServiceConfig {
 
     @Bean
     public CommunityUseCase communityUseCase(UserAccountRepositoryPort users, CommunityQueryPort community,
-                                             ScanlationProjectRepositoryPort projects, WorkRepositoryPort works, ChapterRepositoryPort chapters) {
-        return transactional(new CommunityService(users, community, projects, works, chapters, Clock.systemUTC()), CommunityUseCase.class,
+                                             TeamRepositoryPort teams, ScanlationProjectRepositoryPort projects, WorkRepositoryPort works) {
+        return transactional(new CommunityService(users, community, teams, projects, works, Clock.systemUTC()), CommunityUseCase.class,
                 transactionManager);
     }
 
@@ -225,8 +230,9 @@ public class DomainServiceConfig {
     public BrowseCatalogUseCase browseCatalogUseCase(
             WorkRepositoryPort workRepository,
             ChapterRepositoryPort chapterRepository,
-            ScanlationProjectRepositoryPort projectRepository) {
-        return transactional(new CatalogService(workRepository, chapterRepository, projectRepository),
+            ScanlationProjectRepositoryPort projectRepository,
+            TeamRepositoryPort teamRepository) {
+        return transactional(new CatalogService(workRepository, chapterRepository, projectRepository, teamRepository),
                 BrowseCatalogUseCase.class, transactionManager);
     }
 }

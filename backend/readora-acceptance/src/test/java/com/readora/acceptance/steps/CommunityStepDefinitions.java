@@ -6,11 +6,13 @@ import com.readora.acceptance.fakes.InMemoryCommunity;
 import com.readora.acceptance.fakes.InMemoryDiscovery;
 import com.readora.acceptance.fakes.InMemoryLibraryRepository;
 import com.readora.acceptance.fakes.InMemoryProjectRepository;
+import com.readora.acceptance.fakes.InMemoryTeamRepository;
 import com.readora.acceptance.fakes.InMemoryRatingRepository;
 import com.readora.acceptance.fakes.InMemoryUserAccounts;
 import com.readora.acceptance.fakes.InMemoryWorkRepository;
 import com.readora.application.port.in.CommunityUseCase.PublicProfile;
 import com.readora.application.port.in.CommunityUseCase.TeamPage;
+import com.readora.application.port.in.CommunityUseCase.TeamSeries;
 import com.readora.application.port.in.DiscoverUseCase.Release;
 import com.readora.application.port.in.ManageLibraryUseCase.ExportRow;
 import com.readora.application.service.CommunityService;
@@ -23,6 +25,7 @@ import com.readora.domain.identity.PasswordHash;
 import com.readora.domain.identity.UserAccount;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.ScanlationRole;
+import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamMember;
 import com.readora.domain.social.ReadingStatus;
 import com.readora.domain.work.Chapter;
@@ -51,6 +54,7 @@ public class CommunityStepDefinitions {
     private InMemoryWorkRepository works;
     private InMemoryChapterRepository chapters;
     private InMemoryProjectRepository projects;
+    private InMemoryTeamRepository teams;
     private InMemoryUserAccounts users;
     private CommunityService community;
     private DiscoveryService discovery;
@@ -66,14 +70,18 @@ public class CommunityStepDefinitions {
         works = new InMemoryWorkRepository();
         chapters = new InMemoryChapterRepository();
         projects = new InMemoryProjectRepository();
+        teams = new InMemoryTeamRepository();
         users = new InMemoryUserAccounts();
         InMemoryLibraryRepository libraryRepository = new InMemoryLibraryRepository();
         InMemoryChapterReadRepository reads = new InMemoryChapterReadRepository(chapters);
-        InMemoryCommunity communityQueries = new InMemoryCommunity(works, reads, libraryRepository, users);
+        InMemoryCommunity communityQueries = new InMemoryCommunity(works, reads, libraryRepository, users, chapters);
         InMemoryDiscovery discoveryQueries = new InMemoryDiscovery(works, chapters, libraryRepository, reads);
-        discoveryQueries.followedTeams(communityQueries::followedBy);
+        discoveryQueries.followedTeams(reader -> communityQueries.followedBy(reader).stream()
+                .flatMap(teamId -> projects.findByTeamId(teamId).stream())
+                .map(ScanlationProject::getId)
+                .collect(java.util.stream.Collectors.toSet()));
         Clock clock = Clock.systemUTC();
-        community = new CommunityService(users, communityQueries, projects, works, chapters, clock);
+        community = new CommunityService(users, communityQueries, teams, projects, works, clock);
         discovery = new DiscoveryService(discoveryQueries, works, new InMemoryRatingRepository(), clock);
         library = new LibraryService(libraryRepository, works, reads, clock);
         reading = new ReadingTrackerService(reads, chapters, works, clock);
@@ -106,7 +114,7 @@ public class CommunityStepDefinitions {
     @When("{string} follows the team {string}")
     public void followsTheTeam(String reader, String teamName) {
         account(reader);
-        community.follow(UserId.of(reader), team(teamName).getId());
+        community.follow(UserId.of(reader), team(teamName).getTeamId());
     }
 
     @When("{string} publishes a chapter")
@@ -123,16 +131,22 @@ public class CommunityStepDefinitions {
 
     @When("a reader opens the page of the team {string}")
     public void aReaderOpensThePageOfTheTeam(String teamName) {
-        ScanlationProject project = team(teamName);
-        publish(works.findById(project.getWorkId()).orElseThrow(), project, "1");
-        team = community.team(project.getId(), null);
+        ScanlationProject first = team(teamName);
+        Work secondSeries = works.save(Work.create("Omniscient Reader", "", WorkType.MANHWA, "", Set.of()));
+        ScanlationProject second = projects.save(ScanlationProject.create(teamName, secondSeries.getId(), first.getTeamId()));
+        publish(works.findById(first.getWorkId()).orElseThrow(), first, "1");
+        publish(works.findById(first.getWorkId()).orElseThrow(), first, "2");
+        publish(secondSeries, second, "1");
+        team = community.team(first.getTeamId(), null);
     }
 
-    @Then("they see its members, the series it translates and its latest chapters")
+    @Then("they see its members, every series it translates and its latest chapters")
     public void theySeeMembersSeriesAndChapters() {
+        assertThat(team.name()).isEqualTo("Shadow Scans");
         assertThat(team.members()).extracting(m -> m.username()).containsExactly("leader", "translator");
-        assertThat(team.series().getTitle()).isEqualTo("Solo Leveling");
-        assertThat(team.latestChapters()).hasSize(1);
+        assertThat(team.series()).extracting(series -> series.work().getTitle(), TeamSeries::chapterCount)
+                .containsExactly(org.assertj.core.groups.Tuple.tuple("Solo Leveling", 2L), org.assertj.core.groups.Tuple.tuple("Omniscient Reader", 1L));
+        assertThat(team.latestChapters()).hasSize(3);
     }
 
     @When("{string} exports his library")
@@ -158,9 +172,10 @@ public class CommunityStepDefinitions {
         Work work = works.all().stream().filter(w -> w.getTitle().equals("Solo Leveling")).findFirst()
                 .orElseGet(() -> works.save(Work.create("Solo Leveling", "", WorkType.MANHWA, "", Set.of())));
         return projects.findByWorkId(work.getId()).stream().findFirst().orElseGet(() -> {
-            ScanlationProject project = ScanlationProject.create(teamName, work.getId(), account("leader"));
-            project.addMember(TeamMember.of(account("translator"), ScanlationRole.TRANSLATOR));
-            return projects.save(project);
+            Team roster = Team.create(teamName, null, account("leader"));
+            roster.addMember(TeamMember.of(account("translator"), ScanlationRole.TRANSLATOR));
+            teams.save(roster);
+            return projects.save(ScanlationProject.create(teamName, work.getId(), roster.getId()));
         });
     }
 

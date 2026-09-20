@@ -3,18 +3,22 @@ package com.readora.application.service;
 import com.readora.application.port.in.BrowseCatalogUseCase;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
+import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort.WorkPage;
 import com.readora.application.port.out.WorkRepositoryPort.WorkSearch;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.Team;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.Work;
 import com.readora.domain.work.WorkId;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -26,11 +30,14 @@ public class CatalogService implements BrowseCatalogUseCase {
     private final WorkRepositoryPort workRepository;
     private final ChapterRepositoryPort chapterRepository;
     private final ScanlationProjectRepositoryPort projectRepository;
+    private final TeamRepositoryPort teamRepository;
 
-    public CatalogService(WorkRepositoryPort workRepository, ChapterRepositoryPort chapterRepository, ScanlationProjectRepositoryPort projectRepository) {
+    public CatalogService(WorkRepositoryPort workRepository, ChapterRepositoryPort chapterRepository,
+                          ScanlationProjectRepositoryPort projectRepository, TeamRepositoryPort teamRepository) {
         this.workRepository = Objects.requireNonNull(workRepository, "WorkRepositoryPort cannot be null");
         this.chapterRepository = Objects.requireNonNull(chapterRepository, "ChapterRepositoryPort cannot be null");
         this.projectRepository = Objects.requireNonNull(projectRepository, "ScanlationProjectRepositoryPort cannot be null");
+        this.teamRepository = Objects.requireNonNull(teamRepository, "TeamRepositoryPort cannot be null");
     }
 
     @Override
@@ -74,12 +81,18 @@ public class CatalogService implements BrowseCatalogUseCase {
     }
 
     @Override
-    public Optional<ScanlationProject> getProject(ProjectId projectId) {
-        return projectRepository.findById(projectId);
+    public Optional<ProjectBoard> getProject(ProjectId projectId) {
+        return projectRepository.findById(projectId)
+                .flatMap(project -> teamRepository.findById(project.getTeamId()).map(team -> new ProjectBoard(project, team)));
     }
 
     @Override
-    public List<ScanlationProject> listProjectsByWork(WorkId workId) {
-        return projectRepository.findByWorkId(workId);
+    public List<ProjectBoard> listProjectsByWork(WorkId workId) {
+        List<ScanlationProject> projects = projectRepository.findByWorkId(workId);
+        Map<TeamId, Team> teams = teamRepository.findAllById(projects.stream().map(ScanlationProject::getTeamId).toList()).stream()
+                .collect(Collectors.toMap(Team::getId, team -> team));
+        return projects.stream()
+                .flatMap(project -> Optional.ofNullable(teams.get(project.getTeamId())).map(team -> new ProjectBoard(project, team)).stream())
+                .toList();
     }
 }

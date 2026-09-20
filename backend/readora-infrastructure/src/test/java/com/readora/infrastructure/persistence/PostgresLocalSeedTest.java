@@ -5,7 +5,9 @@ import com.readora.domain.identity.Permission;
 import com.readora.domain.identity.UserAccount;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.Team;
 import com.readora.infrastructure.persistence.adapter.ScanlationProjectRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.TeamRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.UserAccountRepositoryAdapter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,6 +58,9 @@ class PostgresLocalSeedTest {
     private ScanlationProjectRepositoryAdapter projects;
 
     @Autowired
+    private TeamRepositoryAdapter teams;
+
+    @Autowired
     private com.readora.infrastructure.persistence.adapter.RatingRepositoryAdapter ratings;
 
     @Test
@@ -68,8 +73,10 @@ class PostgresLocalSeedTest {
         assertThat(users.findByEmail(Email.of("moderator@readora.local")).orElseThrow().can(Permission.COMMENT_MODERATE)).isTrue();
         assertThat(ratings.findTopRated(5, 10)).hasSize(2);
 
-        ScanlationProject team = projects.findById(ProjectId.of(UUID.fromString("00000000-0000-4000-9000-000000000101"))).orElseThrow();
+        ScanlationProject project = projects.findById(ProjectId.of(UUID.fromString("00000000-0000-4000-9000-000000000101"))).orElseThrow();
+        assertThat(project.getTasks()).hasSize(5);
+        Team team = teams.findById(project.getTeamId()).orElseThrow();
+        assertThat(team.getName()).isEqualTo("Readora Demo Team");
         assertThat(team.getMembers()).hasSize(6);
-        assertThat(team.getTasks()).hasSize(5);
     }
 }

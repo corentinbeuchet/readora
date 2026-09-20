@@ -2,6 +2,7 @@ package com.readora.acceptance.steps;
 
 import com.readora.acceptance.fakes.InMemoryChapterRepository;
 import com.readora.acceptance.fakes.InMemoryProjectRepository;
+import com.readora.acceptance.fakes.InMemoryTeamRepository;
 import com.readora.acceptance.fakes.InMemoryWorkRepository;
 import com.readora.application.port.in.BrowseCatalogUseCase.CatalogQuery;
 import com.readora.application.service.CatalogService;
@@ -36,7 +37,7 @@ public class CatalogDiscoveryStepDefinitions {
     @Before
     public void setup() {
         works = new InMemoryWorkRepository();
-        catalog = new CatalogService(works, new InMemoryChapterRepository(), new InMemoryProjectRepository());
+        catalog = new CatalogService(works, new InMemoryChapterRepository(), new InMemoryProjectRepository(), new InMemoryTeamRepository());
         results = List.of();
     }
 

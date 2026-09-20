@@ -9,6 +9,8 @@ import com.readora.domain.social.CommentId;
 import com.readora.acceptance.fakes.InMemoryChapterReadRepository;
 import com.readora.acceptance.fakes.InMemoryChapterRepository;
 import com.readora.acceptance.fakes.InMemoryLibraryRepository;
+import com.readora.acceptance.fakes.InMemoryProjectRepository;
+import com.readora.acceptance.fakes.InMemoryTeamRepository;
 import com.readora.acceptance.fakes.InMemoryWorkRepository;
 import com.readora.acceptance.fakes.MutableClock;
 import com.readora.application.port.in.ReadChapterUseCase.ChapterReading;
@@ -75,7 +77,7 @@ public class ReadingExperienceStepDefinitions {
         reading = new ReadingTrackerService(reads, chapters, works, clock);
         library = new LibraryService(new InMemoryLibraryRepository(), works, reads, clock);
         storage = new FakeStorage();
-        chapterReader = new ChapterReadingService(chapters, works, storage);
+        chapterReader = new ChapterReadingService(chapters, works, new InMemoryProjectRepository(), new InMemoryTeamRepository(), storage);
         // Stand-in for the ImageIO adapter (tested in infrastructure): a copy a quarter of the size.
         assets = new AssetService(storage, image -> Optional.of(Arrays.copyOf(image, image.length / 4)));
         dataSaver = false;

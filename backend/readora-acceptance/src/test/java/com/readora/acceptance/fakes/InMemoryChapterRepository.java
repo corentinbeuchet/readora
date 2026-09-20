@@ -14,6 +14,10 @@ public class InMemoryChapterRepository implements ChapterRepositoryPort {
 
     private final Map<ChapterId, Chapter> chapters = new ConcurrentHashMap<>();
 
+    public List<Chapter> all() {
+        return List.copyOf(chapters.values());
+    }
+
     @Override
     public Optional<Chapter> findById(ChapterId id) {
         return Optional.ofNullable(chapters.get(id));

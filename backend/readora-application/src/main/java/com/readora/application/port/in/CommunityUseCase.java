@@ -1,10 +1,12 @@
 package com.readora.application.port.in;
 
 import com.readora.domain.common.UserId;
-import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationRole;
-import com.readora.domain.work.Chapter;
+import com.readora.domain.scanlation.TeamId;
+import com.readora.domain.work.ChapterId;
+import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.Work;
+import com.readora.domain.work.WorkId;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
@@ -23,19 +25,28 @@ public interface CommunityUseCase {
     record TeamMemberView(String username, Set<ScanlationRole> roles) {
     }
 
-    /// @param following whether the viewer follows the team (false for guests)
-    record TeamPage(ProjectId id, String name, Work series, List<TeamMemberView> members, List<Chapter> latestChapters,
-                    long followers, boolean following) {
+    /// A series the team translates, with the number of chapters the team published in it.
+    record TeamSeries(Work work, long chapterCount) {
+    }
+
+    record TeamChapter(ChapterId id, WorkId workId, ChapterNumber number, String title, int pageCount, Instant publishedAt) {
+    }
+
+    /// @param series        every series the team works on, the one with the most chapters first
+    /// @param latestChapters the team's latest chapters across its series, newest first
+    /// @param following     whether the viewer follows the team (false for guests)
+    record TeamPage(TeamId id, String name, @Nullable String description, List<TeamSeries> series, List<TeamMemberView> members,
+                    List<TeamChapter> latestChapters, long followers, boolean following) {
     }
 
     /// @throws com.readora.domain.common.NotFoundException if there is no such reader
     PublicProfile profile(String username);
 
     /// @throws com.readora.domain.common.NotFoundException if there is no such team
-    TeamPage team(ProjectId projectId, @Nullable UserId viewer);
+    TeamPage team(TeamId teamId, @Nullable UserId viewer);
 
     /// @throws com.readora.domain.common.NotFoundException if there is no such team
-    void follow(UserId userId, ProjectId projectId);
+    void follow(UserId userId, TeamId teamId);
 
-    void unfollow(UserId userId, ProjectId projectId);
+    void unfollow(UserId userId, TeamId teamId);
 }

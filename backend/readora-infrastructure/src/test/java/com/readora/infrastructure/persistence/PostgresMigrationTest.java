@@ -3,6 +3,7 @@ package com.readora.infrastructure.persistence;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.Team;
 import com.readora.domain.work.*;
 import com.readora.domain.library.ChapterRead;
 import com.readora.domain.rating.Review;
@@ -23,6 +24,7 @@ import com.readora.infrastructure.persistence.adapter.PageReportRepositoryAdapte
 import com.readora.infrastructure.persistence.adapter.RatingRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.ReadingListRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.ScanlationProjectRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.TeamRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.WorkRepositoryAdapter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -74,11 +76,15 @@ class PostgresMigrationTest {
     @Autowired
     private ScanlationProjectRepositoryAdapter projectRepository;
 
+    @Autowired
+    private TeamRepositoryAdapter teamRepository;
+
     @Test
     @DisplayName("All migrations apply on PostgreSQL and the aggregates round-trip through the validated schema")
     void migrationsApplyAndAggregatesRoundTrip() {
         Work work = workRepository.save(Work.create("PG Work", "Synopsis", WorkType.MANHWA, "c.png", Set.of("Action")));
-        ScanlationProject project = ScanlationProject.create("PG Group", work.getId(), UserId.of("leader"));
+        Team pgGroup = teamRepository.save(Team.create("PG Group", null, UserId.of("leader")));
+        ScanlationProject project = ScanlationProject.create("PG Group", work.getId(), pgGroup.getId());
         project.addChapterTask(ChapterNumber.of("1"));
         projectRepository.save(project);
         Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", project.getId());
@@ -145,7 +151,8 @@ class PostgresMigrationTest {
     @DisplayName("Page reports round-trip on PostgreSQL, with optimistic locking on resolve")
     void pageReportsRunOnPostgres() {
         Work work = workRepository.save(Work.create("PG Reports", "", WorkType.MANGA, "c.png", Set.of("Action")));
-        ScanlationProject team = projectRepository.save(ScanlationProject.create("PG Team", work.getId(), UserId.of("pg-leader")));
+        Team pgTeam = teamRepository.save(Team.create("PG Team", null, UserId.of("pg-leader")));
+        ScanlationProject team = projectRepository.save(ScanlationProject.create("PG Team", work.getId(), pgTeam.getId()));
         Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", team.getId());
         chapter.updatePages(List.of(PageAsset.create(1, "p1.webp", null)));
         chapter.publish(UserId.of("pg-leader"));
@@ -262,8 +269,9 @@ class PostgresMigrationTest {
     @DisplayName("Profile stats (genres of finished reads), usernames and team follows run on PostgreSQL")
     void communityQueriesRunOnPostgres() {
         Work work = workRepository.save(Work.create("PG Community", "", WorkType.MANGA, "c.png", Set.of("Mystery")));
-        ScanlationProject team = projectRepository.save(ScanlationProject.create("PG Team 2", work.getId(), UserId.of("pg-leader-2")));
-        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", team.getId());
+        Team team = teamRepository.save(Team.create("PG Team 2", null, UserId.of("pg-leader-2")));
+        ScanlationProject project = projectRepository.save(ScanlationProject.create("PG Team 2", work.getId(), team.getId()));
+        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", project.getId());
         chapter.updatePages(List.of(PageAsset.create(1, "p1.webp", null)));
         chapter.publish(UserId.of("qc"));
         chapterRepository.save(chapter);
@@ -276,6 +284,12 @@ class PostgresMigrationTest {
         assertThat(community.follow(reader, team.getId(), java.time.Instant.now())).isTrue();
         assertThat(community.follow(reader, team.getId(), java.time.Instant.now())).isFalse();
         assertThat(community.countFollowers(team.getId())).isEqualTo(1);
+        assertThat(community.countPublishedChapters(List.of(project.getId()))).containsEntry(project.getId(), 1L);
+        assertThat(community.latestPublishedChapters(List.of(project.getId()), 10)).singleElement()
+                .satisfies(latest -> {
+                    assertThat(latest.id()).isEqualTo(chapter.getId());
+                    assertThat(latest.pageCount()).isEqualTo(1);
+                });
         assertThat(discovery.findLatestReleases(reader, 0, 10)).extracting(r -> r.chapterId()).contains(chapter.getId());
         assertThat(community.unfollow(reader, team.getId())).isTrue();
         assertThat(community.usernames(List.of(reader))).isEmpty();

@@ -1,6 +1,6 @@
 package com.readora.web.dto;
 
-import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.application.port.in.BrowseCatalogUseCase.ProjectBoard;
 import com.readora.domain.scanlation.ScanlationRole;
 import com.readora.domain.scanlation.TeamMember;
 
@@ -13,6 +13,8 @@ public record ScanlationProjectDto(
         UUID id,
         String name,
         UUID workId,
+        UUID teamId,
+        String teamName,
         List<TeamMemberDto> members,
         List<WorkflowTaskDto> tasks,
         Instant createdAt,
@@ -27,12 +29,15 @@ public record ScanlationProjectDto(
         }
     }
 
-    public static ScanlationProjectDto fromDomain(ScanlationProject project) {
+    public static ScanlationProjectDto fromDomain(ProjectBoard board) {
+        var project = board.project();
         return new ScanlationProjectDto(
                 project.getId().value(),
                 project.getName(),
                 project.getWorkId().value(),
-                project.getMembers().stream()
+                board.team().getId().value(),
+                board.team().getName(),
+                board.team().getMembers().stream()
                         .sorted(Comparator.comparing(m -> m.userId().value()))
                         .map(TeamMemberDto::fromDomain)
                         .toList(),

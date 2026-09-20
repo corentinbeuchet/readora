@@ -2,7 +2,7 @@ package com.readora.web.controller;
 
 import com.readora.application.port.in.CommunityUseCase;
 import com.readora.domain.common.UserId;
-import com.readora.domain.scanlation.ProjectId;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.web.dto.ApiResponse;
 import com.readora.web.dto.PublicProfileDto;
 import com.readora.web.dto.TeamPageDto;
@@ -36,26 +36,26 @@ public class CommunityController {
         return ResponseEntity.ok(ApiResponse.ok(PublicProfileDto.fromDomain(community.profile(username))));
     }
 
-    @GetMapping("/teams/{projectId}")
+    @GetMapping("/teams/{teamId}")
     @Operation(summary = "A scanlation team's page: members, series, latest chapters, followers")
-    public ResponseEntity<ApiResponse<TeamPageDto>> team(@PathVariable UUID projectId) {
+    public ResponseEntity<ApiResponse<TeamPageDto>> team(@PathVariable UUID teamId) {
         UserId viewer = currentUserProvider.current().map(AuthenticatedUser::userId).orElse(null);
-        return ResponseEntity.ok(ApiResponse.ok(TeamPageDto.fromDomain(community.team(ProjectId.of(projectId), viewer))));
+        return ResponseEntity.ok(ApiResponse.ok(TeamPageDto.fromDomain(community.team(TeamId.of(teamId), viewer))));
     }
 
-    @PutMapping("/teams/{projectId}/follow")
+    @PutMapping("/teams/{teamId}/follow")
     @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "Follow a team: its chapters appear in my library updates")
-    public ResponseEntity<ApiResponse<Map<String, Boolean>>> follow(@PathVariable UUID projectId) {
-        community.follow(currentUserProvider.requireUserId(), ProjectId.of(projectId));
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> follow(@PathVariable UUID teamId) {
+        community.follow(currentUserProvider.requireUserId(), TeamId.of(teamId));
         return ResponseEntity.ok(ApiResponse.ok(Map.of("following", true)));
     }
 
-    @DeleteMapping("/teams/{projectId}/follow")
+    @DeleteMapping("/teams/{teamId}/follow")
     @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "Stop following a team")
-    public ResponseEntity<ApiResponse<Map<String, Boolean>>> unfollow(@PathVariable UUID projectId) {
-        community.unfollow(currentUserProvider.requireUserId(), ProjectId.of(projectId));
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> unfollow(@PathVariable UUID teamId) {
+        community.unfollow(currentUserProvider.requireUserId(), TeamId.of(teamId));
         return ResponseEntity.ok(ApiResponse.ok(Map.of("following", false)));
     }
 }

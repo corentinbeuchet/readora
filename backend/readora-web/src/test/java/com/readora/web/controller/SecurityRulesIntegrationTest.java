@@ -3,8 +3,10 @@ package com.readora.web.controller;
 import com.readora.domain.common.UserId;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
+import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.WorkflowTask;
 import com.readora.domain.work.*;
 import com.readora.web.ReadoraApplication;
@@ -42,6 +44,9 @@ class SecurityRulesIntegrationTest extends AuthTestSupport {
 
     @Autowired
     private ScanlationProjectRepositoryPort projectRepository;
+
+    @Autowired
+    private TeamRepositoryPort teamRepository;
 
     private Work work;
     private Chapter chapter;
@@ -142,7 +147,8 @@ class SecurityRulesIntegrationTest extends AuthTestSupport {
         mockMvc.perform(get("/api/v1/bookmarks").header("Authorization", reader.bearer()))
                 .andExpect(status().isForbidden());
 
-        ScanlationProject project = ScanlationProject.create("Team Tower", work.getId(), UserId.of("leader-1"));
+        Team team = teamRepository.save(Team.create("Team Tower", null, UserId.of("leader-1")));
+        ScanlationProject project = ScanlationProject.create("Team Tower", work.getId(), team.getId());
         WorkflowTask task = project.addChapterTask(ChapterNumber.of("2"));
         project = projectRepository.save(project);
 
@@ -160,7 +166,8 @@ class SecurityRulesIntegrationTest extends AuthTestSupport {
     void scanlatorPassesGateButDomainRulesStillApply() throws Exception {
         Session scanlator = registerScanlator();
 
-        ScanlationProject project = ScanlationProject.create("Team Tower", work.getId(), UserId.of("leader-2"));
+        Team team = teamRepository.save(Team.create("Team Tower", null, UserId.of("leader-2")));
+        ScanlationProject project = ScanlationProject.create("Team Tower", work.getId(), team.getId());
         WorkflowTask task = project.addChapterTask(ChapterNumber.of("3"));
         project = projectRepository.save(project);
 

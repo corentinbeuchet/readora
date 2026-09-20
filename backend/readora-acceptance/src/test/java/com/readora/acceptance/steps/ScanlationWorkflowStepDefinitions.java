@@ -1,5 +1,6 @@
 package com.readora.acceptance.steps;
 
+import com.readora.acceptance.fakes.InMemoryTeamRepository;
 import com.readora.domain.common.UserId;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
@@ -27,6 +28,8 @@ public class ScanlationWorkflowStepDefinitions {
     private final List<DomainEvent> emittedEvents = new ArrayList<>();
 
     private ScanlationTaskService scanlationTaskService;
+    private final InMemoryTeamRepository teams = new InMemoryTeamRepository();
+    private Team currentTeam;
     private ScanlationProject currentProject;
     private WorkflowTask currentTask;
     private Exception thrownException;
@@ -50,10 +53,15 @@ public class ScanlationWorkflowStepDefinitions {
             }
 
             @Override
+            public List<ScanlationProject> findByTeamId(TeamId teamId) {
+                return projectStore.values().stream().filter(p -> p.getTeamId().equals(teamId)).toList();
+            }
+
+            @Override
             public ScanlationProject save(ScanlationProject project) {
                 projectStore.put(project.getId(), project);
                 // Like the JPA adapter: the returned object is rebuilt from state and carries no pending events.
-                return new ScanlationProject(project.getId(), project.getName(), project.getWorkId(), project.getMembers(),
+                return new ScanlationProject(project.getId(), project.getName(), project.getWorkId(), project.getTeamId(),
                         project.getTasks(), project.getCreatedAt(), project.getUpdatedAt());
             }
         };
@@ -80,24 +88,26 @@ public class ScanlationWorkflowStepDefinitions {
         };
 
         EventPublisherPort eventPublisher = emittedEvents::add;
-        scanlationTaskService = new ScanlationTaskService(projectRepo, chapterRepo, eventPublisher);
+        scanlationTaskService = new ScanlationTaskService(projectRepo, teams, chapterRepo, eventPublisher);
     }
 
     @Given("a scanlation team {string} exists")
     public void scanlationTeamExists(String teamName) {
-        // Team metadata
+        currentTeam = Team.create(teamName, null, UserId.of("LeaderBob"));
+        teams.save(currentTeam);
     }
 
     @Given("{string} has a scanlation project managed by {string}")
     public void projectManagedByTeam(String workTitle, String teamName) {
-        currentProject = ScanlationProject.create(teamName + " - " + workTitle, WorkId.generate(), UserId.of("LeaderBob"));
+        currentProject = ScanlationProject.create(teamName + " - " + workTitle, WorkId.generate(), currentTeam.getId());
         projectStore.put(currentProject.getId(), currentProject);
     }
 
     @Given("team member {string} has role {string}")
     public void teamMemberHasRole(String memberName, String roleStr) {
         ScanlationRole role = ScanlationRole.valueOf(roleStr);
-        currentProject.addMember(TeamMember.of(UserId.of(memberName), role));
+        currentTeam.addMember(TeamMember.of(UserId.of(memberName), role));
+        teams.save(currentTeam);
     }
 
     @Given("{string} workflow task is in stage {string}")

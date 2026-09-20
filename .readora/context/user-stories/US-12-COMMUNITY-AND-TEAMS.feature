@@ -25,7 +25,7 @@ Feature: Community and scanlation teams
   @could
   Scenario: A team page
     When a reader opens the page of the team "Shadow Scans"
-    Then they see its members, the series it translates and its latest chapters
+    Then they see its members, every series it translates and its latest chapters
 
   # Inspired by: MangaDex
   @could @wip

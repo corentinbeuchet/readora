@@ -3,6 +3,7 @@ package com.readora.acceptance.steps;
 import com.readora.acceptance.fakes.InMemoryChapterRepository;
 import com.readora.acceptance.fakes.InMemoryPageReportRepository;
 import com.readora.acceptance.fakes.InMemoryProjectRepository;
+import com.readora.acceptance.fakes.InMemoryTeamRepository;
 import com.readora.acceptance.fakes.NoUserAccounts;
 import com.readora.application.service.PageReportService;
 import com.readora.domain.common.AccessDeniedDomainException;
@@ -10,6 +11,7 @@ import com.readora.domain.common.UserId;
 import com.readora.domain.report.PageReport;
 import com.readora.domain.report.PageReportReason;
 import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.Team;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.PageAsset;
@@ -39,6 +41,7 @@ public class ReaderCustomizationStepDefinitions {
             "Low quality", PageReportReason.LOW_QUALITY);
 
     private InMemoryProjectRepository projects;
+    private InMemoryTeamRepository teams;
     private InMemoryChapterRepository chapters;
     private PageReportService reports;
     private ScanlationProject team;
@@ -49,8 +52,9 @@ public class ReaderCustomizationStepDefinitions {
     @Before
     public void setup() {
         projects = new InMemoryProjectRepository();
+        teams = new InMemoryTeamRepository();
         chapters = new InMemoryChapterRepository();
-        reports = new PageReportService(new InMemoryPageReportRepository(), chapters, projects, new NoUserAccounts(), event -> { },
+        reports = new PageReportService(new InMemoryPageReportRepository(), chapters, projects, teams, new NoUserAccounts(), event -> { },
                 Clock.systemUTC());
         refusal = null;
     }
@@ -59,7 +63,8 @@ public class ReaderCustomizationStepDefinitions {
     public void readerIsReadingChapterTranslatedBy(String reader, int number, String title, String teamName) {
         Work work = Work.create(title, "", WorkType.MANHWA, "", Set.of());
         leader = UserId.of(teamName + " leader");
-        team = projects.save(ScanlationProject.create(teamName, work.getId(), leader));
+        Team roster = teams.save(Team.create(teamName, null, leader));
+        team = projects.save(ScanlationProject.create(teamName, work.getId(), roster.getId()));
         Chapter draft = Chapter.createDraft(work.getId(), ChapterNumber.of(String.valueOf(number)), "Chapter " + number, team.getId());
         draft.updatePages(IntStream.rangeClosed(1, 20).mapToObj(n -> PageAsset.create(n, "p" + n + ".webp", null)).toList());
         draft.publish(leader);

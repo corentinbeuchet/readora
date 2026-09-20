@@ -3,6 +3,7 @@ package com.readora.application.service;
 import com.readora.application.port.in.BrowseCatalogUseCase.CatalogQuery;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
+import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort.WorkPage;
 import com.readora.application.port.out.WorkRepositoryPort.WorkSearch;
@@ -42,11 +43,14 @@ class CatalogServiceTest {
     @Mock
     private ScanlationProjectRepositoryPort projectRepository;
 
+    @Mock
+    private TeamRepositoryPort teamRepository;
+
     private CatalogService service;
 
     @BeforeEach
     void setUp() {
-        service = new CatalogService(workRepository, chapterRepository, projectRepository);
+        service = new CatalogService(workRepository, chapterRepository, projectRepository, teamRepository);
     }
 
     @Test

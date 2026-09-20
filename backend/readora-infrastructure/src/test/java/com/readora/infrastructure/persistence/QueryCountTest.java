@@ -6,11 +6,13 @@ import com.readora.domain.identity.Email;
 import com.readora.domain.identity.PasswordHash;
 import com.readora.domain.identity.UserAccount;
 import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.ScanlationRole;
 import com.readora.domain.scanlation.TeamMember;
 import com.readora.domain.work.*;
 import com.readora.infrastructure.persistence.adapter.ChapterRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.ScanlationProjectRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.TeamRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.UserAccountRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.WorkRepositoryAdapter;
 import jakarta.persistence.EntityManagerFactory;
@@ -60,6 +62,9 @@ class QueryCountTest {
     private ScanlationProjectRepositoryAdapter projectRepository;
 
     @Autowired
+    private TeamRepositoryAdapter teamRepository;
+
+    @Autowired
     private UserAccountRepositoryAdapter accountRepository;
 
     @Autowired
@@ -107,24 +112,25 @@ class QueryCountTest {
     }
 
     @Test
-    @DisplayName("Projects of a work load members, roles and tasks in batches")
+    @DisplayName("Projects of a work load their tasks in batches, and their teams load members and roles in batches")
     void projectsAreBatched() {
         Work work = workRepository.save(Work.create("Projects Work", "S", WorkType.MANGA, "c.png", Set.of("Action")));
         IntStream.range(0, 5).forEach(i -> {
-            ScanlationProject project = ScanlationProject.create("Group " + i, work.getId(), UserId.of("leader-" + i));
-            project.addMember(TeamMember.of(UserId.of("tl-" + i), ScanlationRole.TRANSLATOR));
+            Team team = Team.create("Group " + i, null, UserId.of("leader-" + i));
+            team.addMember(TeamMember.of(UserId.of("tl-" + i), ScanlationRole.TRANSLATOR));
+            teamRepository.save(team);
+            ScanlationProject project = ScanlationProject.create("Group " + i, work.getId(), team.getId());
             project.addChapterTask(ChapterNumber.of(String.valueOf(i + 1)));
             projectRepository.save(project);
         });
 
         statistics.clear();
         List<ScanlationProject> projects = projectRepository.findByWorkId(work.getId());
+        List<Team> teams = teamRepository.findAllById(projects.stream().map(ScanlationProject::getTeamId).toList());
 
-        assertThat(projects).hasSize(5).allSatisfy(p -> {
-            assertThat(p.getMembers()).hasSize(2);
-            assertThat(p.getTasks()).hasSize(1);
-        });
-        assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(4);
+        assertThat(projects).hasSize(5).allSatisfy(p -> assertThat(p.getTasks()).hasSize(1));
+        assertThat(teams).hasSize(5).allSatisfy(t -> assertThat(t.getMembers()).hasSize(2));
+        assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(5);
     }
 
     @Test

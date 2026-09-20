@@ -2,8 +2,10 @@ package com.readora.web.controller;
 
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
+import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.ScanlationRole;
 import com.readora.domain.scanlation.TeamMember;
 import com.readora.domain.common.UserId;
@@ -42,13 +44,18 @@ class ScanlationTaskControllerIntegrationTest extends AuthTestSupport {
     @Autowired
     private ScanlationProjectRepositoryPort projectRepository;
 
+    @Autowired
+    private TeamRepositoryPort teamRepository;
+
     private Work work;
+    private Team team;
     private ScanlationProject project;
 
     @BeforeEach
     void setup() {
         work = workRepository.save(Work.create("Solo Leveling", "Hunter sung jin-woo", WorkType.MANHWA, "solo.webp", Set.of("Action")));
-        project = ScanlationProject.create("Asura Team", work.getId(), UserId.of("leader-init"));
+        team = teamRepository.save(Team.create("Asura Team", null, UserId.of("leader-init")));
+        project = ScanlationProject.create("Asura Team", work.getId(), team.getId());
         project = projectRepository.save(project);
     }
 
@@ -56,8 +63,8 @@ class ScanlationTaskControllerIntegrationTest extends AuthTestSupport {
     @DisplayName("SCANLATOR member can upload chapter task and receive 201 Created")
     void scanlatorMemberUploadsChapterTask() throws Exception {
         Session scanlator = registerScanlator();
-        project.addMember(TeamMember.of(UserId.of(scanlator.userId()), ScanlationRole.CLEANER_REDRAWER));
-        projectRepository.save(project);
+        team.addMember(TeamMember.of(UserId.of(scanlator.userId()), ScanlationRole.CLEANER_REDRAWER));
+        teamRepository.save(team);
 
         CreateTaskRequest request = new CreateTaskRequest(BigDecimal.valueOf(1), "scans/solo/1/raw.zip", 22);
 
@@ -105,8 +112,8 @@ class ScanlationTaskControllerIntegrationTest extends AuthTestSupport {
     @DisplayName("Duplicate chapter number upload returns 400 Bad Request")
     void duplicateChapterUploadReturnsBadRequest() throws Exception {
         Session scanlator = registerScanlator();
-        project.addMember(TeamMember.of(UserId.of(scanlator.userId()), ScanlationRole.LEADER));
-        projectRepository.save(project);
+        team.addMember(TeamMember.of(UserId.of(scanlator.userId()), ScanlationRole.LEADER));
+        teamRepository.save(team);
 
         CreateTaskRequest request = new CreateTaskRequest(BigDecimal.valueOf(1), "scans/solo/1/raw.zip", 22);
 
@@ -128,8 +135,8 @@ class ScanlationTaskControllerIntegrationTest extends AuthTestSupport {
     @DisplayName("Invalid task payload returns 400 Bad Request")
     void invalidTaskPayloadReturnsBadRequest() throws Exception {
         Session scanlator = registerScanlator();
-        project.addMember(TeamMember.of(UserId.of(scanlator.userId()), ScanlationRole.LEADER));
-        projectRepository.save(project);
+        team.addMember(TeamMember.of(UserId.of(scanlator.userId()), ScanlationRole.LEADER));
+        teamRepository.save(team);
 
         mockMvc.perform(post("/api/v1/scanlation/projects/" + project.getId().value() + "/tasks")
                         .header("Authorization", scanlator.bearer())

@@ -103,12 +103,18 @@ SELECT CAST('00000000-0000-4000-9000-000000000014' AS UUID), g.genre
 FROM (SELECT 'Action' AS genre UNION ALL SELECT 'Dark Fantasy' UNION ALL SELECT 'Horror') g
 WHERE NOT EXISTS (SELECT 1 FROM work_genres wg WHERE wg.work_id = CAST('00000000-0000-4000-9000-000000000014' AS UUID) AND wg.genre = g.genre);
 
-INSERT INTO scanlation_projects (id, name, work_id, created_at, updated_at, version)
-SELECT CAST('00000000-0000-4000-9000-000000000101' AS UUID), 'Readora Demo Team', CAST('00000000-0000-4000-9000-000000000001' AS UUID),
+-- The demo team and its project on the demo series share one id, like every team migrated by V17.
+INSERT INTO teams (id, name, description, created_at, updated_at, version)
+SELECT CAST('00000000-0000-4000-9000-000000000101' AS UUID), 'Readora Demo Team', 'Demo scanlation team with one member per role.',
        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
+WHERE NOT EXISTS (SELECT 1 FROM teams WHERE id = CAST('00000000-0000-4000-9000-000000000101' AS UUID));
+
+INSERT INTO scanlation_projects (id, name, work_id, team_id, created_at, updated_at, version)
+SELECT CAST('00000000-0000-4000-9000-000000000101' AS UUID), 'Readora Demo Team', CAST('00000000-0000-4000-9000-000000000001' AS UUID),
+       CAST('00000000-0000-4000-9000-000000000101' AS UUID), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
 WHERE NOT EXISTS (SELECT 1 FROM scanlation_projects WHERE id = CAST('00000000-0000-4000-9000-000000000101' AS UUID));
 
-INSERT INTO team_members (id, project_id, user_id, joined_at)
+INSERT INTO team_members (id, team_id, user_id, joined_at)
 SELECT m.id, CAST('00000000-0000-4000-9000-000000000101' AS UUID), m.user_id, CURRENT_TIMESTAMP
 FROM (
     SELECT CAST('00000000-0000-4000-9000-000000000201' AS UUID) AS id, '00000000-0000-4000-8000-000000000011' AS user_id
@@ -120,7 +126,7 @@ FROM (
 ) m
 WHERE EXISTS (SELECT 1 FROM users u WHERE u.id = m.user_id)
   AND NOT EXISTS (SELECT 1 FROM team_members t
-                  WHERE t.id = m.id OR (t.project_id = CAST('00000000-0000-4000-9000-000000000101' AS UUID) AND t.user_id = m.user_id));
+                  WHERE t.id = m.id OR (t.team_id = CAST('00000000-0000-4000-9000-000000000101' AS UUID) AND t.user_id = m.user_id));
 
 INSERT INTO member_roles (member_id, role)
 SELECT r.member_id, r.role

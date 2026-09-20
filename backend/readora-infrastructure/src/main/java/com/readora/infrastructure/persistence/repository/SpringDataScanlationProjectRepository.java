@@ -10,4 +10,6 @@ import java.util.UUID;
 @Repository
 public interface SpringDataScanlationProjectRepository extends JpaRepository<ScanlationProjectJpaEntity, UUID> {
     List<ScanlationProjectJpaEntity> findByWorkId(UUID workId);
+
+    List<ScanlationProjectJpaEntity> findByTeamId(UUID teamId);
 }

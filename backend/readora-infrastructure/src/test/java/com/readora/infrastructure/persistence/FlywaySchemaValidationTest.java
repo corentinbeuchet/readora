@@ -4,6 +4,7 @@ import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.*;
 import com.readora.domain.work.*;
 import com.readora.infrastructure.persistence.adapter.ScanlationProjectRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.TeamRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.WorkRepositoryAdapter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -49,6 +51,9 @@ class FlywaySchemaValidationTest {
     @Autowired
     private ScanlationProjectRepositoryAdapter scanlationProjectRepositoryAdapter;
 
+    @Autowired
+    private TeamRepositoryAdapter teamRepositoryAdapter;
+
     @Test
     @DisplayName("Work with genres is successfully persisted and retrieved with Hibernate ddl-auto: validate")
     void persistAndRetrieveWorkWithGenres() {
@@ -62,22 +67,29 @@ class FlywaySchemaValidationTest {
     }
 
     @Test
-    @DisplayName("ScanlationProject with team member roles is successfully persisted and retrieved")
+    @DisplayName("A team with member roles and its project are successfully persisted and retrieved")
     void persistAndRetrieveProjectWithMemberRoles() {
         Work work = Work.create("Project Work", "Synopsis", WorkType.MANGA, "c.png", Set.of("Adventure"));
         workRepositoryAdapter.save(work);
 
-        ScanlationProject project = ScanlationProject.create("Scan Group", work.getId(), UserId.of("leader_1"));
-        project.addMember(new TeamMember(UserId.of("translator_1"), Set.of(ScanlationRole.TRANSLATOR, ScanlationRole.PROOFREADER), Instant.now()));
+        Team team = Team.create("Scan Group", "We scan.", UserId.of("leader_1"));
+        team.addMember(new TeamMember(UserId.of("translator_1"), Set.of(ScanlationRole.TRANSLATOR, ScanlationRole.PROOFREADER), Instant.now()));
+        teamRepositoryAdapter.save(team);
+        ScanlationProject project = ScanlationProject.create("Scan Group", work.getId(), team.getId());
 
         scanlationProjectRepositoryAdapter.save(project);
 
         Optional<ScanlationProject> loaded = scanlationProjectRepositoryAdapter.findById(project.getId());
         assertTrue(loaded.isPresent());
         assertEquals("Scan Group", loaded.get().getName());
-        assertEquals(2, loaded.get().getMembers().size());
+        assertEquals(team.getId(), loaded.get().getTeamId());
+        assertEquals(List.of(project.getId()), scanlationProjectRepositoryAdapter.findByTeamId(team.getId()).stream().map(ScanlationProject::getId).toList());
 
-        TeamMember translator = loaded.get().getMembers().stream()
+        Team loadedTeam = teamRepositoryAdapter.findById(team.getId()).orElseThrow();
+        assertEquals("We scan.", loadedTeam.getDescription());
+        assertEquals(2, loadedTeam.getMembers().size());
+
+        TeamMember translator = loadedTeam.getMembers().stream()
                 .filter(m -> m.userId().value().equals("translator_1"))
                 .findFirst()
                 .orElseThrow();
@@ -89,7 +101,9 @@ class FlywaySchemaValidationTest {
     void staleProjectSaveIsRejected() {
         Work work = Work.create("Locking Work", "Synopsis", WorkType.MANGA, "c.png", Set.of("Action"));
         workRepositoryAdapter.save(work);
-        ScanlationProject project = ScanlationProject.create("Lock Group", work.getId(), UserId.of("leader_lock"));
+        Team team = Team.create("Lock Group", null, UserId.of("leader_lock"));
+        teamRepositoryAdapter.save(team);
+        ScanlationProject project = ScanlationProject.create("Lock Group", work.getId(), team.getId());
         project.addChapterTask(ChapterNumber.of("1"));
         scanlationProjectRepositoryAdapter.save(project);
 
@@ -97,7 +111,7 @@ class FlywaySchemaValidationTest {
         ScanlationProject second = scanlationProjectRepositoryAdapter.findById(project.getId()).orElseThrow();
         TaskId taskId = first.getTasks().getFirst().getId();
 
-        first.claimTask(taskId, UserId.of("leader_lock"));
+        first.claimTask(team, taskId, UserId.of("leader_lock"));
         scanlationProjectRepositoryAdapter.save(first);
 
         second.addChapterTask(ChapterNumber.of("2"));
