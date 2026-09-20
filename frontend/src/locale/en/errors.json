@@ -13,6 +13,7 @@
     "error.malformedRequest": "The request was not valid. Check the form and try again.",
     "error.teamNameTaken": "A team already has this name. Choose another one.",
     "error.seriesAlreadyInTeam": "Your team already works on this series.",
+    "error.chapterAlreadyExists": "Your team already has this chapter of the series.",
     "error.teamNotOnSeries": "Your team does not work on this series yet. Add the series to your team first.",
     "error.lastLeader": "A team needs at least one leader. Name another leader first.",
     "error.fileTooLarge": "This file is too large.",

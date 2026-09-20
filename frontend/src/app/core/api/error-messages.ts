@@ -27,6 +27,8 @@ export function errorMessageForCode(code: string | null): string | undefined {
       return $localize`:@@error.teamNameTaken:A team already has this name. Choose another one.`;
     case 'SERIES_ALREADY_IN_TEAM':
       return $localize`:@@error.seriesAlreadyInTeam:Your team already works on this series.`;
+    case 'CHAPTER_ALREADY_EXISTS':
+      return $localize`:@@error.chapterAlreadyExists:Your team already has this chapter of the series.`;
     case 'TEAM_NOT_ON_SERIES':
       return $localize`:@@error.teamNotOnSeries:Your team does not work on this series yet. Add the series to your team first.`;
     case 'LAST_LEADER':

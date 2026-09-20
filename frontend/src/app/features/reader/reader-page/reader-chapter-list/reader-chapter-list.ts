@@ -36,12 +36,12 @@ export class ReaderChapterList {
   );
   /** One row per chapter, computed once (not per template call). */
   protected readonly rows = computed(() => {
-    const finished = new Set(this.progress.hasValue() ? (this.progress.value()?.finishedChapterIds ?? []) : []);
+    const finished = new Set(this.progress.hasValue() ? (this.progress.value()?.finishedChapterNumbers ?? []) : []);
     const current = this.currentChapterId();
     return (this.chapters.hasValue() ? this.chapters.value() : []).map((chapter) => ({
       chapter,
       current: chapter.id === current,
-      read: finished.has(chapter.id)
+      read: finished.has(chapter.chapterNumber)
     }));
   });
 }

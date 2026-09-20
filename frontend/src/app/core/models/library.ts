@@ -53,10 +53,18 @@ export interface HistoryItem {
   lastRead: ChapterRead;
 }
 
+/**
+ * Progress follows the chapter number (US-12): a number is read once any team's version of it is finished.
+ */
 export interface WorkProgress {
   workId: string;
+  /** The versions I finished (what history and "continue" point at). */
   finishedChapterIds: string[];
-  /** The chapter to read next; `null` when the reader is up to date. */
+  /** The chapter numbers I read, in any version. */
+  finishedChapterNumbers: string[];
+  /** The number to read next; `null` when I am up to date. */
+  nextChapterNumber: string | null;
+  /** The version of that number to open: by the team I read last when it has one, else the first published. */
   nextChapterId: string | null;
 }
 

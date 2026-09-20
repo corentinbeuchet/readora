@@ -18,6 +18,9 @@ const MOCK_CHAPTER: Chapter = {
   title: 'Chapter 10',
   status: 'PUBLISHED',
   team: null,
+  versions: [],
+  previous: null,
+  next: null,
   work: null,
   previousChapterId: null,
   nextChapterId: null,
@@ -992,7 +995,13 @@ describe('ReaderPage (API-driven)', () => {
       pageCount: 3
     }));
     http.expectOne(`${API}/works/${MOCK_CHAPTER.workId}/chapters`).flush(ok(chapters));
-    http.expectOne(`${API}/reading/works/${MOCK_CHAPTER.workId}`).flush(ok({ workId: MOCK_CHAPTER.workId, finishedChapterIds: work.finished, nextChapterId: work.next }));
+    http.expectOne(`${API}/reading/works/${MOCK_CHAPTER.workId}`).flush(ok({
+      workId: MOCK_CHAPTER.workId,
+      finishedChapterIds: work.finished,
+      finishedChapterNumbers: work.finished.map((id) => id.replace('c-', '')),
+      nextChapterNumber: work.next.replace('c-', ''),
+      nextChapterId: work.next
+    }));
     await settle(fixture);
   }
 

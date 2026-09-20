@@ -60,21 +60,28 @@ export class WorkDetailPage {
   protected readonly library = asyncAction($localize`:@@catalog.work.libraryError:Could not update your library. Please try again.`);
 
   private readonly progress = this.readingApi.progressResource(this.workId, this.canUseLibrary);
-  private readonly finished = computed(() => new Set(this.progress.hasValue() ? (this.progress.value()?.finishedChapterIds ?? []) : []));
+  /** Read marks follow the chapter number: a chapter read in one team's version is read in every version. */
+  private readonly finished = computed(() => new Set(this.progress.hasValue() ? (this.progress.value()?.finishedChapterNumbers ?? []) : []));
   /**
    * One row per chapter with its read marks, computed in a single pass: "Mark all previous as read" is offered only
-   * on an unread chapter that has unread chapters before it (where it would change something).
+   * on an unread chapter that has unread chapter numbers before it (where it would change something). Several
+   * teams' versions of one number follow each other in the list and count as one chapter.
    */
   protected readonly chapterRows = computed(() => {
     const finished = this.finished();
     const next = this.nextChapterId();
     const canMark = this.canUseLibrary() && this.progress.hasValue();
     let unreadBefore = false;
+    let number: string | null = null;
+    let numberIsUnread = false;
     return (this.chapters.hasValue() ? this.chapters.value() : []).map((chapter) => {
-      const read = finished.has(chapter.id);
-      const row = { chapter, read, next: chapter.id === next, canMarkPrevious: canMark && !read && unreadBefore };
-      unreadBefore ||= !read;
-      return row;
+      if (chapter.chapterNumber !== number) {
+        unreadBefore ||= numberIsUnread;
+        number = chapter.chapterNumber;
+      }
+      const read = finished.has(chapter.chapterNumber);
+      numberIsUnread = !read;
+      return { chapter, read, next: chapter.id === next, canMarkPrevious: canMark && !read && unreadBefore };
     });
   });
   protected readonly nextChapterId = computed(() => (this.progress.hasValue() ? (this.progress.value()?.nextChapterId ?? null) : null));

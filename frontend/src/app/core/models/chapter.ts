@@ -54,9 +54,26 @@ export interface Chapter {
   work: { id: string; title: string; type: WorkType } | null;
   /** Reader view only (`null` elsewhere): the team that translated this version of the chapter. */
   team: TeamRef | null;
-  /** Reader view only: published neighbours, `null` at either end. */
+  /** Reader view only (empty elsewhere): every team's version of this chapter number, this one included. */
+  versions: ChapterVersion[];
+  /** Reader view only: the chapter numbers before and after this one with their versions, `null` at either end. */
+  previous: ChapterNeighbour | null;
+  next: ChapterNeighbour | null;
+  /** The version of `previous` / `next` to open by default: the same team's when it has one. */
   previousChapterId: string | null;
   nextChapterId: string | null;
+}
+
+/** One team's published version of a chapter number. */
+export interface ChapterVersion {
+  chapterId: string;
+  team: TeamRef;
+}
+
+export interface ChapterNeighbour {
+  chapterNumber: string;
+  /** The first one published first. */
+  versions: ChapterVersion[];
 }
 
 export interface ChapterSummary {

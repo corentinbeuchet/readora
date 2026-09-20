@@ -30,6 +30,7 @@
     "error.teamNameTaken": "Une équipe porte déjà ce nom. Choisissez-en un autre.",
     "error.seriesAlreadyInTeam": "Votre équipe travaille déjà sur cette série.",
     "error.lastLeader": "Une équipe a besoin d'au moins un responsable. Nommez-en un autre d'abord.",
-    "error.teamNotOnSeries": "Votre équipe ne travaille pas encore sur cette série. Ajoutez d'abord la série à votre équipe."
+    "error.teamNotOnSeries": "Votre équipe ne travaille pas encore sur cette série. Ajoutez d'abord la série à votre équipe.",
+    "error.chapterAlreadyExists": "Votre équipe a déjà publié ce chapitre de la série."
   }
 }

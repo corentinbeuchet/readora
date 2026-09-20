@@ -6,6 +6,7 @@ import { AuthStore } from '@app/core/auth/auth-store';
 import { ApiResponse } from '@app/core/models/api';
 import { Work } from '@app/core/models/catalog';
 import { givenIAmSignedInWith, mockUser, signIn } from '../../../core/auth/auth-fixtures';
+import { WorkProgress } from '@app/core/models/library';
 import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 
 const WORK: Work = {
@@ -86,6 +87,21 @@ describe('WorkDetailPage', () => {
       thenChapterIsCreditedTo(3, 'Chapter 3 translated by Shadow Scans', '/teams/t-shadow');
     });
 
+    it('a chapter finished in the version of one team is read in the version of the other team too', async () => {
+      await givenIAmOnTheWorkPage({ inLibrary: true, finished: ['c-1'], next: 'c-2', otherVersions: [{ id: 'c-1-moon', number: '1', team: 'Moon Scans' }] });
+
+      thenTheRowsAre(['Ch. 1', 'Ch. 1', 'Ch. 2', 'Ch. 3']);
+      thenRowIsRead(1);
+      thenRowIsRead(2);
+      thenRowIsCreditedTo(2, 'Moon Scans');
+    });
+
+    it('another version of the first chapter has nothing before it to mark as read', async () => {
+      await givenIAmOnTheWorkPage({ inLibrary: true, finished: [], next: 'c-1', otherVersions: [{ id: 'c-1-moon', number: '1', team: 'Moon Scans' }] });
+
+      thenMarkPreviousIsOfferedBefore([2, 3]);
+    });
+
     it('Marking all previous chapters as read', async () => {
       await givenIAmOnTheWorkPage({ inLibrary: true, finished: ['c-1'], next: 'c-2' });
       thenICanMarkPreviousChaptersOnlyBefore(3);
@@ -112,13 +128,21 @@ describe('WorkDetailPage', () => {
     });
 
     /** A free reader on a 3-chapter series; the library and read state the test checks are its arguments. */
-    async function givenIAmOnTheWorkPage(state: { inLibrary: boolean; finished: string[]; next: string }): Promise<void> {
+    async function givenIAmOnTheWorkPage(state: {
+      inLibrary: boolean;
+      finished: string[];
+      next: string;
+      otherVersions?: { id: string; number: string; team: string }[];
+    }): Promise<void> {
+      const versions = (state.otherVersions ?? []).map((v) => ({ ...CHAPTERS[0], id: v.id, chapterNumber: v.number, team: { id: `t-${v.team}`, name: v.team } }));
+      // The API lists versions of a number next to each other, the first published first.
+      const listed = [...CHAPTERS, ...versions].sort((a, b) => Number(a.chapterNumber) - Number(b.chapterNumber));
       await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: ['LIBRARY_USE'] }));
       fixture = TestBed.createComponent(WorkDetailPage);
       fixture.componentRef.setInput('workId', WORK.id);
       await settle(fixture);
       http.expectOne(`${API}/works/${WORK.id}`).flush(ok(WORK));
-      http.expectOne(`${API}/works/${WORK.id}/chapters`).flush(ok(CHAPTERS));
+      http.expectOne(`${API}/works/${WORK.id}/chapters`).flush(ok(listed));
       // Only this series' library entry is fetched; 404 = not in my library.
       const entry = http.expectOne(`${API}/library/${WORK.id}`);
       if (state.inLibrary) {
@@ -126,14 +150,20 @@ describe('WorkDetailPage', () => {
       } else {
         entry.flush(fail('Not found'), { status: 404, statusText: 'Not Found' });
       }
-      http.expectOne(`${API}/reading/works/${WORK.id}`).flush(ok({ workId: WORK.id, finishedChapterIds: state.finished, nextChapterId: state.next }));
+      http.expectOne(`${API}/reading/works/${WORK.id}`).flush(ok(progressOf(state.finished, state.next)));
       await settle(fixture);
+    }
+
+    /** In this series chapter `c-N` is the only version of number N. */
+    function progressOf(finished: string[], next: string): WorkProgress {
+      const number = (id: string): string => id.replace('c-', '');
+      return { workId: WORK.id, finishedChapterIds: finished, finishedChapterNumbers: finished.map(number), nextChapterNumber: number(next), nextChapterId: next };
     }
 
     async function whenIMarkTheChaptersBeforeAsRead(chapter: number, progress: { nowFinished: string[]; next: string }): Promise<void> {
       markPreviousButton(chapter)!.click();
       lastRequest = http.expectOne(`${API}/reading/chapters/c-${chapter}/read-up-to`);
-      lastRequest.flush(ok({ workId: WORK.id, finishedChapterIds: progress.nowFinished, nextChapterId: progress.next }));
+      lastRequest.flush(ok(progressOf(progress.nowFinished, progress.next)));
       await settle(fixture);
     }
 
@@ -149,6 +179,25 @@ describe('WorkDetailPage', () => {
       lastRequest = http.expectOne(`${API}/library/${WORK.id}`);
       lastRequest.flush(null, { status: 204, statusText: 'No Content' });
       await settle(fixture);
+    }
+
+    function thenMarkPreviousIsOfferedBefore(chapters: number[]): void {
+      expect(markPreviousButtons().map((b) => b.textContent!.replace(/\s+/g, ' ').trim())).toEqual(
+        chapters.map((n) => `Mark all previous as read (before chapter ${n})`)
+      );
+    }
+
+    function thenTheRowsAre(numbers: string[]): void {
+      const shown: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.chapter-number'));
+      expect(shown.map((el) => el.textContent!.trim())).toEqual(numbers);
+    }
+
+    function thenRowIsRead(row: number): void {
+      expect(chapterLink(row).classList).toContain('chapter-read');
+    }
+
+    function thenRowIsCreditedTo(row: number, team: string): void {
+      expect(fixture.nativeElement.querySelectorAll('.chapter-row')[row - 1].querySelector('a.chapter-team').textContent).toContain(team);
     }
 
     function thenChapterIsRead(chapter: number): void {
