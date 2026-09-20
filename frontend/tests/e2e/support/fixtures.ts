@@ -11,7 +11,7 @@ export const test = base.extend<{
   publishedChapter: Awaited<ReturnType<typeof publishChapter>>;
   /** A new series translated by two teams (US-12): chapters 1 and 2 in two versions, chapter 3 by the first team only. */
   seriesByTwoTeams: Awaited<ReturnType<typeof publishSeriesByTwoTeams>>;
-  /** A new series created with `E2E_FACTS` (US-04) and one published chapter; the publisher account leads its team. */
+  /** A new series created with facts (US-04) and one published chapter; the publisher account leads its team. */
   seriesWithFacts: Awaited<ReturnType<typeof publishSeriesWithFacts>>;
   /** An axe scan of the current page against WCAG 2.0/2.1/2.2 A and AA (`await axe().analyze()`). */
   axe: () => AxeBuilder;

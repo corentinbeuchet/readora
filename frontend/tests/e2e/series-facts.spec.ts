@@ -1,13 +1,13 @@
 import { Page } from '@playwright/test';
 import { test, expect } from './support/fixtures';
-import { givenIAmLoggedInAsThePublisher } from './support/helpers';
+import { givenIAmLoggedInAsThePublisher, thenTheFactIs } from './support/helpers';
 
 /** US-04: what a series page says beside the synopsis, and the team leaders who keep it right. */
 test.describe('Series facts', () => {
   test('the series page lists the facts that were filled in, and only those', async ({ page, seriesWithFacts }) => {
     await whenIOpenTheSeries(page, seriesWithFacts);
 
-    await thenTheFactIs(page, 'Other titles', ['Shin no Nakama', 'The True Companion']);
+    await thenTheFactIs(page, 'Other titles', seriesWithFacts.otherTitles);
     await thenTheFactIs(page, 'Artist', ['E2E Artist']);
     await thenTheFactIs(page, 'First published', ['2019']);
     await thenTheFactIs(page, 'Original language', ['Japanese']);
@@ -40,6 +40,21 @@ test.describe('Series facts', () => {
     await thenTheFieldIsRefusedWith(page, 'First published (year)', 'Enter a year between 1900 and 2100, or leave it empty');
   });
 
+  test('the search box finds a series by one of its other titles', async ({ page, seriesWithFacts }) => {
+    await givenIAmOnTheHomePage(page);
+
+    await whenISearchFor(page, seriesWithFacts.otherTitles[0].toLowerCase());
+    await whenIChooseTheSuggestion(page, seriesWithFacts.title);
+
+    await thenIAmOnTheSeriesPage(page, seriesWithFacts);
+  });
+
+  test('the catalog finds a series by one of its other titles', async ({ page, seriesWithFacts }) => {
+    await whenIOpenTheCatalogSearchingFor(page, seriesWithFacts.otherTitles[0]);
+
+    await thenTheCatalogListsOnly(page, seriesWithFacts.title);
+  });
+
   test('a reader cannot open the edit page of a series', async ({ page, seriesWithFacts }) => {
     await whenIVisitTheEditPageOf(page, seriesWithFacts);
 
@@ -51,6 +66,28 @@ async function givenIEditTheSeries(page: Page, series: { workId: string }): Prom
   await page.goto(`/scanlation/series/${series.workId}`);
   await expect(page.getByRole('heading', { level: 1, name: 'Edit series' })).toBeVisible();
   await expect(page.getByLabel('Artist')).toHaveValue('E2E Artist');
+}
+
+async function givenIAmOnTheHomePage(page: Page): Promise<void> {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+}
+
+async function whenISearchFor(page: Page, text: string): Promise<void> {
+  await page.getByRole('combobox', { name: 'Search series by title or author' }).fill(text);
+}
+
+async function whenIChooseTheSuggestion(page: Page, title: string): Promise<void> {
+  await page.getByRole('option', { name: title }).click();
+}
+
+async function whenIOpenTheCatalogSearchingFor(page: Page, text: string): Promise<void> {
+  await page.goto(`/works?q=${encodeURIComponent(text)}`);
+  await expect(page.getByRole('heading', { level: 1, name: 'Catalog' })).toBeVisible();
+}
+
+async function thenTheCatalogListsOnly(page: Page, title: string): Promise<void> {
+  await expect(page.getByRole('main').getByRole('link', { name: /^E2E Series / })).toHaveText([title]);
 }
 
 async function whenIOpenTheSeries(page: Page, series: { workId: string; title: string }): Promise<void> {
@@ -77,12 +114,6 @@ async function whenISaveTheSeries(page: Page): Promise<void> {
 async function thenIAmOnTheSeriesPage(page: Page, series: { workId: string; title: string }): Promise<void> {
   await expect(page).toHaveURL(new RegExp(`/works/${series.workId}$`));
   await expect(page.getByRole('heading', { level: 1 })).toContainText(series.title);
-}
-
-/** A fact is a term of the description list with its values: `dt` has the ARIA role "term", `dd` "definition". */
-async function thenTheFactIs(page: Page, fact: string, values: string[]): Promise<void> {
-  const group = page.locator('dl > div').filter({ has: page.getByRole('term').filter({ hasText: new RegExp(`^${fact}$`) }) });
-  await expect(group.getByRole('definition')).toHaveText(values);
 }
 
 async function thenTheFactIsNotListed(page: Page, fact: string): Promise<void> {

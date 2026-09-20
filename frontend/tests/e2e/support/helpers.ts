@@ -7,7 +7,7 @@ export const API_URL = (process.env['E2E_API_URL'] ?? 'http://localhost:8080/api
  * Account allowed to create series and publish chapters (`WORK_CREATE`). Defaults to the `admin` dev seed account
  * (Spring profile `local`, see AGENTS.md); against another environment set E2E_PUBLISHER_EMAIL / E2E_PUBLISHER_PASSWORD.
  */
-const PUBLISHER = {
+export const PUBLISHER = {
   email: process.env['E2E_PUBLISHER_EMAIL'] ?? 'admin@readora.local',
   password: process.env['E2E_PUBLISHER_PASSWORD'] ?? 'readora-dev'
 };
@@ -77,7 +77,7 @@ async function data<T>(response: Awaited<ReturnType<APIRequestContext['get']>>):
 }
 
 /** 1×1 transparent PNG: the smallest page image the upload endpoint accepts. */
-const PAGE_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
+export const PAGE_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
 
 type Headers = Record<string, string>;
 
@@ -136,15 +136,25 @@ export async function publishChapter(request: APIRequestContext): Promise<{ work
   return { workId: series.workId, title: series.title, chapterId };
 }
 
-/** The facts `publishSeriesWithFacts` gives its series (US-04); the content rating is left out on purpose. */
-export const E2E_FACTS = { alternativeTitles: ['Shin no Nakama', 'The True Companion'], artist: 'E2E Artist', releaseYear: 2019, originalLanguage: 'JAPANESE' };
+/**
+ * A fact of the series page (US-04) and its values. A fact is a term of the description list: `dt` has the ARIA role
+ * "term", `dd` "definition". `label` is the text of the running language ("Artist", "Dessin").
+ */
+export async function thenTheFactIs(page: Page, label: string, values: string[]): Promise<void> {
+  const group = page.locator('dl > div').filter({ has: page.getByRole('term').filter({ hasText: new RegExp(`^${label}$`) }) });
+  await expect(group.getByRole('definition')).toHaveText(values);
+}
 
-/** A series created with `E2E_FACTS` and one published chapter, led by the publisher account (US-04). */
-export async function publishSeriesWithFacts(request: APIRequestContext): Promise<{ workId: string; title: string }> {
+/**
+ * A series created with facts (US-04) and one published chapter, led by the publisher account. The content rating
+ * is left out on purpose, and the first other title is unique, so a search for it finds this series only.
+ */
+export async function publishSeriesWithFacts(request: APIRequestContext): Promise<{ workId: string; title: string; otherTitles: string[] }> {
   const headers = await givenIAmThePublisher(request);
-  const series = await createSeries(request, headers, E2E_FACTS);
+  const otherTitles = [`Shin no Nakama ${uniqueSuffix()}`, 'The True Companion'];
+  const series = await createSeries(request, headers, { alternativeTitles: otherTitles, artist: 'E2E Artist', releaseYear: 2019, originalLanguage: 'JAPANESE' });
   await publishChapterFor(request, headers, series.workId, series.team, '1', 'The beginning');
-  return { workId: series.workId, title: series.title };
+  return { workId: series.workId, title: series.title, otherTitles };
 }
 
 /** Logs in through the UI as the publisher account: the leader of the team of every series the helpers create. */
