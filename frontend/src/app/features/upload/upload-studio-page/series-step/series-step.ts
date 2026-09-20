@@ -7,11 +7,12 @@ import { ExistingSeries, GENRE_PRESETS, UploadWizard } from '@app/features/uploa
 import { CoverPicker } from './cover-picker/cover-picker';
 import { FieldErrors } from '@app/shared/forms/field-errors';
 import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
+import { WorkFactsFields } from '@app/shared/forms/work-facts-fields/work-facts-fields';
 
 /** Step 1: the series' details and cover, or what is being published into when the series already exists. */
 @Component({
   selector: 'app-series-step',
-  imports: [FieldErrors, AriaInvalidDirective, FormField, CoverPicker],
+  imports: [FieldErrors, AriaInvalidDirective, FormField, CoverPicker, WorkFactsFields],
   templateUrl: './series-step.html',
   styleUrl: './series-step.scss'
 })

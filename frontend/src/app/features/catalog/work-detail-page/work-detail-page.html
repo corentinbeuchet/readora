@@ -19,6 +19,7 @@
           }
         </p>
         <p class="synopsis">{{ w.synopsis }}</p>
+        <app-work-fact-list [work]="w" />
 
         <div class="work-actions">
           @if (bookmark(); as bm) {

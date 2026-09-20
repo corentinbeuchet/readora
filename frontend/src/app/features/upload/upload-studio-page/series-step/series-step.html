@@ -99,6 +99,8 @@
         <textarea id="manga-synopsis" rows="4" placeholder="Brief summary of the story, characters, and setting…" i18n-placeholder="@@upload.series.synopsis.placeholder"
                   [formField]="form.synopsis"></textarea>
       </div>
+
+      <app-work-facts-fields [facts]="form.facts" />
     </div>
 
     <app-cover-picker [previewUrl]="wizard.cover()?.previewUrl ?? ''" (fileSelected)="wizard.setCover($event)" (removed)="wizard.removeCover()" />

@@ -190,6 +190,29 @@ describe('UploadStudioPage', () => {
     thenTheSuccessLinksAre(['/read/chap-999', '/works/work-123']);
   });
 
+  it('the facts typed in the series step are sent with the new series; what is left empty is left out', async () => {
+    await givenIOpenTheStudio();
+    whenITypeTheFacts({ otherTitles: 'Jeonjijeok Dokja Sijeom\n\nORV', artist: 'Sleepy-C', year: '2020', language: 'KOREAN' });
+    await givenIAmOnTheReview({ series: { title: 'Omniscient Reader' }, chapter: { number: '1' }, pages: ['p1.png'] });
+
+    await whenIPublish();
+    await whenTheSeriesIsCreated({ ...WORK, id: 'work-123', title: 'Omniscient Reader' });
+
+    thenTheSeriesWasCreatedWithTheFacts({ alternativeTitles: ['Jeonjijeok Dokja Sijeom', 'ORV'], artist: 'Sleepy-C', releaseYear: 2020, originalLanguage: 'KOREAN' });
+
+    await whenEveryPageUploads();
+    await whenTheChapterIsPublished({ ...CHAPTER, id: 'chap-999', workId: 'work-123' });
+  });
+
+  it('a year that is not a year keeps me on the series step', async () => {
+    await givenIOpenTheStudio();
+    whenITypeTheTitle('Omniscient Reader');
+
+    whenITypeTheFacts({ year: '20' });
+
+    thenICannotGoToTheChapterSetup();
+  });
+
   it('shows the upload progress as a progressbar while publishing', async () => {
     await givenIAmOnTheReview({ series: { title: 'Blue Lock' }, chapter: { number: '3' }, pages: ['p1.png', 'p2.png'] });
 
@@ -519,6 +542,16 @@ describe('UploadStudioPage', () => {
     typeInto('#manga-title', title);
   }
 
+  function whenITypeTheFacts(facts: { otherTitles?: string; artist?: string; year?: string; language?: string }): void {
+    const fields: [string, string | undefined][] = [
+      ['#facts-titles', facts.otherTitles],
+      ['#facts-artist', facts.artist],
+      ['#facts-year', facts.year],
+      ['#facts-language', facts.language]
+    ];
+    fields.filter(([, value]) => value !== undefined).forEach(([selector, value]) => typeInto(selector, value!));
+  }
+
   function whenITypeTheChapterNumber(chapterNumber: string): void {
     typeInto('#chapter-number', chapterNumber);
   }
@@ -693,6 +726,15 @@ describe('UploadStudioPage', () => {
 
   function thenStepIsCompleted(step: number): void {
     expect(stepButtons()[step - 1].classList.contains('completed')).toBe(true);
+  }
+
+  function thenTheSeriesWasCreatedWithTheFacts(facts: object): void {
+    expect(workRequest.request.body.facts).toEqual(facts);
+  }
+
+  function thenICannotGoToTheChapterSetup(): void {
+    const next = Array.from(page().querySelectorAll('button')).find((button) => button.textContent!.includes('Next: Chapter Setup'))!;
+    expect(next.disabled).toBe(true);
   }
 
   function thenTheSeriesWasCreatedWith(fields: SeriesDraft): void {

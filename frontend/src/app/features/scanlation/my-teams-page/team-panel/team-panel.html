@@ -19,9 +19,17 @@
       @for (board of team().boards; track board.projectId) {
         <li class="board">
           <a [routerLink]="['/scanlation', board.projectId]">{{ board.work.title }}</a>
-          @if (canPublish()) {
-            <a class="btn btn-sm" routerLink="/upload" [queryParams]="{ workId: board.work.id, teamId: team().id }"
-               i18n="@@scanlation.teams.publishChapter">Publish a chapter<span class="sr-only"> of {{ board.work.title }}</span></a>
+          @if (canPublish() || leads()) {
+            <div class="board-actions">
+              @if (canPublish()) {
+                <a class="btn btn-sm" routerLink="/upload" [queryParams]="{ workId: board.work.id, teamId: team().id }"
+                   i18n="@@scanlation.teams.publishChapter">Publish a chapter<span class="sr-only"> of {{ board.work.title }}</span></a>
+              }
+              @if (leads()) {
+                <a class="btn btn-sm" [routerLink]="['/scanlation/series', board.work.id]"
+                   i18n="@@scanlation.teams.editSeries">Edit series<span class="sr-only">: {{ board.work.title }}</span></a>
+              }
+            </div>
           }
         </li>
       }

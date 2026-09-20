@@ -21,6 +21,17 @@
     "rail.forward": "Faire défiler vers l'avant : {$heading}",
     "sectionHeader.seeAll": "Tout voir",
     "workCard.rank": "Rang",
-    "workCard.newChapters": "{VAR_PLURAL, plural, =0 {0 nouveau{START_TAG_SPAN} chapitre{CLOSE_TAG_SPAN}} =1 {1 nouveau{START_TAG_SPAN} chapitre{CLOSE_TAG_SPAN}} other {{INTERPOLATION} nouveaux{START_TAG_SPAN} chapitres{CLOSE_TAG_SPAN}}}"
+    "workCard.newChapters": "{VAR_PLURAL, plural, =0 {0 nouveau{START_TAG_SPAN} chapitre{CLOSE_TAG_SPAN}} =1 {1 nouveau{START_TAG_SPAN} chapitre{CLOSE_TAG_SPAN}} other {{INTERPOLATION} nouveaux{START_TAG_SPAN} chapitres{CLOSE_TAG_SPAN}}}",
+    "form.workFacts.legend": "En savoir plus sur la série (facultatif)",
+    "form.workFacts.titles": "Autres titres",
+    "form.workFacts.titles.hint": "Un par ligne : le titre original, sa transcription, le titre dans une autre langue. Dix au maximum.",
+    "form.workFacts.artist": "Dessin",
+    "form.workFacts.year": "Première parution (année)",
+    "form.workFacts.language": "Langue d'origine",
+    "form.workFacts.notSpecified": "Non précisé",
+    "form.workFacts.rating": "Classification",
+    "form.workFacts.year.invalid": "Saisissez une année entre {$min} et {$max}, ou laissez le champ vide",
+    "form.workFacts.titles.tooMany": "Une série a au maximum {$max} autres titres",
+    "form.workFacts.titles.tooLong": "Un titre fait au maximum {$max} caractères"
   }
 }

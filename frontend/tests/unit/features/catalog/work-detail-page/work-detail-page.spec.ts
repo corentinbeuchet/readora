@@ -4,7 +4,7 @@ import { provideRouter } from '@angular/router';
 import { WorkDetailPage } from '@app/features/catalog/work-detail-page/work-detail-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { ApiResponse } from '@app/core/models/api';
-import { Work } from '@app/core/models/catalog';
+import { Work, WorkFacts } from '@app/core/models/catalog';
 import { givenIAmSignedInWith, mockUser, signIn } from '../../../core/auth/auth-fixtures';
 import { WorkProgress } from '@app/core/models/library';
 import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
@@ -18,7 +18,8 @@ const WORK: Work = {
   author: null,
   demographic: null,
   coverImageUrl: 'https://cdn.readora.com/covers/w-1.webp',
-  genres: ['Action']
+  genres: ['Action'],
+  facts: { alternativeTitles: [], artist: null, releaseYear: null, originalLanguage: null, contentRating: null }
 };
 
 describe('WorkDetailPage', () => {
@@ -104,6 +105,22 @@ describe('WorkDetailPage', () => {
       ]);
     });
 
+    it('Series facts on the series page', async () => {
+      await givenIAmOnTheWorkPage({
+        inLibrary: false,
+        finished: [],
+        next: 'c-1',
+        facts: { alternativeTitles: ['Na Honjaman Level Up'], artist: 'DUBU', releaseYear: 2018, originalLanguage: 'KOREAN', contentRating: null }
+      });
+
+      thenTheFactsAre([
+        { fact: 'Other titles', values: ['Na Honjaman Level Up'] },
+        { fact: 'Artist', values: ['DUBU'] },
+        { fact: 'First published', values: ['2018'] },
+        { fact: 'Original language', values: ['Korean'] }
+      ]);
+    });
+
     it('another version of the first chapter has nothing before it to mark as read', async () => {
       await givenIAmOnTheWorkPage({ inLibrary: true, finished: [], next: 'c-1', otherVersions: [{ id: 'c-1-moon', number: '1', team: 'Moon Scans' }] });
 
@@ -141,6 +158,7 @@ describe('WorkDetailPage', () => {
       finished: string[];
       next: string;
       otherVersions?: { id: string; number: string; team: string }[];
+      facts?: WorkFacts;
     }): Promise<void> {
       const versions = (state.otherVersions ?? []).map((v) => ({ ...CHAPTERS[0], id: v.id, chapterNumber: v.number, team: { id: `t-${v.team.toLowerCase().replaceAll(' ', '-')}`, name: v.team } }));
       // The API lists versions of a number next to each other, the first published first.
@@ -149,7 +167,7 @@ describe('WorkDetailPage', () => {
       fixture = TestBed.createComponent(WorkDetailPage);
       fixture.componentRef.setInput('workId', WORK.id);
       await settle(fixture);
-      http.expectOne(`${API}/works/${WORK.id}`).flush(ok(WORK));
+      http.expectOne(`${API}/works/${WORK.id}`).flush(ok({ ...WORK, facts: state.facts ?? WORK.facts }));
       http.expectOne(`${API}/works/${WORK.id}/chapters`).flush(ok(listed));
       // Only this series' library entry is fetched; 404 = not in my library.
       const entry = http.expectOne(`${API}/library/${WORK.id}`);
@@ -160,6 +178,16 @@ describe('WorkDetailPage', () => {
       }
       http.expectOne(`${API}/reading/works/${WORK.id}`).flush(ok(progressOf(state.finished, state.next)));
       await settle(fixture);
+    }
+
+    function thenTheFactsAre(expected: { fact: string; values: string[] }[]): void {
+      const facts: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('app-work-fact-list .fact'));
+      expect(
+        facts.map((fact) => ({
+          fact: fact.querySelector('dt')!.textContent!.trim(),
+          values: Array.from(fact.querySelectorAll('dd')).map((value) => value.textContent!.trim())
+        }))
+      ).toEqual(expected);
     }
 
     /** In this series chapter `c-N` is the only version of number N. */

@@ -1,0 +1,15 @@
+<section class="page">
+  <h1 i18n="@@scanlation.editSeries.heading">Edit series</h1>
+
+  @if (work.isLoading()) {
+    <p class="muted" role="status" i18n="@@scanlation.editSeries.loading">Loading the series…</p>
+  } @else if (work.error()) {
+    <app-load-error [error]="work.error()" notFound="This series doesn't exist." i18n-notFound="@@scanlation.editSeries.notFound" (retry)="work.reload()">
+      <ng-container i18n="@@scanlation.editSeries.loadError">This series could not be loaded.</ng-container>
+      <a actions routerLink="/scanlation" class="btn btn-link" i18n="@@scanlation.editSeries.backToTeams">Back to my teams</a>
+    </app-load-error>
+  } @else if (work.value(); as w) {
+    <p class="muted intro" i18n="@@scanlation.editSeries.intro">Readers see this on the page of <a [routerLink]="['/works', w.id]">{{ w.title }}</a>. Every team that translates the series shares it.</p>
+    <app-series-form [work]="w" (saved)="openSeries($event)" />
+  }
+</section>

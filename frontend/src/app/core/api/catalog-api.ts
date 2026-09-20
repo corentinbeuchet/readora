@@ -3,7 +3,7 @@ import { Service, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { PagedResponse } from '@app/core/models/api';
-import { CatalogQuery, CreateWorkPayload, Work, WorkSummary } from '@app/core/models/catalog';
+import { CatalogQuery, CreateWorkPayload, UpdateWorkPayload, Work, WorkSummary } from '@app/core/models/catalog';
 import { Chapter, ChapterSummary, DirectPublishChapterPayload } from '@app/core/models/chapter';
 import { ScanlationProject } from '@app/core/models/scanlation';
 import { ApiClient, parseEnvelope } from './api-client';
@@ -37,6 +37,11 @@ export class CatalogApi {
 
   createWork(payload: CreateWorkPayload): Observable<Work> {
     return this.api.post<Work>('/works', payload);
+  }
+
+  /** Replaces the description of a series: for the leaders of a team that translates it (the server checks). */
+  updateWork(workId: string, payload: UpdateWorkPayload): Observable<Work> {
+    return this.api.put<Work>(`/works/${workId}`, payload);
   }
 
   listProjects(workId: string): Observable<ScanlationProject[]> {

@@ -3,7 +3,7 @@ import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '@app/core/api/api-client';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { ScanlationApi } from '@app/core/api/scanlation-api';
-import { Work } from '@app/core/models/catalog';
+import { Work, factsPayloadOf } from '@app/core/models/catalog';
 import { ScanlationProject } from '@app/core/models/scanlation';
 import { DirectPublishChapterPayload } from '@app/core/models/chapter';
 import { PageUploadItem } from './file-utils';
@@ -127,6 +127,7 @@ export class PublishFlow {
         demographic: draft.demographic || undefined,
         coverImageUrl: this.uploadedCoverUrl || undefined,
         genres: draft.genres,
+        facts: factsPayloadOf(draft.facts),
         teamId: draft.teamId || undefined
       })
     );

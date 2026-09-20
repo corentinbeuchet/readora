@@ -1,0 +1,12 @@
+@if (facts().length > 0) {
+  <dl class="work-facts">
+    @for (fact of facts(); track fact.key) {
+      <div class="fact">
+        <dt>{{ fact.label }}</dt>
+        @for (value of fact.values; track value) {
+          <dd>{{ value }}</dd>
+        }
+      </div>
+    }
+  </dl>
+}

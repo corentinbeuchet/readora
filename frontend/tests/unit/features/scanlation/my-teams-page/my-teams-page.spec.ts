@@ -56,6 +56,18 @@ describe('MyTeamsPage (US-12)', () => {
     thenThereIsNoLinkTo('/upload?workId=w-1&teamId=t-1');
   });
 
+  it('leaders can edit the page of a series the team translates', async () => {
+    await givenIAmOnMyTeams({ teams: [team({ myRoles: ['LEADER'] })] });
+
+    thenThereIsALinkTo('/scanlation/series/w-1');
+  });
+
+  it('other members, quality checkers included, do not get the edit link', async () => {
+    await givenIAmOnMyTeams({ teams: [team({ myRoles: ['QUALITY_CHECKER'] })] });
+
+    thenThereIsNoLinkTo('/scanlation/series/w-1');
+  });
+
   it('without a team, says how to get one', async () => {
     await givenIAmOnMyTeams({ teams: [] });
 

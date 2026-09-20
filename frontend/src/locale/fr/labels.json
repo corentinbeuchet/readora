@@ -46,6 +46,15 @@
     "scanlationRole.translator": "Traducteur",
     "scanlationRole.typesetter": "Lettreur",
     "scanlationRole.proofreader": "Relecteur",
-    "scanlationRole.qualityChecker": "Contrôle qualité"
+    "scanlationRole.qualityChecker": "Contrôle qualité",
+    "originalLanguage.japanese": "Japonais",
+    "originalLanguage.korean": "Coréen",
+    "originalLanguage.chinese": "Chinois",
+    "originalLanguage.english": "Anglais",
+    "originalLanguage.french": "Français",
+    "originalLanguage.other": "Autre langue",
+    "contentRating.allAges": "Tous publics",
+    "contentRating.teen": "Ados (13+)",
+    "contentRating.mature": "Public averti (17+)"
   }
 }

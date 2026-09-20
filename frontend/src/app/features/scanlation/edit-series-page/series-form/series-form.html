@@ -1,0 +1,68 @@
+@let f = seriesForm;
+<form class="card form series-form" (submit)="save($event)" novalidate>
+  <div class="field">
+    <label for="series-title" i18n="@@scanlation.editSeries.title">Title <span class="required" aria-hidden="true">*</span></label>
+    <input id="series-title" type="text" [formField]="f.title" [appAriaInvalid]="f.title" aria-describedby="series-title-error" />
+    <app-field-errors id="series-title-error" [field]="f.title" />
+  </div>
+
+  <div class="form-row">
+    <div class="field">
+      <label for="series-type" i18n="@@scanlation.editSeries.type">Type</label>
+      <select id="series-type" [formField]="f.type">
+        @for (type of types; track type.code) {
+          <option [value]="type.code">{{ type.label }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="series-status" i18n="@@scanlation.editSeries.status">Publication status</label>
+      <select id="series-status" [formField]="f.status">
+        @for (status of statuses; track status.code) {
+          <option [value]="status.code">{{ status.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="field">
+      <label for="series-author" i18n="@@scanlation.editSeries.author">Author</label>
+      <input id="series-author" type="text" [formField]="f.author" [appAriaInvalid]="f.author" aria-describedby="series-author-error" />
+      <app-field-errors id="series-author-error" [field]="f.author" />
+    </div>
+
+    <div class="field">
+      <label for="series-audience" i18n="@@scanlation.editSeries.audience">Audience</label>
+      <select id="series-audience" [formField]="f.demographic">
+        <option value="" i18n="@@scanlation.editSeries.audience.none">Not specified</option>
+        @for (audience of audiences; track audience.code) {
+          <option [value]="audience.code">{{ audience.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="series-genres" i18n="@@scanlation.editSeries.genres">Genres</label>
+    <input id="series-genres" type="text" [formField]="f.genres" [appAriaInvalid]="f.genres" aria-describedby="series-genres-hint series-genres-error" />
+    <p id="series-genres-hint" class="muted field-hint" i18n="@@scanlation.editSeries.genres.hint">Separated by commas, for example: Action, Fantasy.</p>
+    <app-field-errors id="series-genres-error" [field]="f.genres" />
+  </div>
+
+  <div class="field">
+    <label for="series-synopsis" i18n="@@scanlation.editSeries.synopsis">Synopsis</label>
+    <textarea id="series-synopsis" rows="5" [formField]="f.synopsis" [appAriaInvalid]="f.synopsis" aria-describedby="series-synopsis-error"></textarea>
+    <app-field-errors id="series-synopsis-error" [field]="f.synopsis" />
+  </div>
+
+  <app-work-facts-fields [facts]="f.facts" />
+
+  @if (saving.error(); as message) {
+    <p class="form-error" role="alert">{{ message }}</p>
+  }
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary" [disabled]="saving.busy()" i18n="@@scanlation.editSeries.save">Save the series</button>
+  </div>
+</form>

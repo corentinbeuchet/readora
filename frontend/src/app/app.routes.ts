@@ -62,6 +62,12 @@ export const routes: Routes = [
     data: { permission: 'PROJECT_VIEW' }
   },
   {
+    path: 'scanlation/series/:workId',
+    loadComponent: () => import('@app/features/scanlation/edit-series-page/edit-series-page').then((m) => m.EditSeriesPage),
+    canActivate: [permissionGuard],
+    data: { permission: 'WORK_CREATE' }
+  },
+  {
     path: 'scanlation/:projectId',
     loadComponent: () => import('@app/features/scanlation/scanlation-board-page/scanlation-board-page').then((m) => m.ScanlationBoardPage),
     canActivate: [permissionGuard],

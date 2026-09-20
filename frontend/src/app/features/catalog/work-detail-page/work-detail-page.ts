@@ -9,6 +9,7 @@ import { ReadingApi } from '@app/core/api/reading-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { ChapterList } from './chapter-list/chapter-list';
+import { WorkFactList } from './work-fact-list/work-fact-list';
 import { WorkRatings } from './work-ratings/work-ratings';
 import { WorkTeams } from './work-teams/work-teams';
 import { AddToList } from './add-to-list/add-to-list';
@@ -22,7 +23,7 @@ import { WORK_STATUS_LABELS, WORK_TYPE_LABELS } from '@app/core/models/catalog';
 
 @Component({
   selector: 'app-work-detail-page',
-  imports: [WorkCover, LoadError, RouterLink, HasPermissionDirective, WorkRatings, AddToList, ChapterList, WorkTeams],
+  imports: [WorkCover, LoadError, RouterLink, HasPermissionDirective, WorkRatings, AddToList, ChapterList, WorkTeams, WorkFactList],
   templateUrl: './work-detail-page.html',
   styleUrl: './work-detail-page.scss'
 })

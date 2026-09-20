@@ -1,0 +1,47 @@
+@let f = facts();
+<fieldset class="facts">
+  <legend i18n="@@form.workFacts.legend">More about the series (optional)</legend>
+
+  <div class="field">
+    <label for="facts-titles" i18n="@@form.workFacts.titles">Other titles</label>
+    <textarea id="facts-titles" rows="3" [formField]="f.alternativeTitles" [appAriaInvalid]="f.alternativeTitles" aria-describedby="facts-titles-hint facts-titles-error"></textarea>
+    <p id="facts-titles-hint" class="muted field-hint" i18n="@@form.workFacts.titles.hint">One per line: the original title, its romanisation, the title in another language. Ten at most.</p>
+    <app-field-errors id="facts-titles-error" [field]="f.alternativeTitles" />
+  </div>
+
+  <div class="facts-row">
+    <div class="field">
+      <label for="facts-artist" i18n="@@form.workFacts.artist">Artist</label>
+      <input id="facts-artist" type="text" [formField]="f.artist" [appAriaInvalid]="f.artist" aria-describedby="facts-artist-error" />
+      <app-field-errors id="facts-artist-error" [field]="f.artist" />
+    </div>
+
+    <div class="field">
+      <label for="facts-year" i18n="@@form.workFacts.year">First published (year)</label>
+      <input id="facts-year" type="text" inputmode="numeric" autocomplete="off" [formField]="f.releaseYear" [appAriaInvalid]="f.releaseYear" aria-describedby="facts-year-error" />
+      <app-field-errors id="facts-year-error" [field]="f.releaseYear" />
+    </div>
+  </div>
+
+  <div class="facts-row">
+    <div class="field">
+      <label for="facts-language" i18n="@@form.workFacts.language">Original language</label>
+      <select id="facts-language" [formField]="f.originalLanguage">
+        <option value="" i18n="@@form.workFacts.notSpecified">Not specified</option>
+        @for (language of languages; track language.code) {
+          <option [value]="language.code">{{ language.label }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="facts-rating" i18n="@@form.workFacts.rating">Content rating</label>
+      <select id="facts-rating" [formField]="f.contentRating">
+        <option value="" i18n="@@form.workFacts.notSpecified">Not specified</option>
+        @for (rating of ratings; track rating.code) {
+          <option [value]="rating.code">{{ rating.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+</fieldset>

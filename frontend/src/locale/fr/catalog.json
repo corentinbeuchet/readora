@@ -99,6 +99,13 @@
     "catalog.work.chapters.versions.ofChapter": "pour le chapitre {$INTERPOLATION}",
     "catalog.work.chapters.filter.none": "Cette équipe n'a encore traduit aucun chapitre de cette série.",
     "catalog.work.teams.heading": "Traduit par",
-    "catalog.work.teams.chapters": "{VAR_PLURAL, plural, =0 {0 chapitre} =1 {1 chapitre} other {{INTERPOLATION} chapitres}}"
+    "catalog.work.teams.chapters": "{VAR_PLURAL, plural, =0 {0 chapitre} =1 {1 chapitre} other {{INTERPOLATION} chapitres}}",
+    "catalog.work.facts.otherTitles": "Autres titres",
+    "catalog.work.facts.author": "Auteur",
+    "catalog.work.facts.artist": "Dessin",
+    "catalog.work.facts.year": "Première parution",
+    "catalog.work.facts.language": "Langue d'origine",
+    "catalog.work.facts.audience": "Public",
+    "catalog.work.facts.rating": "Classification"
   }
 }

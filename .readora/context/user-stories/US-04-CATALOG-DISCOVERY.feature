@@ -71,3 +71,17 @@ Feature: Finding a series in the catalog
     Given scanlator "Mina" leads a team that translates "Solo Leveling"
     When "Mina" gives "Solo Leveling" 11 other titles
     Then the edit is refused because a series has at most 10 other titles
+
+  @should @ui
+  Scenario: Series facts on the series page
+    Given "Solo Leveling" has the artist "DUBU", the year 2018, the language Korean and the other title "Na Honjaman Level Up"
+    And nobody filled in its content rating
+    When a reader opens the series "Solo Leveling"
+    Then the page lists the artist, the year, the language and the other title
+    And no content rating is shown
+
+  @should @ui
+  Scenario: A team leader edits the series from the team workspace
+    Given "Mina" leads a team that translates "Solo Leveling"
+    When she opens "Edit series" for "Solo Leveling" in her team workspace and saves the artist "DUBU"
+    Then the series is saved with the artist "DUBU" and she is back on the series page

@@ -90,6 +90,7 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'subscription/cancel', renderMode: RenderMode.Client },
   { path: 'upload', renderMode: RenderMode.Client },
   { path: 'scanlation', renderMode: RenderMode.Client },
+  { path: 'scanlation/series/:workId', renderMode: RenderMode.Client },
   { path: 'scanlation/:projectId', renderMode: RenderMode.Client },
   { path: 'forbidden', renderMode: RenderMode.Client },
   { path: '**', renderMode: RenderMode.Client }

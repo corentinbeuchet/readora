@@ -35,6 +35,8 @@ const FILE_OF_PREFIX = {
   workType: 'labels',
   workStatus: 'labels',
   demographic: 'labels',
+  originalLanguage: 'labels',
+  contentRating: 'labels',
   taskStatus: 'labels',
   scanlationRole: 'labels',
   role: 'labels',

@@ -1,0 +1,32 @@
+@use 'breakpoints' as bp;
+
+.series-form {
+  display: grid;
+  gap: var(--space-4);
+  max-inline-size: 48rem;
+}
+
+// Two fields side by side from a large phone; one per line below.
+.form-row {
+  display: grid;
+  gap: var(--space-4);
+
+  @include bp.from(sm) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.field {
+  margin: 0;
+  min-inline-size: 0;
+}
+
+.field-hint {
+  margin: var(--space-1) 0 0;
+  font-size: var(--fs-sm);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}

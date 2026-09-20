@@ -1,7 +1,8 @@
 import { DestroyRef, Service, computed, inject, signal } from '@angular/core';
-import { form, maxLength, required, validate } from '@angular/forms/signals';
-import { Demographic, Work, WorkStatus, WorkType } from '@app/core/models/catalog';
+import { apply, form, maxLength, required, validate } from '@angular/forms/signals';
+import { Demographic, NO_FACTS_DRAFT, Work, WorkFactsDraft, WorkStatus, WorkType } from '@app/core/models/catalog';
 import { TeamRef } from '@app/core/models/chapter';
+import { WORK_FACTS_SCHEMA } from '@app/shared/forms/work-facts-fields/work-facts-schema';
 import { PageUploadItem, createPreviewUrl, isImageFile, revokePreviewUrl } from './file-utils';
 
 export type UploadStep = 'manga' | 'chapter' | 'pages' | 'review' | 'success';
@@ -58,6 +59,7 @@ export interface UploadDraft {
   demographic: Demographic | '';
   synopsis: string;
   genres: string[];
+  facts: WorkFactsDraft;
   chapterNumber: string;
   chapterTitle: string;
   publishingMode: PublishingMode;
@@ -72,6 +74,7 @@ const NEW_DRAFT: UploadDraft = {
   demographic: '',
   synopsis: '',
   genres: ['Action'],
+  facts: NO_FACTS_DRAFT,
   chapterNumber: '1',
   chapterTitle: '',
   publishingMode: 'DIRECT'
@@ -89,6 +92,7 @@ export class UploadWizard {
     validate(path.title, ({ value }) => (value() && !value().trim() ? { kind: 'required', message: TITLE_REQUIRED } : undefined));
     maxLength(path.title, TITLE_MAX);
     maxLength(path.author, 120);
+    apply(path.facts, WORK_FACTS_SCHEMA);
     maxLength(path.chapterTitle, TITLE_MAX);
     required(path.chapterNumber, { message: CHAPTER_NUMBER_ERROR });
     validate(path.chapterNumber, ({ value }) =>
@@ -104,7 +108,7 @@ export class UploadWizard {
   private readonly _message = signal<string | null>(null);
   readonly message = this._message.asReadonly();
 
-  readonly seriesValid = computed(() => this.form.title().valid() && this.form.author().valid());
+  readonly seriesValid = computed(() => this.form.title().valid() && this.form.author().valid() && this.form.facts().valid());
   readonly chapterValid = computed(() => this.form.chapterNumber().valid() && this.form.chapterTitle().valid());
   readonly pagesValid = computed(() => this.pages().length > 0);
 
