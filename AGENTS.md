@@ -30,7 +30,8 @@ series; teams take chapters from RAW to published). Monorepo:
   The roster belongs to the team (its roles apply to every series the team works on); the tasks belong to the team's
   project for "Readora Demo Saga". `/scanlation` lists my teams and their task boards.
   The catalog also has four US-04 series (Solo Leveling, Omniscient Reader, Horimiya, Berserk; no chapters) to try
-  search and filters.
+  search and filters; Solo Leveling and Berserk have series facts (other titles, artist, year, language, rating).
+  `leader` can edit the page of "Readora Demo Saga" from `/scanlation` ("Edit series").
   Seed file: `backend/readora-infrastructure/src/main/resources/db/seed-local/R__local_seed_accounts.sql`.
   Never enabled with `production` (startup guard).
 

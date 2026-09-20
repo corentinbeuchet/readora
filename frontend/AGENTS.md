@@ -63,6 +63,8 @@
   (model: `scanlation-board-page/scanlation-board-page.ts` `project.update(withTask(...))`).
 - Inside `effect`, wrap writes/reads you don't want tracked in `untracked(...)`. Check `resource.hasValue()` before `value()`.
 - Seeding a form from loaded data must not overwrite in-progress edits: only while pristine (model: `profile-page/profile-form/profile-form.ts`).
+  A form that edits one loaded object gets it as a required input of a child component and seeds its model with
+  `linkedSignal` (model: `scanlation/edit-series-page/series-form/`); the page keeps the loading, error and 404 states.
 
 ## Data access
 - One API service per backend resource in `core/api/*-api.ts`, all built on `ApiClient` (envelope unwrap + `ApiError`).
@@ -118,7 +120,8 @@ breakpoints).
 - Shared UI (`src/app/shared/`) before writing a copy: `app-work-card`, `app-work-card-skeleton`, `app-rail`,
   `app-section-header`, `app-empty-state`, `app-list-card`, `app-icon` (see "Design"), `app-load-error`,
   `app-work-cover` (ngSrc + fallback), `app-dialog` (focus trap, Escape, labelledBy), `timeAgo` pipe,
-  `app-field-errors`, `appAriaInvalid`; shared styles `.work-grid`, `.work-rows`, `.rail-item`, `.skeleton`, `.tab`,
+  `app-field-errors`, `appAriaInvalid`, `app-work-facts-fields` + `WORK_FACTS_SCHEMA` (the optional facts of a
+  series, for any form that creates or edits one: `apply(path.facts, WORK_FACTS_SCHEMA)`); shared styles `.work-grid`, `.work-rows`, `.rail-item`, `.skeleton`, `.tab`,
   `.pager`, `.wizard-*`, `.dialog-actions` in `styles.scss`. A third copy of anything means it should be shared.
   Content projected into a shared component is styled from `styles.scss` (an attribute or class), never `::ng-deep`.
 - Every `<label>` has a control; custom radios/toggles need `role`, `aria-checked/pressed`, and keyboard handlers;
