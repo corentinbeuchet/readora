@@ -85,6 +85,7 @@
     "catalog.works.genres.off": "{$genre} : non filtré",
     "catalog.works.seoTitle": "Catalogue — mangas, manhwas et comics",
     "catalog.works.seoDescription": "Parcourez tous les mangas, manhwas, manhuas et comics publiés sur Readora par les équipes de scantrad.",
-    "catalog.works.surpriseNoMatch": "Aucune série ne correspond à ces filtres."
+    "catalog.works.surpriseNoMatch": "Aucune série ne correspond à ces filtres.",
+    "catalog.work.chapters.teamOf": "Chapitre {$INTERPOLATION} traduit par"
   }
 }

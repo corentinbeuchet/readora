@@ -26,6 +26,7 @@
     "catalog.work.chapters.read": "✓ Read",
     "catalog.work.chapters.nextUp": "Next up",
     "catalog.work.chapters.pages": "{VAR_PLURAL, plural, =1 {1 page} other {{INTERPOLATION} pages}}",
+    "catalog.work.chapters.teamOf": "Chapter {$INTERPOLATION} translated by",
     "catalog.work.chapters.markPrevious": " Mark all previous as read{$START_TAG_SPAN} (before chapter {$INTERPOLATION}){$CLOSE_TAG_SPAN}",
     "catalog.work.ratingsPlaceholder": "Ratings and reviews",
     "catalog.work.libraryError": "Could not update your library. Please try again.",

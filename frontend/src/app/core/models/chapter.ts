@@ -1,6 +1,14 @@
 import { WorkType } from '@app/core/models/catalog';
 
+/** The team credited for a chapter: enough to name it and link to `/teams/:id`. */
+export interface TeamRef {
+  id: string;
+  name: string;
+}
+
 export interface DirectPublishChapterPayload {
+  /** The team the chapter is published for; the server checks that I may publish for it. */
+  teamId: string;
   chapterNumber: string;
   title?: string;
   pages: {
@@ -42,11 +50,10 @@ export interface Chapter {
   title: string;
   status: 'DRAFT' | 'PENDING_REVIEW' | 'PUBLISHED' | 'ARCHIVED';
   pages: PageAsset[];
-  scanlationProjectId: string | null;
   /** Reader view only (`GET /chapters/{id}`): the series, for its title and default reading mode. */
   work: { id: string; title: string; type: WorkType } | null;
-  /** Reader view only: the team credited for the chapter, `null` when it has none. */
-  team: { id: string; name: string } | null;
+  /** Reader view only (`null` elsewhere): the team that translated this version of the chapter. */
+  team: TeamRef | null;
   /** Reader view only: published neighbours, `null` at either end. */
   previousChapterId: string | null;
   nextChapterId: string | null;
@@ -60,4 +67,6 @@ export interface ChapterSummary {
   status: Chapter['status'];
   pageCount: number;
   publishedAt: string | null;
+  /** The team that translated this version of the chapter. */
+  team: TeamRef;
 }

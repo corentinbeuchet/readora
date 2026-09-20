@@ -4,12 +4,13 @@ import { apiErrorMessage } from '@app/core/api/api-client';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { ScanlationApi } from '@app/core/api/scanlation-api';
 import { Work } from '@app/core/models/catalog';
+import { ScanlationProject } from '@app/core/models/scanlation';
 import { DirectPublishChapterPayload } from '@app/core/models/chapter';
 import { PageUploadItem } from './file-utils';
 import { UploadService } from './upload.service';
-import { UploadWizard, parseChapterNumber } from './upload-wizard';
+import { ExistingSeries, UploadWizard, parseChapterNumber } from './upload-wizard';
 
-const NO_PROJECT_ERROR = $localize`:@@upload.publish.noProject:No scanlation project exists for this series yet. Create one from the Scanlation workspace, then publish again.`;
+const NO_PROJECT_ERROR = $localize`:@@upload.publish.noProject:Your team does not work on this series yet. Add the series to your team from My teams, then publish again.`;
 
 /** A failure whose message is written for the user (as opposed to an unexpected exception). */
 class UploadFlowError extends Error {}
@@ -36,10 +37,11 @@ export class PublishFlow {
   /** CDN URL of the uploaded cover, kept so a retry does not upload it again. */
   private uploadedCoverUrl: string | null = null;
 
-  async publish(): Promise<void> {
+  /** @param existing the series and team to publish into; without it the wizard's series is created first */
+  async publish(existing: ExistingSeries | null = null): Promise<void> {
     const wizard = this.wizard;
     const chapterNumber = parseChapterNumber(wizard.draft().chapterNumber);
-    if (!wizard.seriesValid() || !wizard.pagesValid() || chapterNumber === null) {
+    if ((!existing && !wizard.seriesValid()) || !wizard.pagesValid() || chapterNumber === null) {
       wizard.showMessage($localize`:@@upload.publish.incomplete:Please complete all required fields before publishing.`);
       return;
     }
@@ -48,7 +50,7 @@ export class PublishFlow {
     wizard.showMessage(null);
     this.progress.set(5);
     try {
-      const work = await this.ensureWork();
+      const work = existing?.work ?? (await this.ensureWork());
 
       const pending = wizard.pages().filter((p) => p.status !== 'done').length;
       this.progress.set(40);
@@ -70,10 +72,11 @@ export class PublishFlow {
       }
 
       this.progress.set(90);
+      const project = await this.projectOf(work, existing?.team.id ?? (wizard.draft().teamId || null));
       if (wizard.draft().publishingMode === 'DIRECT') {
-        await this.publishDirect(work, uploaded, chapterNumber);
+        await this.publishDirect(work, project, uploaded, chapterNumber);
       } else {
-        await this.createScanlationTask(work, uploaded, chapterNumber);
+        await this.createScanlationTask(project, uploaded, chapterNumber);
       }
 
       this.progress.set(100);
@@ -123,14 +126,28 @@ export class PublishFlow {
         author: draft.author.trim() || undefined,
         demographic: draft.demographic || undefined,
         coverImageUrl: this.uploadedCoverUrl || undefined,
-        genres: draft.genres
+        genres: draft.genres,
+        teamId: draft.teamId || undefined
       })
     );
     this.createdWork.set(work);
     return work;
   }
 
-  private async publishDirect(work: Work, pages: PageUploadItem[], chapterNumber: string): Promise<void> {
+  /**
+   * The task board of the publishing team for this series: the named team's, or the only one of a series that was
+   * just created. Errors propagate: a failed lookup must be reported, not treated as "no project".
+   */
+  private async projectOf(work: Work, teamId: string | null): Promise<ScanlationProject> {
+    const projects = await firstValueFrom(this.catalogApi.listProjects(work.id));
+    const project = teamId ? projects.find((p) => p.teamId === teamId) : projects[0];
+    if (!project) {
+      throw new UploadFlowError(NO_PROJECT_ERROR);
+    }
+    return project;
+  }
+
+  private async publishDirect(work: Work, project: ScanlationProject, pages: PageUploadItem[], chapterNumber: string): Promise<void> {
     this.statusText.set($localize`:@@upload.publish.publishingDirect:Publishing chapter directly to catalog…`);
     const payload: DirectPublishChapterPayload['pages'] = pages.map((p) => ({
       pageNumber: p.pageNumber,
@@ -142,22 +159,21 @@ export class PublishFlow {
       liteCdnUrl: p.liteCdnUrl
     }));
     const chapter = await firstValueFrom(
-      this.catalogApi.directPublishChapter(work.id, { chapterNumber, title: this.wizard.draft().chapterTitle.trim() || undefined, pages: payload })
+      this.catalogApi.directPublishChapter(work.id, {
+        teamId: project.teamId,
+        chapterNumber,
+        title: this.wizard.draft().chapterTitle.trim() || undefined,
+        pages: payload
+      })
     );
     this.createdChapterId.set(chapter.id);
   }
 
-  private async createScanlationTask(work: Work, pages: PageUploadItem[], chapterNumber: string): Promise<void> {
+  private async createScanlationTask(project: ScanlationProject, pages: PageUploadItem[], chapterNumber: string): Promise<void> {
     this.statusText.set($localize`:@@upload.publish.attachingRaw:Attaching RAW package to scanlation workspace…`);
-    // Errors propagate: a failed lookup must be reported, not treated as "no project".
-    const projects = await firstValueFrom(this.catalogApi.listProjects(work.id));
-    const projectId = projects[0]?.id;
-    if (!projectId) {
-      throw new UploadFlowError(NO_PROJECT_ERROR);
-    }
-    this.createdProjectId.set(projectId);
+    this.createdProjectId.set(project.id);
     await firstValueFrom(
-      this.scanlationApi.createTask(projectId, { chapterNumber: Number(chapterNumber), assetUrl: pages[0]?.cdnUrl ?? '', pageCount: pages.length })
+      this.scanlationApi.createTask(project.id, { chapterNumber: Number(chapterNumber), assetUrl: pages[0]?.cdnUrl ?? '', pageCount: pages.length })
     );
   }
 }

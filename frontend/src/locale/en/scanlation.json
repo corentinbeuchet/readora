@@ -14,6 +14,7 @@
     "scanlation.teams.myRoles": "My roles",
     "scanlation.teams.boards": "Task boards",
     "scanlation.teams.boardsNone": "No series yet. A leader adds the first one.",
+    "scanlation.teams.publishChapter": "Publish a chapter{$START_TAG_SPAN} of {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
     "scanlation.teams.series.summary": "Add a series",
     "scanlation.teams.series.label": "Series title",
     "scanlation.teams.series.search": "Search the catalog",

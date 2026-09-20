@@ -69,6 +69,7 @@
     "scanlation.teams.member.submit": "Ajouter à l'équipe",
     "scanlation.teams.member.added": "{$INTERPOLATION} fait partie de l'équipe.",
     "scanlation.teams.series.textRequired": "Saisissez le titre d'une série",
-    "scanlation.teams.member.usernameRequired": "Saisissez son nom d'utilisateur"
+    "scanlation.teams.member.usernameRequired": "Saisissez son nom d'utilisateur",
+    "scanlation.teams.publishChapter": "Publier un chapitre{$START_TAG_SPAN} de {$INTERPOLATION}{$CLOSE_TAG_SPAN}"
   }
 }

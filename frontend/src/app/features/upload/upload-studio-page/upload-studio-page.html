@@ -4,10 +4,27 @@
     <p class="muted" i18n="@@upload.studio.intro">Publish new manga, manhwa, and comics or kick off scanlation workflows.</p>
   </header>
 
+  @if (loadingExisting()) {
+    <p class="muted" role="status" i18n="@@upload.studio.loadingSeries">Loading the series…</p>
+  } @else if (work.error()) {
+    <app-load-error [error]="work.error()" notFound="This series could not be found." i18n-notFound="@@upload.studio.seriesNotFound" (retry)="work.reload()">
+      <ng-container i18n="@@upload.studio.seriesLoadError">Could not load the series.</ng-container>
+      <a actions routerLink="/scanlation" class="btn btn-link" i18n="@@upload.studio.backToTeams">Back to my teams</a>
+    </app-load-error>
+  } @else if (myTeams.error()) {
+    <app-load-error [error]="myTeams.error()" (retry)="myTeams.reload()">
+      <ng-container i18n="@@upload.studio.teamsLoadError">Could not load your teams.</ng-container>
+    </app-load-error>
+  } @else if (notMyTeam()) {
+    <div class="form-error studio-alert" role="alert">
+      <ng-container i18n="@@upload.studio.notMyTeam">You are not on the team this link was made for.</ng-container>
+      <a routerLink="/scanlation" class="btn btn-link" i18n="@@upload.studio.backToTeams">Back to my teams</a>
+    </div>
+  } @else {
   @if (wizard.step() !== 'success') {
     <app-wizard-steps
       [current]="wizard.step()"
-      [mangaValid]="wizard.seriesValid()"
+      [mangaValid]="seriesValid()"
       [chapterValid]="wizard.chapterValid()"
       [pagesValid]="wizard.pagesValid()"
       (stepSelected)="wizard.goTo($event)"
@@ -20,7 +37,7 @@
 
   @switch (wizard.step()) {
     @case ('manga') {
-      <app-series-step />
+      <app-series-step [existing]="existing()" />
     }
     @case ('chapter') {
       <app-chapter-step />
@@ -29,10 +46,11 @@
       <app-pages-step />
     }
     @case ('review') {
-      <app-review-step />
+      <app-review-step [existing]="existing()" />
     }
     @case ('success') {
       <app-upload-success />
     }
+  }
   }
 </section>

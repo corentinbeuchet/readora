@@ -17,7 +17,13 @@
   } @else {
     <ul class="board-list">
       @for (board of team().boards; track board.projectId) {
-        <li><a [routerLink]="['/scanlation', board.projectId]">{{ board.work.title }}</a></li>
+        <li class="board">
+          <a [routerLink]="['/scanlation', board.projectId]">{{ board.work.title }}</a>
+          @if (canPublish()) {
+            <a class="btn btn-sm" routerLink="/upload" [queryParams]="{ workId: board.work.id, teamId: team().id }"
+               i18n="@@scanlation.teams.publishChapter">Publish a chapter<span class="sr-only"> of {{ board.work.title }}</span></a>
+          }
+        </li>
       }
     </ul>
   }

@@ -1,6 +1,7 @@
 import { DestroyRef, Service, computed, inject, signal } from '@angular/core';
 import { form, maxLength, required, validate } from '@angular/forms/signals';
-import { Demographic, WorkStatus, WorkType } from '@app/core/models/catalog';
+import { Demographic, Work, WorkStatus, WorkType } from '@app/core/models/catalog';
+import { TeamRef } from '@app/core/models/chapter';
 import { PageUploadItem, createPreviewUrl, isImageFile, revokePreviewUrl } from './file-utils';
 
 export type UploadStep = 'manga' | 'chapter' | 'pages' | 'review' | 'success';
@@ -41,7 +42,15 @@ export const GENRE_PRESETS = [
 ];
 
 /** What the uploader types in the wizard (files are kept aside: cover and pages). */
+/** An existing series a team publishes a chapter into (`/upload?workId=&teamId=`): no series is created. */
+export interface ExistingSeries {
+  work: Work;
+  team: TeamRef;
+}
+
 export interface UploadDraft {
+  /** One of the teams I lead, for a new series; `''` gives the series a new team of its own. */
+  teamId: string;
   title: string;
   type: WorkType;
   status: WorkStatus;
@@ -55,6 +64,7 @@ export interface UploadDraft {
 }
 
 const NEW_DRAFT: UploadDraft = {
+  teamId: '',
   title: '',
   type: 'MANGA',
   status: 'ONGOING',

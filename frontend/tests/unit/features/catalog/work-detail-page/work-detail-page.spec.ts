@@ -64,7 +64,9 @@ describe('WorkDetailPage', () => {
       chapterNumber: n,
       title: `Chapter ${n}`,
       status: 'PUBLISHED' as const,
-      pageCount: 10
+      pageCount: 10,
+      publishedAt: null,
+      team: { id: 't-shadow', name: 'Shadow Scans' }
     }));
     let lastRequest: TestRequest;
 
@@ -76,6 +78,12 @@ describe('WorkDetailPage', () => {
       thenChapterIsUnread(3);
       thenICanContinueWith('Continue with chapter 2', '/read/c-2');
       thenMyLibraryStatusIs('READING');
+    });
+
+    it('Each chapter of a series names the team that translated it', async () => {
+      await givenIAmOnTheWorkPage({ inLibrary: false, finished: [], next: 'c-1' });
+
+      thenChapterIsCreditedTo(3, 'Chapter 3 translated by Shadow Scans', '/teams/t-shadow');
     });
 
     it('Marking all previous chapters as read', async () => {
@@ -186,6 +194,12 @@ describe('WorkDetailPage', () => {
       expect(lastRequest.request.method).toBe(method);
       expect(lastRequest.request.url).toBe(url);
       if (body !== undefined) expect(lastRequest.request.body).toEqual(body);
+    }
+
+    function thenChapterIsCreditedTo(chapter: number, name: string, href: string): void {
+      const link = fixture.nativeElement.querySelectorAll('.chapter-row')[chapter - 1].querySelector('a.chapter-team') as HTMLAnchorElement;
+      expect(link.textContent!.replace(/\s+/g, ' ').trim()).toBe(name);
+      expect(link.getAttribute('href')).toBe(href);
     }
 
     function chapterLink(chapter: number): HTMLElement {

@@ -46,6 +46,8 @@ export interface CreateWorkPayload {
   demographic?: Demographic;
   coverImageUrl?: string;
   genres: string[];
+  /** One of the teams I lead; left out, the series gets a new team of its own. */
+  teamId?: string;
 }
 
 export interface WorkSummary {

@@ -44,6 +44,18 @@ describe('MyTeamsPage (US-12)', () => {
     thenTheToolsAre([]);
   });
 
+  it('leaders and quality checkers can publish a chapter of a series for the team', async () => {
+    await givenIAmOnMyTeams({ teams: [team({ myRoles: ['QUALITY_CHECKER'] })] });
+
+    thenThereIsALinkTo('/upload?workId=w-1&teamId=t-1');
+  });
+
+  it('other members do not get the publish link', async () => {
+    await givenIAmOnMyTeams({ teams: [team({ myRoles: ['TRANSLATOR'] })] });
+
+    thenThereIsNoLinkTo('/upload?workId=w-1&teamId=t-1');
+  });
+
   it('without a team, says how to get one', async () => {
     await givenIAmOnMyTeams({ teams: [] });
 
@@ -193,6 +205,11 @@ describe('MyTeamsPage (US-12)', () => {
   function thenThereIsALinkTo(href: string): void {
     const links = Array.from(fixture.nativeElement.querySelectorAll('a') as NodeListOf<HTMLAnchorElement>).map((a) => a.getAttribute('href'));
     expect(links).toContain(href);
+  }
+
+  function thenThereIsNoLinkTo(href: string): void {
+    const links = Array.from(fixture.nativeElement.querySelectorAll('a') as NodeListOf<HTMLAnchorElement>).map((a) => a.getAttribute('href'));
+    expect(links).not.toContain(href);
   }
 
   function thenMyRolesAre(labels: string[]): void {

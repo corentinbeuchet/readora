@@ -5,18 +5,29 @@
 
   <div class="review-grid">
     <dl class="review-summary">
-      <div class="review-item">
-        <dt class="label" i18n="@@upload.review.seriesTitle">Series Title:</dt>
-        <dd class="value strong">{{ draft.title }}</dd>
-      </div>
-      <div class="review-item">
-        <dt class="label" i18n="@@upload.review.formatStatus">Format & Status:</dt>
-        <dd class="value">{{ typeLabels[draft.type] }} &bull; {{ statusLabels[draft.status] }}</dd>
-      </div>
-      <div class="review-item">
-        <dt class="label" i18n="@@upload.review.genres">Genres:</dt>
-        <dd class="value">{{ genres() }}</dd>
-      </div>
+      @if (existing(); as target) {
+        <div class="review-item">
+          <dt class="label" i18n="@@upload.review.seriesTitle">Series Title:</dt>
+          <dd class="value strong">{{ target.work.title }}</dd>
+        </div>
+        <div class="review-item">
+          <dt class="label" i18n="@@upload.review.team">Team:</dt>
+          <dd class="value">{{ target.team.name }}</dd>
+        </div>
+      } @else {
+        <div class="review-item">
+          <dt class="label" i18n="@@upload.review.seriesTitle">Series Title:</dt>
+          <dd class="value strong">{{ draft.title }}</dd>
+        </div>
+        <div class="review-item">
+          <dt class="label" i18n="@@upload.review.formatStatus">Format & Status:</dt>
+          <dd class="value">{{ typeLabels[draft.type] }} &bull; {{ statusLabels[draft.status] }}</dd>
+        </div>
+        <div class="review-item">
+          <dt class="label" i18n="@@upload.review.genres">Genres:</dt>
+          <dd class="value">{{ genres() }}</dd>
+        </div>
+      }
       <div class="review-item">
         <dt class="label" i18n="@@upload.review.chapterLabel">Chapter:</dt>
         <dd class="value">
@@ -71,12 +82,16 @@
 
   <div class="wizard-actions">
     <button type="button" class="btn" [disabled]="flow.submitting()" (click)="wizard.goTo('pages')" i18n="@@upload.review.back">&larr; Back</button>
-    <button type="button" class="btn btn-primary btn-publish" [disabled]="flow.submitting()" (click)="flow.publish()">
+    <button type="button" class="btn btn-primary btn-publish" [disabled]="flow.submitting()" (click)="flow.publish(existing())">
       @if (flow.submitting()) {
         <span class="spinner" aria-hidden="true"></span>
         <ng-container i18n="@@upload.review.publishing">Publishing…</ng-container>
       } @else {
-        <ng-container i18n="@@upload.review.publish">Publish Series & Chapter &rarr;</ng-container>
+        @if (existing()) {
+          <ng-container i18n="@@upload.review.publishChapter">Publish chapter &rarr;</ng-container>
+        } @else {
+          <ng-container i18n="@@upload.review.publish">Publish Series & Chapter &rarr;</ng-container>
+        }
       }
     </button>
   </div>

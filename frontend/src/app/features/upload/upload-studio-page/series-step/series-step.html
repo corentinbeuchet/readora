@@ -1,9 +1,34 @@
+@if (existing(); as target) {
+  <div class="card wizard-card">
+    <h2 i18n="@@upload.series.existing.heading">1. Series</h2>
+    <p i18n="@@upload.series.existing.summary">You are publishing a chapter of <strong>{{ target.work.title }}</strong> for the team <strong>{{ target.team.name }}</strong>.</p>
+    <p class="muted" i18n="@@upload.series.existing.hint">Other teams may translate the same series: readers see which team did each chapter.</p>
+    <div class="wizard-actions wizard-actions-end">
+      <button type="button" class="btn btn-primary" (click)="wizard.goTo('chapter')" i18n="@@upload.series.next">
+        Next: Chapter Setup &rarr;
+      </button>
+    </div>
+  </div>
+} @else {
 <div class="card wizard-card">
   <h2 i18n="@@upload.series.heading">1. Manga / Series Information</h2>
   <p class="muted" i18n="@@upload.series.intro">Provide basic metadata and a cover image for readers to discover your work.</p>
 
   <div class="form-layout">
     <div class="form-fields">
+      @if (ledTeams().length > 0) {
+        <div class="field">
+          <label for="manga-team" i18n="@@upload.series.team">Translated by</label>
+          <select id="manga-team" [formField]="form.teamId" aria-describedby="manga-team-hint">
+            <option value="" i18n="@@upload.series.team.new">A new team for this series</option>
+            @for (team of ledTeams(); track team.id) {
+              <option [value]="team.id">{{ team.name }}</option>
+            }
+          </select>
+          <p id="manga-team-hint" class="muted field-hint" i18n="@@upload.series.team.hint">Pick one of the teams you lead to keep all its series together.</p>
+        </div>
+      }
+
       <div class="field">
         <label for="manga-title" i18n="@@upload.series.title">Series Title <span class="required" aria-hidden="true">*</span></label>
         <input id="manga-title" type="text" placeholder="e.g. Solo Leveling, Berserk" i18n-placeholder="@@upload.series.title.placeholder"
@@ -85,3 +110,4 @@
     </button>
   </div>
 </div>
+}

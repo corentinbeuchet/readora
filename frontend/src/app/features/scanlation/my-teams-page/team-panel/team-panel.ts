@@ -5,7 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { TeamsApi } from '@app/core/api/teams-api';
 import { WorkSummary } from '@app/core/models/catalog';
-import { MyTeam, SCANLATION_ROLES, SCANLATION_ROLE_LABELS, ScanlationRole, leadsTeam } from '@app/core/models/scanlation';
+import { MyTeam, SCANLATION_ROLES, SCANLATION_ROLE_LABELS, ScanlationRole, leadsTeam, publishesForTeam } from '@app/core/models/scanlation';
 import { asyncAction } from '@app/core/utils/async-action';
 import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
 import { FieldErrors } from '@app/shared/forms/field-errors';
@@ -29,6 +29,7 @@ export class TeamPanel {
 
   protected readonly roles = SCANLATION_ROLES.map((role) => ({ role, label: SCANLATION_ROLE_LABELS[role] }));
   protected readonly leads = computed(() => leadsTeam(this.team()));
+  protected readonly canPublish = computed(() => publishesForTeam(this.team()));
   protected readonly myRoles = computed(() => this.team().myRoles.map((role) => SCANLATION_ROLE_LABELS[role]));
   private readonly boardWorkIds = computed(() => new Set(this.team().boards.map((board) => board.work.id)));
 

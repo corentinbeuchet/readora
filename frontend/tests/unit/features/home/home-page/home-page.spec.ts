@@ -20,7 +20,7 @@ const HORIMIYA = series('w-hori', 'Horimiya');
 const RANKING: RankedWork[] = [SOLO, ORV, HORIMIYA].map((work, index) => ({ rank: index + 1, work, score: 100 - index, ratings: 0 }));
 
 function release(work: WorkSummary, chapter: string, read = false): Release {
-  return { work, chapterId: `c-${work.id}-${chapter}`, chapterNumber: chapter, chapterTitle: '', publishedAt: FIXED_NOW.toISOString(), read };
+  return { work, team: { id: 't-1', name: 'Shadow Scans' }, chapterId: `c-${work.id}-${chapter}`, chapterNumber: chapter, chapterTitle: '', publishedAt: FIXED_NOW.toISOString(), read };
 }
 
 function lastRead(work: WorkSummary, chapter: string, finished: boolean): HistoryItem {

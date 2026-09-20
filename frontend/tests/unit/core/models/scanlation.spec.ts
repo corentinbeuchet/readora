@@ -1,4 +1,16 @@
-import { MyTeam, ScanlationRole, TaskStatus, WorkflowStage, WorkflowTask, canClaim, canPublish, canSubmit, isAssignedTo, leadsTeam } from '@app/core/models/scanlation';
+import {
+  MyTeam,
+  ScanlationRole,
+  TaskStatus,
+  WorkflowStage,
+  WorkflowTask,
+  canClaim,
+  canPublish,
+  canSubmit,
+  isAssignedTo,
+  leadsTeam,
+  publishesForTeam
+} from '@app/core/models/scanlation';
 
 describe('scanlation task rules', () => {
   let task: WorkflowTask;
@@ -76,6 +88,20 @@ describe('team rules', () => {
 
     thenILeadTheTeam(leads);
   });
+
+  it.each<[ScanlationRole[], boolean]>([
+    [['LEADER'], true],
+    [['QUALITY_CHECKER'], true],
+    [['TRANSLATOR', 'PROOFREADER'], false]
+  ])('with the roles %s I publish the chapters of the team: %s', (myRoles, publishes) => {
+    givenMyRolesAre(myRoles);
+
+    thenIPublishForTheTeam(publishes);
+  });
+
+  function thenIPublishForTheTeam(publishes: boolean): void {
+    expect(publishesForTeam(team)).toBe(publishes);
+  }
 
   function givenMyRolesAre(myRoles: ScanlationRole[]): void {
     team = { id: 't-1', name: 'Moon Scans', description: null, myRoles, boards: [] };

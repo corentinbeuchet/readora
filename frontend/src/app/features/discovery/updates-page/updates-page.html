@@ -31,6 +31,7 @@
               @if (release.chapterTitle) {
                 <span>{{ release.chapterTitle }}</span>
               }
+              <a class="release-team" [routerLink]="['/teams', release.team.id]"><span class="sr-only" i18n="@@discovery.updates.teamOf">{{ release.work.title }} chapter {{ release.chapterNumber }} translated by</span> {{ release.team.name }}</a>
               <time [attr.datetime]="release.publishedAt">{{ release.publishedAt | timeAgo }}</time>
               @if (release.read) {
                 <span class="badge" i18n="@@discovery.updates.read">Read</span>

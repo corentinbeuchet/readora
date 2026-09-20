@@ -50,8 +50,20 @@
   gap: 0.25rem 0.75rem;
 }
 
-.mark-previous {
+.mark-previous,
+.chapter-team {
   font-size: var(--fs-sm);
+}
+
+// Its own link beside the row (a link cannot sit inside the chapter link); 24px tall for touch.
+.chapter-team {
+  flex: 0 0 10rem;
+  display: block;
+  min-block-size: 1.5rem;
+  line-height: 1.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chapter-link {

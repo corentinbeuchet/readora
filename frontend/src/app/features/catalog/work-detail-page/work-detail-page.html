@@ -90,6 +90,7 @@
                   }
                 </span>
               </a>
+              <a class="chapter-team" [routerLink]="['/teams', chapter.team.id]"><span class="sr-only" i18n="@@catalog.work.chapters.teamOf">Chapter {{ chapter.chapterNumber }} translated by</span> {{ chapter.team.name }}</a>
               @if (row.canMarkPrevious) {
                 <button type="button" class="btn btn-sm btn-link mark-previous" [disabled]="library.busy()" (click)="markPreviousAsRead(chapter.id)" i18n="@@catalog.work.chapters.markPrevious">
                   Mark all previous as read<span class="sr-only"> (before chapter {{ chapter.chapterNumber }})</span>

@@ -65,6 +65,11 @@ export function leadsTeam(team: MyTeam): boolean {
   return team.myRoles.includes('LEADER');
 }
 
+/** Leaders and quality checkers publish the team's chapters; the server enforces it too. */
+export function publishesForTeam(team: MyTeam): boolean {
+  return leadsTeam(team) || team.myRoles.includes('QUALITY_CHECKER');
+}
+
 export interface SubmitTaskRequest {
   assetUrl: string;
   pageCount: number;

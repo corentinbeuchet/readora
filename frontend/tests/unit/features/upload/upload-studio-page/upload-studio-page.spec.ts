@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { UploadStudioPage, parseChapterNumber } from '@app/features/upload/upload-studio-page/upload-studio-page';
+import { givenIAmSignedInWith } from '../../../core/auth/auth-fixtures';
 import { API, fail, ok, provideHttpTesting } from '../../../test-utils';
 
 const WORK = { id: 'work-1', title: 'Blue Lock', synopsis: '', type: 'MANGA', status: 'ONGOING', coverImageUrl: '', genres: ['Action'] };
@@ -40,6 +41,12 @@ type PageAnswer = { storageKey: string; cdnUrl: string; liteCdnUrl?: string } | 
  * The studio driven like a user: fields are typed into, buttons clicked, pages added through the file input, and the
  * API answered at the HTTP level. Nothing reads or calls the component's own members.
  */
+/** A team's task board for the series, as `GET /works/{id}/projects` lists it (only what the studio reads). */
+interface Board {
+  id: string;
+  teamId: string;
+}
+
 describe('UploadStudioPage', () => {
   let fixture: ComponentFixture<UploadStudioPage>;
   let http: HttpTestingController;
@@ -178,7 +185,7 @@ describe('UploadStudioPage', () => {
     await whenEveryPageUploads();
     await whenTheChapterIsPublished({ ...CHAPTER, id: 'chap-999', workId: 'work-123' });
 
-    thenThePublishedChapterIncludes({ chapterNumber: '1', title: 'Prologue' });
+    thenThePublishedChapterIncludes({ teamId: 'team-1', chapterNumber: '1', title: 'Prologue' });
     thenTheStepIs(SUCCESS);
     thenTheSuccessLinksAre(['/read/chap-999', '/works/work-123']);
   });
@@ -194,6 +201,109 @@ describe('UploadStudioPage', () => {
 
     // Answered so that no request is left pending.
     await whenCreatingTheSeriesFails('down', 503);
+  });
+
+  describe('publishing for a team (US-12)', () => {
+    const MOON_SCANS = { id: 'team-moon', name: 'Moon Scans', description: null, myRoles: ['LEADER' as const], boards: [] };
+
+    it('publishes a chapter of an existing series for my team, without creating a series', async () => {
+      await givenIOpenedTheStudioFor({ workId: 'work-77', teamId: 'team-moon' }, { series: { ...WORK, id: 'work-77', title: 'Solo Leveling' }, myTeams: [MOON_SCANS] });
+
+      thenTheStepSays('You are publishing a chapter of Solo Leveling for the team Moon Scans.');
+
+      await whenIFillTheChapterAndPages({ number: '5', pages: ['p1.png'] });
+
+      thenTheReviewSummaryShows('Moon Scans');
+
+      await whenIPublishTheChapter();
+      await whenEveryPageUploads();
+      await whenTheChapterIsPublished({ ...CHAPTER, id: 'chap-5', workId: 'work-77' }, [{ id: 'proj-shadow', teamId: 'team-shadow' }, { id: 'proj-moon', teamId: 'team-moon' }]);
+
+      thenThePublishedChapterIncludes({ teamId: 'team-moon', chapterNumber: '5' });
+      thenTheStepIs(SUCCESS);
+    });
+
+    it('refuses a link made for a team I am not on', async () => {
+      await givenIOpenedTheStudioFor({ workId: 'work-77', teamId: 'team-shadow' }, { series: { ...WORK, id: 'work-77' }, myTeams: [MOON_SCANS] });
+
+      thenTheAlertSays('You are not on the team this link was made for.');
+      thenThereIsNoWizard();
+    });
+
+    it('a new series can belong to a team I lead', async () => {
+      await givenILeadTheTeams([MOON_SCANS]);
+      whenIChooseTheTeam('team-moon');
+      await givenIAmOnTheReview({ series: { title: 'Blue Lock' }, chapter: { number: '1' }, pages: ['p1.png'] });
+
+      await whenIPublish();
+      await whenTheSeriesIsCreated(WORK);
+
+      thenTheSeriesWasCreatedForTheTeam('team-moon');
+
+      await whenEveryPageUploads();
+      await whenTheChapterIsPublished(CHAPTER, [{ id: 'proj-moon', teamId: 'team-moon' }]);
+
+      thenThePublishedChapterIncludes({ teamId: 'team-moon' });
+    });
+
+    it('without a team I lead, the series simply gets its own team', async () => {
+      await givenIOpenTheStudio();
+
+      thenThereIsNoTeamChoice();
+    });
+
+    async function givenIOpenedTheStudioFor(link: { workId: string; teamId: string }, server: { series: typeof WORK; myTeams: (typeof MOON_SCANS)[] }): Promise<void> {
+      workId = link.workId;
+      fixture.componentRef.setInput('workId', link.workId);
+      fixture.componentRef.setInput('teamId', link.teamId);
+      await settleStudio();
+      http.expectOne(`${API}/works/${link.workId}`).flush(ok(server.series));
+      http.expectOne(`${API}/teams/mine`).flush(ok(server.myTeams));
+      await settleStudio();
+    }
+
+    async function givenILeadTheTeams(teams: (typeof MOON_SCANS)[]): Promise<void> {
+      await givenIAmSignedInWith(['PROJECT_VIEW', 'WORK_CREATE']);
+      await settleStudio();
+      http.expectOne(`${API}/teams/mine`).flush(ok(teams));
+      await settleStudio();
+    }
+
+    async function whenIFillTheChapterAndPages(chapter: { number: string; pages: string[] }): Promise<void> {
+      clickButton('Next: Chapter Setup');
+      whenITypeTheChapterNumber(chapter.number);
+      whenIGoToThePages();
+      await whenIAddPages(...chapter.pages);
+      whenIGoToTheReview();
+    }
+
+    async function whenIPublishTheChapter(): Promise<void> {
+      clickButton('Publish chapter');
+      await settleStudio();
+    }
+
+    function whenIChooseTheTeam(teamId: string): void {
+      const select = page().querySelector<HTMLSelectElement>('#manga-team')!;
+      select.value = teamId;
+      select.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+    }
+
+    function thenTheStepSays(text: string): void {
+      expect(page().querySelector('.wizard-card')!.textContent!.replace(/\s+/g, ' ')).toContain(text);
+    }
+
+    function thenThereIsNoWizard(): void {
+      expect(page().querySelector('.wizard-card')).toBeNull();
+    }
+
+    function thenThereIsNoTeamChoice(): void {
+      expect(page().querySelector('#manga-team')).toBeNull();
+    }
+
+    function thenTheSeriesWasCreatedForTheTeam(teamId: string): void {
+      expect(workRequest.request.body).toMatchObject({ teamId });
+    }
   });
 
   describe('publish failures and retries (HTTP level)', () => {
@@ -224,6 +334,7 @@ describe('UploadStudioPage', () => {
       await whenTheChapterIsPublished(CHAPTER);
 
       thenThePublishedChapterIs({
+        teamId: 'team-1',
         chapterNumber: '3',
         title: undefined,
         pages: [
@@ -274,10 +385,10 @@ describe('UploadStudioPage', () => {
       await whenEveryPageUploads();
       await whenTheSeriesHasProjects([]);
 
-      thenTheAlertSays('No scanlation project exists');
+      thenTheAlertSays('Your team does not work on this series yet');
 
       await whenIPublish();
-      await whenTheSeriesHasProjects([{ id: 'proj-1' }]);
+      await whenTheSeriesHasProjects([{ id: 'proj-1', teamId: 'team-1' }]);
       await whenTheTaskIsCreated();
 
       thenTheTaskWasCreatedWith({ chapterNumber: 3, assetUrl: 'https://cdn/k0', pageCount: 2 });
@@ -480,7 +591,9 @@ describe('UploadStudioPage', () => {
     await settleStudio();
   }
 
-  async function whenTheChapterIsPublished(chapter: typeof CHAPTER): Promise<void> {
+  /** The publishing team's board is looked up first: the chapter is published for that team. */
+  async function whenTheChapterIsPublished(chapter: typeof CHAPTER, boards: Board[] = [{ id: 'proj-1', teamId: 'team-1' }]): Promise<void> {
+    await whenTheSeriesHasProjects(boards);
     chapterRequest = http.expectOne(`${API}/works/${workId}/chapters/direct`);
     chapterRequest.flush(ok(chapter));
     await settleStudio();
@@ -491,7 +604,7 @@ describe('UploadStudioPage', () => {
     await settleStudio();
   }
 
-  async function whenTheSeriesHasProjects(projects: { id: string }[]): Promise<void> {
+  async function whenTheSeriesHasProjects(projects: Board[]): Promise<void> {
     http.expectOne(`${API}/works/${workId}/projects`).flush(ok(projects));
     await settleStudio();
   }

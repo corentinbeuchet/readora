@@ -1,7 +1,10 @@
+import { TeamRef } from '@app/core/models/chapter';
 import { WorkSummary } from '@app/core/models/catalog';
 
 export interface Release {
   work: WorkSummary;
+  /** The team that translated the chapter. */
+  team: TeamRef;
   chapterId: string;
   chapterNumber: string;
   chapterTitle: string;

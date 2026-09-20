@@ -36,6 +36,7 @@
     "discovery.updates.pager.older": "Plus anciennes →",
     "discovery.updates.readNow.label": "Lire : {$title}, chapitre {$chapter}",
     "discovery.updates.seoTitle": "Dernières sorties",
-    "discovery.updates.seoDescription": "Les derniers chapitres de mangas, manhwas et comics sur Readora."
+    "discovery.updates.seoDescription": "Les derniers chapitres de mangas, manhwas et comics sur Readora.",
+    "discovery.updates.teamOf": "{$INTERPOLATION} chapitre {$INTERPOLATION_1} traduit par"
   }
 }

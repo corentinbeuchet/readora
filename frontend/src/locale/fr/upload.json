@@ -43,7 +43,7 @@
     "upload.pages.intro": " Envoyez plusieurs images de pages ou déposez une archive {$START_TAG_CODE}.zip{$CLOSE_TAG_CODE} / {$START_TAG_CODE}.cbz{$CLOSE_TAG_CODE}. Les pages seront triées dans l'ordre naturel. ",
     "upload.pages.back": "← Retour",
     "upload.pages.next": " Suivant : vérification → ",
-    "upload.publish.noProject": "Aucun projet de scantrad n'existe encore pour cette série. Créez-en un depuis l'espace de scantrad, puis publiez à nouveau.",
+    "upload.publish.noProject": "Votre équipe ne travaille pas encore sur cette série. Ajoutez la série à votre équipe depuis Mes équipes, puis publiez à nouveau.",
     "upload.publish.incomplete": "Remplissez tous les champs obligatoires avant de publier.",
     "upload.publish.uploadingPages": "Envoi de {$count} pages du chapitre…",
     "upload.publish.uploadedPages": "{$completed}/{$total} pages envoyées…",
@@ -126,6 +126,20 @@
     "upload.steps.manga": "Série",
     "upload.steps.chapter": "Chapitre",
     "upload.steps.pages": "Pages",
-    "upload.steps.review": "Vérification et publication"
+    "upload.steps.review": "Vérification et publication",
+    "upload.review.team": "Équipe :",
+    "upload.review.publishChapter": "Publier le chapitre →",
+    "upload.series.existing.heading": "1. Série",
+    "upload.series.existing.summary": "Vous publiez un chapitre de {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG} pour l'équipe {$START_TAG_STRONG}{$INTERPOLATION_1}{$CLOSE_TAG_STRONG}.",
+    "upload.series.existing.hint": "D'autres équipes peuvent traduire la même série : les lecteurs voient quelle équipe a fait chaque chapitre.",
+    "upload.series.team": "Traduit par",
+    "upload.series.team.new": "Une nouvelle équipe pour cette série",
+    "upload.series.team.hint": "Choisissez l'une des équipes que vous dirigez pour garder toutes ses séries ensemble.",
+    "upload.studio.loadingSeries": "Chargement de la série…",
+    "upload.studio.seriesNotFound": "Cette série est introuvable.",
+    "upload.studio.seriesLoadError": "Impossible de charger la série.",
+    "upload.studio.backToTeams": "Retour à mes équipes",
+    "upload.studio.teamsLoadError": "Impossible de charger vos équipes.",
+    "upload.studio.notMyTeam": "Vous ne faites pas partie de l'équipe pour laquelle ce lien a été créé."
   }
 }

@@ -11,6 +11,7 @@ import { API, FIXED_NOW, fail, freezeDate, ok, provideHttpTesting, settle } from
 function release(id: string, title: string, number: string, minutesAgo: number, read = false): Release {
   return {
     work: { id: `w-${title}`, title, type: 'MANGA', status: 'ONGOING', author: null, demographic: null, coverImageUrl: '', genres: [] },
+    team: { id: 't-shadow', name: 'Shadow Scans' },
     chapterId: id,
     chapterNumber: number,
     chapterTitle: '',
@@ -47,6 +48,7 @@ describe('UpdatesPage (US-08)', () => {
     thenTheFeedWasAskedFor({ mine: false });
     thenReleaseShows(1, 'One Piece', '10 minutes ago');
     thenReleaseLinksTo(1, '/read/op-180');
+    thenReleaseIsCreditedTo(1, 'Shadow Scans', '/teams/t-shadow');
     thenThereIsNoFeedChoice();
   });
 
@@ -107,6 +109,12 @@ describe('UpdatesPage (US-08)', () => {
   function thenReleaseShows(position: number, title: string, age: string): void {
     expect(releaseRow(position).textContent).toContain(title);
     expect(releaseRow(position).textContent).toContain(age);
+  }
+
+  function thenReleaseIsCreditedTo(position: number, team: string, href: string): void {
+    const link = releaseRow(position).querySelector('a.release-team')!;
+    expect(link.textContent).toContain(team);
+    expect(link.getAttribute('href')).toBe(href);
   }
 
   function thenReleaseLinksTo(position: number, href: string): void {

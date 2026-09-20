@@ -29,6 +29,7 @@
     "discovery.updates.emptyMine.browse": "Browse the catalog",
     "discovery.updates.empty": "No chapters have been published yet.",
     "discovery.updates.chapter": "Chapter {$INTERPOLATION}",
+    "discovery.updates.teamOf": "{$INTERPOLATION} chapter {$INTERPOLATION_1} translated by",
     "discovery.updates.read": "Read",
     "discovery.updates.readNow": "Read now",
     "discovery.updates.pager.label": "Updates pages",
