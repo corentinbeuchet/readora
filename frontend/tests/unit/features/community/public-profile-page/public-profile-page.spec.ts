@@ -70,7 +70,7 @@ describe('PublicProfilePage (US-12)', () => {
   }
 
   function thenTheCompletedSeriesLinksTo(href: string): void {
-    expect(fixture.nativeElement.querySelector('.plain-list a').getAttribute('href')).toBe(href);
+    expect(fixture.nativeElement.querySelector('app-work-card a').getAttribute('href')).toBe(href);
   }
 
   function thenTheAlertSays(message: string): void {

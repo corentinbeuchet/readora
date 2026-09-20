@@ -6,11 +6,12 @@ import { HasPermissionDirective } from '@app/core/auth/has-permission.directive'
 import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
 import { LoadError } from '@app/shared/ui/load-error';
+import { WorkCard } from '@app/shared/ui/work-card/work-card';
 
 /** A scanlation team's page (US-12): members, series, latest chapters, follow. */
 @Component({
   selector: 'app-team-page',
-  imports: [LoadError, RouterLink, HasPermissionDirective],
+  imports: [LoadError, RouterLink, HasPermissionDirective, WorkCard],
   templateUrl: './team-page.html',
   styleUrl: './team-page.scss'
 })

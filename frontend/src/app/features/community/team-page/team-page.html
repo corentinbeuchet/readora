@@ -9,10 +9,7 @@
   } @else if (team.hasValue() && team.value(); as t) {
     <header class="profile-header">
       <h1>{{ t.name }}</h1>
-      <p class="muted">
-        <ng-container i18n="@@community.team.translates">Translates <a [routerLink]="['/works', t.series.id]">{{ t.series.title }}</a></ng-container>
-        · <ng-container i18n="@@community.team.followers">{followers(), plural, =1 {1 follower} other {{{ followers() }} followers}}</ng-container>
-      </p>
+      <p class="muted" i18n="@@community.team.followers">{followers(), plural, =1 {1 follower} other {{{ followers() }} followers}}</p>
       <button *appHasPermission="'LIBRARY_USE'" type="button" class="btn" [class.btn-primary]="!following()"
               [attr.aria-pressed]="following()" [disabled]="follow.busy()" (click)="toggleFollow()">
         @if (following()) {
@@ -25,6 +22,9 @@
         <p class="form-error" role="alert">{{ message }}</p>
       }
     </header>
+
+    <h2 i18n="@@community.team.series">Translates</h2>
+    <app-work-card class="team-series" [work]="t.series" variant="row" priority />
 
     <h2 i18n="@@community.team.members">Members</h2>
     <ul class="plain-list">

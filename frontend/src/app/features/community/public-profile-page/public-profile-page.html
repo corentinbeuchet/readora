@@ -30,9 +30,9 @@
     @if (p.completedSeries.length === 0) {
       <p class="muted" i18n="@@community.profile.completedNone">None yet.</p>
     } @else {
-      <ul class="plain-list">
+      <ul class="work-grid">
         @for (work of p.completedSeries; track work.id) {
-          <li><a [routerLink]="['/works', work.id]">{{ work.title }}</a></li>
+          <li><app-work-card [work]="work" /></li>
         }
       </ul>
     }

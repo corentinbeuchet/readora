@@ -15,7 +15,7 @@
     "community.team.notFound": "Cette équipe est introuvable.",
     "community.team.loadError": "Impossible de charger l'équipe.",
     "community.team.browse": "Parcourir le catalogue",
-    "community.team.translates": "Traduit {$START_LINK}{$INTERPOLATION}{$CLOSE_LINK}",
+    "community.team.series": "Traduit",
     "community.team.followers": "{VAR_PLURAL, plural, =0 {0 abonné} =1 {1 abonné} other {{INTERPOLATION} abonnés}}",
     "community.team.following": "Abonné",
     "community.team.follow": "Suivre",
