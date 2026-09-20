@@ -53,6 +53,12 @@
 - Read marks, "Next up" and "mark previous as read" follow the chapter **number** (`WorkProgress.finishedChapterNumbers`,
   `nextChapterNumber`): a number can have several teams' versions, listed next to each other by the API. Ids
   (`finishedChapterIds`, `nextChapterId`) only say which version to open.
+- Which team's version opens (US-12): my team for the series when it has the chapter, else the server's choice (the
+  team being read, else the first published). "My team" lives in the browser (`core/reading/PreferredTeamStore`, key
+  `readora.reading.teams`, guests too, so `read/:chapterId` stays prerendered) and is written only when the reader
+  picks a version on purpose (a version link on the series page or in the reader), never by just reading. The rules
+  are the pure functions `groupByNumber`, `pickVersion`, `teamsOf` in `core/models/chapter.ts`; the chapter list's
+  team filter and sort are view operations kept in the URL (`?team=`, `?order=`).
 - After a write, update the resource itself (`resource.set/update(...)`), not a second signal holding a copy
   (model: `scanlation-board-page/scanlation-board-page.ts` `project.update(withTask(...))`).
 - Inside `effect`, wrap writes/reads you don't want tracked in `untracked(...)`. Check `resource.hasValue()` before `value()`.
@@ -102,7 +108,7 @@ breakpoints).
 - Standard async block: loading (`role="status"`) / error + retry / empty / content (model: `works-page.html`); the
   error state is `<app-load-error [error]="r.error()" notFound="…" (retry)="r.reload()">` (a 404 is not a network error).
 - No method calls in `@for` rows and no repeated per-row work: build a view-model with `computed` (model:
-  `work-detail-page.ts` `chapterRows`). Formatting via pipes (`DatePipe`, `DecimalPipe`, `I18nPluralPipe`, `timeAgo`),
+  `work-detail-page/chapter-list/chapter-list.ts` `rows`). Formatting via pipes (`DatePipe`, `DecimalPipe`, `I18nPluralPipe`, `timeAgo`),
   not `toFixed`/plural ternaries/`.join` in templates. Use `$index`/`$first` directly, template literals in bindings.
 - A `[formField]` control listens to the DOM `input` event, selects included: specs dispatch `input` (not only
   `change`) after setting a select's value.
@@ -168,6 +174,11 @@ interface is neutral and the cover art is the colour on the page.
   it; error = `<app-load-error>`.
 - **Sections** of a page: `<app-section-header>` (its "See all" link names the section) or `<app-rail>` for a line
   of tiles: a scrollable list of links with mouse-only arrows, not an ARIA carousel.
+- **Versions of a chapter** (several teams, US-12): one row per chapter number; the row's link opens one version
+  and the other teams are a labelled `<ul>` of plain links beside it ("Also by"), with a disclosure button
+  (`aria-expanded` + `aria-controls`) past three. No menu, tab or listbox role and no heading per row: it is
+  navigation, and a role would promise keyboard behaviour links don't need. Each link's accessible name says the
+  chapter and the team (`.sr-only` prefix). Same pattern in the reader toolbar (model: `chapter-list/`).
 - **Navigation** (US-14): one `<nav aria-label="Primary">` (`shell/primary-nav/`), a bottom tab bar below `lg` and
   header links from `lg`, by CSS only; at most five entries shown at once; the logo is the way home (no "Home" link
   in the header); team tools (scanlation, upload, moderation) live in the account menu. A new section must earn its
