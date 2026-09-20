@@ -3,6 +3,38 @@
   <p class="muted" i18n="@@lists.page.intro">Series picked and annotated by readers.</p>
 
   <ng-container *appHasPermission="'LIBRARY_USE'">
+
+    @if (mine.hasValue() && mine.value().length > 0) {
+      <section aria-labelledby="my-lists-heading">
+        <app-section-header heading="My lists" i18n-heading="@@lists.page.mine.heading" headingId="my-lists-heading" />
+        <ul class="list-cards">
+          @for (list of mine.value(); track list.id) {
+            <li><app-list-card [list]="list" showVisibility /></li>
+          }
+        </ul>
+      </section>
+    }
+  </ng-container>
+
+  <section aria-labelledby="top-lists-heading">
+    <app-section-header heading="Most upvoted" i18n-heading="@@lists.page.top.heading" headingId="top-lists-heading" />
+    @if (top.isLoading()) {
+      <app-work-card-skeleton variant="row" count="4" i18n="@@lists.page.top.loading">Loading lists…</app-work-card-skeleton>
+    } @else if (top.error()) {
+      <app-load-error (retry)="top.reload()"><ng-container i18n="@@lists.page.top.loadError">Could not load the lists.</ng-container></app-load-error>
+    } @else if (top.hasValue() && top.value().length === 0) {
+      <app-empty-state><ng-container i18n="@@lists.page.top.empty">No public lists yet.</ng-container></app-empty-state>
+    } @else if (top.hasValue()) {
+      <ul class="list-cards">
+        @for (list of top.value(); track list.id) {
+          <li><app-list-card [list]="list" /></li>
+        }
+      </ul>
+    }
+  </section>
+
+  <!-- Making a list comes after reading them: the page is about lists first. -->
+  <ng-container *appHasPermission="'LIBRARY_USE'">
     <form class="card form new-list" (submit)="create($event)" novalidate>
       <h2 i18n="@@lists.page.new.heading">New list</h2>
       <div class="field">
@@ -20,35 +52,5 @@
       }
       <button type="submit" class="btn btn-primary" [disabled]="creating.busy()" i18n="@@lists.page.new.submit">Create list</button>
     </form>
-
-    @if (mine.hasValue() && mine.value().length > 0) {
-      <h2 i18n="@@lists.page.mine.heading">My lists</h2>
-      <ul class="list-cards">
-        @for (list of mine.value(); track list.id) {
-          <li class="card">
-            <a [routerLink]="['/lists', list.id]" class="list-title">{{ list.title }}</a>
-            <span class="muted"><ng-container i18n="@@lists.page.seriesCount">{list.items.length, plural, other {{{ list.items.length }} series}}</ng-container> · <ng-container i18n="@@lists.page.visibility">{list.published, select, true {public} other {private}}</ng-container> · ▲ {{ list.upvotes }}</span>
-          </li>
-        }
-      </ul>
-    }
   </ng-container>
-
-  <h2 i18n="@@lists.page.top.heading">Most upvoted</h2>
-  @if (top.isLoading()) {
-    <p class="muted" role="status" i18n="@@lists.page.top.loading">Loading lists…</p>
-  } @else if (top.error()) {
-    <app-load-error (retry)="top.reload()"><ng-container i18n="@@lists.page.top.loadError">Could not load the lists.</ng-container></app-load-error>
-  } @else if (top.hasValue() && top.value().length === 0) {
-    <p class="muted" i18n="@@lists.page.top.empty">No public lists yet.</p>
-  } @else if (top.hasValue()) {
-    <ul class="list-cards">
-      @for (list of top.value(); track list.id) {
-        <li class="card">
-          <a [routerLink]="['/lists', list.id]" class="list-title">{{ list.title }}</a>
-          <span class="muted"><ng-container i18n="@@lists.page.top.by">by {{ list.ownerUsername }}</ng-container> · <ng-container i18n="@@lists.page.seriesCount">{list.items.length, plural, other {{{ list.items.length }} series}}</ng-container> · ▲ {{ list.upvotes }}</span>
-        </li>
-      }
-    </ul>
-  }
 </section>

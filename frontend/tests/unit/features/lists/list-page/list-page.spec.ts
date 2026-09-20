@@ -167,7 +167,7 @@ describe('ListPage (US-05)', () => {
   }
 
   function thenTheListIsNotMarkedPrivate(): void {
-    expect(fixture.nativeElement.querySelector('.badge')).toBeNull();
+    expect(fixture.nativeElement.querySelector('header .badge')).toBeNull();
   }
 
   function thenTheSaveRequestWas(method: string, body: unknown): void {
@@ -208,7 +208,7 @@ describe('ListPage (US-05)', () => {
   }
 
   function listItems(): HTMLElement[] {
-    return Array.from(fixture.nativeElement.querySelectorAll('.list-item'));
+    return Array.from(fixture.nativeElement.querySelectorAll('.list-items > li'));
   }
 
   function button(label: string): HTMLButtonElement | undefined {

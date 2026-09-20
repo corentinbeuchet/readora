@@ -1,29 +1,42 @@
-.list-title {
-  font-weight: var(--fw-semibold);
-  color: inherit;
-}
-
 .list-items {
-  list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  margin: 1rem 0;
+  gap: var(--space-2);
+  margin: var(--space-4) 0;
+  list-style: none;
 }
 
+// The curator's words about a series: readable line length, not muted (it is why the series is here).
+.note {
+  max-inline-size: var(--measure);
+  font-size: var(--fs-sm);
+}
+
+.list-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.upvotes {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+// Edit mode: one row per series with its note field and the remove button.
 .list-item {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: var(--space-3);
+  list-style: none;
 }
 
 .list-item-body {
   flex: 1;
 }
 
-.list-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
+.list-title {
+  font-weight: var(--fw-semibold);
 }

@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { FormField, form, maxLength, required, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import { ListsApi } from '@app/core/api/lists-api';
@@ -9,12 +9,16 @@ import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
 import { FieldErrors } from '@app/shared/forms/field-errors';
 import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
+import { EmptyState } from '@app/shared/ui/empty-state/empty-state';
+import { ListCard } from '@app/shared/ui/list-card/list-card';
 import { LoadError } from '@app/shared/ui/load-error';
+import { SectionHeader } from '@app/shared/ui/section-header/section-header';
+import { WorkCardSkeleton } from '@app/shared/ui/work-card-skeleton/work-card-skeleton';
 
 /** Community lists (US-05): the most upvoted public lists, my lists, and a new-list form. */
 @Component({
   selector: 'app-lists-page',
-  imports: [LoadError, FieldErrors, AriaInvalidDirective, RouterLink, FormField, HasPermissionDirective],
+  imports: [LoadError, FieldErrors, AriaInvalidDirective, FormField, HasPermissionDirective, ListCard, SectionHeader, WorkCardSkeleton, EmptyState],
   templateUrl: './lists-page.html',
   styleUrl: './lists-page.scss'
 })

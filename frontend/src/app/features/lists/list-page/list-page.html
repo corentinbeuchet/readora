@@ -60,9 +60,9 @@
         }
         <div class="list-actions">
           @if (canUpvote() && l.published) {
-            <button type="button" class="btn" [disabled]="action.busy()" (click)="upvote()" i18n="@@lists.list.upvote">▲ Upvote <span class="sr-only">this list</span>({{ l.upvotes }})</button>
+            <button type="button" class="btn" [disabled]="action.busy()" (click)="upvote()"><app-icon name="arrow-big-up" /><ng-container i18n="@@lists.list.upvote">Upvote <span class="sr-only">this list</span>({{ l.upvotes }})</ng-container></button>
           } @else {
-            <span class="muted">▲ {{ l.upvotes }}</span>
+            <span class="muted upvotes"><app-icon name="arrow-big-up" /><span class="sr-only" i18n="@@lists.list.upvotes">Upvotes:</span> {{ l.upvotes }}</span>
           }
           @if (isOwner()) {
             <button type="button" class="btn" (click)="startEditing()" i18n="@@lists.list.editButton">Edit list</button>
@@ -73,18 +73,21 @@
           <p class="form-error" role="alert">{{ message }}</p>
         }
       </header>
-      <ol class="list-items">
-        @for (item of l.items; track item.work.id) {
-          <li class="card list-item">
-            <div class="list-item-body">
-              <a [routerLink]="['/works', item.work.id]" class="list-title">{{ item.work.title }}</a>
-              @if (item.note) {
-                <p>{{ item.note }}</p>
-              }
-            </div>
-          </li>
-        }
-      </ol>
+      @if (l.items.length === 0) {
+        <app-empty-state><ng-container i18n="@@lists.list.empty">This list has no series yet.</ng-container></app-empty-state>
+      } @else {
+        <ol class="work-rows list-items">
+          @for (item of l.items; track item.work.id) {
+            <li>
+              <app-work-card [work]="item.work" variant="row" [priority]="$first">
+                @if (item.note) {
+                  <p cardMeta class="note">{{ item.note }}</p>
+                }
+              </app-work-card>
+            </li>
+          }
+        </ol>
+      }
     }
   }
 </section>

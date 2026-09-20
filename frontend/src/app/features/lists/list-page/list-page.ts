@@ -6,7 +6,10 @@ import { AuthStore } from '@app/core/auth/auth-store';
 import { ReadingList } from '@app/core/models/reading-lists';
 import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
+import { EmptyState } from '@app/shared/ui/empty-state/empty-state';
+import { Icon } from '@app/shared/ui/icon/icon';
 import { LoadError } from '@app/shared/ui/load-error';
+import { WorkCard } from '@app/shared/ui/work-card/work-card';
 
 interface Draft {
   title: string;
@@ -18,7 +21,7 @@ interface Draft {
 /** One list (US-05): readers see and upvote it; the owner edits it and decides when it is public. */
 @Component({
   selector: 'app-list-page',
-  imports: [LoadError, RouterLink],
+  imports: [LoadError, RouterLink, WorkCard, EmptyState, Icon],
   templateUrl: './list-page.html',
   styleUrl: './list-page.scss'
 })
