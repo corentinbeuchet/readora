@@ -22,7 +22,8 @@
       "dom"
     ],
     "types": [
-      "node"
+      "node",
+      "vitest/globals"
     ],
     "paths": {
       "@app/*": [
