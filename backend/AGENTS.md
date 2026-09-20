@@ -43,6 +43,9 @@
   Membership lives on the `Team` (one roster, roles valid for all its series), never on the `ScanlationProject` (a
   team's task board for one series): load the project's team and check there (model: `ScanlationProject.requireMember`,
   `TeamManagementService.requireLeaderOrAdmin`). Several teams may have a project on the same work.
+  A chapter belongs to a team (`Chapter.teamId`, never null): whoever publishes names the team in the request, and
+  the service checks both that the actor may publish for that team and that the team works on the series
+  (`TEAM_NOT_ON_SERIES`). A payload that shows a chapter carries its `TeamCredit` (id + name).
 - Not-found is a dedicated not-found exception → 404. Don't use `DomainValidationException` (400) for missing entities.
 - Use-case signatures take value objects (`ChapterNumber`, `WorkId`), not raw strings. Validation lives in the domain; web only
   pre-validates shape.
@@ -196,7 +199,8 @@ Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = repor
 - R14 `UseCaseTransactions` never sets `readOnly`: query-only use cases run read-write, adapters' `readOnly = true` is ignored.
 - Same sweep as R4 still to do (survey): uncoded reader-visible rules in `WorkManagementService`, `ReaderSocialService`, `SubscriptionService`.
 - R19/R20 (survey) Rankings query: three correlated counts per work; missing indexes `chapter_reads(work_id, read_at)`,
-  `refresh_tokens(expires_at)`, `chapters(scanlation_project_id)`; `%text%` search on unindexed title/author.
+  `refresh_tokens(expires_at)`, `chapters(scanlation_project_id)` (that one became `chapters(team_id, status,
+  published_at)` — fixed 8185f47); `%text%` search on unindexed title/author.
 - R21/R22 (survey) Unbounded lists (chapter comments, work chapters, library list/export, bookmarks); the chapter list
   loads every page row for `pageCount`.
 - R23/R24 (survey) Scanlation "not a member" answers 400 instead of 403; `ProfileController` PUT and
