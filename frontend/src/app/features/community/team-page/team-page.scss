@@ -6,11 +6,6 @@
   }
 }
 
-h2 {
-  font-size: var(--fs-md);
-  margin: 1.25rem 0 0.5rem;
-}
-
 .plain-list {
   list-style: none;
   display: flex;
@@ -29,4 +24,8 @@ h2 {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
+}
+
+app-section-header {
+  margin-block-start: var(--space-6);
 }

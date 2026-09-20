@@ -46,7 +46,7 @@
       }
     </section>
 
-    <h2 i18n="@@community.team.members">Members</h2>
+    <app-section-header heading="Members" i18n-heading="@@community.team.members" />
     <ul class="plain-list">
       @for (member of members(); track member.username) {
         <li class="member">
@@ -58,7 +58,7 @@
       }
     </ul>
 
-    <h2 i18n="@@community.team.latest">Latest chapters</h2>
+    <app-section-header heading="Latest chapters" i18n-heading="@@community.team.latest" />
     @if (t.latestChapters.length === 0) {
       <p class="muted" i18n="@@community.team.latestNone">No chapters published yet.</p>
     } @else {
