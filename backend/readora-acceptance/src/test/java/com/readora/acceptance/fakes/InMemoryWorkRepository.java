@@ -80,7 +80,8 @@ public class InMemoryWorkRepository implements WorkRepositoryPort {
         String text = search.text();
         boolean textMatches = text == null
                 || contains(work.getTitle(), text)
-                || (work.getAuthor() != null && contains(work.getAuthor(), text));
+                || (work.getAuthor() != null && contains(work.getAuthor(), text))
+                || work.getFacts().alternativeTitles().stream().anyMatch(title -> contains(title, text));
         return textMatches
                 && genres.containsAll(search.includedGenres())
                 && search.excludedGenres().stream().noneMatch(genres::contains)

@@ -77,6 +77,14 @@ public class CatalogDiscoveryStepDefinitions {
         }
     }
 
+    @Given("{string} is also known as {string}")
+    public void isAlsoKnownAs(String title, String otherTitle) {
+        Work work = works.byTitle(title);
+        work.describe(work.getTitle(), work.getSynopsis(), work.getType(), work.getStatus(), work.getAuthor(), work.getDemographic(),
+                work.getCoverImageUrl(), work.getGenres(), new WorkFacts(List.of(otherTitle), null, null, null, null), work.getUpdatedAt());
+        works.save(work);
+    }
+
     @When("a reader wants {string} but not {string}")
     public void aReaderWantsButNot(String wanted, String excluded) {
         search(new CatalogQuery(null, Set.of(wanted), Set.of(excluded), Set.of(), Set.of(), Set.of()));

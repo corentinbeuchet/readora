@@ -3,6 +3,7 @@ package com.readora.web.controller;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.work.Demographic;
 import com.readora.domain.work.Work;
+import com.readora.domain.work.WorkFacts;
 import com.readora.domain.work.WorkStatus;
 import com.readora.domain.work.WorkType;
 import com.readora.web.ReadoraApplication;
@@ -14,8 +15,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -88,6 +91,27 @@ class CatalogSearchIntegrationTest {
 
         mockMvc.perform(get("/api/v1/works").param("genre", run).param("q", "0%"))
                 .andExpect(jsonPath("$.data.items[*].title", containsInAnyOrder("Berserk 100% " + run)));
+    }
+
+    @Test
+    @DisplayName("Text search also matches part of another title of the series, once per series and with the right total")
+    void textSearchOnOtherTitles() throws Exception {
+        givenTheSeriesKnownAs("Known As " + run, "Na Honjaman Level Up", "Na Honjaman Rebeleop", "나 혼자만 레벨업");
+
+        whenISearchFor("HONJAMAN")
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.items[*].title", containsInAnyOrder("Known As " + run)));
+        whenISearchFor("혼자만").andExpect(jsonPath("$.data.items[*].title", containsInAnyOrder("Known As " + run)));
+        whenISearchFor("na_honjaman").andExpect(jsonPath("$.data.totalElements").value(0));
+    }
+
+    private void givenTheSeriesKnownAs(String title, String... otherTitles) {
+        workRepository.save(Work.create(title, "", WorkType.MANHWA, WorkStatus.COMPLETED, "Chugong", null, null, Set.of(run),
+                new WorkFacts(List.of(otherTitles), null, null, null, null)));
+    }
+
+    private ResultActions whenISearchFor(String text) throws Exception {
+        return mockMvc.perform(get("/api/v1/works").param("genre", run).param("q", text)).andExpect(status().isOk());
     }
 
     @Test

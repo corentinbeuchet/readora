@@ -132,6 +132,19 @@ class PostgresMigrationTest {
         assertThat(workRepository.findAllGenres()).contains("Action", "PG-run", "Romance");
     }
 
+    @Test
+    @DisplayName("Catalog search by another title (EXISTS on work_alt_titles) runs on PostgreSQL and lists a series once")
+    void catalogSearchByOtherTitleRunsOnPostgres() {
+        WorkFacts knownAs = new WorkFacts(List.of("PG Honjaman Level Up", "PG Honjaman Rebeleop"), null, null, null, null);
+        workRepository.save(Work.create("PG Known As", "", WorkType.MANHWA, WorkStatus.COMPLETED, "Chugong", null, null, Set.of("PG-alt-run"), knownAs));
+
+        var page = workRepository.search(
+                new WorkRepositoryPort.WorkSearch("pg honjaman", Set.of("pg-alt-run"), Set.of(), Set.of(), Set.of(), Set.of()), 0, 10);
+
+        assertThat(page.totalElements()).isEqualTo(1);
+        assertThat(page.items()).singleElement().extracting(Work::getTitle).isEqualTo("PG Known As");
+    }
+
     @Autowired
     private ChapterReadRepositoryAdapter chapterReads;
 

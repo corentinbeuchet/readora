@@ -38,6 +38,13 @@ Feature: Finding a series in the catalog
     When a reader types "miura" in the search box
     Then the suggestions show "Berserk" by "Kentaro Miura"
 
+  # A series is often known by its original or romanised title: the search finds it by any of its other titles too.
+  @should
+  Scenario: Searching by another title of the series
+    Given "Solo Leveling" is also known as "Na Honjaman Level Up"
+    When a reader types "honjaman" in the search box
+    Then the suggestions show "Solo Leveling" by "Chugong"
+
   @ui
   Scenario: Clicking a genre cycles between wanted, excluded and ignored
     When a reader clicks the "Action" genre once

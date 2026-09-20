@@ -17,7 +17,8 @@ import java.util.Locale;
 import java.util.UUID;
 
 /// Catalog search as one SQL query (plus the page count): genre rules are `EXISTS` sub-queries on `work_genres`,
-/// so nothing is filtered in memory and pagination stays correct.
+/// and the text also looks into `work_alt_titles` with an `EXISTS` (a join would repeat a series once per matching
+/// title), so nothing is filtered in memory and pagination stays correct.
 public final class WorkSpecifications {
 
     private static final char LIKE_ESCAPE = '\\';
@@ -33,7 +34,8 @@ public final class WorkSpecifications {
                 String pattern = "%" + escapeLike(text.toLowerCase(Locale.ROOT)) + "%";
                 predicates.add(cb.or(
                         cb.like(cb.lower(root.get("title")), pattern, LIKE_ESCAPE),
-                        cb.like(cb.lower(root.get("author")), pattern, LIKE_ESCAPE)));
+                        cb.like(cb.lower(root.get("author")), pattern, LIKE_ESCAPE),
+                        cb.exists(hasOtherTitleLike(root, query, cb, pattern))));
             }
             inIfPresent(predicates, root.get("workType"), names(search.types()));
             inIfPresent(predicates, root.get("status"), names(search.statuses()));
@@ -55,6 +57,15 @@ public final class WorkSpecifications {
         Expression<String> workGenre = work.join("genres");
         return subquery.select(work.get("id"))
                 .where(cb.equal(work.get("id"), root.get("id")), cb.equal(cb.lower(workGenre), genre));
+    }
+
+    /// `pattern` is already lower-cased and escaped.
+    private static Subquery<UUID> hasOtherTitleLike(Root<WorkJpaEntity> root, CriteriaQuery<?> query, CriteriaBuilder cb, String pattern) {
+        Subquery<UUID> subquery = query.subquery(UUID.class);
+        Root<WorkJpaEntity> work = subquery.from(WorkJpaEntity.class);
+        Expression<String> otherTitle = work.join("alternativeTitles");
+        return subquery.select(work.get("id"))
+                .where(cb.equal(work.get("id"), root.get("id")), cb.like(cb.lower(otherTitle), pattern, LIKE_ESCAPE));
     }
 
     private static void inIfPresent(List<Predicate> predicates, Expression<String> column, List<String> values) {
