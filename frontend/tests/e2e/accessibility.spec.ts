@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from './support/fixtures';
-import { givenMyThemeIs, signUp } from './support/helpers';
+import { PublishingTeam, givenMyThemeIs, signUp } from './support/helpers';
 
 /**
  * axe finds about half of the WCAG issues: this guards against regressions, a manual pass still matters.
@@ -36,6 +36,16 @@ for (const theme of ['light', 'dark'] as const) {
       await thenAxeFindsNoViolations(axe());
     });
 
+    test('a series translated by two teams and the reader of one version have no axe violations', async ({ page, axe, seriesByTwoTeams }) => {
+      await whenIVisit(page, `/works/${seriesByTwoTeams.workId}`);
+
+      await thenAxeFindsNoViolations(axe());
+
+      await whenIOpenTheVersion(page, seriesByTwoTeams.firstTeam, '1');
+
+      await thenAxeFindsNoViolations(axe());
+    });
+
     test('the signed-in header, account menu and notifications have no axe violations', async ({ page, axe }) => {
       await signUp(page, 'a11y');
 
@@ -56,6 +66,12 @@ for (const theme of ['light', 'dark'] as const) {
 async function whenIVisit(page: Page, url: string): Promise<void> {
   await page.goto(url);
   await expect(page.locator('main h1').first()).toBeVisible();
+}
+
+/** Waits for the links to the other teams' versions: they arrive with the chapter. */
+async function whenIOpenTheVersion(page: Page, team: PublishingTeam, chapterNumber: string): Promise<void> {
+  await page.goto(`/read/${team.chapterIds[chapterNumber]}`);
+  await expect(page.getByRole('link', { name: /^Read this chapter by/ })).toBeVisible();
 }
 
 async function whenIOpenTheReaderSettings(page: Page): Promise<void> {

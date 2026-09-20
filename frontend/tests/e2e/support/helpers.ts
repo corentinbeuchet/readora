@@ -79,36 +79,76 @@ async function data<T>(response: Awaited<ReturnType<APIRequestContext['get']>>):
 /** 1×1 transparent PNG: the smallest page image the upload endpoint accepts. */
 const PAGE_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
 
-/**
- * Creates a series with one published chapter of two pages through the API (as the publisher account), so reader
- * tests never depend on what an environment happens to contain.
- */
-export async function publishChapter(request: APIRequestContext): Promise<{ workId: string; title: string; chapterId: string }> {
-  const { accessToken } = await data<{ accessToken: string }>(await request.post(`${API_URL}/auth/login`, { data: PUBLISHER }));
-  const headers = { Authorization: `Bearer ${accessToken}` };
+type Headers = Record<string, string>;
 
+/** A team of a series and the chapters it published there, by chapter number. */
+export interface PublishingTeam {
+  id: string;
+  name: string;
+  chapterIds: Record<string, string>;
+}
+
+async function givenIAmThePublisher(request: APIRequestContext): Promise<Headers> {
+  const { accessToken } = await data<{ accessToken: string }>(await request.post(`${API_URL}/auth/login`, { data: PUBLISHER }));
+  return { Authorization: `Bearer ${accessToken}` };
+}
+
+/** A new series; the API creates its first team with it, led by the publisher. */
+async function createSeries(request: APIRequestContext, headers: Headers): Promise<{ workId: string; title: string; team: PublishingTeam }> {
   const title = `E2E Series ${uniqueSuffix()}`;
   const work = await data<{ id: string }>(
     await request.post(`${API_URL}/works`, { headers, data: { title, synopsis: 'Created by the e2e suite.', type: 'MANGA', status: 'ONGOING', genres: ['Action'] } })
   );
+  const projects = await data<{ teamId: string; teamName: string }[]>(await request.get(`${API_URL}/works/${work.id}/projects`, { headers }));
+  return { workId: work.id, title, team: { id: projects[0].teamId, name: projects[0].teamName, chapterIds: {} } };
+}
 
+/** Publishes a two-page chapter of the series for one team (a chapter always belongs to a team). */
+async function publishChapterFor(request: APIRequestContext, headers: Headers, workId: string, team: PublishingTeam, chapterNumber: string, title: string): Promise<string> {
   const pages = [];
   for (const pageNumber of [1, 2]) {
     const stored = await data<{ storageKey: string; cdnUrl: string }>(
-      await request.post(`${API_URL}/storage/upload?folder=${encodeURIComponent(`scans/${work.id}/c1`)}`, {
+      await request.post(`${API_URL}/storage/upload?folder=${encodeURIComponent(`scans/${workId}/${team.id}/c${chapterNumber}`)}`, {
         headers,
         multipart: { file: { name: `${pageNumber}.png`, mimeType: 'image/png', buffer: PAGE_PNG } }
       })
     );
     pages.push({ pageNumber, storageKey: stored.storageKey, cdnUrl: stored.cdnUrl, width: 1, height: 1 });
   }
-  // A chapter is published for a team: the one created with the series, led by its creator.
-  const projects = await data<{ teamId: string }[]>(await request.get(`${API_URL}/works/${work.id}/projects`, { headers }));
   const chapter = await data<{ id: string }>(
-    await request.post(`${API_URL}/works/${work.id}/chapters/direct`, {
-      headers,
-      data: { teamId: projects[0].teamId, chapterNumber: '1', title: 'The beginning', pages }
-    })
+    await request.post(`${API_URL}/works/${workId}/chapters/direct`, { headers, data: { teamId: team.id, chapterNumber, title, pages } })
   );
-  return { workId: work.id, title, chapterId: chapter.id };
+  team.chapterIds[chapterNumber] = chapter.id;
+  return chapter.id;
+}
+
+/**
+ * Creates a series with one published chapter of two pages through the API (as the publisher account), so reader
+ * tests never depend on what an environment happens to contain.
+ */
+export async function publishChapter(request: APIRequestContext): Promise<{ workId: string; title: string; chapterId: string }> {
+  const headers = await givenIAmThePublisher(request);
+  const series = await createSeries(request, headers);
+  const chapterId = await publishChapterFor(request, headers, series.workId, series.team, '1', 'The beginning');
+  return { workId: series.workId, title: series.title, chapterId };
+}
+
+/**
+ * A series translated by two teams (US-12): the first team published chapters 1, 2 and 3, the second team, which
+ * added the series to its own, chapters 1 and 2. So chapters 1 and 2 have two versions and chapter 3 only one.
+ */
+export async function publishSeriesByTwoTeams(request: APIRequestContext): Promise<{ workId: string; title: string; firstTeam: PublishingTeam; secondTeam: PublishingTeam }> {
+  const headers = await givenIAmThePublisher(request);
+  const series = await createSeries(request, headers);
+  const created = await data<{ id: string; name: string }>(await request.post(`${API_URL}/teams`, { headers, data: { name: `E2E Team ${uniqueSuffix()}` } }));
+  const secondTeam: PublishingTeam = { id: created.id, name: created.name, chapterIds: {} };
+  await data(await request.post(`${API_URL}/teams/${secondTeam.id}/series`, { headers, data: { workId: series.workId } }));
+
+  for (const chapterNumber of ['1', '2', '3']) {
+    await publishChapterFor(request, headers, series.workId, series.team, chapterNumber, `Chapter ${chapterNumber}`);
+  }
+  for (const chapterNumber of ['1', '2']) {
+    await publishChapterFor(request, headers, series.workId, secondTeam, chapterNumber, `Chapter ${chapterNumber}`);
+  }
+  return { workId: series.workId, title: series.title, firstTeam: series.team, secondTeam };
 }

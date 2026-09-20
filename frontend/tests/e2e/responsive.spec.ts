@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
 import { test, expect } from './support/fixtures';
-import { thenNoNavigationLabelIsClipped } from './support/helpers';
+import { PublishingTeam, thenNoNavigationLabelIsClipped } from './support/helpers';
 
 const VIEWPORTS = [
   { name: 'small phone', width: 320, height: 640 },
@@ -28,6 +28,20 @@ test.describe('Responsive layout', () => {
       await thenThePageDoesNotScrollSideways(page, 'the reader');
     });
   }
+
+  test('a series translated by two teams fits a small phone, with chapter controls of at least 24px', async ({ page, seriesByTwoTeams }) => {
+    await givenMyScreenIs(page, VIEWPORTS[0]);
+
+    await whenIVisit(page, `/works/${seriesByTwoTeams.workId}`);
+
+    await thenThePageDoesNotScrollSideways(page, 'the series page');
+    await thenEveryControlIsAtLeast24px(page, 'app-chapter-list');
+
+    await whenIOpenTheVersion(page, seriesByTwoTeams.firstTeam, '1');
+
+    await thenThePageDoesNotScrollSideways(page, 'the reader');
+    await thenEveryControlIsAtLeast24px(page, 'app-reader-toolbar');
+  });
 
   test('on a phone the navigation is a tab bar at the bottom of the screen', async ({ page }) => {
     await givenMyScreenIs(page, VIEWPORTS[1]);
@@ -87,6 +101,12 @@ async function whenIOpenTheChapter(page: Page, chapter: { chapterId: string; wor
   await page.goto(`/read/${chapter.chapterId}`);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('The beginning');
   await expect(page.getByRole('link', { name: /^Translated by/ }).or(page.locator(`a[href="/works/${chapter.workId}"]`)).first()).toBeVisible();
+}
+
+/** Waits for the links to the other teams' versions: they arrive with the chapter. */
+async function whenIOpenTheVersion(page: Page, team: PublishingTeam, chapterNumber: string): Promise<void> {
+  await page.goto(`/read/${team.chapterIds[chapterNumber]}`);
+  await expect(page.getByRole('link', { name: /^Read this chapter by/ })).toBeVisible();
 }
 
 async function whenIChooseTheLink(page: Page, name: string): Promise<void> {

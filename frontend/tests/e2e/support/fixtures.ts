@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test as base } from '@playwright/test';
-import { publishChapter } from './helpers';
+import { publishChapter, publishSeriesByTwoTeams } from './helpers';
 
 /**
  * Readora's `test`: Playwright fixtures are the "Given" step. A fixture only runs for the tests that ask for it, and
@@ -9,11 +9,16 @@ import { publishChapter } from './helpers';
 export const test = base.extend<{
   /** A new series with one published two-page chapter, created through the API for this test only. */
   publishedChapter: Awaited<ReturnType<typeof publishChapter>>;
+  /** A new series translated by two teams (US-12): chapters 1 and 2 in two versions, chapter 3 by the first team only. */
+  seriesByTwoTeams: Awaited<ReturnType<typeof publishSeriesByTwoTeams>>;
   /** An axe scan of the current page against WCAG 2.0/2.1/2.2 A and AA (`await axe().analyze()`). */
   axe: () => AxeBuilder;
 }>({
   publishedChapter: async ({ request }, use) => {
     await use(await publishChapter(request));
+  },
+  seriesByTwoTeams: async ({ request }, use) => {
+    await use(await publishSeriesByTwoTeams(request));
   },
   axe: async ({ page }, use) => {
     await use(() => new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']));
