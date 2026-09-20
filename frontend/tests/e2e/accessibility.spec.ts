@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from './support/fixtures';
-import { PublishingTeam, givenMyThemeIs, signUp } from './support/helpers';
+import { PublishingTeam, givenIAmLoggedInAsThePublisher, givenMyThemeIs, signUp } from './support/helpers';
 
 /**
  * axe finds about half of the WCAG issues: this guards against regressions, a manual pass still matters.
@@ -46,6 +46,18 @@ for (const theme of ['light', 'dark'] as const) {
       await thenAxeFindsNoViolations(axe());
     });
 
+    test('a series with facts and the form that edits them have no axe violations', async ({ page, axe, seriesWithFacts }) => {
+      await whenIVisit(page, `/works/${seriesWithFacts.workId}`);
+
+      await thenAxeFindsNoViolations(axe());
+
+      await givenIAmLoggedInAsThePublisher(page);
+      await whenIVisit(page, `/scanlation/series/${seriesWithFacts.workId}`);
+      await whenISaveAYearThatIsNotAYear(page);
+
+      await thenAxeFindsNoViolations(axe());
+    });
+
     test('the signed-in header, account menu and notifications have no axe violations', async ({ page, axe }) => {
       await signUp(page, 'a11y');
 
@@ -72,6 +84,13 @@ async function whenIVisit(page: Page, url: string): Promise<void> {
 async function whenIOpenTheVersion(page: Page, team: PublishingTeam, chapterNumber: string): Promise<void> {
   await page.goto(`/read/${team.chapterIds[chapterNumber]}`);
   await expect(page.getByRole('link', { name: /^Read this chapter by/ })).toBeVisible();
+}
+
+/** The form is scanned with an error showing: the state with the most ARIA in it. */
+async function whenISaveAYearThatIsNotAYear(page: Page): Promise<void> {
+  await page.getByLabel('First published (year)').fill('19');
+  await page.getByRole('button', { name: 'Save the series' }).click();
+  await expect(page.getByLabel('First published (year)')).toHaveAttribute('aria-invalid', 'true');
 }
 
 async function whenIOpenTheReaderSettings(page: Page): Promise<void> {

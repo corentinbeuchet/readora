@@ -94,10 +94,13 @@ async function givenIAmThePublisher(request: APIRequestContext): Promise<Headers
 }
 
 /** A new series; the API creates its first team with it, led by the publisher. */
-async function createSeries(request: APIRequestContext, headers: Headers): Promise<{ workId: string; title: string; team: PublishingTeam }> {
+async function createSeries(request: APIRequestContext, headers: Headers, facts?: object): Promise<{ workId: string; title: string; team: PublishingTeam }> {
   const title = `E2E Series ${uniqueSuffix()}`;
   const work = await data<{ id: string }>(
-    await request.post(`${API_URL}/works`, { headers, data: { title, synopsis: 'Created by the e2e suite.', type: 'MANGA', status: 'ONGOING', genres: ['Action'] } })
+    await request.post(`${API_URL}/works`, {
+      headers,
+      data: { title, synopsis: 'Created by the e2e suite.', type: 'MANGA', status: 'ONGOING', genres: ['Action'], facts }
+    })
   );
   const projects = await data<{ teamId: string; teamName: string }[]>(await request.get(`${API_URL}/works/${work.id}/projects`, { headers }));
   return { workId: work.id, title, team: { id: projects[0].teamId, name: projects[0].teamName, chapterIds: {} } };
@@ -131,6 +134,26 @@ export async function publishChapter(request: APIRequestContext): Promise<{ work
   const series = await createSeries(request, headers);
   const chapterId = await publishChapterFor(request, headers, series.workId, series.team, '1', 'The beginning');
   return { workId: series.workId, title: series.title, chapterId };
+}
+
+/** The facts `publishSeriesWithFacts` gives its series (US-04); the content rating is left out on purpose. */
+export const E2E_FACTS = { alternativeTitles: ['Shin no Nakama', 'The True Companion'], artist: 'E2E Artist', releaseYear: 2019, originalLanguage: 'JAPANESE' };
+
+/** A series created with `E2E_FACTS` and one published chapter, led by the publisher account (US-04). */
+export async function publishSeriesWithFacts(request: APIRequestContext): Promise<{ workId: string; title: string }> {
+  const headers = await givenIAmThePublisher(request);
+  const series = await createSeries(request, headers, E2E_FACTS);
+  await publishChapterFor(request, headers, series.workId, series.team, '1', 'The beginning');
+  return { workId: series.workId, title: series.title };
+}
+
+/** Logs in through the UI as the publisher account: the leader of the team of every series the helpers create. */
+export async function givenIAmLoggedInAsThePublisher(page: Page): Promise<void> {
+  await page.goto('/login');
+  await page.getByLabel('Email').fill(PUBLISHER.email);
+  await page.getByLabel('Password').fill(PUBLISHER.password);
+  await page.getByRole('button', { name: 'Log in' }).click();
+  await expect(page.getByRole('button', { name: 'Account menu' })).toBeVisible();
 }
 
 /**
