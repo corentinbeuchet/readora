@@ -40,6 +40,9 @@
   connection. `InvalidCredentialsException` commits (security side effects stick).
   Validate/mutate all aggregates in memory before the first save. External calls (Stripe) must be idempotent.
 - Every write on a resource checks ownership/membership, not just the global permission (e.g. publisher must belong to the work's project).
+  Membership lives on the `Team` (one roster, roles valid for all its series), never on the `ScanlationProject` (a
+  team's task board for one series): load the project's team and check there (model: `ScanlationProject.requireMember`,
+  `TeamManagementService.requireLeaderOrAdmin`). Several teams may have a project on the same work.
 - Not-found is a dedicated not-found exception → 404. Don't use `DomainValidationException` (400) for missing entities.
 - Use-case signatures take value objects (`ChapterNumber`, `WorkId`), not raw strings. Validation lives in the domain; web only
   pre-validates shape.
@@ -51,6 +54,12 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 
 ## Persistence
 - Every schema change = new Flyway migration in `readora-infrastructure/src/main/resources/db/migration`. Never edit an applied one.
+  Migrations also run on H2 (PostgreSQL mode) in tests: name every constraint you create, don't drop a constraint by
+  its generated name (they differ per database: rebuild the table instead, model `V17__teams.sql`), and no expression
+  indexes (model: `teams.name_key` in `V18`). A migration that moves data gets a Testcontainers test that migrates
+  to the previous version, inserts rows, then migrates (model: `TeamsMigrationTest`).
+- `teams.id` equals the old project id for every team that existed before V17 (links and follows kept working);
+  teams and projects created since have unrelated ids. `TeamId` and `ProjectId` are never interchangeable in code.
 - Entity column lengths == DTO `@Size` limits == migration column sizes.
 - Aggregate entities carry `@Version`. Adapters call `OptimisticLocking.verify(...)` before copying state, save with
   `OptimisticLocking.flush(..., saveAndFlush)` and `restoreVersion` after; conflicts surface as

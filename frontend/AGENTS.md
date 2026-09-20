@@ -47,6 +47,9 @@
   only `set` / `update`. Keep transformations pure.
 - **Never use `effect` to copy or sync state** (resource -> signal, prefs -> state, input -> form): derive it with
   `computed`/`linkedSignal`. Effects are for non-signal side effects (SEO/head, DOM APIs, recording a visit).
+- A list that reloads after a write keeps its rows mounted: show the loading state for `status() === 'loading'`,
+  not `isLoading()` (true while reloading too), or open disclosures and confirmations inside the rows are lost
+  (model: `my-teams-page.html`).
 - After a write, update the resource itself (`resource.set/update(...)`), not a second signal holding a copy
   (model: `scanlation-board-page/scanlation-board-page.ts` `project.update(withTask(...))`).
 - Inside `effect`, wrap writes/reads you don't want tracked in `untracked(...)`. Check `resource.hasValue()` before `value()`.
@@ -98,6 +101,8 @@ breakpoints).
 - No method calls in `@for` rows and no repeated per-row work: build a view-model with `computed` (model:
   `work-detail-page.ts` `chapterRows`). Formatting via pipes (`DatePipe`, `DecimalPipe`, `I18nPluralPipe`, `timeAgo`),
   not `toFixed`/plural ternaries/`.join` in templates. Use `$index`/`$first` directly, template literals in bindings.
+- A `[formField]` control listens to the DOM `input` event, selects included: specs dispatch `input` (not only
+  `change`) after setting a select's value.
 - Forms: Signal Forms (`@angular/forms/signals`), validators in the schema (no `required`/`maxlength` attributes on
   `[formField]`, NG8022); per field `[appAriaInvalid]="f.x"` + `aria-describedby` and
   `<app-field-errors id="…-error" [field]="f.x" />` (`shared/forms/`). Ids must be unique — never a static id inside `@for`.

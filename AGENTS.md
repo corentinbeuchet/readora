@@ -27,6 +27,8 @@ series; teams take chapters from RAW to published). Monorepo:
   `reader` (free), `premium` (PREMIUM until 2099), `admin`, `moderator` (comment moderation queue at `/moderation`),
   and the "Readora Demo Team" scanlators `leader`, `cleaner`,
   `translator`, `typesetter`, `proofreader`, `quality` (QC) with one open task per stage (chapters 1–5; QC can publish ch. 5).
+  The roster belongs to the team (its roles apply to every series the team works on); the tasks belong to the team's
+  project for "Readora Demo Saga". `/scanlation` lists my teams and their task boards.
   The catalog also has four US-04 series (Solo Leveling, Omniscient Reader, Horimiya, Berserk; no chapters) to try
   search and filters.
   Seed file: `backend/readora-infrastructure/src/main/resources/db/seed-local/R__local_seed_accounts.sql`.
