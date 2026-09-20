@@ -102,8 +102,13 @@ export async function publishChapter(request: APIRequestContext): Promise<{ work
     );
     pages.push({ pageNumber, storageKey: stored.storageKey, cdnUrl: stored.cdnUrl, width: 1, height: 1 });
   }
+  // A chapter is published for a team: the one created with the series, led by its creator.
+  const projects = await data<{ teamId: string }[]>(await request.get(`${API_URL}/works/${work.id}/projects`, { headers }));
   const chapter = await data<{ id: string }>(
-    await request.post(`${API_URL}/works/${work.id}/chapters/direct`, { headers, data: { chapterNumber: '1', title: 'The beginning', pages } })
+    await request.post(`${API_URL}/works/${work.id}/chapters/direct`, {
+      headers,
+      data: { teamId: projects[0].teamId, chapterNumber: '1', title: 'The beginning', pages }
+    })
   );
   return { workId: work.id, title, chapterId: chapter.id };
 }
