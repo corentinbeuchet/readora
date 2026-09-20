@@ -9,8 +9,15 @@
   margin-block: var(--space-3);
 }
 
+// A select is as wide as its longest option: a long team name must not push the page sideways on a phone.
 .team-filter {
   margin: 0;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+
+  select {
+    max-inline-size: 100%;
+  }
 }
 
 .sort {
