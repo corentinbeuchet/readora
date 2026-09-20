@@ -46,6 +46,11 @@
   A chapter belongs to a team (`Chapter.teamId`, never null): whoever publishes names the team in the request, and
   the service checks both that the actor may publish for that team and that the team works on the series
   (`TEAM_NOT_ON_SERIES`). A payload that shows a chapter carries its `TeamCredit` (id + name).
+- A chapter number may exist in several teams' versions (unique per `(work, number, team)`). Anything about "the
+  chapters of a series" goes through `domain.work.ReadingOrder`: progress, "N new", notifications and profile counts
+  follow the **number** (any version read = chapter read; only the first version published is news), next/previous
+  stay with the team being read (`pick(number, team)`), and a lookup by number always names the team. Never assume
+  one row per number, in SQL or in a fake.
 - Not-found is a dedicated not-found exception → 404. Don't use `DomainValidationException` (400) for missing entities.
 - Use-case signatures take value objects (`ChapterNumber`, `WorkId`), not raw strings. Validation lives in the domain; web only
   pre-validates shape.
@@ -202,7 +207,8 @@ Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = repor
   `refresh_tokens(expires_at)`, `chapters(scanlation_project_id)` (that one became `chapters(team_id, status,
   published_at)` — fixed 8185f47); `%text%` search on unindexed title/author.
 - R21/R22 (survey) Unbounded lists (chapter comments, work chapters, library list/export, bookmarks); the chapter list
-  loads every page row for `pageCount`.
+  loads every page row for `pageCount`. The chapter list now has one item per team version: when it gets paginated,
+  paginate by chapter number on the server, so the versions of a number never split across pages.
 - R23/R24 (survey) Scanlation "not a member" answers 400 instead of 403; `ProfileController` PUT and
   `SubscriptionController` checkout/cancel lack `@PreAuthorize`; `/api/v1/auth/me` sits under a `permitAll` prefix.
 - R25/R27/R28 (survey) Stripe calls inside the DB transaction; 9 of 19 application services without unit tests

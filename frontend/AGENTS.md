@@ -50,6 +50,9 @@
 - A list that reloads after a write keeps its rows mounted: show the loading state for `status() === 'loading'`,
   not `isLoading()` (true while reloading too), or open disclosures and confirmations inside the rows are lost
   (model: `my-teams-page.html`).
+- Read marks, "Next up" and "mark previous as read" follow the chapter **number** (`WorkProgress.finishedChapterNumbers`,
+  `nextChapterNumber`): a number can have several teams' versions, listed next to each other by the API. Ids
+  (`finishedChapterIds`, `nextChapterId`) only say which version to open.
 - After a write, update the resource itself (`resource.set/update(...)`), not a second signal holding a copy
   (model: `scanlation-board-page/scanlation-board-page.ts` `project.update(withTask(...))`).
 - Inside `effect`, wrap writes/reads you don't want tracked in `untracked(...)`. Check `resource.hasValue()` before `value()`.
