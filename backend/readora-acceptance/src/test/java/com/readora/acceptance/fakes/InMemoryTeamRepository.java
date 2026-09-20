@@ -1,6 +1,7 @@
 package com.readora.acceptance.fakes;
 
 import com.readora.application.port.out.TeamRepositoryPort;
+import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamId;
 
@@ -22,6 +23,16 @@ public class InMemoryTeamRepository implements TeamRepositoryPort {
     @Override
     public List<Team> findAllById(Collection<TeamId> ids) {
         return ids.stream().distinct().flatMap(id -> findById(id).stream()).toList();
+    }
+
+    @Override
+    public List<Team> findByMember(UserId userId) {
+        return teams.values().stream().filter(team -> team.findMember(userId).isPresent()).toList();
+    }
+
+    @Override
+    public boolean existsByName(String name) {
+        return teams.values().stream().anyMatch(team -> team.getName().equalsIgnoreCase(name));
     }
 
     /// Like the JPA adapter: the returned object is rebuilt from state and carries no pending events.

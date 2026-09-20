@@ -11,6 +11,7 @@ import com.readora.application.port.in.ManageLibraryUseCase;
 import com.readora.application.port.in.ManageListsUseCase;
 import com.readora.application.port.in.ManageProfileUseCase;
 import com.readora.application.port.in.ManageScanlationTaskUseCase;
+import com.readora.application.port.in.ManageTeamUseCase;
 import com.readora.application.port.in.ManageSubscriptionUseCase;
 import com.readora.application.port.in.ManageWorkUseCase;
 import com.readora.application.port.in.ModerateCommentsUseCase;
@@ -39,6 +40,7 @@ import com.readora.application.service.ReaderSocialService;
 import com.readora.application.service.ReadingTrackerService;
 import com.readora.application.service.ScanlationTaskService;
 import com.readora.application.service.SubscriptionService;
+import com.readora.application.service.TeamManagementService;
 import com.readora.application.service.WorkManagementService;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -224,6 +226,13 @@ public class DomainServiceConfig {
     @Bean
     public ManageListsUseCase manageListsUseCase(ReadingListRepositoryPort lists, WorkRepositoryPort works) {
         return transactional(new ReadingListService(lists, works, Clock.systemUTC()), ManageListsUseCase.class, transactionManager);
+    }
+
+    @Bean
+    public ManageTeamUseCase manageTeamUseCase(TeamRepositoryPort teams, ScanlationProjectRepositoryPort projects, WorkRepositoryPort works,
+                                               UserAccountRepositoryPort users) {
+        return transactional(new TeamManagementService(teams, projects, works, users, Clock.systemUTC()), ManageTeamUseCase.class,
+                transactionManager);
     }
 
     @Bean

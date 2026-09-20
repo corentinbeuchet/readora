@@ -2,6 +2,8 @@ package com.readora.domain.scanlation;
 
 import com.readora.domain.common.AggregateRoot;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
+import com.readora.domain.common.NotFoundException;
 import com.readora.domain.common.UserId;
 import org.jspecify.annotations.Nullable;
 
@@ -65,11 +67,43 @@ public class Team extends AggregateRoot<TeamId> {
         return trimmed;
     }
 
+    /// Adds a member, or replaces the roles of an existing one.
+    ///
+    /// @throws DomainValidationException if the member has no role, or with the code `LAST_LEADER` if the change
+    ///         would leave the team without a leader
     public void addMember(TeamMember member) {
         Objects.requireNonNull(member, "TeamMember cannot be null");
+        if (member.roles().isEmpty()) {
+            throw new DomainValidationException("A team member needs at least one role");
+        }
+        if (!member.roles().contains(ScanlationRole.LEADER)) {
+            requireAnotherLeader(member.userId());
+        }
         this.members.remove(member);
         this.members.add(member);
         this.updatedAt = Instant.now();
+    }
+
+    /// @throws NotFoundException if the user is not on the team
+    /// @throws DomainValidationException `LAST_LEADER` if the team would be left without a leader
+    public void removeMember(UserId userId) {
+        TeamMember member = findMember(userId).orElseThrow(() -> new NotFoundException("Team member", userId));
+        requireAnotherLeader(userId);
+        this.members.remove(member);
+        this.updatedAt = Instant.now();
+    }
+
+    public boolean isLeader(UserId userId) {
+        return findMember(userId).filter(member -> member.roles().contains(ScanlationRole.LEADER)).isPresent();
+    }
+
+    /// Guards a change that takes the leader role away from `userId` (a no-op for someone who is not a leader).
+    private void requireAnotherLeader(UserId userId) {
+        boolean leadsToday = isLeader(userId);
+        boolean someoneElseLeads = members.stream().anyMatch(m -> !m.userId().equals(userId) && m.roles().contains(ScanlationRole.LEADER));
+        if (leadsToday && !someoneElseLeads) {
+            throw DomainValidationException.withCode(ErrorCodes.LAST_LEADER, "Team " + name + " must keep at least one leader");
+        }
     }
 
     public Optional<TeamMember> findMember(UserId userId) {

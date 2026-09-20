@@ -33,6 +33,42 @@ Feature: Community and scanlation teams
     When a reader opens the page of the team "Shadow Scans"
     Then each series is a card with the number of chapters the team published
 
+  # Inspired by: MangaDex groups (anyone who uploads can start a group; a group works on many titles)
+  @should
+  Scenario: A scanlator creates a team
+    When scanlator "Mina" creates the team "Moon Scans"
+    Then "Mina" is the leader of "Moon Scans"
+    And the page of the team "Moon Scans" lists no series yet
+
+  @should
+  Scenario: A team name is taken only once
+    Given scanlator "Mina" leads the team "Moon Scans"
+    When scanlator "Ravi" creates the team "moon scans"
+    Then the team is refused because the name is taken
+
+  @should
+  Scenario: A team leader adds an existing series to their team
+    Given "Solo Leveling" is already translated by the team "Shadow Scans"
+    And scanlator "Mina" leads the team "Moon Scans"
+    When "Mina" adds the series "Solo Leveling" to "Moon Scans"
+    Then "Moon Scans" has its own task board for "Solo Leveling"
+    And the page of the team "Moon Scans" lists the series "Solo Leveling"
+
+  @should
+  Scenario: Only a leader can add a series or a member
+    Given scanlator "Mina" leads the team "Moon Scans"
+    And "Mina" added "Bob" to "Moon Scans" as "TRANSLATOR"
+    When "Bob" tries to add the series "Solo Leveling" to "Moon Scans"
+    Then the team refuses what "Bob" asked
+    When "Bob" tries to add "Aoi" to "Moon Scans" as "PROOFREADER"
+    Then the team refuses what "Bob" asked
+
+  @should
+  Scenario: A team always keeps a leader
+    Given scanlator "Mina" leads the team "Moon Scans"
+    When "Mina" tries to leave "Moon Scans"
+    Then the team refuses because it would have no leader
+
   # Inspired by: MangaDex
   @could @wip
   Scenario: Several teams translated the same chapter

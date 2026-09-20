@@ -147,7 +147,7 @@ class SecurityRulesIntegrationTest extends AuthTestSupport {
         mockMvc.perform(get("/api/v1/bookmarks").header("Authorization", reader.bearer()))
                 .andExpect(status().isForbidden());
 
-        Team team = teamRepository.save(Team.create("Team Tower", null, UserId.of("leader-1")));
+        Team team = teamRepository.save(Team.create("Team Tower " + java.util.UUID.randomUUID(), null, UserId.of("leader-1")));
         ScanlationProject project = ScanlationProject.create("Team Tower", work.getId(), team.getId());
         WorkflowTask task = project.addChapterTask(ChapterNumber.of("2"));
         project = projectRepository.save(project);
@@ -166,7 +166,7 @@ class SecurityRulesIntegrationTest extends AuthTestSupport {
     void scanlatorPassesGateButDomainRulesStillApply() throws Exception {
         Session scanlator = registerScanlator();
 
-        Team team = teamRepository.save(Team.create("Team Tower", null, UserId.of("leader-2")));
+        Team team = teamRepository.save(Team.create("Team Tower " + java.util.UUID.randomUUID(), null, UserId.of("leader-2")));
         ScanlationProject project = ScanlationProject.create("Team Tower", work.getId(), team.getId());
         WorkflowTask task = project.addChapterTask(ChapterNumber.of("3"));
         project = projectRepository.save(project);

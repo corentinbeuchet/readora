@@ -16,6 +16,10 @@ import com.readora.application.port.in.CommunityUseCase.TeamSeries;
 import com.readora.application.port.in.DiscoverUseCase.Release;
 import com.readora.application.port.in.ManageLibraryUseCase.ExportRow;
 import com.readora.application.service.CommunityService;
+import com.readora.application.service.TeamManagementService;
+import com.readora.domain.common.AccessDeniedDomainException;
+import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
 import com.readora.application.service.DiscoveryService;
 import com.readora.application.service.LibraryService;
 import com.readora.application.service.ReadingTrackerService;
@@ -42,6 +46,8 @@ import io.cucumber.java.en.When;
 
 import java.time.Clock;
 import java.time.Instant;
+import org.jspecify.annotations.Nullable;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -57,6 +63,8 @@ public class CommunityStepDefinitions {
     private InMemoryTeamRepository teams;
     private InMemoryUserAccounts users;
     private CommunityService community;
+    private TeamManagementService teamManagement;
+    private @Nullable RuntimeException refusal;
     private DiscoveryService discovery;
     private LibraryService library;
     private ReadingTrackerService reading;
@@ -82,6 +90,8 @@ public class CommunityStepDefinitions {
                 .collect(java.util.stream.Collectors.toSet()));
         Clock clock = Clock.systemUTC();
         community = new CommunityService(users, communityQueries, teams, projects, works, clock);
+        teamManagement = new TeamManagementService(teams, projects, works, users, clock);
+        refusal = null;
         discovery = new DiscoveryService(discoveryQueries, works, new InMemoryRatingRepository(), clock);
         library = new LibraryService(libraryRepository, works, reads, clock);
         reading = new ReadingTrackerService(reads, chapters, works, clock);
@@ -149,6 +159,87 @@ public class CommunityStepDefinitions {
         assertThat(team.latestChapters()).hasSize(3);
     }
 
+    @Given("scanlator {string} leads the team {string}")
+    @When("scanlator {string} creates the team {string}")
+    public void scanlatorCreatesTheTeam(String scanlator, String teamName) {
+        try {
+            teamManagement.createTeam(account(scanlator), teamName, null);
+        } catch (RuntimeException e) {
+            refusal = e;
+        }
+    }
+
+    @Then("{string} is the leader of {string}")
+    public void isTheLeaderOf(String scanlator, String teamName) {
+        assertThat(teamNamed(teamName).isLeader(account(scanlator))).isTrue();
+    }
+
+    @Then("the page of the team {string} lists no series yet")
+    public void thePageListsNoSeriesYet(String teamName) {
+        assertThat(community.team(teamNamed(teamName).getId(), null).series()).isEmpty();
+    }
+
+    @Then("the team is refused because the name is taken")
+    public void theTeamIsRefusedBecauseTheNameIsTaken() {
+        assertThat(refusal).isInstanceOfSatisfying(DomainValidationException.class, e -> assertThat(e.code()).isEqualTo(ErrorCodes.TEAM_NAME_TAKEN));
+    }
+
+    @Given("{string} is already translated by the team {string}")
+    public void isAlreadyTranslatedBy(String title, String teamName) {
+        team(teamName);
+    }
+
+    @Given("{string} added {string} to {string} as {string}")
+    public void addedAMember(String leader, String member, String teamName, String role) {
+        teamManagement.setMember(account(leader), teamNamed(teamName).getId(), account(member).value().toLowerCase(Locale.ROOT),
+                Set.of(ScanlationRole.valueOf(role)));
+    }
+
+    @When("{string} adds the series {string} to {string}")
+    @When("{string} tries to add the series {string} to {string}")
+    public void addsTheSeriesTo(String actor, String title, String teamName) {
+        Work work = works.all().stream().filter(w -> w.getTitle().equals(title)).findFirst()
+                .orElseGet(() -> works.save(Work.create(title, "", WorkType.MANHWA, "", Set.of())));
+        attempt(() -> teamManagement.addSeries(account(actor), teamNamed(teamName).getId(), work.getId()));
+    }
+
+    @When("{string} tries to add {string} to {string} as {string}")
+    public void triesToAddAMember(String actor, String member, String teamName, String role) {
+        String username = account(member).value().toLowerCase(Locale.ROOT);
+        attempt(() -> teamManagement.setMember(account(actor), teamNamed(teamName).getId(), username, Set.of(ScanlationRole.valueOf(role))));
+    }
+
+    @When("{string} tries to leave {string}")
+    public void triesToLeave(String member, String teamName) {
+        String username = account(member).value().toLowerCase(Locale.ROOT);
+        attempt(() -> teamManagement.removeMember(account(member), teamNamed(teamName).getId(), username));
+    }
+
+    @Then("{string} has its own task board for {string}")
+    public void hasItsOwnTaskBoardFor(String teamName, String title) {
+        Team moon = teamNamed(teamName);
+        assertThat(refusal).isNull();
+        assertThat(projects.findByTeamId(moon.getId())).singleElement()
+                .satisfies(board -> assertThat(works.findById(board.getWorkId()).orElseThrow().getTitle()).isEqualTo(title));
+        assertThat(projects.findByWorkId(projects.findByTeamId(moon.getId()).getFirst().getWorkId())).hasSize(2);
+    }
+
+    @Then("the page of the team {string} lists the series {string}")
+    public void thePageListsTheSeries(String teamName, String title) {
+        assertThat(community.team(teamNamed(teamName).getId(), null).series()).extracting(series -> series.work().getTitle()).containsExactly(title);
+    }
+
+    @Then("the team refuses what {string} asked")
+    public void theTeamRefusesWhatWasAsked(String actor) {
+        assertThat(refusal).isInstanceOf(AccessDeniedDomainException.class);
+        refusal = null;
+    }
+
+    @Then("the team refuses because it would have no leader")
+    public void theTeamRefusesBecauseItWouldHaveNoLeader() {
+        assertThat(refusal).isInstanceOfSatisfying(DomainValidationException.class, e -> assertThat(e.code()).isEqualTo(ErrorCodes.LAST_LEADER));
+    }
+
     @When("{string} exports his library")
     public void exportsHisLibrary(String reader) {
         UserId kenji = account(reader);
@@ -177,6 +268,18 @@ public class CommunityStepDefinitions {
             teams.save(roster);
             return projects.save(ScanlationProject.create(teamName, work.getId(), roster.getId()));
         });
+    }
+
+    private Team teamNamed(String teamName) {
+        return teams.findByMember(account("mina")).stream().filter(t -> t.getName().equals(teamName)).findFirst().orElseThrow();
+    }
+
+    private void attempt(Runnable action) {
+        try {
+            action.run();
+        } catch (RuntimeException e) {
+            refusal = e;
+        }
     }
 
     private UserId account(String name) {

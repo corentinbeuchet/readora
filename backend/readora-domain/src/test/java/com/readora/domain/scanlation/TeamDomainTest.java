@@ -1,11 +1,16 @@
 package com.readora.domain.scanlation;
 
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
+import com.readora.domain.common.NotFoundException;
 import com.readora.domain.common.UserId;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.WorkId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.time.Instant;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -63,6 +68,45 @@ class TeamDomainTest {
     }
 
     @Test
+    @DisplayName("A member without any role is rejected")
+    void memberNeedsARole() {
+        givenTheTeam();
+
+        thenAddingTheMemberIsRejected(new TeamMember(ALICE, Set.of(), Instant.now()), "at least one role");
+    }
+
+    @Test
+    @DisplayName("The only leader can neither lose the leader role nor leave")
+    void teamKeepsALeader() {
+        givenTheTeam();
+        givenTheMember(ALICE, ScanlationRole.TRANSLATOR);
+
+        thenAddingTheMemberIsRejectedAs(TeamMember.of(LEADER, ScanlationRole.TRANSLATOR), ErrorCodes.LAST_LEADER);
+        thenRemovingTheMemberIsRejectedAs(LEADER, ErrorCodes.LAST_LEADER);
+        thenTheMemberHasRole(LEADER, ScanlationRole.LEADER);
+    }
+
+    @Test
+    @DisplayName("With a second leader, the first one can step down and leave")
+    void aSecondLeaderFreesTheFirst() {
+        givenTheTeam();
+        givenTheMember(ALICE, ScanlationRole.LEADER);
+
+        whenIRemoveTheMember(LEADER);
+
+        thenTheTeamHasMembers(1);
+        thenTheMemberHasRole(ALICE, ScanlationRole.LEADER);
+    }
+
+    @Test
+    @DisplayName("Removing someone who is not on the team is a not-found")
+    void removingAStrangerIsNotFound() {
+        givenTheTeam();
+
+        thenRemovingTheMemberIsNotFound(ALICE);
+    }
+
+    @Test
     @DisplayName("A project only accepts its own team's roster")
     void projectRejectsAnotherTeamsRoster() {
         givenTheTeam();
@@ -95,6 +139,28 @@ class TeamDomainTest {
 
     private void whenICreateTheTeam(String name, String description) {
         team = Team.create(name, description, LEADER);
+    }
+
+    private void whenIRemoveTheMember(UserId userId) {
+        team.removeMember(userId);
+    }
+
+    private void thenAddingTheMemberIsRejected(TeamMember member, String reason) {
+        assertThatThrownBy(() -> team.addMember(member)).isInstanceOf(DomainValidationException.class).hasMessageContaining(reason);
+    }
+
+    private void thenAddingTheMemberIsRejectedAs(TeamMember member, String code) {
+        assertThatThrownBy(() -> team.addMember(member))
+                .isInstanceOfSatisfying(DomainValidationException.class, e -> assertThat(e.code()).isEqualTo(code));
+    }
+
+    private void thenRemovingTheMemberIsRejectedAs(UserId userId, String code) {
+        assertThatThrownBy(() -> team.removeMember(userId))
+                .isInstanceOfSatisfying(DomainValidationException.class, e -> assertThat(e.code()).isEqualTo(code));
+    }
+
+    private void thenRemovingTheMemberIsNotFound(UserId userId) {
+        assertThatThrownBy(() -> team.removeMember(userId)).isInstanceOf(NotFoundException.class);
     }
 
     private void whenIAddTheMember(UserId userId, ScanlationRole role) {

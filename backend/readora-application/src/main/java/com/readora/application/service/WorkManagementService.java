@@ -70,7 +70,8 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
 
         if (creatorId != null) {
             String name = savedWork.getTitle() + " Workspace";
-            Team team = Team.create(name, null, creatorId);
+            String teamName = teamRepository.existsByName(name) ? name + " " + savedWork.getId().toString().substring(0, 8) : name;
+            Team team = Team.create(teamName, null, creatorId);
             teamRepository.save(team);
             projectRepository.save(ScanlationProject.create(name, savedWork.getId(), team.getId()));
         }

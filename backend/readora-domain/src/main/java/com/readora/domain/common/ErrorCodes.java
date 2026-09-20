@@ -37,6 +37,9 @@ public final class ErrorCodes {
     public static final String UNSUPPORTED_FILE_FORMAT = "UNSUPPORTED_FILE_FORMAT";
     public static final String EMPTY_FILE = "EMPTY_FILE";
     public static final String CHAPTER_NOT_PUBLISHED = "CHAPTER_NOT_PUBLISHED";
+    public static final String TEAM_NAME_TAKEN = "TEAM_NAME_TAKEN";
+    public static final String SERIES_ALREADY_IN_TEAM = "SERIES_ALREADY_IN_TEAM";
+    public static final String LAST_LEADER = "LAST_LEADER";
 
     private ErrorCodes() {
     }

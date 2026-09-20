@@ -110,6 +110,13 @@ public class ScanlationWorkflowStepDefinitions {
         teams.save(currentTeam);
     }
 
+    @Given("{string} has role {string} in another team {string}")
+    public void memberOfAnotherTeam(String memberName, String roleStr, String teamName) {
+        Team other = Team.create(teamName, null, UserId.of(teamName + " leader"));
+        other.addMember(TeamMember.of(UserId.of(memberName), ScanlationRole.valueOf(roleStr)));
+        teams.save(other);
+    }
+
     @Given("{string} workflow task is in stage {string}")
     public void taskIsInStage(String chapterName, String stageStr) {
         String num = chapterName.replaceAll("[^0-9.]", "");
@@ -154,6 +161,14 @@ public class ScanlationWorkflowStepDefinitions {
         } catch (Exception e) {
             thrownException = e;
         }
+    }
+
+    @Then("the assignment is rejected because {string} is not on the team")
+    public void verifyNotOnTheTeam(String memberName) {
+        assertThat(thrownException)
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessageContaining("is not a member of project");
+        assertThat(currentTask.getAssigneeId()).isNull();
     }
 
     @Then("the assignment is rejected because {string} lacks the {string} role")

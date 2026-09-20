@@ -104,8 +104,8 @@ FROM (SELECT 'Action' AS genre UNION ALL SELECT 'Dark Fantasy' UNION ALL SELECT 
 WHERE NOT EXISTS (SELECT 1 FROM work_genres wg WHERE wg.work_id = CAST('00000000-0000-4000-9000-000000000014' AS UUID) AND wg.genre = g.genre);
 
 -- The demo team and its project on the demo series share one id, like every team migrated by V17.
-INSERT INTO teams (id, name, description, created_at, updated_at, version)
-SELECT CAST('00000000-0000-4000-9000-000000000101' AS UUID), 'Readora Demo Team', 'Demo scanlation team with one member per role.',
+INSERT INTO teams (id, name, name_key, description, created_at, updated_at, version)
+SELECT CAST('00000000-0000-4000-9000-000000000101' AS UUID), 'Readora Demo Team', 'readora demo team', 'Demo scanlation team with one member per role.',
        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
 WHERE NOT EXISTS (SELECT 1 FROM teams WHERE id = CAST('00000000-0000-4000-9000-000000000101' AS UUID));
 

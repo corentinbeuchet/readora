@@ -85,6 +85,10 @@ class FlywaySchemaValidationTest {
         assertEquals(team.getId(), loaded.get().getTeamId());
         assertEquals(List.of(project.getId()), scanlationProjectRepositoryAdapter.findByTeamId(team.getId()).stream().map(ScanlationProject::getId).toList());
 
+        assertTrue(teamRepositoryAdapter.existsByName("SCAN group"));
+        assertEquals(List.of(team.getId()), teamRepositoryAdapter.findByMember(UserId.of("translator_1")).stream().map(Team::getId).toList());
+        assertTrue(teamRepositoryAdapter.findByMember(UserId.of("nobody")).isEmpty());
+
         Team loadedTeam = teamRepositoryAdapter.findById(team.getId()).orElseThrow();
         assertEquals("We scan.", loadedTeam.getDescription());
         assertEquals(2, loadedTeam.getMembers().size());

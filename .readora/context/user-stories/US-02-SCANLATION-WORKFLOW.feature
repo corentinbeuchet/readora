@@ -22,6 +22,12 @@ Feature: Collaborative Scanlation Chapter Workflow Pipeline
     When "Alice" attempts to claim the translation task
     Then the assignment is rejected because "Alice" lacks the "TRANSLATOR" role
 
+  Scenario: A member of another team cannot claim the task
+    Given "Chapter 10" workflow task is in stage "RAW_UPLOADED"
+    And "Dana" has role "CLEANER_REDRAWER" in another team "Moon Scans"
+    When "Dana" claims the task for "Chapter 10"
+    Then the assignment is rejected because "Dana" is not on the team
+
   Scenario: Translator submits script and advances stage to Typesetting
     Given "Chapter 10" workflow task is assigned to "Bob" in stage "TRANSLATING"
     When "Bob" submits the translated script mapping for 22 pages

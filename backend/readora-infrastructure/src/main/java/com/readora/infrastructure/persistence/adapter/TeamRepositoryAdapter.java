@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -45,6 +46,18 @@ public class TeamRepositoryAdapter implements TeamRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<Team> findByMember(UserId userId) {
+        return springDataRepository.findByMember(userId.value()).stream().map(this::toDomain).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByName(String name) {
+        return springDataRepository.existsByNameKey(name.toLowerCase(Locale.ROOT));
+    }
+
+    @Override
     @Transactional
     public Team save(Team team) {
         TeamJpaEntity existing = springDataRepository.findById(team.getId().value()).orElse(null);
@@ -54,7 +67,6 @@ public class TeamRepositoryAdapter implements TeamRepositoryPort {
             return toDomain(saved);
         }
         OptimisticLocking.verify(team, existing.getVersion(), "Team");
-        existing.setName(team.getName());
         existing.setDescription(team.getDescription());
         existing.setUpdatedAt(team.getUpdatedAt());
 

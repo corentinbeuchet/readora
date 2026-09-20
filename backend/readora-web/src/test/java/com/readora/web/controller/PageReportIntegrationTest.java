@@ -52,7 +52,7 @@ class PageReportIntegrationTest extends AuthTestSupport {
         Session outsider = registerScanlator();
         Session kenji = register();
         Work work = workRepository.save(Work.create("Report Work", "S", WorkType.MANHWA, "c.webp", Set.of("Action")));
-        Team shadowScans = teamRepository.save(Team.create("Shadow Scans", null, UserId.of(leader.userId())));
+        Team shadowScans = teamRepository.save(Team.create("Shadow Scans " + java.util.UUID.randomUUID(), null, UserId.of(leader.userId())));
         ScanlationProject team = projectRepository.save(ScanlationProject.create("Shadow Scans", work.getId(), shadowScans.getId()));
         Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", team.getId());
         chapter.updatePages(List.of(PageAsset.create(1, "r/p1.webp", null), PageAsset.create(2, "r/p2.webp", null)));
