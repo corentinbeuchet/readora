@@ -1,33 +1,12 @@
-.history-list {
-  list-style: none;
+// Which chapter, and when: two pieces side by side, no separator.
+.read-line {
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.history-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
   flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  font-size: var(--fs-sm);
 }
 
-.history-cover {
-  width: 60px;
-  height: 84px;
-  border-radius: 6px;
-}
-
-.history-body {
-  flex: 1;
-  min-width: 10rem;
-}
-
-.history-title {
-  font-size: var(--fs-md);
-
-  a {
-    color: inherit;
-  }
+.read-chapter {
+  color: var(--text);
+  font-weight: var(--fw-medium);
 }

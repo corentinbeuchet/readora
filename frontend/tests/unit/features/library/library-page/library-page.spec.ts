@@ -1,3 +1,4 @@
+import { WORK_STATUS_LABELS, WORK_TYPE_LABELS } from '@app/core/models/catalog';
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
@@ -45,6 +46,15 @@ describe('LibraryPage (US-05 My library)', () => {
     thenRowHasTheBadge(1, '2 new');
     thenRowHasNoBadge(2);
     thenRowStatusIs(2, 'PLAN_TO_READ');
+  });
+
+  it('names the type and status of a series instead of showing the API codes', async () => {
+    await whenIOpen('/library', { library: [SOLO] });
+
+    thenRowShows(1, typeAndStatusNamesOf(SOLO).type);
+    thenRowShows(1, typeAndStatusNamesOf(SOLO).status);
+    thenRowDoesNotShow(1, SOLO.work.type);
+    thenRowDoesNotShow(1, SOLO.work.status);
   });
 
   it('filters by status from the URL and marks the current tab', async () => {
@@ -189,6 +199,10 @@ describe('LibraryPage (US-05 My library)', () => {
     expect(rows()[position - 1].textContent).toContain(text);
   }
 
+  function thenRowDoesNotShow(position: number, text: string): void {
+    expect(rows()[position - 1].textContent).not.toContain(text);
+  }
+
   function thenRowHasTheBadge(position: number, text: string): void {
     expect(rows()[position - 1].querySelector('.badge-new')?.textContent).toContain(text);
   }
@@ -245,8 +259,12 @@ describe('LibraryPage (US-05 My library)', () => {
     return harness.routeNativeElement as HTMLElement;
   }
 
+  function typeAndStatusNamesOf(item: LibraryItem): { type: string; status: string } {
+    return { type: WORK_TYPE_LABELS[item.work.type], status: WORK_STATUS_LABELS[item.work.status] };
+  }
+
   function rows(): HTMLElement[] {
-    return Array.from(el().querySelectorAll<HTMLElement>('.library-item'));
+    return Array.from(el().querySelectorAll<HTMLElement>('app-work-card'));
   }
 
   function row(series: LibraryItem): HTMLElement {

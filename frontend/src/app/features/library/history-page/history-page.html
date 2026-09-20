@@ -2,33 +2,37 @@
   <h1 i18n="@@library.history.heading">Reading history</h1>
 
   @if (history.isLoading()) {
-    <p class="muted" role="status" i18n="@@library.history.loading">Loading your history…</p>
+    <app-work-card-skeleton variant="row" count="6" i18n="@@library.history.loading">Loading your history…</app-work-card-skeleton>
   } @else if (history.error()) {
     <app-load-error (retry)="reload()"><ng-container i18n="@@library.history.loadError">Could not load your reading history.</ng-container></app-load-error>
   } @else if (history.hasValue() && history.value().length === 0) {
-    <p class="muted" i18n="@@library.history.empty">You haven't read anything yet.</p>
-    <a routerLink="/works" class="btn btn-primary" i18n="@@library.history.browse">Browse the catalog</a>
+    <app-empty-state>
+      <ng-container i18n="@@library.history.empty">You haven't read anything yet.</ng-container>
+      <a emptyAction routerLink="/works" class="btn btn-primary" i18n="@@library.history.browse">Browse the catalog</a>
+    </app-empty-state>
   } @else if (history.hasValue()) {
-    <ol class="history-list">
+    <ol class="work-rows">
       @for (item of history.value(); track item.work.id) {
-        <li class="card history-item">
-          <app-work-cover class="history-cover" [src]="item.work.coverImageUrl" width="60" height="84" />
-          <div class="history-body">
-            <h2 class="history-title"><a [routerLink]="['/works', item.work.id]">{{ item.work.title }}</a></h2>
-            <p class="muted">
-              <ng-container i18n="@@library.history.chapter">Chapter {{ item.lastRead.chapterNumber }}</ng-container>
-              @if (item.lastRead.finished) {
-                <ng-container i18n="@@library.history.finished">(finished)</ng-container>
-              }
-              · {{ item.lastRead.readAt | date: 'medium' }}
+        <li>
+          <app-work-card [work]="item.work" variant="row">
+            <p cardMeta class="muted read-line">
+              <span class="read-chapter">
+                <ng-container i18n="@@library.history.chapter">Chapter {{ item.lastRead.chapterNumber }}</ng-container>
+                @if (item.lastRead.finished) {
+                  <ng-container i18n="@@library.history.finished">(finished)</ng-container>
+                }
+              </span>
+              <time [attr.datetime]="item.lastRead.readAt">{{ item.lastRead.readAt | date: 'medium' }}</time>
             </p>
-          </div>
-          <a
-            class="btn btn-primary"
-            [routerLink]="['/read', item.lastRead.chapterId]"
-            [attr.aria-label]="continueLabels().get(item.work.id)"
-            i18n="@@library.history.continue"
-          >Continue</a>
+            <span cardActions>
+              <a
+                class="btn btn-primary btn-sm"
+                [routerLink]="['/read', item.lastRead.chapterId]"
+                [attr.aria-label]="continueLabels().get(item.work.id)"
+                i18n="@@library.history.continue"
+              >Continue</a>
+            </span>
+          </app-work-card>
         </li>
       }
     </ol>

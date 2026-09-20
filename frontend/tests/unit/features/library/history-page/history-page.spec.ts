@@ -66,7 +66,7 @@ describe('HistoryPage (US-07 reading history)', () => {
   }
 
   function thenTheSeriesListedAre(titles: string[]): void {
-    expect(rows().map((r) => r.querySelector('.history-title')?.textContent?.trim())).toEqual(titles);
+    expect(rows().map((r) => r.querySelector('a')?.textContent?.trim())).toEqual(titles);
   }
 
   function thenRowContinuesTo(position: number, href: string): void {
@@ -88,7 +88,7 @@ describe('HistoryPage (US-07 reading history)', () => {
   }
 
   function rows(): HTMLElement[] {
-    return Array.from(fixture.nativeElement.querySelectorAll('.history-item'));
+    return Array.from(fixture.nativeElement.querySelectorAll('app-work-card'));
   }
 
   function continueLink(position: number): HTMLAnchorElement {

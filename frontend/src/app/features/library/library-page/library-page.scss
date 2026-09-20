@@ -1,55 +1,15 @@
 .status-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  margin: 1rem 0 1.5rem;
-}
-
-.library-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.library-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.library-cover {
-  width: 60px;
-  height: 84px;
-  border-radius: 6px;
-}
-
-.library-body {
-  flex: 1;
-  min-width: 10rem;
-}
-
-.library-title {
-  font-size: var(--fs-md);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-
-  a {
-    color: inherit;
-  }
-}
-
-.badge-new {
-  background: var(--accent);
-  color: var(--on-accent);
+  gap: var(--space-1);
+  margin: var(--space-4) 0 var(--space-5);
 }
 
 .library-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2) var(--space-3);
 }
 
 .status-field {
@@ -61,10 +21,10 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .export {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }

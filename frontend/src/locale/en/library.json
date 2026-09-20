@@ -21,7 +21,6 @@
     "library.page.emptyStatus": "Nothing marked “{$INTERPOLATION}” yet.",
     "library.page.empty": "Your library is empty. Open a series and choose “Add to library”.",
     "library.page.browse": "Browse the catalog",
-    "library.page.newChapters": "{VAR_PLURAL, plural, other {{INTERPOLATION} new{START_TAG_SPAN} chapters{CLOSE_TAG_SPAN}}}",
     "library.page.statusLabel": "Reading status of {$INTERPOLATION}",
     "library.page.notify": "New chapter alerts{$START_TAG_SPAN} for {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
     "library.page.remove": " Remove{$START_TAG_SPAN} {$INTERPOLATION}{$CLOSE_TAG_SPAN}",

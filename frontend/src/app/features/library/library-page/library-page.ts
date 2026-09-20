@@ -8,14 +8,16 @@ import { LibraryItem, READING_STATUS_LABELS, ReadingStatus } from '@app/core/mod
 import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
 import { LoadError } from '@app/shared/ui/load-error';
-import { WorkCover } from '@app/shared/ui/work-cover/work-cover';
+import { EmptyState } from '@app/shared/ui/empty-state/empty-state';
+import { WorkCard } from '@app/shared/ui/work-card/work-card';
+import { WorkCardSkeleton } from '@app/shared/ui/work-card-skeleton/work-card-skeleton';
 
 const STATUSES = Object.keys(READING_STATUS_LABELS) as ReadingStatus[];
 
 /** "My library" (US-05): the series I follow, by reading status, with new-chapter badges (US-07). */
 @Component({
   selector: 'app-library-page',
-  imports: [WorkCover, LoadError, RouterLink],
+  imports: [WorkCard, WorkCardSkeleton, EmptyState, LoadError, RouterLink],
   templateUrl: './library-page.html',
   styleUrl: './library-page.scss'
 })

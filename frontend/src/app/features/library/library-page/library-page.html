@@ -25,35 +25,25 @@
   }
 
   @if (items.isLoading()) {
-    <p class="muted" role="status" i18n="@@library.page.loading">Loading your library…</p>
+    <app-work-card-skeleton variant="row" count="6" i18n="@@library.page.loading">Loading your library…</app-work-card-skeleton>
   } @else if (items.error()) {
     <app-load-error (retry)="reload()"><ng-container i18n="@@library.page.loadError">Could not load your library.</ng-container></app-load-error>
   } @else if (items.hasValue() && items.value().length === 0) {
-    <p class="muted">
+    <app-empty-state>
       @if (selected(); as current) {
         <ng-container i18n="@@library.page.emptyStatus">Nothing marked “{{ labels[current] }}” yet.</ng-container>
       } @else {
         <ng-container i18n="@@library.page.empty">Your library is empty. Open a series and choose “Add to library”.</ng-container>
       }
-    </p>
-    <a routerLink="/works" class="btn btn-primary" i18n="@@library.page.browse">Browse the catalog</a>
+      <a emptyAction routerLink="/works" class="btn btn-primary" i18n="@@library.page.browse">Browse the catalog</a>
+    </app-empty-state>
   } @else if (items.hasValue()) {
-    <ul class="library-list">
+    <ul class="work-rows">
       @for (item of items.value(); track item.work.id) {
-        <li class="card library-item">
-          <a [routerLink]="['/works', item.work.id]" class="library-cover-link" [attr.aria-label]="item.work.title">
-            <app-work-cover class="library-cover" [src]="item.work.coverImageUrl" width="60" height="84" />
-          </a>
-          <div class="library-body">
-            <h2 class="library-title">
-              <a [routerLink]="['/works', item.work.id]">{{ item.work.title }}</a>
-              @if (item.newChapters > 0) {
-                <span class="badge badge-new" i18n="@@library.page.newChapters">{item.newChapters, plural, other {{{ item.newChapters }} new<span class="sr-only"> chapters</span>}}</span>
-              }
-            </h2>
-            <p class="muted">{{ item.work.type }} · {{ item.work.status }}</p>
-          </div>
-          <div class="library-actions">
+        <li>
+          <!-- The card names the type and status (never the API codes) and flags new chapters. -->
+          <app-work-card [work]="item.work" variant="row" [newChapters]="item.newChapters">
+            <div cardActions class="library-actions">
             <label class="field status-field">
               <span class="sr-only" i18n="@@library.page.statusLabel">Reading status of {{ item.work.title }}</span>
               <select [disabled]="action.busyKey() === item.work.id" (change)="changeStatus(item, $event)">
@@ -70,7 +60,8 @@
             <button type="button" class="btn btn-danger-outline btn-sm" [disabled]="action.busyKey() === item.work.id" (click)="remove(item)" i18n="@@library.page.remove">
               Remove<span class="sr-only"> {{ item.work.title }}</span>
             </button>
-          </div>
+            </div>
+          </app-work-card>
         </li>
       }
     </ul>
