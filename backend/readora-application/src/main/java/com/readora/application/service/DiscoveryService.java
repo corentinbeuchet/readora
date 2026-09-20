@@ -5,10 +5,14 @@ import com.readora.application.port.in.DiscoverUseCase;
 import com.readora.application.port.out.DiscoveryQueryPort;
 import com.readora.application.port.out.DiscoveryQueryPort.ChapterRelease;
 import com.readora.application.port.out.RatingRepositoryPort;
+import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort.WorkSearch;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.UserId;
+import com.readora.domain.scanlation.Team;
+import com.readora.domain.scanlation.TeamCredit;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.Work;
 import com.readora.domain.work.WorkId;
@@ -32,12 +36,15 @@ public class DiscoveryService implements DiscoverUseCase {
     private final DiscoveryQueryPort discovery;
     private final WorkRepositoryPort workRepository;
     private final RatingRepositoryPort ratingRepository;
+    private final TeamRepositoryPort teamRepository;
     private final Clock clock;
 
-    public DiscoveryService(DiscoveryQueryPort discovery, WorkRepositoryPort workRepository, RatingRepositoryPort ratingRepository, Clock clock) {
+    public DiscoveryService(DiscoveryQueryPort discovery, WorkRepositoryPort workRepository, RatingRepositoryPort ratingRepository,
+                            TeamRepositoryPort teamRepository, Clock clock) {
         this.discovery = Objects.requireNonNull(discovery, "DiscoveryQueryPort cannot be null");
         this.workRepository = Objects.requireNonNull(workRepository, "WorkRepositoryPort cannot be null");
         this.ratingRepository = Objects.requireNonNull(ratingRepository, "RatingRepositoryPort cannot be null");
+        this.teamRepository = Objects.requireNonNull(teamRepository, "TeamRepositoryPort cannot be null");
         this.clock = Objects.requireNonNull(clock, "Clock cannot be null");
     }
 
@@ -51,12 +58,15 @@ public class DiscoveryService implements DiscoverUseCase {
             return List.of();
         }
         Map<WorkId, Work> works = worksById(releases.stream().map(ChapterRelease::workId).distinct().toList());
+        Map<TeamId, TeamCredit> teams = teamRepository.findAllById(releases.stream().map(ChapterRelease::teamId).distinct().toList()).stream()
+                .collect(Collectors.toMap(Team::getId, TeamCredit::of));
         Set<ChapterId> finished = viewer == null ? Set.of()
                 : discovery.findFinished(viewer, releases.stream().map(ChapterRelease::chapterId).toList());
         return releases.stream()
                 .flatMap(r -> Optional.ofNullable(works.get(r.workId()))
-                        .map(work -> new Release(work, r.chapterId(), r.chapterNumber(), r.chapterTitle(), r.publishedAt(),
-                                finished.contains(r.chapterId())))
+                        .flatMap(work -> Optional.ofNullable(teams.get(r.teamId()))
+                                .map(team -> new Release(work, team, r.chapterId(), r.chapterNumber(), r.chapterTitle(), r.publishedAt(),
+                                        finished.contains(r.chapterId()))))
                         .stream())
                 .toList();
     }

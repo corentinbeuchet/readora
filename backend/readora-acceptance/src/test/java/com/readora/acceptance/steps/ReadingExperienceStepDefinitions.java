@@ -9,7 +9,6 @@ import com.readora.domain.social.CommentId;
 import com.readora.acceptance.fakes.InMemoryChapterReadRepository;
 import com.readora.acceptance.fakes.InMemoryChapterRepository;
 import com.readora.acceptance.fakes.InMemoryLibraryRepository;
-import com.readora.acceptance.fakes.InMemoryProjectRepository;
 import com.readora.acceptance.fakes.InMemoryTeamRepository;
 import com.readora.acceptance.fakes.InMemoryWorkRepository;
 import com.readora.acceptance.fakes.MutableClock;
@@ -63,6 +62,7 @@ public class ReadingExperienceStepDefinitions {
     private final java.util.Map<String, ChapterId> lastChapterRead = new java.util.HashMap<>();
     private InMemoryCommentRepository comments;
     private FakeStorage storage;
+    private InMemoryTeamRepository teams;
     private AssetService assets;
     private boolean dataSaver;
     private ReaderSocialService social;
@@ -73,11 +73,12 @@ public class ReadingExperienceStepDefinitions {
         clock = new MutableClock(START);
         works = new InMemoryWorkRepository();
         chapters = new InMemoryChapterRepository();
+        teams = new InMemoryTeamRepository();
         InMemoryChapterReadRepository reads = new InMemoryChapterReadRepository(chapters);
         reading = new ReadingTrackerService(reads, chapters, works, clock);
         library = new LibraryService(new InMemoryLibraryRepository(), works, reads, clock);
         storage = new FakeStorage();
-        chapterReader = new ChapterReadingService(chapters, works, new InMemoryProjectRepository(), new InMemoryTeamRepository(), storage);
+        chapterReader = new ChapterReadingService(chapters, works, teams, storage);
         // Stand-in for the ImageIO adapter (tested in infrastructure): a copy a quarter of the size.
         assets = new AssetService(storage, image -> Optional.of(Arrays.copyOf(image, image.length / 4)));
         dataSaver = false;
@@ -255,7 +256,7 @@ public class ReadingExperienceStepDefinitions {
             return new PageAsset(n, stored.storageKey(), stored.publicUrl(), 800, 1200, null, stored.litePublicUrl());
         }).toList();
         Chapter six = new Chapter(ChapterId.generate(), workId, ChapterNumber.of("6"), "Chapter 6", ChapterStatus.PUBLISHED,
-                pages, null, START, START, START);
+                pages, teams.anyTeam(), START, START, START);
         chapters.save(six);
 
         List<PageAsset> read = chapterReader.readChapter(six.getId(), reader, "VERTICAL").chapter().getPages();
@@ -281,6 +282,6 @@ public class ReadingExperienceStepDefinitions {
 
     private void publish(WorkId workId, int number, Instant at) {
         chapters.save(new Chapter(ChapterId.generate(), workId, ChapterNumber.of(String.valueOf(number)), "Chapter " + number,
-                ChapterStatus.PUBLISHED, List.of(PageAsset.create(1, "p1.webp", null)), null, at, at, at));
+                ChapterStatus.PUBLISHED, List.of(PageAsset.create(1, "p1.webp", null)), teams.anyTeam(), at, at, at));
     }
 }

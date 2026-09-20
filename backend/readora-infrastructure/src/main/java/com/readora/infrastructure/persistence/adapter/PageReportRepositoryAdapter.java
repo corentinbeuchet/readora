@@ -6,7 +6,7 @@ import com.readora.domain.report.PageReport;
 import com.readora.domain.report.PageReportId;
 import com.readora.domain.report.PageReportReason;
 import com.readora.domain.report.PageReportStatus;
-import com.readora.domain.scanlation.ProjectId;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.WorkId;
@@ -61,8 +61,8 @@ public class PageReportRepositoryAdapter implements PageReportRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
-    public List<PageReport> findOpenByProject(ProjectId projectId) {
-        return springDataRepository.findByProjectIdAndStatusOrderByCreatedAtAsc(projectId.value(), PageReportStatus.OPEN.name()).stream()
+    public List<PageReport> findOpenByTeamAndWork(TeamId teamId, WorkId workId) {
+        return springDataRepository.findByTeamIdAndWorkIdAndStatusOrderByCreatedAtAsc(teamId.value(), workId.value(), PageReportStatus.OPEN.name()).stream()
                 .map(this::toDomain)
                 .toList();
     }
@@ -72,7 +72,7 @@ public class PageReportRepositoryAdapter implements PageReportRepositoryPort {
                 PageReportId.of(row.getId()),
                 ChapterId.of(row.getChapterId()),
                 WorkId.of(row.getWorkId()),
-                row.getProjectId() != null ? ProjectId.of(row.getProjectId()) : null,
+                TeamId.of(row.getTeamId()),
                 ChapterNumber.of(row.getChapterNumber()),
                 row.getPageNumber(),
                 PageReportReason.valueOf(row.getReason()),
@@ -85,9 +85,8 @@ public class PageReportRepositoryAdapter implements PageReportRepositoryPort {
     }
 
     private PageReportJpaEntity toEntity(PageReport report) {
-        ProjectId projectId = report.getProjectId();
         return new PageReportJpaEntity(report.getId().value(), report.getChapterId().value(), report.getWorkId().value(),
-                projectId != null ? projectId.value() : null, report.getChapterNumber().value(), report.getPageNumber(),
+                report.getTeamId().value(), report.getChapterNumber().value(), report.getPageNumber(),
                 report.getReason().name(), report.getReporterId().value(), report.getStatus().name(), report.getCreatedAt());
     }
 }

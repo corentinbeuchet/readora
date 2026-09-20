@@ -25,8 +25,8 @@ public class ChapterJpaEntity {
     @Column(nullable = false)
     private String status;
 
-    @Column(name = "scanlation_project_id")
-    private UUID scanlationProjectId;
+    @Column(name = "team_id", nullable = false)
+    private UUID teamId;
 
     @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @BatchSize(size = 64)
@@ -52,13 +52,13 @@ public class ChapterJpaEntity {
 
     public ChapterJpaEntity() {}
 
-    public ChapterJpaEntity(UUID id, UUID workId, String chapterNumber, String title, String status, UUID scanlationProjectId, Instant createdAt, Instant publishedAt, Instant updatedAt) {
+    public ChapterJpaEntity(UUID id, UUID workId, String chapterNumber, String title, String status, UUID teamId, Instant createdAt, Instant publishedAt, Instant updatedAt) {
         this.id = id;
         this.workId = workId;
         this.chapterNumber = chapterNumber;
         this.title = title;
         this.status = status;
-        this.scanlationProjectId = scanlationProjectId;
+        this.teamId = teamId;
         this.createdAt = createdAt;
         this.publishedAt = publishedAt;
         this.updatedAt = updatedAt;
@@ -74,8 +74,7 @@ public class ChapterJpaEntity {
     public void setTitle(String title) { this.title = title; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
-    public UUID getScanlationProjectId() { return scanlationProjectId; }
-    public void setScanlationProjectId(UUID scanlationProjectId) { this.scanlationProjectId = scanlationProjectId; }
+    public UUID getTeamId() { return teamId; }
     public List<PageAssetJpaEntity> getPages() { return pages; }
     public void setPages(List<PageAssetJpaEntity> pages) { this.pages = pages; }
     public Instant getCreatedAt() { return createdAt; }

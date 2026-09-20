@@ -67,7 +67,7 @@ class SubscriptionWebhookIntegrationTest extends AuthTestSupport {
     @BeforeEach
     void setup() {
         work = workRepository.save(Work.create("Vinland Saga", "Synopsis", WorkType.MANGA, "cover.webp", Set.of("Historical")));
-        chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Chapter 1", null);
+        chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Chapter 1", anyTeam());
         chapter.updatePages(List.of(PageAsset.create(1, "v/p1.webp", "https://cdn.readora.com/v/p1.webp")));
         chapter.publish(UserId.of("publisher1"));
         chapter = chapterRepository.save(chapter);

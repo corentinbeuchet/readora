@@ -39,7 +39,7 @@ class CommentUpvoteIntegrationTest extends AuthTestSupport {
     @BeforeEach
     void setup() {
         Work work = workRepository.save(Work.create("Lookism", "Synopsis", WorkType.MANHWA, "cover.webp", Set.of("Drama")));
-        Chapter draft = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Chapter 1", null);
+        Chapter draft = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Chapter 1", anyTeam());
         draft.updatePages(List.of(PageAsset.create(1, "l/p1.webp", "https://cdn.readora.com/l/p1.webp")));
         draft.publish(UserId.of("publisher1"));
         chapter = chapterRepository.save(draft);
@@ -78,7 +78,7 @@ class CommentUpvoteIntegrationTest extends AuthTestSupport {
     @DisplayName("Commenting on a draft chapter is rejected with 400 and on an unknown chapter with 404")
     void commentsNeedAPublishedChapter() throws Exception {
         Session reader = register();
-        Chapter draft = chapterRepository.save(Chapter.createDraft(chapter.getWorkId(), ChapterNumber.of("2"), "Draft", null));
+        Chapter draft = chapterRepository.save(Chapter.createDraft(chapter.getWorkId(), ChapterNumber.of("2"), "Draft", anyTeam()));
         String body = objectMapper.writeValueAsString(new CreateCommentRequest("Early!", null, null, false));
 
         mockMvc.perform(post("/api/v1/comments/chapter/" + draft.getId().value())

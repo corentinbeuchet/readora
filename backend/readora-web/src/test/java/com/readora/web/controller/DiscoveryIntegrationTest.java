@@ -38,7 +38,7 @@ class DiscoveryIntegrationTest extends AuthTestSupport {
     private ChapterRepositoryPort chapterRepository;
 
     private Chapter publish(Work work, String number) {
-        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of(number), "Ch " + number, null);
+        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of(number), "Ch " + number, anyTeam());
         chapter.updatePages(List.of(PageAsset.create(1, "d/p1.webp", "https://cdn.readora.com/d/p1.webp")));
         chapter.publish(UserId.of("publisher"));
         return chapterRepository.save(chapter);

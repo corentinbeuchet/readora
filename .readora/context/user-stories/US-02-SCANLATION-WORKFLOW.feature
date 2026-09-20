@@ -37,4 +37,5 @@ Feature: Collaborative Scanlation Chapter Workflow Pipeline
     Given "Chapter 10" has passed proofreading and is in stage "QC_REVIEW"
     When "Charlie" approves the final assembled chapter and triggers publication
     Then the chapter status becomes "PUBLISHED"
+    And the chapter is credited to the team "FlameScans"
     And a "ChapterPublishedEvent" is emitted to notify readers

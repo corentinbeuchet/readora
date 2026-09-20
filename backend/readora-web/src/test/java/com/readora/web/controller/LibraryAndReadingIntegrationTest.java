@@ -47,11 +47,11 @@ class LibraryAndReadingIntegrationTest extends AuthTestSupport {
         work = workRepository.save(Work.create("Library Work", "S", WorkType.MANHWA, "c.webp", Set.of("Action")));
         one = publish("1");
         two = publish("2");
-        draft = chapterRepository.save(Chapter.createDraft(work.getId(), ChapterNumber.of("3"), "Draft", null));
+        draft = chapterRepository.save(Chapter.createDraft(work.getId(), ChapterNumber.of("3"), "Draft", anyTeam()));
     }
 
     private Chapter publish(String number) {
-        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of(number), "Ch " + number, null);
+        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of(number), "Ch " + number, anyTeam());
         chapter.updatePages(List.of(PageAsset.create(1, "l/p1.webp", "https://cdn.readora.com/l/p1.webp")));
         chapter.publish(UserId.of("publisher1"));
         return chapterRepository.save(chapter);

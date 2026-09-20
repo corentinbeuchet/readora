@@ -1,6 +1,7 @@
 package com.readora.domain.work;
 
 import com.readora.domain.common.UserId;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.common.DomainValidationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,7 @@ class ChapterDomainTest {
     @DisplayName("Publishing a chapter with zero pages should fail with DomainValidationException")
     void publishingEmptyChapterThrowsException() {
         Work work = Work.create("Tower of God", "Synopsis", WorkType.MANHWA, "cover.jpg", Set.of("Action"));
-        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Chapter 1", null);
+        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Chapter 1", TeamId.generate());
 
         assertThatThrownBy(() -> chapter.publish(UserId.of("editor1")))
                 .isInstanceOf(DomainValidationException.class)
@@ -27,7 +28,7 @@ class ChapterDomainTest {
     @Test
     @DisplayName("Publishing an already published chapter is rejected and emits no second event")
     void republishingIsRejected() {
-        Chapter chapter = Chapter.createDraft(WorkId.generate(), ChapterNumber.of("1"), "Chapter 1", null);
+        Chapter chapter = Chapter.createDraft(WorkId.generate(), ChapterNumber.of("1"), "Chapter 1", TeamId.generate());
         chapter.updatePages(List.of(PageAsset.create(1, "page1.webp", null)));
         chapter.publish(UserId.of("editor1"));
         chapter.pollDomainEvents();
@@ -42,7 +43,7 @@ class ChapterDomainTest {
     @DisplayName("Publishing a chapter with pages registers ChapterPublishedEvent and updates status")
     void publishingValidChapterEmitsEvent() {
         Work work = Work.create("Tower of God", "Synopsis", WorkType.MANHWA, "cover.jpg", Set.of("Action"));
-        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Chapter 1", null);
+        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Chapter 1", TeamId.generate());
         chapter.updatePages(List.of(PageAsset.create(1, "page1.webp", "https://cdn.readora.com/p1.webp")));
 
         chapter.publish(UserId.of("editor1"));

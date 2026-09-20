@@ -41,7 +41,7 @@ class BookmarkControllerIntegrationTest extends AuthTestSupport {
     @BeforeEach
     void setup() {
         work = workRepository.save(Work.create("Omniscient Reader", "Synopsis", WorkType.MANHWA, "cover.webp", Set.of("Action")));
-        chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Chapter 1", null);
+        chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Chapter 1", anyTeam());
         chapter.updatePages(List.of(PageAsset.create(1, "o/p1.webp", "https://cdn.readora.com/o/p1.webp")));
         chapter.publish(UserId.of("publisher1"));
         chapter = chapterRepository.save(chapter);

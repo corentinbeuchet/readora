@@ -6,6 +6,7 @@ import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.NotFoundException;
 import com.readora.domain.common.UserId;
 import com.readora.domain.library.ChapterRead;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.PageAsset;
@@ -55,7 +56,7 @@ class ReadingTrackerServiceTest {
     }
 
     private Chapter published(String number) {
-        Chapter chapter = Chapter.createDraft(work, ChapterNumber.of(number), "Ch " + number, null);
+        Chapter chapter = Chapter.createDraft(work, ChapterNumber.of(number), "Ch " + number, TeamId.generate());
         chapter.updatePages(List.of(PageAsset.create(1, "p.webp", null)));
         chapter.publish(UserId.of("qc"));
         return chapter;
@@ -64,7 +65,7 @@ class ReadingTrackerServiceTest {
     @Test
     @DisplayName("Reading a draft chapter is refused as not found and nothing is recorded")
     void draftChapterIsNotRecorded() {
-        Chapter draft = Chapter.createDraft(work, ChapterNumber.of("9"), "Draft", null);
+        Chapter draft = Chapter.createDraft(work, ChapterNumber.of("9"), "Draft", TeamId.generate());
         when(chapters.findById(draft.getId())).thenReturn(Optional.of(draft));
 
         assertThatThrownBy(() -> service.recordRead(kenji, draft.getId(), false)).isInstanceOf(NotFoundException.class);

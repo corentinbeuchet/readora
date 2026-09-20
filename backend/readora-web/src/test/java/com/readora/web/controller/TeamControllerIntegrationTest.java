@@ -122,6 +122,29 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    @DisplayName("A new series can belong to one of my teams; only its leaders may do that")
+    void newSeriesForMyTeam() throws Exception {
+        Session mina = registerScanlator();
+        Session bob = registerScanlator();
+        String moonScans = givenATeamLedBy(mina);
+
+        whenICreateASeriesFor(bob, moonScans).andExpect(status().isForbidden());
+        whenICreateASeriesFor(mina, UUID.randomUUID().toString()).andExpect(status().isNotFound());
+        var created = whenICreateASeriesFor(mina, moonScans).andExpect(status().isCreated()).andReturn();
+        String workId = json(created).path("data").path("id").asString();
+
+        mockMvc.perform(get("/api/v1/works/" + workId + "/projects").header("Authorization", mina.bearer()))
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].teamId").value(moonScans));
+        mockMvc.perform(get("/api/v1/teams/" + moonScans)).andExpect(jsonPath("$.data.series[0].work.id").value(workId));
+    }
+
+    private ResultActions whenICreateASeriesFor(Session scanlator, String teamId) throws Exception {
+        return mockMvc.perform(post("/api/v1/works").header("Authorization", scanlator.bearer()).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"title\":\"Team Series " + UUID.randomUUID() + "\",\"type\":\"MANHWA\",\"genres\":[\"Action\"],\"teamId\":\"" + teamId + "\"}"));
+    }
+
     private String givenATeamLedBy(Session leader) throws Exception {
         var created = whenICreateTheTeam(leader, "Team " + UUID.randomUUID()).andExpect(status().isCreated()).andReturn();
         return json(created).path("data").path("id").asString();

@@ -88,10 +88,9 @@ public class DomainServiceConfig {
     public ReadChapterUseCase readChapterUseCase(
             ChapterRepositoryPort chapterRepository,
             WorkRepositoryPort workRepository,
-            ScanlationProjectRepositoryPort projectRepository,
             TeamRepositoryPort teamRepository,
             StoragePort storagePort) {
-        return transactional(new ChapterReadingService(chapterRepository, workRepository, projectRepository, teamRepository, storagePort),
+        return transactional(new ChapterReadingService(chapterRepository, workRepository, teamRepository, storagePort),
                 ReadChapterUseCase.class, transactionManager);
     }
 
@@ -197,8 +196,9 @@ public class DomainServiceConfig {
     }
 
     @Bean
-    public DiscoverUseCase discoverUseCase(DiscoveryQueryPort discovery, WorkRepositoryPort workRepository, RatingRepositoryPort ratingRepository) {
-        return transactional(new DiscoveryService(discovery, workRepository, ratingRepository, Clock.systemUTC()), DiscoverUseCase.class,
+    public DiscoverUseCase discoverUseCase(DiscoveryQueryPort discovery, WorkRepositoryPort workRepository, RatingRepositoryPort ratingRepository,
+                                           TeamRepositoryPort teamRepository) {
+        return transactional(new DiscoveryService(discovery, workRepository, ratingRepository, teamRepository, Clock.systemUTC()), DiscoverUseCase.class,
                 transactionManager);
     }
 

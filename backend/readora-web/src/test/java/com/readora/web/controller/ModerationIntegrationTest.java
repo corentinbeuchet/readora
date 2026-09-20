@@ -87,7 +87,7 @@ class ModerationIntegrationTest extends AuthTestSupport {
 
     private String chapter() {
         Work work = workRepository.save(Work.create("Moderated Work", "", WorkType.MANGA, "c.webp", Set.of("Action")));
-        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", null);
+        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", anyTeam());
         chapter.updatePages(List.of(PageAsset.create(1, "m/p1.webp", null)));
         chapter.publish(UserId.of("publisher"));
         return chapterRepository.save(chapter).getId().value().toString();

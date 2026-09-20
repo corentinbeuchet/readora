@@ -1,5 +1,6 @@
 package com.readora.web.dto;
 
+import com.readora.application.port.in.BrowseCatalogUseCase.CreditedChapter;
 import com.readora.domain.work.Chapter;
 import org.jspecify.annotations.Nullable;
 
@@ -13,9 +14,11 @@ public record ChapterSummaryDto(
         String title,
         String status,
         int pageCount,
-        @Nullable Instant publishedAt
+        @Nullable Instant publishedAt,
+        TeamRefDto team
 ) {
-    public static ChapterSummaryDto fromDomain(Chapter chapter) {
+    public static ChapterSummaryDto fromDomain(CreditedChapter credited) {
+        Chapter chapter = credited.chapter();
         return new ChapterSummaryDto(
                 chapter.getId().value(),
                 chapter.getWorkId().value(),
@@ -23,7 +26,8 @@ public record ChapterSummaryDto(
                 chapter.getTitle(),
                 chapter.getStatus().name(),
                 chapter.getPages().size(),
-                chapter.getPublishedAt()
+                chapter.getPublishedAt(),
+                TeamRefDto.fromDomain(credited.team())
         );
     }
 }

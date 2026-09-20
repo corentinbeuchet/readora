@@ -3,6 +3,7 @@ package com.readora.application.port.in;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.Team;
+import com.readora.domain.scanlation.TeamCredit;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.Demographic;
 import com.readora.domain.work.Work;
@@ -53,7 +54,12 @@ public interface BrowseCatalogUseCase {
     List<String> listGenres();
 
     Optional<Work> getWork(WorkId workId);
-    List<Chapter> listPublishedChapters(WorkId workId);
+    /// A published chapter with the team that translated it.
+    record CreditedChapter(Chapter chapter, TeamCredit team) {
+    }
+
+    /// Published chapters of a series in reading order.
+    List<CreditedChapter> listPublishedChapters(WorkId workId);
     /// A team's task board for one series, with the team whose roster works on it.
     record ProjectBoard(ScanlationProject project, Team team) {
     }

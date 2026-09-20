@@ -4,7 +4,6 @@ import com.readora.application.port.out.CommunityQueryPort;
 import com.readora.domain.common.UserId;
 import com.readora.domain.library.ChapterRead;
 import com.readora.domain.library.LibraryEntry;
-import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.social.ReadingStatus;
@@ -66,23 +65,21 @@ public class InMemoryCommunity implements CommunityQueryPort {
     }
 
     @Override
-    public Map<ProjectId, Long> countPublishedChapters(Collection<ProjectId> projectIds) {
-        return publishedBy(projectIds).collect(Collectors.groupingBy(Chapter::getScanlationProjectId, Collectors.counting()));
+    public Map<WorkId, Long> countPublishedChapters(TeamId teamId) {
+        return publishedBy(teamId).collect(Collectors.groupingBy(Chapter::getWorkId, Collectors.counting()));
     }
 
     @Override
-    public List<PublishedChapter> latestPublishedChapters(Collection<ProjectId> projectIds, int limit) {
-        return publishedBy(projectIds)
+    public List<PublishedChapter> latestPublishedChapters(TeamId teamId, int limit) {
+        return publishedBy(teamId)
                 .sorted(Comparator.comparing(Chapter::getPublishedAt).reversed())
                 .limit(limit)
                 .map(c -> new PublishedChapter(c.getId(), c.getWorkId(), c.getChapterNumber(), c.getTitle(), c.getPages().size(), c.getPublishedAt()))
                 .toList();
     }
 
-    private java.util.stream.Stream<Chapter> publishedBy(Collection<ProjectId> projectIds) {
-        return chapters.all().stream()
-                .filter(Chapter::isPublished)
-                .filter(c -> c.getScanlationProjectId() != null && projectIds.contains(c.getScanlationProjectId()));
+    private java.util.stream.Stream<Chapter> publishedBy(TeamId teamId) {
+        return chapters.all().stream().filter(Chapter::isPublished).filter(c -> c.getTeamId().equals(teamId));
     }
 
     @Override

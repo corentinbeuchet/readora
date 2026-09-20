@@ -7,6 +7,7 @@ import com.readora.domain.work.Chapter;
 import com.readora.domain.work.Demographic;
 import com.readora.domain.work.PageAsset;
 import com.readora.domain.work.Work;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.WorkId;
 import com.readora.domain.work.WorkStatus;
 import com.readora.domain.work.WorkType;
@@ -111,7 +112,8 @@ public class CatalogController {
                 request.author(),
                 request.demographic(),
                 request.coverImageUrl(),
-                request.genres() != null ? request.genres() : Set.of()
+                request.genres() != null ? request.genres() : Set.of(),
+                request.teamId() != null ? TeamId.of(request.teamId()) : null
         );
         Work work = manageWorkUseCase.createWork(details, currentUserProvider.requireUserId());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(WorkDto.fromDomain(work)));
@@ -129,6 +131,7 @@ public class CatalogController {
                 .toList();
         Chapter chapter = directPublishChapterUseCase.directPublishChapter(
                 WorkId.of(workId),
+                TeamId.of(request.teamId()),
                 request.chapterNumber(),
                 request.title(),
                 pages,

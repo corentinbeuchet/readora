@@ -4,6 +4,7 @@ import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.CommentRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.service.ReaderSocialService;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.social.ChapterComment;
 import com.readora.domain.social.CommentId;
 import com.readora.domain.work.Chapter;
@@ -87,7 +88,7 @@ public class SocialCommentsStepDefinitions {
             @Override
             public Optional<Chapter> findById(ChapterId id) {
                 return Optional.of(new Chapter(id, WorkId.generate(), ChapterNumber.of("1"), "Chapter 1", ChapterStatus.PUBLISHED,
-                        List.of(PageAsset.create(1, "p1.webp", null)), null, null, null, null));
+                        List.of(PageAsset.create(1, "p1.webp", null)), TeamId.generate(), null, null, null));
             }
 
             @Override

@@ -54,7 +54,7 @@ class PageReportIntegrationTest extends AuthTestSupport {
         Work work = workRepository.save(Work.create("Report Work", "S", WorkType.MANHWA, "c.webp", Set.of("Action")));
         Team shadowScans = teamRepository.save(Team.create("Shadow Scans " + java.util.UUID.randomUUID(), null, UserId.of(leader.userId())));
         ScanlationProject team = projectRepository.save(ScanlationProject.create("Shadow Scans", work.getId(), shadowScans.getId()));
-        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", team.getId());
+        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", shadowScans.getId());
         chapter.updatePages(List.of(PageAsset.create(1, "r/p1.webp", null), PageAsset.create(2, "r/p2.webp", null)));
         chapter.publish(UserId.of(leader.userId()));
         chapter = chapterRepository.save(chapter);
@@ -98,7 +98,7 @@ class PageReportIntegrationTest extends AuthTestSupport {
     void invalidReports() throws Exception {
         Session kenji = register();
         Work work = workRepository.save(Work.create("Report Work 2", "S", WorkType.MANGA, "c.webp", Set.of("Action")));
-        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", null);
+        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", anyTeam());
         chapter.updatePages(List.of(PageAsset.create(1, "r/p1.webp", null)));
         chapter.publish(UserId.of("publisher"));
         chapter = chapterRepository.save(chapter);

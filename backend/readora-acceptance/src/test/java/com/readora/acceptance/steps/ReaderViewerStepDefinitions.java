@@ -1,7 +1,6 @@
 package com.readora.acceptance.steps;
 
 import com.readora.domain.common.UserId;
-import com.readora.acceptance.fakes.InMemoryProjectRepository;
 import com.readora.acceptance.fakes.InMemoryTeamRepository;
 import com.readora.acceptance.fakes.InMemoryWorkRepository;
 import com.readora.application.port.out.ChapterRepositoryPort;
@@ -27,6 +26,7 @@ public class ReaderViewerStepDefinitions {
 
     private final Map<WorkId, Work> workStore = new ConcurrentHashMap<>();
     private final Map<ChapterId, Chapter> chapterStore = new ConcurrentHashMap<>();
+    private final InMemoryTeamRepository teams = new InMemoryTeamRepository();
     private final Map<String, Bookmark> bookmarkStore = new ConcurrentHashMap<>();
 
     private ChapterReadingService chapterReadingService;
@@ -89,8 +89,7 @@ public class ReaderViewerStepDefinitions {
             }
         };
 
-        chapterReadingService = new ChapterReadingService(chapterRepo, new InMemoryWorkRepository(workStore), new InMemoryProjectRepository(),
-                new InMemoryTeamRepository(), storagePort);
+        chapterReadingService = new ChapterReadingService(chapterRepo, new InMemoryWorkRepository(workStore), teams, storagePort);
     }
 
     @Given("the reader {string} is registered on Readora")
@@ -118,7 +117,7 @@ public class ReaderViewerStepDefinitions {
                 chapterName,
                 ChapterStatus.PUBLISHED,
                 pages,
-                null,
+                teams.anyTeam(),
                 Instant.now(),
                 Instant.now(),
                 Instant.now()
@@ -192,7 +191,7 @@ public class ReaderViewerStepDefinitions {
                 chapterName,
                 ChapterStatus.valueOf(statusStr),
                 List.of(PageAsset.create(1, "draft/p1.webp", null)),
-                null,
+                teams.anyTeam(),
                 Instant.now(),
                 null,
                 Instant.now()

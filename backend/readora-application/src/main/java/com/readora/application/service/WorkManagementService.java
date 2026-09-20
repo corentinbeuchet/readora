@@ -11,20 +11,18 @@ import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.AccessDeniedDomainException;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.NotFoundException;
 import com.readora.domain.identity.Permission;
-import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.ScanlationRole;
 import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.*;
-import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class WorkManagementService implements ManageWorkUseCase, DirectPublishChapterUseCase {
 
@@ -62,13 +60,17 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
             throw new DomainValidationException("Work type cannot be null");
         }
 
+        Team ownTeam = details.teamId() != null ? requireLedTeam(details.teamId(), creatorId) : null;
+
         WorkStatus requested = details.status();
         WorkStatus status = requested != null ? requested : WorkStatus.ONGOING;
         Work work = Work.create(title, details.synopsis(), details.type(), status, details.author(), details.demographic(),
                 details.coverImageUrl(), details.genres() != null ? details.genres() : Set.of());
         Work savedWork = workRepository.save(work);
 
-        if (creatorId != null) {
+        if (ownTeam != null) {
+            projectRepository.save(ScanlationProject.create(ownTeam.getName() + " - " + savedWork.getTitle(), savedWork.getId(), ownTeam.getId()));
+        } else if (creatorId != null) {
             String name = savedWork.getTitle() + " Workspace";
             String teamName = teamRepository.existsByName(name) ? name + " " + savedWork.getId().toString().substring(0, 8) : name;
             Team team = Team.create(teamName, null, creatorId);
@@ -80,12 +82,13 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
     }
 
     @Override
-    public Chapter directPublishChapter(WorkId workId, String chapterNumberStr, String title, List<PageAsset> pages, UserId publisherId) {
+    public Chapter directPublishChapter(WorkId workId, TeamId teamId, String chapterNumberStr, String title, List<PageAsset> pages,
+                                        UserId publisherId) {
         Objects.requireNonNull(workId, "WorkId cannot be null");
         if (workRepository.findById(workId).isEmpty()) {
             throw new NotFoundException("Work", workId);
         }
-        ProjectId projectId = authorizePublisher(workId, publisherId);
+        authorizePublisher(workId, teamId, publisherId);
 
         if (chapterNumberStr == null || chapterNumberStr.trim().isEmpty()) {
             throw new DomainValidationException("Chapter number cannot be empty");
@@ -100,7 +103,7 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
             throw new DomainValidationException("Cannot publish chapter with zero pages.");
         }
 
-        Chapter chapter = Chapter.createPublished(workId, chapterNumber, title != null ? title : "", pages, projectId, publisherId);
+        Chapter chapter = Chapter.createPublished(workId, chapterNumber, title != null ? title : "", pages, teamId, publisherId);
         Chapter savedChapter = chapterRepository.save(chapter);
 
         chapter.pollDomainEvents().forEach(eventPublisher::publish);
@@ -108,24 +111,26 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
         return savedChapter;
     }
 
-    /// Only a leader or quality checker of one of the work's scanlation projects (or an admin) may publish into it.
+    private Team requireLedTeam(TeamId teamId, UserId creatorId) {
+        Team team = teamRepository.findById(teamId).orElseThrow(() -> new NotFoundException("Team", teamId));
+        if (!team.isLeader(creatorId)) {
+            throw new AccessDeniedDomainException("Only a leader of " + team.getName() + " can add a series to it");
+        }
+        return team;
+    }
+
+    /// The chapter is published as `teamId`'s version: the team must work on the series (have a task board for it),
+    /// and the publisher must be one of its leaders or quality checkers, or an admin.
     ///
-    /// @return the project the chapter is attributed to, or `null` for an admin publishing a work without a project
-    /// @throws AccessDeniedDomainException for anyone else — the global `CHAPTER_PUBLISH` permission is not enough
-    private @Nullable ProjectId authorizePublisher(WorkId workId, UserId publisherId) {
-        List<ScanlationProject> projects = projectRepository.findByWorkId(workId);
-        Set<TeamId> publisherTeams = teamRepository.findAllById(projects.stream().map(ScanlationProject::getTeamId).toList()).stream()
-                .filter(team -> team.findMember(publisherId).filter(m -> m.hasRole(ScanlationRole.QUALITY_CHECKER)).isPresent())
-                .map(Team::getId)
-                .collect(Collectors.toSet());
-        var memberProject = projects.stream().filter(p -> publisherTeams.contains(p.getTeamId())).findFirst();
-        if (memberProject.isPresent()) {
-            return memberProject.get().getId();
+    /// @throws AccessDeniedDomainException for anyone else: the global `CHAPTER_PUBLISH` permission is not enough
+    private void authorizePublisher(WorkId workId, TeamId teamId, UserId publisherId) {
+        Team team = teamRepository.findById(teamId).orElseThrow(() -> new NotFoundException("Team", teamId));
+        boolean onTheTeam = team.findMember(publisherId).filter(m -> m.hasRole(ScanlationRole.QUALITY_CHECKER)).isPresent();
+        if (!onTheTeam && !userRepository.findById(publisherId).map(account -> account.can(Permission.USER_MANAGE)).orElse(false)) {
+            throw new AccessDeniedDomainException("Only a leader or quality checker of " + team.getName() + " can publish its chapters");
         }
-        boolean admin = userRepository.findById(publisherId).map(account -> account.can(Permission.USER_MANAGE)).orElse(false);
-        if (!admin) {
-            throw new AccessDeniedDomainException("Only a leader or quality checker of this work's scanlation project can publish chapters");
+        if (projectRepository.findByTeamId(teamId).stream().noneMatch(project -> project.getWorkId().equals(workId))) {
+            throw DomainValidationException.withCode(ErrorCodes.TEAM_NOT_ON_SERIES, team.getName() + " does not work on this series yet");
         }
-        return projects.stream().findFirst().map(ScanlationProject::getId).orElse(null);
     }
 }

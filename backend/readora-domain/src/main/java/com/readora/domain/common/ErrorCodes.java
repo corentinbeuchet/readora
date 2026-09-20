@@ -40,6 +40,7 @@ public final class ErrorCodes {
     public static final String TEAM_NAME_TAKEN = "TEAM_NAME_TAKEN";
     public static final String SERIES_ALREADY_IN_TEAM = "SERIES_ALREADY_IN_TEAM";
     public static final String LAST_LEADER = "LAST_LEADER";
+    public static final String TEAM_NOT_ON_SERIES = "TEAM_NOT_ON_SERIES";
 
     private ErrorCodes() {
     }

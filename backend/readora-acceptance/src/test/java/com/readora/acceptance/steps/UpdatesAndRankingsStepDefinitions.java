@@ -1,5 +1,6 @@
 package com.readora.acceptance.steps;
 
+import com.readora.acceptance.fakes.InMemoryTeamRepository;
 import com.readora.acceptance.fakes.InMemoryChapterReadRepository;
 import com.readora.acceptance.fakes.InMemoryChapterRepository;
 import com.readora.acceptance.fakes.InMemoryDiscovery;
@@ -15,6 +16,8 @@ import com.readora.application.port.in.DiscoverUseCase.Release;
 import com.readora.application.service.DiscoveryService;
 import com.readora.application.service.LibraryService;
 import com.readora.application.service.ReadingTrackerService;
+import com.readora.domain.scanlation.TeamId;
+import com.readora.domain.scanlation.Team;
 import com.readora.domain.common.UserId;
 import com.readora.domain.rating.WorkRating;
 import com.readora.domain.work.Chapter;
@@ -50,6 +53,7 @@ public class UpdatesAndRankingsStepDefinitions {
     private InMemoryChapterRepository chapters;
     private InMemoryRatingRepository ratings;
     private InMemoryDiscovery discovery;
+    private InMemoryTeamRepository teams;
     private DiscoveryService service;
     private ReadingTrackerService reading;
     private List<Release> releases = List.of();
@@ -65,7 +69,8 @@ public class UpdatesAndRankingsStepDefinitions {
         InMemoryLibraryRepository library = new InMemoryLibraryRepository();
         InMemoryChapterReadRepository reads = new InMemoryChapterReadRepository(chapters);
         discovery = new InMemoryDiscovery(works, chapters, library, reads);
-        service = new DiscoveryService(discovery, works, ratings, clock);
+        teams = new InMemoryTeamRepository();
+        service = new DiscoveryService(discovery, works, ratings, teams, clock);
         reading = new ReadingTrackerService(reads, chapters, works, clock);
         libraryService = new LibraryService(library, works, reads, clock);
     }
@@ -100,6 +105,19 @@ public class UpdatesAndRankingsStepDefinitions {
     @Given("{string} read chapter {int} of {string}")
     public void readChapter(String reader, int number, String title) {
         reading.recordRead(UserId.of(reader), chapter(title, number), true);
+    }
+
+    @Given("the team {string} published chapter {int} of {string} {int} minutes ago")
+    public void theTeamPublishedChapter(String teamName, int number, String title, int minutes) {
+        Team team = teams.save(Team.create(teamName, null, UserId.of(teamName + " leader")));
+        publish(title, number, NOW.minus(Duration.ofMinutes(minutes)), team.getId());
+    }
+
+    @Then("the release of {string} chapter {int} is credited to {string}")
+    public void theReleaseIsCreditedTo(String title, int number, String teamName) {
+        Release release = release(number);
+        assertThat(release.work().getTitle()).isEqualTo(title);
+        assertThat(release.team().name()).isEqualTo(teamName);
     }
 
     @When("{string} opens {string}")
@@ -215,7 +233,11 @@ public class UpdatesAndRankingsStepDefinitions {
     }
 
     private void publish(String title, int number, Instant at) {
+        publish(title, number, at, teams.anyTeam());
+    }
+
+    private void publish(String title, int number, Instant at, TeamId teamId) {
         chapters.save(new Chapter(ChapterId.generate(), work(title), ChapterNumber.of(String.valueOf(number)), "Chapter " + number,
-                ChapterStatus.PUBLISHED, List.of(PageAsset.create(1, "p1.webp", null)), null, at, at, at));
+                ChapterStatus.PUBLISHED, List.of(PageAsset.create(1, "p1.webp", null)), teamId, at, at, at));
     }
 }

@@ -2,6 +2,7 @@ package com.readora.application.port.in;
 
 import com.readora.application.port.in.BrowseCatalogUseCase.CatalogQuery;
 import com.readora.domain.common.UserId;
+import com.readora.domain.scanlation.TeamCredit;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.Work;
@@ -20,8 +21,9 @@ public interface DiscoverUseCase {
 
     enum Period { TODAY, WEEK, MONTH, ALL }
 
+    /// @param team the team that translated the chapter
     /// @param read whether the viewer has finished this chapter (always false for guests)
-    record Release(Work work, ChapterId chapterId, ChapterNumber chapterNumber, String chapterTitle, Instant publishedAt, boolean read) {
+    record Release(Work work, TeamCredit team, ChapterId chapterId, ChapterNumber chapterNumber, String chapterTitle, Instant publishedAt, boolean read) {
     }
 
     /// @param score popularity score, or average rating for top rated

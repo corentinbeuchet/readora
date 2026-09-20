@@ -10,6 +10,7 @@ import com.readora.application.exception.CommentRateLimitedException;
 import com.readora.application.port.in.ModerateCommentsUseCase.QueueItem;
 import com.readora.application.service.ModerationService;
 import com.readora.application.service.ReaderSocialService;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.common.AccessDeniedDomainException;
 import com.readora.domain.common.UserId;
 import com.readora.domain.identity.Email;
@@ -70,7 +71,7 @@ public class ModerationStepDefinitions {
         Work work = new InMemoryWorkRepository().save(Work.create("Solo Leveling", "", WorkType.MANHWA, "", Set.of()));
         Instant earlier = clock.instant().minus(Duration.ofDays(1));
         chapterId = chapters.save(new Chapter(ChapterId.generate(), work.getId(), ChapterNumber.of("5"), "Chapter 5", ChapterStatus.PUBLISHED,
-                List.of(PageAsset.create(1, "p1.webp", null)), null, earlier, earlier, earlier)).getId();
+                List.of(PageAsset.create(1, "p1.webp", null)), TeamId.generate(), earlier, earlier, earlier)).getId();
         refusal = null;
     }
 

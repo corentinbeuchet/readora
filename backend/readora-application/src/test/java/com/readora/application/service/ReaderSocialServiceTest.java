@@ -6,6 +6,7 @@ import com.readora.application.port.out.EventPublisherPort;
 import com.readora.domain.social.ChapterComment;
 import com.readora.domain.social.CommentPostedEvent;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.ChapterNumber;
@@ -75,7 +76,7 @@ class ReaderSocialServiceTest {
     @Test
     @DisplayName("Commenting on a draft chapter is rejected and nothing is saved")
     void commentOnDraftChapterIsRejected() {
-        Chapter draft = Chapter.createDraft(WorkId.generate(), ChapterNumber.of("1"), "Draft", null);
+        Chapter draft = Chapter.createDraft(WorkId.generate(), ChapterNumber.of("1"), "Draft", TeamId.generate());
         when(chapterRepository.findById(draft.getId())).thenReturn(Optional.of(draft));
 
         assertThatThrownBy(() ->
@@ -85,7 +86,7 @@ class ReaderSocialServiceTest {
     }
 
     private static Chapter publishedChapter() {
-        Chapter chapter = Chapter.createDraft(WorkId.generate(), ChapterNumber.of("1"), "Chapter 1", null);
+        Chapter chapter = Chapter.createDraft(WorkId.generate(), ChapterNumber.of("1"), "Chapter 1", TeamId.generate());
         chapter.updatePages(List.of(PageAsset.create(1, "p1.webp", null)));
         chapter.publish(UserId.of("publisher"));
         return chapter;

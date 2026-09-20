@@ -15,6 +15,7 @@ import com.readora.application.port.in.CommunityUseCase.TeamPage;
 import com.readora.application.port.in.CommunityUseCase.TeamSeries;
 import com.readora.application.port.in.DiscoverUseCase.Release;
 import com.readora.application.port.in.ManageLibraryUseCase.ExportRow;
+import com.readora.application.service.WorkManagementService;
 import com.readora.application.service.CommunityService;
 import com.readora.application.service.TeamManagementService;
 import com.readora.domain.common.AccessDeniedDomainException;
@@ -64,6 +65,7 @@ public class CommunityStepDefinitions {
     private InMemoryUserAccounts users;
     private CommunityService community;
     private TeamManagementService teamManagement;
+    private WorkManagementService publishing;
     private @Nullable RuntimeException refusal;
     private DiscoveryService discovery;
     private LibraryService library;
@@ -84,15 +86,13 @@ public class CommunityStepDefinitions {
         InMemoryChapterReadRepository reads = new InMemoryChapterReadRepository(chapters);
         InMemoryCommunity communityQueries = new InMemoryCommunity(works, reads, libraryRepository, users, chapters);
         InMemoryDiscovery discoveryQueries = new InMemoryDiscovery(works, chapters, libraryRepository, reads);
-        discoveryQueries.followedTeams(reader -> communityQueries.followedBy(reader).stream()
-                .flatMap(teamId -> projects.findByTeamId(teamId).stream())
-                .map(ScanlationProject::getId)
-                .collect(java.util.stream.Collectors.toSet()));
+        discoveryQueries.followedTeams(communityQueries::followedBy);
         Clock clock = Clock.systemUTC();
         community = new CommunityService(users, communityQueries, teams, projects, works, clock);
         teamManagement = new TeamManagementService(teams, projects, works, users, clock);
+        publishing = new WorkManagementService(works, chapters, projects, teams, users, event -> { });
         refusal = null;
-        discovery = new DiscoveryService(discoveryQueries, works, new InMemoryRatingRepository(), clock);
+        discovery = new DiscoveryService(discoveryQueries, works, new InMemoryRatingRepository(), teams, clock);
         library = new LibraryService(libraryRepository, works, reads, clock);
         reading = new ReadingTrackerService(reads, chapters, works, clock);
     }
@@ -229,6 +229,27 @@ public class CommunityStepDefinitions {
         assertThat(community.team(teamNamed(teamName).getId(), null).series()).extracting(series -> series.work().getTitle()).containsExactly(title);
     }
 
+    @When("{string} publishes chapter {int} of {string} for {string}")
+    public void publishesChapterFor(String publisher, int number, String title, String teamName) {
+        Work work = works.all().stream().filter(w -> w.getTitle().equals(title)).findFirst().orElseThrow();
+        attempt(() -> publishing.directPublishChapter(work.getId(), teamNamed(teamName).getId(), String.valueOf(number), "Chapter " + number,
+                List.of(PageAsset.create(1, "p1.webp", null)), account(publisher)));
+    }
+
+    @Then("the chapter is refused because {string} does not work on the series")
+    public void theChapterIsRefusedBecauseTheTeamDoesNotWorkOnTheSeries(String teamName) {
+        assertThat(refusal).isInstanceOfSatisfying(DomainValidationException.class, e -> assertThat(e.code()).isEqualTo(ErrorCodes.TEAM_NOT_ON_SERIES));
+        refusal = null;
+    }
+
+    @Then("chapter {int} of {string} is credited to {string}")
+    public void chapterIsCreditedTo(int number, String title, String teamName) {
+        assertThat(refusal).isNull();
+        Work work = works.all().stream().filter(w -> w.getTitle().equals(title)).findFirst().orElseThrow();
+        assertThat(chapters.findByWorkIdAndChapterNumber(work.getId(), ChapterNumber.of(String.valueOf(number))))
+                .hasValueSatisfying(chapter -> assertThat(chapter.getTeamId()).isEqualTo(teamNamed(teamName).getId()));
+    }
+
     @Then("the team refuses what {string} asked")
     public void theTeamRefusesWhatWasAsked(String actor) {
         assertThat(refusal).isInstanceOf(AccessDeniedDomainException.class);
@@ -294,6 +315,6 @@ public class CommunityStepDefinitions {
     private Chapter publish(Work work, ScanlationProject project, String number) {
         Instant now = Instant.now();
         return chapters.save(new Chapter(ChapterId.generate(), work.getId(), ChapterNumber.of(number), "Chapter " + number, ChapterStatus.PUBLISHED,
-                List.of(PageAsset.create(1, "p1.webp", null)), project != null ? project.getId() : null, now, now, now));
+                List.of(PageAsset.create(1, "p1.webp", null)), project != null ? project.getTeamId() : teams.anyTeam(), now, now, now));
     }
 }

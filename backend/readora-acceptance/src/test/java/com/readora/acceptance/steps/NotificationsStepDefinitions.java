@@ -9,6 +9,7 @@ import com.readora.acceptance.fakes.InMemoryWorkRepository;
 import com.readora.application.service.LibraryService;
 import com.readora.application.service.NotificationService;
 import com.readora.application.service.ReaderSocialService;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.common.UserId;
 import com.readora.domain.notification.Notification;
 import com.readora.domain.social.ChapterComment;
@@ -153,6 +154,6 @@ public class NotificationsStepDefinitions {
     private Chapter publish(String title, int number) {
         Instant now = Instant.now();
         return chapters.save(new Chapter(ChapterId.generate(), work(title), ChapterNumber.of(String.valueOf(number)), "Chapter " + number,
-                ChapterStatus.PUBLISHED, List.of(PageAsset.create(1, "p1.webp", null)), null, now, now, now));
+                ChapterStatus.PUBLISHED, List.of(PageAsset.create(1, "p1.webp", null)), TeamId.generate(), now, now, now));
     }
 }

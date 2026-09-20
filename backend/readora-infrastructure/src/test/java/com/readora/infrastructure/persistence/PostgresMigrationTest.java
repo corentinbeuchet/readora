@@ -4,6 +4,7 @@ import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.Team;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.*;
 import com.readora.domain.library.ChapterRead;
 import com.readora.domain.rating.Review;
@@ -87,7 +88,7 @@ class PostgresMigrationTest {
         ScanlationProject project = ScanlationProject.create("PG Group", work.getId(), pgGroup.getId());
         project.addChapterTask(ChapterNumber.of("1"));
         projectRepository.save(project);
-        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", project.getId());
+        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", project.getTeamId());
         chapter.updatePages(List.of(PageAsset.create(1, "p1.webp", null)));
         chapter.publish(UserId.of("leader"));
         chapterRepository.save(chapter);
@@ -125,7 +126,7 @@ class PostgresMigrationTest {
     void libraryQueriesRunOnPostgres() {
         Work work = workRepository.save(Work.create("PG Library", "", WorkType.MANGA, "c.png", Set.of("Action")));
         UserId kenji = UserId.of("pg-kenji");
-        Chapter one = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", null);
+        Chapter one = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", anyTeam());
         one.updatePages(List.of(PageAsset.create(1, "p1.webp", null)));
         one.publish(UserId.of("qc"));
         chapterRepository.save(one);
@@ -134,7 +135,7 @@ class PostgresMigrationTest {
         chapterReads.save(new ChapterRead(kenji, work.getId(), one.getId(), one.getChapterNumber(), one.getPublishedAt(), true));
         sleepPastClockTick();
 
-        Chapter two = Chapter.createDraft(work.getId(), ChapterNumber.of("2"), "Ch 2", null);
+        Chapter two = Chapter.createDraft(work.getId(), ChapterNumber.of("2"), "Ch 2", anyTeam());
         two.updatePages(List.of(PageAsset.create(1, "p1.webp", null)));
         two.publish(UserId.of("qc"));
         chapterRepository.save(two);
@@ -153,19 +154,19 @@ class PostgresMigrationTest {
         Work work = workRepository.save(Work.create("PG Reports", "", WorkType.MANGA, "c.png", Set.of("Action")));
         Team pgTeam = teamRepository.save(Team.create("PG Team", null, UserId.of("pg-leader")));
         ScanlationProject team = projectRepository.save(ScanlationProject.create("PG Team", work.getId(), pgTeam.getId()));
-        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", team.getId());
+        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", pgTeam.getId());
         chapter.updatePages(List.of(PageAsset.create(1, "p1.webp", null)));
         chapter.publish(UserId.of("pg-leader"));
         chapterRepository.save(chapter);
 
-        PageReport report = pageReports.save(PageReport.open(chapter.getId(), work.getId(), team.getId(), chapter.getChapterNumber(), 1,
+        PageReport report = pageReports.save(PageReport.open(chapter.getId(), work.getId(), pgTeam.getId(), chapter.getChapterNumber(), 1,
                 PageReportReason.IMAGE_CORRUPTED, UserId.of("pg-reader"), java.time.Instant.now()));
         assertThat(pageReports.findOpen(UserId.of("pg-reader"), chapter.getId(), 1)).isPresent();
-        assertThat(pageReports.findOpenByProject(team.getId())).hasSize(1);
+        assertThat(pageReports.findOpenByTeamAndWork(pgTeam.getId(), work.getId())).hasSize(1);
 
         report.resolve(UserId.of("pg-leader"), java.time.Instant.now());
         pageReports.save(report);
-        assertThat(pageReports.findOpenByProject(team.getId())).isEmpty();
+        assertThat(pageReports.findOpenByTeamAndWork(pgTeam.getId(), work.getId())).isEmpty();
     }
 
     @Autowired
@@ -192,7 +193,7 @@ class PostgresMigrationTest {
     @DisplayName("Feed and popularity queries (sub-selects across reads, comments, library, follows) run on PostgreSQL")
     void discoveryQueriesRunOnPostgres() {
         Work work = workRepository.save(Work.create("PG Popular", "", WorkType.MANGA, "c.png", Set.of("Action")));
-        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", null);
+        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", anyTeam());
         chapter.updatePages(List.of(PageAsset.create(1, "p1.webp", null)));
         chapter.publish(UserId.of("qc"));
         chapterRepository.save(chapter);
@@ -241,7 +242,7 @@ class PostgresMigrationTest {
     @DisplayName("Hidden comments, top comments, the author's last comment time and comment reports work on PostgreSQL")
     void moderationQueriesRunOnPostgres() {
         Work work = workRepository.save(Work.create("PG Moderated", "", WorkType.MANGA, "c.png", Set.of("Action")));
-        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", null);
+        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", anyTeam());
         chapter.updatePages(List.of(PageAsset.create(1, "p1.webp", null)));
         chapter.publish(UserId.of("qc"));
         chapterRepository.save(chapter);
@@ -271,7 +272,7 @@ class PostgresMigrationTest {
         Work work = workRepository.save(Work.create("PG Community", "", WorkType.MANGA, "c.png", Set.of("Mystery")));
         Team team = teamRepository.save(Team.create("PG Team 2", null, UserId.of("pg-leader-2")));
         ScanlationProject project = projectRepository.save(ScanlationProject.create("PG Team 2", work.getId(), team.getId()));
-        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", project.getId());
+        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", project.getTeamId());
         chapter.updatePages(List.of(PageAsset.create(1, "p1.webp", null)));
         chapter.publish(UserId.of("qc"));
         chapterRepository.save(chapter);
@@ -284,8 +285,8 @@ class PostgresMigrationTest {
         assertThat(community.follow(reader, team.getId(), java.time.Instant.now())).isTrue();
         assertThat(community.follow(reader, team.getId(), java.time.Instant.now())).isFalse();
         assertThat(community.countFollowers(team.getId())).isEqualTo(1);
-        assertThat(community.countPublishedChapters(List.of(project.getId()))).containsEntry(project.getId(), 1L);
-        assertThat(community.latestPublishedChapters(List.of(project.getId()), 10)).singleElement()
+        assertThat(community.countPublishedChapters(team.getId())).containsEntry(work.getId(), 1L);
+        assertThat(community.latestPublishedChapters(team.getId(), 10)).singleElement()
                 .satisfies(latest -> {
                     assertThat(latest.id()).isEqualTo(chapter.getId());
                     assertThat(latest.pageCount()).isEqualTo(1);
@@ -320,5 +321,10 @@ class PostgresMigrationTest {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    /// Every chapter is some team's version: a throwaway team for tests that are not about teams.
+    private TeamId anyTeam() {
+        return teamRepository.save(Team.create("Team " + java.util.UUID.randomUUID(), null, UserId.of("any-leader"))).getId();
     }
 }

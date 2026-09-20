@@ -18,8 +18,8 @@ public class PageReportJpaEntity {
     @Column(name = "work_id", nullable = false)
     private UUID workId;
 
-    @Column(name = "project_id")
-    private UUID projectId;
+    @Column(name = "team_id", nullable = false)
+    private UUID teamId;
 
     @Column(name = "chapter_number", nullable = false, length = 50)
     private String chapterNumber;
@@ -52,12 +52,12 @@ public class PageReportJpaEntity {
     protected PageReportJpaEntity() {
     }
 
-    public PageReportJpaEntity(UUID id, UUID chapterId, UUID workId, UUID projectId, String chapterNumber, int pageNumber,
+    public PageReportJpaEntity(UUID id, UUID chapterId, UUID workId, UUID teamId, String chapterNumber, int pageNumber,
                                String reason, String reporterId, String status, Instant createdAt) {
         this.id = id;
         this.chapterId = chapterId;
         this.workId = workId;
-        this.projectId = projectId;
+        this.teamId = teamId;
         this.chapterNumber = chapterNumber;
         this.pageNumber = pageNumber;
         this.reason = reason;
@@ -69,7 +69,7 @@ public class PageReportJpaEntity {
     public UUID getId() { return id; }
     public UUID getChapterId() { return chapterId; }
     public UUID getWorkId() { return workId; }
-    public UUID getProjectId() { return projectId; }
+    public UUID getTeamId() { return teamId; }
     public String getChapterNumber() { return chapterNumber; }
     public int getPageNumber() { return pageNumber; }
     public String getReason() { return reason; }

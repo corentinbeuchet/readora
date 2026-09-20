@@ -2,6 +2,7 @@ package com.readora.infrastructure.persistence.adapter;
 
 import com.readora.application.port.out.DiscoveryQueryPort;
 import com.readora.domain.common.UserId;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.WorkId;
@@ -23,14 +24,13 @@ import java.util.UUID;
 public class DiscoveryQueryAdapter implements DiscoveryQueryPort {
 
     private static final String RELEASES = """
-            select c.id, c.workId, c.chapterNumber, c.title, c.publishedAt from ChapterJpaEntity c
+            select c.id, c.workId, c.teamId, c.chapterNumber, c.title, c.publishedAt from ChapterJpaEntity c
             where c.status = 'PUBLISHED' %s
             order by c.publishedAt desc, c.id
             """;
     private static final String ONLY_FOR_READER = """
             and (c.workId in (select l.id.workId from LibraryEntryJpaEntity l where l.id.userId = :userId)
-                 or c.scanlationProjectId in (select p.id from ScanlationProjectJpaEntity p
-                                              where p.teamId in (select f.id.teamId from TeamFollowJpaEntity f where f.id.userId = :userId)))
+                 or c.teamId in (select f.id.teamId from TeamFollowJpaEntity f where f.id.userId = :userId))
             """;
 
     private final EntityManager entityManager;
@@ -47,8 +47,8 @@ public class DiscoveryQueryAdapter implements DiscoveryQueryPort {
             query.setParameter("userId", onlyFor.value());
         }
         return query.setFirstResult(page * size).setMaxResults(size).getResultList().stream()
-                .map(row -> new ChapterRelease(ChapterId.of((UUID) row[0]), WorkId.of((UUID) row[1]), ChapterNumber.of((String) row[2]),
-                        row[3] != null ? (String) row[3] : "", (Instant) row[4]))
+                .map(row -> new ChapterRelease(ChapterId.of((UUID) row[0]), WorkId.of((UUID) row[1]), TeamId.of((UUID) row[2]),
+                        ChapterNumber.of((String) row[3]), row[4] != null ? (String) row[4] : "", (Instant) row[5]))
                 .toList();
     }
 

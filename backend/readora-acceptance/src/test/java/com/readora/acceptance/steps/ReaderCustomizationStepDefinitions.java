@@ -65,7 +65,7 @@ public class ReaderCustomizationStepDefinitions {
         leader = UserId.of(teamName + " leader");
         Team roster = teams.save(Team.create(teamName, null, leader));
         team = projects.save(ScanlationProject.create(teamName, work.getId(), roster.getId()));
-        Chapter draft = Chapter.createDraft(work.getId(), ChapterNumber.of(String.valueOf(number)), "Chapter " + number, team.getId());
+        Chapter draft = Chapter.createDraft(work.getId(), ChapterNumber.of(String.valueOf(number)), "Chapter " + number, roster.getId());
         draft.updatePages(IntStream.rangeClosed(1, 20).mapToObj(n -> PageAsset.create(n, "p" + n + ".webp", null)).toList());
         draft.publish(leader);
         chapter = chapters.save(draft);

@@ -41,7 +41,7 @@ class CommunityIntegrationTest extends AuthTestSupport {
         var projects = mockMvc.perform(get("/api/v1/works/" + workId + "/projects").header("Authorization", leader.bearer())).andReturn();
         String teamId = json(projects).path("data").path(0).path("teamId").asString();
         var chapter = mockMvc.perform(post("/api/v1/works/" + workId + "/chapters/direct").header("Authorization", leader.bearer())
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"chapterNumber\":\"1\",\"title\":\"Ch\",\"pages\":[" + PAGE + "]}"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"teamId\":\"" + teamId + "\",\"chapterNumber\":\"1\",\"title\":\"Ch\",\"pages\":[" + PAGE + "]}"))
                 .andExpect(status().isCreated()).andReturn();
         String chapterId = json(chapter).path("data").path("id").asString();
 

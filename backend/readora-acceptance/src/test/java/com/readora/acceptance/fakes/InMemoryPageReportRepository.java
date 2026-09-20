@@ -1,10 +1,11 @@
 package com.readora.acceptance.fakes;
 
 import com.readora.application.port.out.PageReportRepositoryPort;
+import com.readora.domain.work.WorkId;
 import com.readora.domain.common.UserId;
 import com.readora.domain.report.PageReport;
 import com.readora.domain.report.PageReportId;
-import com.readora.domain.scanlation.ProjectId;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.ChapterId;
 
 import java.util.Comparator;
@@ -36,9 +37,9 @@ public class InMemoryPageReportRepository implements PageReportRepositoryPort {
     }
 
     @Override
-    public List<PageReport> findOpenByProject(ProjectId projectId) {
+    public List<PageReport> findOpenByTeamAndWork(TeamId teamId, WorkId workId) {
         return reports.values().stream()
-                .filter(r -> r.isOpen() && projectId.equals(r.getProjectId()))
+                .filter(r -> r.isOpen() && teamId.equals(r.getTeamId()) && workId.equals(r.getWorkId()))
                 .sorted(Comparator.comparing(PageReport::getCreatedAt))
                 .toList();
     }

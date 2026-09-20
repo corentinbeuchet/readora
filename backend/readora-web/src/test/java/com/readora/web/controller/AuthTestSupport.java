@@ -1,11 +1,14 @@
 package com.readora.web.controller;
 
+import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.domain.identity.Role;
 import com.readora.domain.identity.Subscription;
 import com.readora.domain.identity.SubscriptionPlan;
 import com.readora.domain.identity.UserAccount;
 import com.readora.domain.common.UserId;
+import com.readora.domain.scanlation.Team;
+import com.readora.domain.scanlation.TeamId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -36,6 +39,9 @@ abstract class AuthTestSupport {
 
     @Autowired
     protected UserAccountRepositoryPort userAccountRepository;
+
+    @Autowired
+    private TeamRepositoryPort teamRepositoryForTests;
 
     record Session(String userId, String email, String username, String accessToken, jakarta.servlet.http.Cookie refreshCookie) {
         String bearer() {
@@ -92,5 +98,18 @@ abstract class AuthTestSupport {
         String accessToken = body.path("data").path("accessToken").asString();
         String userId = body.path("data").path("user").path("id").asString();
         return new Session(userId, email, username, accessToken, response.getCookie(REFRESH_COOKIE));
+    }
+
+    /// The team created with a series (`POST /works` gives its creator a "<title> Workspace" team).
+    protected String teamOf(Session member, String workId) throws Exception {
+        var projects = mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .get("/api/v1/works/" + workId + "/projects").header("Authorization", member.bearer()))
+                .andExpect(status().isOk()).andReturn();
+        return json(projects).path("data").path(0).path("teamId").asString();
+    }
+
+    /// Every chapter is some team's version: a throwaway team for tests that are not about teams.
+    protected TeamId anyTeam() {
+        return teamRepositoryForTests.save(Team.create("Team " + java.util.UUID.randomUUID(), null, UserId.of("any-leader"))).getId();
     }
 }

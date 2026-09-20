@@ -13,5 +13,5 @@ public interface SpringDataPageReportRepository extends JpaRepository<PageReport
     Optional<PageReportJpaEntity> findFirstByReporterIdAndChapterIdAndPageNumberAndStatus(String reporterId, UUID chapterId,
                                                                                           int pageNumber, String status);
 
-    List<PageReportJpaEntity> findByProjectIdAndStatusOrderByCreatedAtAsc(UUID projectId, String status);
+    List<PageReportJpaEntity> findByTeamIdAndWorkIdAndStatusOrderByCreatedAtAsc(UUID teamId, UUID workId, String status);
 }

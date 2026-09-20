@@ -18,6 +18,13 @@ Feature: Latest updates and rankings
     Then he sees "One Piece" chapter 180 first, marked "10 minutes ago"
     And each chapter has a "Read now" button
 
+  # Inspired by: MangaDex and comix.to, where each release names its group
+  @should
+  Scenario: Each release names the team that translated it
+    Given the team "Shadow Scans" published chapter 7 of "Solo Leveling" 5 minutes ago
+    When "Kenji" opens "Latest updates"
+    Then the release of "Solo Leveling" chapter 7 is credited to "Shadow Scans"
+
   # Inspired by: MangaDex "Follows" feed
   @must
   Scenario: Only the series in my library

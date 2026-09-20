@@ -10,6 +10,7 @@ import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.AccessDeniedDomainException;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.identity.UserAccount;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
@@ -101,15 +102,11 @@ class WorkManagementServiceTest {
     }
 
     @Test
-    @DisplayName("Directly publish a chapter with ordered pages")
+    @DisplayName("Directly publish a chapter with ordered pages, credited to the publisher's team")
     void directPublishChapterSuccess() {
         UserId publisherId = UserId.of("pub-1");
         Work work = Work.create("One Piece", "Pirates", WorkType.MANGA, "op.jpg", Set.of("Adventure"));
-        Team team = Team.create("One Piece Workspace", null, publisherId);
-        ScanlationProject project = ScanlationProject.create("One Piece Workspace", work.getId(), team.getId());
-        when(workRepository.findById(work.getId())).thenReturn(Optional.of(work));
-        when(projectRepository.findByWorkId(work.getId())).thenReturn(List.of(project));
-        when(teamRepository.findAllById(List.of(team.getId()))).thenReturn(List.of(team));
+        Team team = givenATeamWorkingOn(work, publisherId);
         when(chapterRepository.save(any(Chapter.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         List<PageAsset> pages = List.of(
@@ -117,11 +114,12 @@ class WorkManagementServiceTest {
                 PageAsset.create(2, "c1/p2.webp", "https://cdn.readora.com/c1/p2.webp")
         );
 
-        Chapter chapter = service.directPublishChapter(work.getId(), "1", "Romance Dawn", pages, publisherId);
+        Chapter chapter = service.directPublishChapter(work.getId(), team.getId(), "1", "Romance Dawn", pages, publisherId);
 
         assertThat(chapter).isNotNull();
         assertThat(chapter.getChapterNumber().value()).isEqualTo("1");
         assertThat(chapter.getStatus()).isEqualTo(ChapterStatus.PUBLISHED);
+        assertThat(chapter.getTeamId()).isEqualTo(team.getId());
         assertThat(chapter.getPages()).hasSize(2);
         verify(eventPublisher, atLeastOnce()).publish(any());
     }
@@ -131,55 +129,72 @@ class WorkManagementServiceTest {
     void directPublishDuplicateChapterThrowsException() {
         UserId publisherId = UserId.of("pub-1");
         Work work = Work.create("One Piece", "Pirates", WorkType.MANGA, "op.jpg", Set.of("Adventure"));
-        Chapter existing = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Existing", null);
-
-        when(workRepository.findById(work.getId())).thenReturn(Optional.of(work));
-        Team team = Team.create("One Piece Workspace", null, publisherId);
-        when(projectRepository.findByWorkId(work.getId()))
-                .thenReturn(List.of(ScanlationProject.create("One Piece Workspace", work.getId(), team.getId())));
-        when(teamRepository.findAllById(List.of(team.getId()))).thenReturn(List.of(team));
+        Team team = givenATeamWorkingOn(work, publisherId);
+        Chapter existing = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Existing", team.getId());
         when(chapterRepository.findByWorkIdAndChapterNumber(work.getId(), ChapterNumber.of("1"))).thenReturn(Optional.of(existing));
 
         List<PageAsset> pages = List.of(PageAsset.create(1, "c1/p1.webp", "https://cdn.readora.com/c1/p1.webp"));
 
-        assertThatThrownBy(() -> service.directPublishChapter(work.getId(), "1", "Duplicate", pages, publisherId))
+        assertThatThrownBy(() -> service.directPublishChapter(work.getId(), team.getId(), "1", "Duplicate", pages, publisherId))
                 .isInstanceOf(DomainValidationException.class)
                 .hasMessageContaining("already exists");
     }
 
     @Test
-    @DisplayName("A scanlator who is not a leader or quality checker of the work's project cannot publish into it")
+    @DisplayName("A scanlator who is not a leader or quality checker of the team cannot publish for it")
     void directPublishByOutsiderIsDenied() {
         Work work = Work.create("One Piece", "Pirates", WorkType.MANGA, "op.jpg", Set.of("Adventure"));
-        Team team = Team.create("One Piece Workspace", null, UserId.of("owner"));
-        ScanlationProject project = ScanlationProject.create("One Piece Workspace", work.getId(), team.getId());
+        Team team = givenATeamWorkingOn(work, UserId.of("owner"));
         UserId outsider = UserId.of("outsider");
-        when(workRepository.findById(work.getId())).thenReturn(Optional.of(work));
-        when(projectRepository.findByWorkId(work.getId())).thenReturn(List.of(project));
-        when(teamRepository.findAllById(List.of(team.getId()))).thenReturn(List.of(team));
         when(userRepository.findById(outsider)).thenReturn(Optional.empty());
 
         List<PageAsset> pages = List.of(PageAsset.create(1, "c1/p1.webp", null));
 
-        assertThatThrownBy(() -> service.directPublishChapter(work.getId(), "1", "Hijack", pages, outsider))
+        assertThatThrownBy(() -> service.directPublishChapter(work.getId(), team.getId(), "1", "Hijack", pages, outsider))
                 .isInstanceOf(AccessDeniedDomainException.class);
         verify(chapterRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("An admin can publish into a work without being a project member")
+    @DisplayName("A team cannot publish into a series it does not work on")
+    void directPublishIntoAnotherTeamsSeriesIsRefused() {
+        UserId leader = UserId.of("mina");
+        Work work = Work.create("One Piece", "Pirates", WorkType.MANGA, "op.jpg", Set.of("Adventure"));
+        Team moonScans = Team.create("Moon Scans", null, leader);
+        when(workRepository.findById(work.getId())).thenReturn(Optional.of(work));
+        when(teamRepository.findById(moonScans.getId())).thenReturn(Optional.of(moonScans));
+        when(projectRepository.findByTeamId(moonScans.getId())).thenReturn(List.of());
+
+        List<PageAsset> pages = List.of(PageAsset.create(1, "c1/p1.webp", null));
+
+        assertThatThrownBy(() -> service.directPublishChapter(work.getId(), moonScans.getId(), "1", "Ch 1", pages, leader))
+                .isInstanceOfSatisfying(DomainValidationException.class, e -> assertThat(e.code()).isEqualTo(ErrorCodes.TEAM_NOT_ON_SERIES));
+        verify(chapterRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("An admin can publish for a team without being one of its members")
     void directPublishByAdminIsAllowed() {
         Work work = Work.create("One Piece", "Pirates", WorkType.MANGA, "op.jpg", Set.of("Adventure"));
+        Team team = givenATeamWorkingOn(work, UserId.of("owner"));
         UserId adminId = UserId.of("admin");
         UserAccount admin = mock(UserAccount.class);
         when(admin.can(com.readora.domain.identity.Permission.USER_MANAGE)).thenReturn(true);
-        when(workRepository.findById(work.getId())).thenReturn(Optional.of(work));
-        when(projectRepository.findByWorkId(work.getId())).thenReturn(List.of());
         when(userRepository.findById(adminId)).thenReturn(Optional.of(admin));
         when(chapterRepository.save(any(Chapter.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Chapter chapter = service.directPublishChapter(work.getId(), "1", "Admin", List.of(PageAsset.create(1, "p1.webp", null)), adminId);
+        Chapter chapter = service.directPublishChapter(work.getId(), team.getId(), "1", "Admin", List.of(PageAsset.create(1, "p1.webp", null)), adminId);
 
         assertThat(chapter.isPublished()).isTrue();
+        assertThat(chapter.getTeamId()).isEqualTo(team.getId());
+    }
+
+    private Team givenATeamWorkingOn(Work work, UserId leader) {
+        Team team = Team.create(work.getTitle() + " Workspace", null, leader);
+        when(workRepository.findById(work.getId())).thenReturn(Optional.of(work));
+        when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
+        when(projectRepository.findByTeamId(team.getId()))
+                .thenReturn(List.of(ScanlationProject.create(team.getName(), work.getId(), team.getId())));
+        return team;
     }
 }

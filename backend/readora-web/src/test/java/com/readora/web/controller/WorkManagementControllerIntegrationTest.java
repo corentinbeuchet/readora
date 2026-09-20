@@ -131,7 +131,9 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
         String workId = json(createWorkRes).path("data").path("id").asString();
 
         // 2. Direct publish chapter
+        String teamId = teamOf(scanlator, workId);
         DirectPublishChapterRequest directReq = new DirectPublishChapterRequest(
+                UUID.fromString(teamId),
                 "1",
                 "Headon's Floor",
                 List.of(
@@ -157,6 +159,8 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
         mockMvc.perform(get("/api/v1/chapters/" + chapterId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.chapterNumber").value("1"))
+                .andExpect(jsonPath("$.data.team.id").value(teamId))
+                .andExpect(jsonPath("$.data.team.name", org.hamcrest.Matchers.startsWith("Tower of God Workspace")))
                 .andExpect(jsonPath("$.data.pages[0].pageNumber").value(1))
                 .andExpect(jsonPath("$.data.pages[0].cdnUrl", equalTo("https://cdn.readora.com/tog/c1/p1.webp")))
                 .andExpect(jsonPath("$.data.pages[0].description").doesNotExist())
@@ -166,7 +170,7 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
     }
 
     @Test
-    @DisplayName("A scanlator cannot directly publish a chapter into another scanlator's work")
+    @DisplayName("A scanlator publishes neither for a team they are not on, nor for their own team into a series it does not work on")
     void directPublishIntoForeignWorkIsForbidden() throws Exception {
         Session owner = registerScanlator();
         Session intruder = registerScanlator();
@@ -181,8 +185,8 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
                 .andReturn();
         String workId = json(createWorkRes).path("data").path("id").asString();
 
-        DirectPublishChapterRequest directReq = new DirectPublishChapterRequest(
-                "1", "Hijacked", List.of(new PageAssetDto(1, "x/p1.webp", "https://cdn.readora.com/x/p1.webp", 800, 1200)));
+        List<PageAssetDto> pages = List.of(new PageAssetDto(1, "x/p1.webp", "https://cdn.readora.com/x/p1.webp", 800, 1200));
+        DirectPublishChapterRequest directReq = new DirectPublishChapterRequest(UUID.fromString(teamOf(owner, workId)), "1", "Hijacked", pages);
 
         mockMvc.perform(post("/api/v1/works/" + workId + "/chapters/direct")
                         .header("Authorization", intruder.bearer())
@@ -190,6 +194,17 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
                         .content(objectMapper.writeValueAsString(directReq)))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false));
+
+        var ownTeam = mockMvc.perform(post("/api/v1/teams").header("Authorization", intruder.bearer())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Intruders " + UUID.randomUUID() + "\"}"))
+                .andExpect(status().isCreated()).andReturn();
+        UUID intruders = UUID.fromString(json(ownTeam).path("data").path("id").asString());
+        mockMvc.perform(post("/api/v1/works/" + workId + "/chapters/direct")
+                        .header("Authorization", intruder.bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new DirectPublishChapterRequest(intruders, "1", "Hijacked", pages))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("TEAM_NOT_ON_SERIES"));
     }
 
     @Test

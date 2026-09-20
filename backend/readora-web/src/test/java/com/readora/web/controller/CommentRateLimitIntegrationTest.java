@@ -39,7 +39,7 @@ class CommentRateLimitIntegrationTest extends AuthTestSupport {
     @DisplayName("A second comment right after the first is refused with 429 and a wait message; other readers are not affected")
     void commentingTooFast() throws Exception {
         Work work = workRepository.save(Work.create("Rate Limited", "", WorkType.MANGA, "c.webp", Set.of("Action")));
-        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", null);
+        Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Ch 1", anyTeam());
         chapter.updatePages(List.of(PageAsset.create(1, "rl/p1.webp", null)));
         chapter.publish(UserId.of("publisher"));
         String url = "/api/v1/comments/chapter/" + chapterRepository.save(chapter).getId().value();

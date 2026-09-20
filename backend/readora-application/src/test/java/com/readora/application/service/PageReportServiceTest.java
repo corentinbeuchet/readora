@@ -75,7 +75,7 @@ class PageReportServiceTest {
         service = new PageReportService(reports, chapters, projects, teams, users, events, Clock.fixed(NOW, ZoneOffset.UTC));
         team = Team.create("Shadow Scans", null, leader);
         project = ScanlationProject.create("Shadow Scans", work, team.getId());
-        chapter = Chapter.createDraft(work, ChapterNumber.of("1"), "Ch 1", project.getId());
+        chapter = Chapter.createDraft(work, ChapterNumber.of("1"), "Ch 1", team.getId());
         chapter.updatePages(List.of(PageAsset.create(1, "p1", null), PageAsset.create(2, "p2", null)));
         chapter.publish(leader);
         lenient().when(chapters.findById(chapter.getId())).thenReturn(Optional.of(chapter));
@@ -100,14 +100,14 @@ class PageReportServiceTest {
 
         PageReport report = service.report(kenji, chapter.getId(), 2, PageReportReason.IMAGE_CORRUPTED);
 
-        assertThat(report.getProjectId()).isEqualTo(project.getId());
+        assertThat(report.getTeamId()).isEqualTo(team.getId());
         verify(events).publish(any(PageReportedEvent.class));
     }
 
     @Test
     @DisplayName("Reporting the same page again returns the open report without saving a new one")
     void duplicateReport() {
-        PageReport first = PageReport.open(chapter.getId(), work, project.getId(), ChapterNumber.of("1"), 2,
+        PageReport first = PageReport.open(chapter.getId(), work, team.getId(), ChapterNumber.of("1"), 2,
                 PageReportReason.IMAGE_CORRUPTED, kenji, NOW);
         when(reports.findOpen(kenji, chapter.getId(), 2)).thenReturn(Optional.of(first));
 
@@ -118,7 +118,7 @@ class PageReportServiceTest {
     @Test
     @DisplayName("Unpublished chapters can't be reported")
     void draftChapter() {
-        Chapter draft = Chapter.createDraft(work, ChapterNumber.of("2"), "Draft", project.getId());
+        Chapter draft = Chapter.createDraft(work, ChapterNumber.of("2"), "Draft", team.getId());
         when(chapters.findById(draft.getId())).thenReturn(Optional.of(draft));
 
         assertThatThrownBy(() -> service.report(kenji, draft.getId(), 1, PageReportReason.MISSING_PAGE)).isInstanceOf(NotFoundException.class);
@@ -127,7 +127,7 @@ class PageReportServiceTest {
     @Test
     @DisplayName("Only team members (or admins) see and fix reports")
     void onlyTheTeam() {
-        PageReport report = PageReport.open(chapter.getId(), work, project.getId(), ChapterNumber.of("1"), 2,
+        PageReport report = PageReport.open(chapter.getId(), work, team.getId(), ChapterNumber.of("1"), 2,
                 PageReportReason.IMAGE_CORRUPTED, kenji, NOW);
         when(reports.findById(report.getId())).thenReturn(Optional.of(report));
 
@@ -138,12 +138,14 @@ class PageReportServiceTest {
     }
 
     @Test
-    @DisplayName("A report on a chapter without a team can only be fixed by an admin")
-    void noTeamNeedsAnAdmin() {
-        PageReport orphan = PageReport.open(chapter.getId(), work, null, ChapterNumber.of("1"), 1,
+    @DisplayName("A report for another team's chapter cannot be fixed by this team's leader")
+    void anotherTeamsReportIsNotMine() {
+        Team otherTeam = Team.create("Moon Scans", null, UserId.of("mina"));
+        when(teams.findById(otherTeam.getId())).thenReturn(Optional.of(otherTeam));
+        PageReport theirs = PageReport.open(chapter.getId(), work, otherTeam.getId(), ChapterNumber.of("1"), 1,
                 PageReportReason.IMAGE_CORRUPTED, kenji, NOW);
-        when(reports.findById(orphan.getId())).thenReturn(Optional.of(orphan));
+        when(reports.findById(theirs.getId())).thenReturn(Optional.of(theirs));
 
-        assertThatThrownBy(() -> service.resolve(leader, orphan.getId())).isInstanceOf(AccessDeniedDomainException.class);
+        assertThatThrownBy(() -> service.resolve(leader, theirs.getId())).isInstanceOf(AccessDeniedDomainException.class);
     }
 }

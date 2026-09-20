@@ -2,7 +2,10 @@ package com.readora.web.controller;
 
 import com.readora.domain.common.UserId;
 import com.readora.application.port.out.ChapterRepositoryPort;
+import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
+import com.readora.domain.scanlation.Team;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.*;
 import com.readora.web.ReadoraApplication;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +40,9 @@ class CatalogControllerIntegrationTest {
     @Autowired
     private ChapterRepositoryPort chapterRepository;
 
+    @Autowired
+    private TeamRepositoryPort teamRepository;
+
     private Work work;
     private Chapter published;
 
@@ -44,12 +50,12 @@ class CatalogControllerIntegrationTest {
     void setup() {
         work = workRepository.save(Work.create("Berserk", "Dark fantasy", WorkType.MANGA, "berserk.webp", Set.of("Dark Fantasy", "Seinen")));
 
-        published = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "The Black Swordsman", null);
+        published = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "The Black Swordsman", anyTeam());
         published.updatePages(List.of(PageAsset.create(1, "b/p1.webp", "https://cdn.readora.com/b/p1.webp")));
         published.publish(UserId.of("publisher1"));
         published = chapterRepository.save(published);
 
-        Chapter draft = Chapter.createDraft(work.getId(), ChapterNumber.of("2"), "Draft", null);
+        Chapter draft = Chapter.createDraft(work.getId(), ChapterNumber.of("2"), "Draft", anyTeam());
         chapterRepository.save(draft);
     }
 
@@ -87,5 +93,10 @@ class CatalogControllerIntegrationTest {
                 .andExpect(jsonPath("$.data[0].id").value(published.getId().value().toString()))
                 .andExpect(jsonPath("$.data[0].status").value("PUBLISHED"))
                 .andExpect(jsonPath("$.data[0].pageCount").value(1));
+    }
+
+    /// Every chapter is some team's version: a throwaway team for tests that are not about teams.
+    private TeamId anyTeam() {
+        return teamRepository.save(Team.create("Team " + java.util.UUID.randomUUID(), null, UserId.of("any-leader"))).getId();
     }
 }

@@ -97,7 +97,7 @@ class NotificationIntegrationTest extends AuthTestSupport {
     private String publish(Session team, String workId, String number) throws Exception {
         var chapter = mockMvc.perform(post("/api/v1/works/" + workId + "/chapters/direct").header("Authorization", team.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"chapterNumber\":\"" + number + "\",\"title\":\"Ch\",\"pages\":[" + PAGE + "]}"))
+                        .content("{\"teamId\":\"" + teamOf(team, workId) + "\",\"chapterNumber\":\"" + number + "\",\"title\":\"Ch\",\"pages\":[" + PAGE + "]}"))
                 .andExpect(status().isCreated()).andReturn();
         return json(chapter).path("data").path("id").asString();
     }

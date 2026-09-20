@@ -3,7 +3,7 @@ package com.readora.domain.work;
 import com.readora.domain.common.UserId;
 import com.readora.domain.common.AggregateRoot;
 import com.readora.domain.common.DomainValidationException;
-import com.readora.domain.scanlation.ProjectId;
+import com.readora.domain.scanlation.TeamId;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
@@ -18,13 +18,13 @@ public class Chapter extends AggregateRoot<ChapterId> {
     private String title;
     private ChapterStatus status;
     private final List<PageAsset> pages = new ArrayList<>();
-    private @Nullable ProjectId scanlationProjectId;
+    private final TeamId teamId;
     private final Instant createdAt;
     private @Nullable Instant publishedAt;
     private Instant updatedAt;
 
     public Chapter(ChapterId id, WorkId workId, ChapterNumber chapterNumber, @Nullable String title, ChapterStatus status,
-                   @Nullable List<PageAsset> pages, @Nullable ProjectId scanlationProjectId, @Nullable Instant createdAt,
+                   @Nullable List<PageAsset> pages, TeamId teamId, @Nullable Instant createdAt,
                    @Nullable Instant publishedAt, @Nullable Instant updatedAt) {
         super(id);
         this.workId = Objects.requireNonNull(workId, "WorkId cannot be null");
@@ -34,26 +34,25 @@ public class Chapter extends AggregateRoot<ChapterId> {
         if (pages != null) {
             this.pages.addAll(pages);
         }
-        this.scanlationProjectId = scanlationProjectId;
+        this.teamId = Objects.requireNonNull(teamId, "TeamId cannot be null");
         this.createdAt = createdAt != null ? createdAt : Instant.now();
         this.publishedAt = publishedAt;
         this.updatedAt = updatedAt != null ? updatedAt : this.createdAt;
     }
 
-    public static Chapter createDraft(WorkId workId, ChapterNumber chapterNumber, @Nullable String title,
-                                      @Nullable ProjectId scanlationProjectId) {
+    public static Chapter createDraft(WorkId workId, ChapterNumber chapterNumber, @Nullable String title, TeamId teamId) {
         Instant now = Instant.now();
-        return new Chapter(ChapterId.generate(), workId, chapterNumber, title, ChapterStatus.DRAFT, List.of(), scanlationProjectId, now, null, now);
+        return new Chapter(ChapterId.generate(), workId, chapterNumber, title, ChapterStatus.DRAFT, List.of(), teamId, now, null, now);
     }
 
     public static Chapter createPublished(WorkId workId, ChapterNumber chapterNumber, @Nullable String title,
-                                          @Nullable List<PageAsset> pages, @Nullable ProjectId scanlationProjectId, UserId publisherId) {
+                                          @Nullable List<PageAsset> pages, TeamId teamId, UserId publisherId) {
         if (pages == null || pages.isEmpty()) {
             throw new DomainValidationException("Cannot publish chapter with zero pages.");
         }
         requireUniquePageNumbers(pages);
         Instant now = Instant.now();
-        Chapter chapter = new Chapter(ChapterId.generate(), workId, chapterNumber, title, ChapterStatus.PUBLISHED, pages, scanlationProjectId, now, now, now);
+        Chapter chapter = new Chapter(ChapterId.generate(), workId, chapterNumber, title, ChapterStatus.PUBLISHED, pages, teamId, now, now, now);
         chapter.registerEvent(ChapterPublishedEvent.now(chapter.getId(), workId, chapterNumber));
         return chapter;
     }
@@ -115,8 +114,9 @@ public class Chapter extends AggregateRoot<ChapterId> {
         return Collections.unmodifiableList(pages);
     }
 
-    public @Nullable ProjectId getScanlationProjectId() {
-        return scanlationProjectId;
+    /// The team credited for this chapter: every chapter is one team's version of it.
+    public TeamId getTeamId() {
+        return teamId;
     }
 
     public Instant getCreatedAt() {

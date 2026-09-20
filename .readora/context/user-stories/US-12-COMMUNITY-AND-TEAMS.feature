@@ -33,6 +33,23 @@ Feature: Community and scanlation teams
     When a reader opens the page of the team "Shadow Scans"
     Then each series is a card with the number of chapters the team published
 
+  # Inspired by: comix.to and MangaDex chapter lists
+  @should @ui
+  Scenario: Each chapter of a series names the team that translated it
+    Given "Shadow Scans" published chapter 5 of "Solo Leveling"
+    When a reader opens the series "Solo Leveling"
+    Then chapter 5 shows a link to the team "Shadow Scans"
+
+  @should
+  Scenario: A team only publishes into a series it works on
+    Given "Solo Leveling" is already translated by the team "Shadow Scans"
+    And scanlator "Mina" leads the team "Moon Scans"
+    When "Mina" publishes chapter 9 of "Solo Leveling" for "Moon Scans"
+    Then the chapter is refused because "Moon Scans" does not work on the series
+    When "Mina" adds the series "Solo Leveling" to "Moon Scans"
+    And "Mina" publishes chapter 9 of "Solo Leveling" for "Moon Scans"
+    Then chapter 9 of "Solo Leveling" is credited to "Moon Scans"
+
   # Inspired by: MangaDex groups (anyone who uploads can start a group; a group works on many titles)
   @should
   Scenario: A scanlator creates a team

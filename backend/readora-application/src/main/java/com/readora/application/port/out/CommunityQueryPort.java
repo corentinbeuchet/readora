@@ -1,7 +1,6 @@
 package com.readora.application.port.out;
 
 import com.readora.domain.common.UserId;
-import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.ChapterNumber;
@@ -32,11 +31,11 @@ public interface CommunityQueryPort {
     record PublishedChapter(ChapterId id, WorkId workId, ChapterNumber number, String title, int pageCount, Instant publishedAt) {
     }
 
-    /// Published chapter count of each of the given projects that has at least one.
-    Map<ProjectId, Long> countPublishedChapters(Collection<ProjectId> projectIds);
+    /// Number of chapters the team published in each series where it published at least one.
+    Map<WorkId, Long> countPublishedChapters(TeamId teamId);
 
-    /// The most recently published chapters of the given projects, newest first.
-    List<PublishedChapter> latestPublishedChapters(Collection<ProjectId> projectIds, int limit);
+    /// The team's most recently published chapters, newest first.
+    List<PublishedChapter> latestPublishedChapters(TeamId teamId, int limit);
 
     /// @return whether this call created the follow (following twice is harmless)
     boolean follow(UserId userId, TeamId teamId, Instant at);

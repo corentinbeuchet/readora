@@ -2,7 +2,10 @@ package com.readora.web.controller;
 
 import com.readora.domain.common.UserId;
 import com.readora.application.port.out.ChapterRepositoryPort;
+import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
+import com.readora.domain.scanlation.Team;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.*;
 import com.readora.web.ReadoraApplication;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,13 +39,16 @@ class ChapterReadingControllerIntegrationTest {
     @Autowired
     private ChapterRepositoryPort chapterRepository;
 
+    @Autowired
+    private TeamRepositoryPort teamRepository;
+
     private Work work;
     private Chapter chapter;
 
     @BeforeEach
     void setup() {
         work = workRepository.save(Work.create("Solo Leveling", "Synopsis", WorkType.MANHWA, "cover.webp", Set.of("Action")));
-        chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Chapter 1", null);
+        chapter = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Chapter 1", anyTeam());
         chapter.updatePages(List.of(
                 PageAsset.create(1, "scans/solo/1/p1.webp", "https://cdn.readora.com/scans/solo/1/p1.webp"),
                 PageAsset.create(2, "scans/solo/1/p2.webp", "https://cdn.readora.com/scans/solo/1/p2.webp")
@@ -66,7 +72,7 @@ class ChapterReadingControllerIntegrationTest {
     @DisplayName("The reader view carries the series (for the default reading mode) and its published neighbours")
     void chapterViewHasSeriesAndNeighbours() throws Exception {
         Chapter second = publish("2");
-        chapterRepository.save(Chapter.createDraft(work.getId(), ChapterNumber.of("3"), "Draft", null));
+        chapterRepository.save(Chapter.createDraft(work.getId(), ChapterNumber.of("3"), "Draft", anyTeam()));
         Chapter tenth = publish("10");
 
         mockMvc.perform(get("/api/v1/chapters/" + second.getId().value()))
@@ -87,7 +93,7 @@ class ChapterReadingControllerIntegrationTest {
     @Test
     @DisplayName("An unpublished chapter is refused with the CHAPTER_NOT_PUBLISHED code, so the client can translate it")
     void unpublishedChapterIsRefusedWithItsOwnCode() throws Exception {
-        Chapter draft = chapterRepository.save(Chapter.createDraft(work.getId(), ChapterNumber.of("2"), "Draft", null));
+        Chapter draft = chapterRepository.save(Chapter.createDraft(work.getId(), ChapterNumber.of("2"), "Draft", anyTeam()));
 
         mockMvc.perform(get("/api/v1/chapters/" + draft.getId().value()))
                 .andExpect(status().isBadRequest())
@@ -96,9 +102,14 @@ class ChapterReadingControllerIntegrationTest {
     }
 
     private Chapter publish(String number) {
-        Chapter next = Chapter.createDraft(work.getId(), ChapterNumber.of(number), "Chapter " + number, null);
+        Chapter next = Chapter.createDraft(work.getId(), ChapterNumber.of(number), "Chapter " + number, anyTeam());
         next.updatePages(List.of(PageAsset.create(1, "scans/solo/" + number + "/p1.webp", "https://cdn.readora.com/p.webp")));
         next.publish(UserId.of("publisher1"));
         return chapterRepository.save(next);
+    }
+
+    /// Every chapter is some team's version: a throwaway team for tests that are not about teams.
+    private TeamId anyTeam() {
+        return teamRepository.save(Team.create("Team " + java.util.UUID.randomUUID(), null, UserId.of("any-leader"))).getId();
     }
 }

@@ -42,10 +42,10 @@ public class InMemoryDiscovery implements DiscoveryQueryPort {
         this.reads = reads;
     }
 
-    private java.util.function.Function<UserId, Set<com.readora.domain.scanlation.ProjectId>> followedTeams = user -> Set.of();
+    private java.util.function.Function<UserId, Set<com.readora.domain.scanlation.TeamId>> followedTeams = user -> Set.of();
 
     /// Teams each reader follows (their chapters join the reader's "My library" updates).
-    public void followedTeams(java.util.function.Function<UserId, Set<com.readora.domain.scanlation.ProjectId>> lookup) {
+    public void followedTeams(java.util.function.Function<UserId, Set<com.readora.domain.scanlation.TeamId>> lookup) {
         this.followedTeams = lookup;
     }
 
@@ -60,11 +60,11 @@ public class InMemoryDiscovery implements DiscoveryQueryPort {
         return works.all().stream()
                 .flatMap(work -> chapters.findPublishedByWorkId(work.getId()).stream())
                 .filter(chapter -> onlyFor == null || mine.contains(chapter.getWorkId())
-                        || (chapter.getScanlationProjectId() != null && followedTeams.apply(onlyFor).contains(chapter.getScanlationProjectId())))
+                        || followedTeams.apply(onlyFor).contains(chapter.getTeamId()))
                 .sorted(Comparator.comparing((Chapter c) -> Objects.requireNonNull(c.getPublishedAt())).reversed())
                 .skip((long) page * size)
                 .limit(size)
-                .map(c -> new ChapterRelease(c.getId(), c.getWorkId(), c.getChapterNumber(), c.getTitle(), Objects.requireNonNull(c.getPublishedAt())))
+                .map(c -> new ChapterRelease(c.getId(), c.getWorkId(), c.getTeamId(), c.getChapterNumber(), c.getTitle(), Objects.requireNonNull(c.getPublishedAt())))
                 .toList();
     }
 

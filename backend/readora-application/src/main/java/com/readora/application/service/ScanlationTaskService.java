@@ -44,7 +44,7 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
         project.pollDomainEvents().forEach(eventPublisher::publish);
 
         if (chapterRepository.findByWorkIdAndChapterNumber(project.getWorkId(), chapterNumber).isEmpty()) {
-            Chapter draft = Chapter.createDraft(project.getWorkId(), chapterNumber, "Chapter " + chapterNumber, projectId);
+            Chapter draft = Chapter.createDraft(project.getWorkId(), chapterNumber, "Chapter " + chapterNumber, project.getTeamId());
             if (pageCount > 0) {
                 List<PageAsset> pages = new ArrayList<>();
                 for (int i = 1; i <= pageCount; i++) {
@@ -91,7 +91,7 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
         // Find or create the chapter to publish
         Chapter chapter = chapterRepository.findByWorkIdAndChapterNumber(project.getWorkId(), task.getChapterNumber())
                 .orElseGet(() -> {
-                    Chapter c = Chapter.createDraft(project.getWorkId(), task.getChapterNumber(), "Chapter " + task.getChapterNumber(), projectId);
+                    Chapter c = Chapter.createDraft(project.getWorkId(), task.getChapterNumber(), "Chapter " + task.getChapterNumber(), project.getTeamId());
                     List<PageAsset> pages = new ArrayList<>();
                     for (int i = 1; i <= task.getPageCount(); i++) {
                         pages.add(PageAsset.create(i, "scans/" + project.getWorkId() + "/" + task.getChapterNumber() + "/p" + i + ".webp", null));

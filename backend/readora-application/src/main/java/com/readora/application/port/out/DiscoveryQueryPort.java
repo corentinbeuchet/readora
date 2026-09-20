@@ -1,6 +1,7 @@
 package com.readora.application.port.out;
 
 import com.readora.domain.common.UserId;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.WorkId;
@@ -14,7 +15,7 @@ import java.util.Set;
 /// Read-model queries for the "Latest updates" feed and the popularity ranking (US-08).
 public interface DiscoveryQueryPort {
 
-    record ChapterRelease(ChapterId chapterId, WorkId workId, ChapterNumber chapterNumber, String chapterTitle, Instant publishedAt) {
+    record ChapterRelease(ChapterId chapterId, WorkId workId, TeamId teamId, ChapterNumber chapterNumber, String chapterTitle, Instant publishedAt) {
     }
 
     /// Published chapters, newest first. With `onlyFor`, only series in that reader's library or translated by teams

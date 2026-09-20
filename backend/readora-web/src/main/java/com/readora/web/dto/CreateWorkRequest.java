@@ -11,6 +11,7 @@ import com.readora.domain.work.WorkType;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Set;
+import java.util.UUID;
 
 public record CreateWorkRequest(
         @NotBlank(message = "Title is required")
@@ -35,5 +36,13 @@ public record CreateWorkRequest(
         @Nullable String coverImageUrl,
 
         @Size(max = 20, message = "A work cannot have more than 20 genres")
-        @Nullable Set<@NotBlank(message = "Genre cannot be blank") @Size(max = 50, message = "Genre must not exceed 50 characters") String> genres
-) {}
+        @Nullable Set<@NotBlank(message = "Genre cannot be blank") @Size(max = 50, message = "Genre must not exceed 50 characters") String> genres,
+
+        /// One of my teams that will translate the series; without it the series gets a new team of its own.
+        @Nullable UUID teamId
+) {
+    public CreateWorkRequest(String title, @Nullable String synopsis, WorkType type, @Nullable WorkStatus status, @Nullable String author,
+                             @Nullable Demographic demographic, @Nullable String coverImageUrl, @Nullable Set<String> genres) {
+        this(title, synopsis, type, status, author, demographic, coverImageUrl, genres, null);
+    }
+}

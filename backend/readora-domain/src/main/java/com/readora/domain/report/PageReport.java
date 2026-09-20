@@ -4,7 +4,7 @@ import com.readora.domain.common.AggregateRoot;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.UserId;
-import com.readora.domain.scanlation.ProjectId;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.WorkId;
@@ -18,7 +18,7 @@ import java.util.Objects;
 public class PageReport extends AggregateRoot<PageReportId> {
     private final ChapterId chapterId;
     private final WorkId workId;
-    private final @Nullable ProjectId projectId;
+    private final TeamId teamId;
     private final ChapterNumber chapterNumber;
     private final int pageNumber;
     private final PageReportReason reason;
@@ -28,7 +28,7 @@ public class PageReport extends AggregateRoot<PageReportId> {
     private @Nullable Instant resolvedAt;
     private @Nullable UserId resolvedBy;
 
-    public PageReport(PageReportId id, ChapterId chapterId, WorkId workId, @Nullable ProjectId projectId, ChapterNumber chapterNumber,
+    public PageReport(PageReportId id, ChapterId chapterId, WorkId workId, TeamId teamId, ChapterNumber chapterNumber,
                       int pageNumber, PageReportReason reason, UserId reporterId, PageReportStatus status, Instant createdAt,
                       @Nullable Instant resolvedAt, @Nullable UserId resolvedBy) {
         super(id);
@@ -37,7 +37,7 @@ public class PageReport extends AggregateRoot<PageReportId> {
         }
         this.chapterId = Objects.requireNonNull(chapterId, "ChapterId cannot be null");
         this.workId = Objects.requireNonNull(workId, "WorkId cannot be null");
-        this.projectId = projectId;
+        this.teamId = Objects.requireNonNull(teamId, "TeamId cannot be null");
         this.chapterNumber = Objects.requireNonNull(chapterNumber, "ChapterNumber cannot be null");
         this.pageNumber = pageNumber;
         this.reason = Objects.requireNonNull(reason, "PageReportReason cannot be null");
@@ -48,9 +48,9 @@ public class PageReport extends AggregateRoot<PageReportId> {
         this.resolvedBy = resolvedBy;
     }
 
-    public static PageReport open(ChapterId chapterId, WorkId workId, @Nullable ProjectId projectId, ChapterNumber chapterNumber,
+    public static PageReport open(ChapterId chapterId, WorkId workId, TeamId teamId, ChapterNumber chapterNumber,
                                   int pageNumber, PageReportReason reason, UserId reporterId, Instant now) {
-        PageReport report = new PageReport(PageReportId.generate(), chapterId, workId, projectId, chapterNumber, pageNumber, reason,
+        PageReport report = new PageReport(PageReportId.generate(), chapterId, workId, teamId, chapterNumber, pageNumber, reason,
                 reporterId, PageReportStatus.OPEN, now, null, null);
         report.registerEvent(PageReportedEvent.now(report.getId(), chapterId, pageNumber, reason));
         return report;
@@ -72,7 +72,7 @@ public class PageReport extends AggregateRoot<PageReportId> {
 
     public ChapterId getChapterId() { return chapterId; }
     public WorkId getWorkId() { return workId; }
-    public @Nullable ProjectId getProjectId() { return projectId; }
+    public TeamId getTeamId() { return teamId; }
     public ChapterNumber getChapterNumber() { return chapterNumber; }
     public int getPageNumber() { return pageNumber; }
     public PageReportReason getReason() { return reason; }

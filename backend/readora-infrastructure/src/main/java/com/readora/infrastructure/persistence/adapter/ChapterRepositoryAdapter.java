@@ -1,7 +1,7 @@
 package com.readora.infrastructure.persistence.adapter;
 
 import com.readora.application.port.out.ChapterRepositoryPort;
-import com.readora.domain.scanlation.ProjectId;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.*;
 import com.readora.infrastructure.persistence.entity.ChapterJpaEntity;
 import com.readora.infrastructure.persistence.entity.PageAssetJpaEntity;
@@ -69,7 +69,6 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
             existing.setChapterNumber(chapter.getChapterNumber().value());
             existing.setTitle(chapter.getTitle());
             existing.setStatus(chapter.getStatus().name());
-            existing.setScanlationProjectId(chapter.getScanlationProjectId() != null ? chapter.getScanlationProjectId().value() : null);
             existing.setPublishedAt(chapter.getPublishedAt());
             existing.setUpdatedAt(chapter.getUpdatedAt());
 
@@ -117,7 +116,7 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
                 entity.getTitle(),
                 ChapterStatus.valueOf(entity.getStatus()),
                 pages,
-                entity.getScanlationProjectId() != null ? ProjectId.of(entity.getScanlationProjectId()) : null,
+                TeamId.of(entity.getTeamId()),
                 entity.getCreatedAt(),
                 entity.getPublishedAt(),
                 entity.getUpdatedAt()
@@ -131,7 +130,7 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
                 chapter.getChapterNumber().value(),
                 chapter.getTitle(),
                 chapter.getStatus().name(),
-                chapter.getScanlationProjectId() != null ? chapter.getScanlationProjectId().value() : null,
+                chapter.getTeamId().value(),
                 chapter.getCreatedAt(),
                 chapter.getPublishedAt(),
                 chapter.getUpdatedAt()

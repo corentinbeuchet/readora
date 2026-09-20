@@ -15,6 +15,11 @@ public class InMemoryTeamRepository implements TeamRepositoryPort {
 
     private final Map<TeamId, Team> teams = new ConcurrentHashMap<>();
 
+    /// A stored throwaway team, for scenarios that need a chapter but are not about teams.
+    public TeamId anyTeam() {
+        return save(Team.create("Team " + java.util.UUID.randomUUID(), null, UserId.of("any-leader"))).getId();
+    }
+
     @Override
     public Optional<Team> findById(TeamId id) {
         return Optional.ofNullable(teams.get(id));

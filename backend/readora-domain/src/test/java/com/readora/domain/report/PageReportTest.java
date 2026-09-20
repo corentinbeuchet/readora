@@ -2,6 +2,7 @@ package com.readora.domain.report;
 
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.UserId;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.WorkId;
@@ -18,7 +19,7 @@ class PageReportTest {
     private static final Instant NOW = Instant.parse("2026-09-10T10:00:00Z");
 
     private PageReport open(int page) {
-        return PageReport.open(ChapterId.generate(), WorkId.generate(), null, ChapterNumber.of("1"), page,
+        return PageReport.open(ChapterId.generate(), WorkId.generate(), TeamId.generate(), ChapterNumber.of("1"), page,
                 PageReportReason.IMAGE_CORRUPTED, UserId.of("kenji"), NOW);
     }
 

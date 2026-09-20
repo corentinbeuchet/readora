@@ -7,6 +7,7 @@ import com.readora.domain.identity.PasswordHash;
 import com.readora.domain.identity.UserAccount;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.Team;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.scanlation.ScanlationRole;
 import com.readora.domain.scanlation.TeamMember;
 import com.readora.domain.work.*;
@@ -95,13 +96,14 @@ class QueryCountTest {
     @DisplayName("Published chapters of a work load with their pages in batches, in numeric chapter order")
     void publishedChaptersAreBatchedAndOrdered() {
         Work work = workRepository.save(Work.create("Chapters Work", "S", WorkType.MANGA, "c.png", Set.of("Action")));
+        TeamId teamId = teamRepository.save(Team.create("Chapters Team", null, UserId.of("publisher"))).getId();
         for (String number : List.of("10", "2", "1")) {
-            Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of(number), "Ch " + number, null);
+            Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of(number), "Ch " + number, teamId);
             chapter.updatePages(List.of(PageAsset.create(2, "p2.webp", null), PageAsset.create(1, "p1.webp", null)));
             chapter.publish(UserId.of("publisher"));
             chapterRepository.save(chapter);
         }
-        chapterRepository.save(Chapter.createDraft(work.getId(), ChapterNumber.of("11"), "Draft", null));
+        chapterRepository.save(Chapter.createDraft(work.getId(), ChapterNumber.of("11"), "Draft", teamId));
 
         statistics.clear();
         List<Chapter> published = chapterRepository.findPublishedByWorkId(work.getId());

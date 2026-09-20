@@ -82,7 +82,7 @@ public class ScanlationWorkflowStepDefinitions {
                 chapterStore.put(chapter.getId(), chapter);
                 // Like the JPA adapter: the returned object is rebuilt from state and carries no pending events.
                 return new Chapter(chapter.getId(), chapter.getWorkId(), chapter.getChapterNumber(), chapter.getTitle(),
-                        chapter.getStatus(), chapter.getPages(), chapter.getScanlationProjectId(), chapter.getCreatedAt(),
+                        chapter.getStatus(), chapter.getPages(), chapter.getTeamId(), chapter.getCreatedAt(),
                         chapter.getPublishedAt(), chapter.getUpdatedAt());
             }
         };
@@ -161,6 +161,13 @@ public class ScanlationWorkflowStepDefinitions {
         } catch (Exception e) {
             thrownException = e;
         }
+    }
+
+    @Then("the chapter is credited to the team {string}")
+    public void theChapterIsCreditedToTheTeam(String teamName) {
+        assertThat(currentTeam.getName()).isEqualTo(teamName);
+        assertThat(chapterStore.values()).filteredOn(Chapter::isPublished).singleElement()
+                .satisfies(chapter -> assertThat(chapter.getTeamId()).isEqualTo(currentTeam.getId()));
     }
 
     @Then("the assignment is rejected because {string} is not on the team")

@@ -17,9 +17,9 @@ import com.readora.domain.report.PageReportId;
 import com.readora.domain.report.PageReportReason;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
-import org.jspecify.annotations.Nullable;
 
 import java.time.Clock;
 import java.util.List;
@@ -60,7 +60,7 @@ public class PageReportService implements ReportPageUseCase {
         if (existing.isPresent()) {
             return existing.get();
         }
-        PageReport report = PageReport.open(chapterId, chapter.getWorkId(), chapter.getScanlationProjectId(), chapter.getChapterNumber(),
+        PageReport report = PageReport.open(chapterId, chapter.getWorkId(), chapter.getTeamId(), chapter.getChapterNumber(),
                 pageNumber, reason, reporterId, clock.instant());
         PageReport saved = reportRepository.save(report);
         report.pollDomainEvents().forEach(eventPublisher::publish);
@@ -74,26 +74,26 @@ public class PageReportService implements ReportPageUseCase {
         if (!isOnTeam(actorId, project) && !isAdmin(actorId)) {
             throw new AccessDeniedDomainException("Only the project's team can see its page reports");
         }
-        return reportRepository.findOpenByProject(projectId);
+        return reportRepository.findOpenByTeamAndWork(project.getTeamId(), project.getWorkId());
     }
 
     @Override
     public PageReport resolve(UserId actorId, PageReportId reportId) {
         PageReport report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new NotFoundException("Page report", reportId));
-        if (!isOnTeam(actorId, report.getProjectId()) && !isAdmin(actorId)) {
+        if (!isOnTeam(actorId, report.getTeamId()) && !isAdmin(actorId)) {
             throw new AccessDeniedDomainException("Only the chapter's team can mark this report as fixed");
         }
         report.resolve(actorId, clock.instant());
         return reportRepository.save(report);
     }
 
-    private boolean isOnTeam(UserId actorId, @Nullable ProjectId projectId) {
-        return projectId != null && projectRepository.findById(projectId).filter(project -> isOnTeam(actorId, project)).isPresent();
+    private boolean isOnTeam(UserId actorId, ScanlationProject project) {
+        return isOnTeam(actorId, project.getTeamId());
     }
 
-    private boolean isOnTeam(UserId actorId, ScanlationProject project) {
-        return teamRepository.findById(project.getTeamId()).flatMap(team -> team.findMember(actorId)).isPresent();
+    private boolean isOnTeam(UserId actorId, TeamId teamId) {
+        return teamRepository.findById(teamId).flatMap(team -> team.findMember(actorId)).isPresent();
     }
 
     private boolean isAdmin(UserId actorId) {

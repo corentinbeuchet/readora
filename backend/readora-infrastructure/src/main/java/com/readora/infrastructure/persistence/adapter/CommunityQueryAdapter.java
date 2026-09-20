@@ -2,7 +2,6 @@ package com.readora.infrastructure.persistence.adapter;
 
 import com.readora.application.port.out.CommunityQueryPort;
 import com.readora.domain.common.UserId;
-import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.social.ReadingStatus;
 import com.readora.domain.work.ChapterId;
@@ -71,35 +70,29 @@ public class CommunityQueryAdapter implements CommunityQueryPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ProjectId, Long> countPublishedChapters(Collection<ProjectId> projectIds) {
-        if (projectIds.isEmpty()) {
-            return Map.of();
-        }
-        Map<ProjectId, Long> counts = new HashMap<>();
+    public Map<WorkId, Long> countPublishedChapters(TeamId teamId) {
+        Map<WorkId, Long> counts = new HashMap<>();
         entityManager.createQuery("""
-                        select c.scanlationProjectId, count(c) from ChapterJpaEntity c
-                        where c.status = :status and c.scanlationProjectId in :ids group by c.scanlationProjectId
+                        select c.workId, count(c) from ChapterJpaEntity c
+                        where c.status = :status and c.teamId = :teamId group by c.workId
                         """, Object[].class)
                 .setParameter("status", ChapterStatus.PUBLISHED.name())
-                .setParameter("ids", projectIds.stream().map(ProjectId::value).toList())
+                .setParameter("teamId", teamId.value())
                 .getResultList()
-                .forEach(row -> counts.put(ProjectId.of((UUID) row[0]), (Long) row[1]));
+                .forEach(row -> counts.put(WorkId.of((UUID) row[0]), (Long) row[1]));
         return counts;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<PublishedChapter> latestPublishedChapters(Collection<ProjectId> projectIds, int limit) {
-        if (projectIds.isEmpty()) {
-            return List.of();
-        }
+    public List<PublishedChapter> latestPublishedChapters(TeamId teamId, int limit) {
         return entityManager.createQuery("""
                         select c.id, c.workId, c.chapterNumber, c.title, size(c.pages), c.publishedAt from ChapterJpaEntity c
-                        where c.status = :status and c.scanlationProjectId in :ids
+                        where c.status = :status and c.teamId = :teamId
                         order by c.publishedAt desc, c.id
                         """, Object[].class)
                 .setParameter("status", ChapterStatus.PUBLISHED.name())
-                .setParameter("ids", projectIds.stream().map(ProjectId::value).toList())
+                .setParameter("teamId", teamId.value())
                 .setMaxResults(limit)
                 .getResultList().stream()
                 .map(row -> new PublishedChapter(ChapterId.of((UUID) row[0]), WorkId.of((UUID) row[1]), ChapterNumber.of((String) row[2]),

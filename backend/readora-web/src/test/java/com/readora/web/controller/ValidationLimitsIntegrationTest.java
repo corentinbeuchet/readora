@@ -17,6 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -79,14 +80,14 @@ class ValidationLimitsIntegrationTest extends AuthTestSupport {
         mockMvc.perform(post("/api/v1/works/" + workId + "/chapters/direct")
                         .header("Authorization", scanlator.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new DirectPublishChapterRequest("9".repeat(51), "T", List.of(page)))))
+                        .content(objectMapper.writeValueAsString(new DirectPublishChapterRequest(UUID.fromString(teamOf(scanlator, workId)), "9".repeat(51), "T", List.of(page)))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", containsString("Chapter number")));
 
         mockMvc.perform(post("/api/v1/works/" + workId + "/chapters/direct")
                         .header("Authorization", scanlator.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new DirectPublishChapterRequest("1", "T", List.of(page, page)))))
+                        .content(objectMapper.writeValueAsString(new DirectPublishChapterRequest(UUID.fromString(teamOf(scanlator, workId)), "1", "T", List.of(page, page)))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", containsString("unique")));
     }
@@ -108,7 +109,7 @@ class ValidationLimitsIntegrationTest extends AuthTestSupport {
         mockMvc.perform(post("/api/v1/works/" + workId + "/chapters/direct")
                         .header("Authorization", scanlator.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new DirectPublishChapterRequest("1", "T", List.of(described)))))
+                        .content(objectMapper.writeValueAsString(new DirectPublishChapterRequest(UUID.fromString(teamOf(scanlator, workId)), "1", "T", List.of(described)))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", containsString("description")));
 
