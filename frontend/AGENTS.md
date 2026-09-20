@@ -416,6 +416,10 @@ Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = repor
 - R17 `PlansPage` hand-rolls busy/error (`asyncAction()` exists) and confirms the cancellation with `window.confirm` (`app-dialog` exists).
 - R18 The kanban shows the raw `assigneeId` UUID: the task DTO has no assignee name (backend + frontend).
 - R26 (survey) Axe and responsive e2e only scan public pages: no signed-in page, no open dialog.
+- R27 (2026-09-20, open) Playwright's WebKit (`webkit`, `Mobile Safari`, on Windows) reports "Page crashed" about 4
+  loads in 5 on `/works/:id` and `/teams/:id` served by `ng serve`, existing tests included; never with JavaScript
+  off, never on `/`, `/works`, `/updates`, `/rankings`, `/lists`, `/u/:name`. Cause unknown (not the `:has()` rule of
+  the chapter list). Next checks: the production build, a real Safari, then bisect the two templates.
 - Smaller (survey): `noUncheckedIndexedAccess` off; 8 `(event.target as …)` casts; silent upvote failure
   (`chapter-comments.ts`); unused `requirePermission()`; footer year baked at prerender; identical "Show Spoiler"
   names; `app.routes.server.ts` reads `environment`; hand-rolled omnisearch combobox vs `@angular/aria`.
