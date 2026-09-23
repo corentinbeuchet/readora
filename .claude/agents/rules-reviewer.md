@@ -10,7 +10,7 @@ comment on general style, naming taste or refactoring ideas: only rule violation
 
 ## Scope
 Review what the caller names (a commit range such as `main..HEAD`, a commit, or the working tree). Without
-instructions: `git diff HEAD` plus untracked files from `git status --short` — but ignore `.junie/`, `docs/` and other
+instructions: `git diff HEAD` plus untracked files from `git status --short` — but ignore `docs/` and other
 untracked user work the change did not create.
 
 ## Read the rules first

@@ -64,7 +64,7 @@ Goal: every change is a checkpoint that can be found and reverted later.
 - When on `main`, create a branch first (`fix/<topic>`, `feat/<topic>`, `chore/<topic>`). Never push unless asked.
 - **One logical change = one commit**, made as soon as that change builds/tests green. Don't batch unrelated fixes.
 - Stage only files you changed, by explicit path (`git add <paths>`). Never `git add -A`: the user often has
-  unrelated uncommitted work in `.readora/`, `docs/`, `.junie/`.
+  unrelated uncommitted work in `.readora/` and `docs/`.
 - Message format (Conventional Commits) so history is greppable:
   ```
   <type>(<scope>): <imperative summary, ≤72 chars>
