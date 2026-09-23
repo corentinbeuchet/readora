@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { UploadWizard } from '@app/features/upload/upload-studio-page/upload-wizard';
-import { PageGridUploader } from './page-grid-uploader/page-grid-uploader';
+import { PageGridUploader } from '@app/shared/pages/page-grid-uploader/page-grid-uploader';
 
 /** Step 3: the chapter's pages (images or a ZIP/CBZ archive), in reading order. */
 @Component({

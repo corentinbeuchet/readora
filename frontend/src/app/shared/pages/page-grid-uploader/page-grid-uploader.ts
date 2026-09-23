@@ -11,7 +11,7 @@ import {
   mapWithConcurrency,
   naturalCompare,
   revokePreviewUrl,
-} from '@app/features/upload/upload-studio-page/file-utils';
+} from '@app/shared/pages/file-utils';
 
 /** How many images are decoded in parallel to read their dimensions. */
 export const IMAGE_DECODE_CONCURRENCY = 4;

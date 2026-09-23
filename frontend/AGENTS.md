@@ -276,7 +276,7 @@ interface is neutral and the cover art is the colour on the page.
   directives, utils, inline-template components such as `forbidden-page.ts`) stay files.
 - **No type folders** (`components/`, `services/`, `directives/`: the style guide says to avoid them). A routed page's
   folder sits at the feature root; each child component is a subfolder of the component that uses it
-  (`upload-studio-page/pages-step/page-grid-uploader/`); services and utils sit beside the component tree that uses
+  (`upload-studio-page/series-step/cover-picker/`); services and utils sit beside the component tree that uses
   them (`reader-page/reader-state.ts`). Used by several components: move it to their nearest common parent; by several
   features: `shared/`. Example: `features/catalog/{works-page/, work-detail-page/{work-ratings/, add-to-list/}}`.
 - `tests/unit` mirrors `src/app` path for path (`tests/unit/features/catalog/work-detail-page/work-detail-page.spec.ts`);
@@ -349,7 +349,7 @@ lessons.
   `VALIDATION_FAILED` details stay English (backstop checks the forms already make).
 
 Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = reported with path:line, re-check before acting):
-- R15 `file-utils.ts` zip-bomb guard uses JSZip private `_data` / `internalStream` and has no spec; `jszip` is a static import.
+- R15 `shared/pages/file-utils.ts` zip-bomb guard uses JSZip private `_data` / `internalStream` and has no spec; `jszip` is a static import.
 - R16 No spec for `shared/ui/dialog`, `core/a11y/focus-trap.directive`, `core/api/api-client`, `register-page`, `publish-flow`.
 - R18 The kanban shows the raw `assigneeId` UUID: the task DTO has no assignee name (backend + frontend).
 - R26 (survey) Axe and responsive e2e only scan public pages: no signed-in page, no open dialog.

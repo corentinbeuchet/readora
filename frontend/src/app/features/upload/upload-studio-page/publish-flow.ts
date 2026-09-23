@@ -6,8 +6,8 @@ import { ScanlationApi } from '@app/core/api/scanlation-api';
 import { Work, factsPayloadOf } from '@app/core/models/catalog';
 import { ScanlationProject } from '@app/core/models/scanlation';
 import { DirectPublishChapterPayload } from '@app/core/models/chapter';
-import { PageUploadItem } from './file-utils';
-import { UploadService } from './upload.service';
+import { PageUploadItem } from '@app/shared/pages/file-utils';
+import { UploadService } from '@app/shared/pages/upload.service';
 import { ExistingSeries, UploadWizard, parseChapterNumber } from './upload-wizard';
 
 const NO_PROJECT_ERROR = $localize`:@@upload.publish.noProject:Your team does not work on this series yet. Add the series to your team in the Studio, then publish again.`;

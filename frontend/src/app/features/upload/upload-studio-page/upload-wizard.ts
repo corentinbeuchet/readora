@@ -3,7 +3,7 @@ import { apply, form, maxLength, required, validate } from '@angular/forms/signa
 import { Demographic, NO_FACTS_DRAFT, Work, WorkFactsDraft, WorkStatus, WorkType } from '@app/core/models/catalog';
 import { TeamRef } from '@app/core/models/chapter';
 import { WORK_FACTS_SCHEMA } from '@app/shared/forms/work-facts-fields/work-facts-schema';
-import { PageUploadItem, createPreviewUrl, isImageFile, revokePreviewUrl } from './file-utils';
+import { PageUploadItem, createPreviewUrl, isImageFile, revokePreviewUrl } from '@app/shared/pages/file-utils';
 
 export type UploadStep = 'manga' | 'chapter' | 'pages' | 'review' | 'success';
 export type PublishingMode = 'DIRECT' | 'SCANLATION';

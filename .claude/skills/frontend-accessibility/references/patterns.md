@@ -50,7 +50,7 @@ under `frontend/src/app/`.
   instead of drag.
 - If drag is ever added: keep the buttons or a "Move to…" menu (2.5.7), and announce moves in a live region.
 
-## File drop zone: upload (`features/upload/upload-studio-page/pages-step/page-grid-uploader/`)
+## File drop zone: page uploads (`shared/pages/page-grid-uploader/`, upload studio and task board)
 - The drop zone is a visual target; a real `<button>` / labelled file input sits outside it (no nested interactive
   elements).
 - Page reordering offers "Move left"/"Move right" buttons besides drag. Announcing the new position in a live region
