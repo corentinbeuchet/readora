@@ -14,14 +14,13 @@ class UserAccountDomainTest {
     }
 
     @Test
-    @DisplayName("Registering a user grants the READER role, normalises the email and emits UserRegisteredEvent")
+    @DisplayName("Registering a user grants the READER role and normalises the email")
     void registerGrantsReaderRole() {
         UserAccount account = newReader();
 
         assertThat(account.getRoles()).containsExactly(Role.READER);
         assertThat(account.getEmail().value()).isEqualTo("reader@example.com");
         assertThat(account.effectivePermissions()).containsExactlyInAnyOrder(Permission.COMMENT_WRITE, Permission.COMMENT_UPVOTE, Permission.LIBRARY_USE, Permission.PAGE_REPORT, Permission.RATE_WORK, Permission.COMMENT_REPORT);
-        assertThat(account.getDomainEvents()).singleElement().isInstanceOf(UserRegisteredEvent.class);
     }
 
     @Test

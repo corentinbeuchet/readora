@@ -17,7 +17,9 @@
 - Value objects are `record`s that validate **and normalise** in the compact constructor (model: `domain/identity/Email.java`).
 - Typed IDs with `fromString` that wraps parse errors into `DomainValidationException` (model: `domain/work/WorkId.java`).
 - Aggregates extend `AggregateRoot`; create them via intent-named factories (`UserAccount.register`, `Chapter.createPublished`,
-  `ChapterComment.createReply`) that `registerEvent(...)`. Events are records with a `now(...)` factory.
+  `ChapterComment.createReply`), which `registerEvent(...)` when something reacts to them. Events are records with a
+  `now(...)` factory, and an event exists only once a listener consumes it (today `ChapterPublishedEvent`,
+  `CommentPostedEvent`): add it together with its listener.
 - Every state transition guards its preconditions (current stage/status, assignee, already-published). No silent re-transitions.
 - Child entities expose no public mutators; all changes go through the aggregate root. Return unmodifiable/copy collections.
 - Permissions are derived in the domain (`Role` permission sets → `UserAccount.effectivePermissions()`).

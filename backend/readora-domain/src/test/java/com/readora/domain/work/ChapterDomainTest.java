@@ -50,7 +50,6 @@ class ChapterDomainTest {
 
         assertThat(chapter.isPublished()).isTrue();
         assertThat(chapter.getPublishedAt()).isNotNull();
-        assertThat(chapter.getDomainEvents()).hasSize(2); // updatePages event + publish event
-        assertThat(chapter.getDomainEvents().get(1)).isInstanceOf(ChapterPublishedEvent.class);
+        assertThat(chapter.getDomainEvents()).singleElement().isInstanceOf(ChapterPublishedEvent.class);
     }
 }

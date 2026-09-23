@@ -7,12 +7,11 @@ import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
-import com.readora.domain.scanlation.TaskAssignedEvent;
 import com.readora.domain.scanlation.Team;
-import com.readora.domain.scanlation.TaskStageAdvancedEvent;
 import com.readora.domain.scanlation.WorkflowStage;
 import com.readora.domain.scanlation.WorkflowTask;
 import com.readora.domain.work.Chapter;
+import com.readora.domain.work.ChapterPublishedEvent;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.common.UserId;
 import com.readora.domain.work.WorkId;
@@ -24,7 +23,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -116,8 +114,8 @@ class ScanlationTaskServiceTest {
     }
 
     @Test
-    @DisplayName("Claiming a task publishes TaskAssignedEvent even though save returns a rebuilt copy")
-    void claimPublishesEventsFromMutatedAggregate() {
+    @DisplayName("Claiming a task returns it assigned even though save returns a rebuilt copy")
+    void claimReturnsTheTaskFromTheMutatedAggregate() {
         UserId leaderId = UserId.of("leader-1");
         Team team = Team.create("Asura Scans", null, leaderId);
         ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), team.getId());
@@ -131,25 +129,25 @@ class ScanlationTaskServiceTest {
         WorkflowTask claimed = taskService.claimTask(project.getId(), task.getId(), leaderId);
 
         assertThat(claimed.getAssigneeId()).isEqualTo(leaderId);
-        verify(eventPublisher).publish(any(TaskAssignedEvent.class));
     }
 
     @Test
-    @DisplayName("Submitting work publishes TaskStageAdvancedEvent even though save returns a rebuilt copy")
-    void submitPublishesEventsFromMutatedAggregate() {
+    @DisplayName("Publishing from QC publishes ChapterPublishedEvent from the chapter it mutated, not the saved copy")
+    void publishFromQcPublishesTheChapterEvent() {
         UserId leaderId = UserId.of("leader-1");
         Team team = Team.create("Asura Scans", null, leaderId);
         ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), team.getId());
-        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"));
-        project.pollDomainEvents();
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"), "scans/1/raw.zip", 20);
+        task.advanceStage(WorkflowStage.QC_REVIEW);
 
         when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
         when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
-        when(projectRepository.save(any(ScanlationProject.class))).thenAnswer(i -> rebuilt(i.getArgument(0)));
+        when(chapterRepository.findByWorkIdAndChapterNumberAndTeam(project.getWorkId(), ChapterNumber.of("1"), team.getId()))
+                .thenReturn(Optional.empty());
 
-        taskService.submitWork(project.getId(), task.getId(), leaderId, "scans/1/clean.zip", 20);
+        taskService.publishChapterFromQC(project.getId(), task.getId(), leaderId);
 
-        verify(eventPublisher).publish(any(TaskStageAdvancedEvent.class));
+        verify(eventPublisher).publish(any(ChapterPublishedEvent.class));
     }
 
     @Test

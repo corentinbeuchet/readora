@@ -52,7 +52,6 @@ public class PageReport extends AggregateRoot<PageReportId> {
                                   int pageNumber, PageReportReason reason, UserId reporterId, Instant now) {
         PageReport report = new PageReport(PageReportId.generate(), chapterId, workId, teamId, chapterNumber, pageNumber, reason,
                 reporterId, PageReportStatus.OPEN, now, null, null);
-        report.registerEvent(PageReportedEvent.now(report.getId(), chapterId, pageNumber, reason));
         return report;
     }
 

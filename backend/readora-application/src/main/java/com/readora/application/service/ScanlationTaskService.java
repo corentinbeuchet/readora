@@ -41,7 +41,6 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
 
         WorkflowTask task = project.addChapterTask(chapterNumber, assetUrl, pageCount);
         projectRepository.save(project);
-        project.pollDomainEvents().forEach(eventPublisher::publish);
 
         if (chapterRepository.findByWorkIdAndChapterNumberAndTeam(project.getWorkId(), chapterNumber, project.getTeamId()).isEmpty()) {
             Chapter draft = Chapter.createDraft(project.getWorkId(), chapterNumber, "Chapter " + chapterNumber, project.getTeamId());
@@ -53,7 +52,6 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
                 draft.updatePages(pages);
             }
             chapterRepository.save(draft);
-            draft.pollDomainEvents().forEach(eventPublisher::publish);
         }
 
         return task;
@@ -65,7 +63,6 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
 
         project.claimTask(requireTeam(project), taskId, userId);
         projectRepository.save(project);
-        project.pollDomainEvents().forEach(eventPublisher::publish);
 
         return project.findTask(taskId).orElseThrow();
     }
@@ -76,7 +73,6 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
 
         project.submitTaskWork(requireTeam(project), taskId, userId, assetUrl, pageCount);
         projectRepository.save(project);
-        project.pollDomainEvents().forEach(eventPublisher::publish);
 
         return project.findTask(taskId).orElseThrow();
     }
@@ -112,7 +108,6 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
 
         projectRepository.save(project);
         chapterRepository.save(chapter);
-        project.pollDomainEvents().forEach(eventPublisher::publish);
         chapter.pollDomainEvents().forEach(eventPublisher::publish);
     }
 

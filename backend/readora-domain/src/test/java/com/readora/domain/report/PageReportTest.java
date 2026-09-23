@@ -24,12 +24,11 @@ class PageReportTest {
     }
 
     @Test
-    @DisplayName("Opening a report registers PageReportedEvent")
-    void openRegistersEvent() {
+    @DisplayName("A new report is open")
+    void newReportIsOpen() {
         PageReport report = open(7);
 
         assertThat(report.isOpen()).isTrue();
-        assertThat(report.getDomainEvents()).singleElement().isInstanceOf(PageReportedEvent.class);
     }
 
     @Test

@@ -2,7 +2,6 @@ package com.readora.application.service;
 
 import com.readora.application.port.in.ReportPageUseCase;
 import com.readora.application.port.out.ChapterRepositoryPort;
-import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.PageReportRepositoryPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
 import com.readora.application.port.out.TeamRepositoryPort;
@@ -32,19 +31,17 @@ public class PageReportService implements ReportPageUseCase {
     private final ScanlationProjectRepositoryPort projectRepository;
     private final TeamRepositoryPort teamRepository;
     private final UserAccountRepositoryPort userRepository;
-    private final EventPublisherPort eventPublisher;
     private final Clock clock;
 
     public PageReportService(PageReportRepositoryPort reportRepository, ChapterRepositoryPort chapterRepository,
                              ScanlationProjectRepositoryPort projectRepository, TeamRepositoryPort teamRepository,
                              UserAccountRepositoryPort userRepository,
-                             EventPublisherPort eventPublisher, Clock clock) {
+                             Clock clock) {
         this.reportRepository = Objects.requireNonNull(reportRepository, "PageReportRepositoryPort cannot be null");
         this.chapterRepository = Objects.requireNonNull(chapterRepository, "ChapterRepositoryPort cannot be null");
         this.projectRepository = Objects.requireNonNull(projectRepository, "ScanlationProjectRepositoryPort cannot be null");
         this.teamRepository = Objects.requireNonNull(teamRepository, "TeamRepositoryPort cannot be null");
         this.userRepository = Objects.requireNonNull(userRepository, "UserAccountRepositoryPort cannot be null");
-        this.eventPublisher = Objects.requireNonNull(eventPublisher, "EventPublisherPort cannot be null");
         this.clock = Objects.requireNonNull(clock, "Clock cannot be null");
     }
 
@@ -63,7 +60,6 @@ public class PageReportService implements ReportPageUseCase {
         PageReport report = PageReport.open(chapterId, chapter.getWorkId(), chapter.getTeamId(), chapter.getChapterNumber(),
                 pageNumber, reason, reporterId, clock.instant());
         PageReport saved = reportRepository.save(report);
-        report.pollDomainEvents().forEach(eventPublisher::publish);
         return saved;
     }
 

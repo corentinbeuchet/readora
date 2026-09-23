@@ -1,7 +1,6 @@
 package com.readora.application.service;
 
 import com.readora.application.port.in.AuthenticateUserUseCase;
-import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.PasswordHasherPort;
 import com.readora.application.port.out.RefreshTokenRepositoryPort;
 import com.readora.application.port.out.TokenProviderPort;
@@ -13,7 +12,6 @@ import com.readora.domain.identity.InvalidCredentialsException;
 import com.readora.domain.identity.PasswordHash;
 import com.readora.domain.identity.RefreshToken;
 import com.readora.domain.identity.UserAccount;
-import com.readora.domain.common.UserId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +29,6 @@ public class AuthenticationService implements AuthenticateUserUseCase {
     private final RefreshTokenRepositoryPort refreshTokenRepository;
     private final PasswordHasherPort passwordHasher;
     private final TokenProviderPort tokenProvider;
-    private final EventPublisherPort eventPublisher;
     private final Duration refreshReuseGrace;
     /// Compared against when the email is unknown, so a failed login costs the same time either way.
     private final PasswordHash timingDummyHash;
@@ -39,9 +36,8 @@ public class AuthenticationService implements AuthenticateUserUseCase {
     public AuthenticationService(UserAccountRepositoryPort userRepository,
                                  RefreshTokenRepositoryPort refreshTokenRepository,
                                  PasswordHasherPort passwordHasher,
-                                 TokenProviderPort tokenProvider,
-                                 EventPublisherPort eventPublisher) {
-        this(userRepository, refreshTokenRepository, passwordHasher, tokenProvider, eventPublisher, Duration.ofSeconds(30));
+                                 TokenProviderPort tokenProvider) {
+        this(userRepository, refreshTokenRepository, passwordHasher, tokenProvider, Duration.ofSeconds(30));
     }
 
     /// @param refreshReuseGrace a revoked refresh token presented again *later* than this after its revocation is
@@ -51,14 +47,12 @@ public class AuthenticationService implements AuthenticateUserUseCase {
                                  RefreshTokenRepositoryPort refreshTokenRepository,
                                  PasswordHasherPort passwordHasher,
                                  TokenProviderPort tokenProvider,
-                                 EventPublisherPort eventPublisher,
                                  Duration refreshReuseGrace) {
         this.refreshReuseGrace = Objects.requireNonNull(refreshReuseGrace, "Refresh reuse grace cannot be null");
         this.userRepository = Objects.requireNonNull(userRepository, "UserAccountRepositoryPort cannot be null");
         this.refreshTokenRepository = Objects.requireNonNull(refreshTokenRepository, "RefreshTokenRepositoryPort cannot be null");
         this.passwordHasher = Objects.requireNonNull(passwordHasher, "PasswordHasherPort cannot be null");
         this.tokenProvider = Objects.requireNonNull(tokenProvider, "TokenProviderPort cannot be null");
-        this.eventPublisher = Objects.requireNonNull(eventPublisher, "EventPublisherPort cannot be null");
         this.timingDummyHash = passwordHasher.hash("readora-timing-equaliser");
     }
 
@@ -75,7 +69,6 @@ public class AuthenticationService implements AuthenticateUserUseCase {
 
         UserAccount account = UserAccount.register(email, username, passwordHasher.hash(rawPassword));
         UserAccount saved = userRepository.save(account);
-        account.pollDomainEvents().forEach(eventPublisher::publish);
         return issueTokens(saved);
     }
 

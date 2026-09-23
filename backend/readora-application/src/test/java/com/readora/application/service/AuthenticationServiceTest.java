@@ -1,6 +1,5 @@
 package com.readora.application.service;
 
-import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.PasswordHasherPort;
 import com.readora.application.port.out.RefreshTokenRepositoryPort;
 import com.readora.application.port.out.TokenProviderPort;
@@ -42,7 +41,7 @@ class AuthenticationServiceTest {
         tokens = mock(TokenProviderPort.class);
         when(hasher.hash(anyString())).thenReturn(DUMMY);
         when(tokens.hashRefreshToken(anyString())).thenAnswer(i -> "h:" + i.getArgument(0));
-        service = new AuthenticationService(users, refreshTokens, hasher, tokens, mock(EventPublisherPort.class), Duration.ofSeconds(30));
+        service = new AuthenticationService(users, refreshTokens, hasher, tokens, Duration.ofSeconds(30));
     }
 
     @Test

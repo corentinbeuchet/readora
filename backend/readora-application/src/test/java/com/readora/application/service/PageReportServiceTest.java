@@ -1,7 +1,6 @@
 package com.readora.application.service;
 
 import com.readora.application.port.out.ChapterRepositoryPort;
-import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.PageReportRepositoryPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
 import com.readora.application.port.out.TeamRepositoryPort;
@@ -12,7 +11,6 @@ import com.readora.domain.common.NotFoundException;
 import com.readora.domain.common.UserId;
 import com.readora.domain.report.PageReport;
 import com.readora.domain.report.PageReportReason;
-import com.readora.domain.report.PageReportedEvent;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.Team;
 import com.readora.domain.work.Chapter;
@@ -59,8 +57,6 @@ class PageReportServiceTest {
     @Mock
     private UserAccountRepositoryPort users;
 
-    @Mock
-    private EventPublisherPort events;
 
     private PageReportService service;
     private final UserId kenji = UserId.of("kenji");
@@ -72,7 +68,7 @@ class PageReportServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new PageReportService(reports, chapters, projects, teams, users, events, Clock.fixed(NOW, ZoneOffset.UTC));
+        service = new PageReportService(reports, chapters, projects, teams, users, Clock.fixed(NOW, ZoneOffset.UTC));
         team = Team.create("Shadow Scans", null, leader);
         project = ScanlationProject.create("Shadow Scans", work, team.getId());
         chapter = Chapter.createDraft(work, ChapterNumber.of("1"), "Ch 1", team.getId());
@@ -94,14 +90,13 @@ class PageReportServiceTest {
     }
 
     @Test
-    @DisplayName("A new report is attributed to the chapter's team and announced")
+    @DisplayName("A new report is attributed to the chapter's team")
     void newReport() {
         when(reports.findOpen(kenji, chapter.getId(), 2)).thenReturn(Optional.empty());
 
         PageReport report = service.report(kenji, chapter.getId(), 2, PageReportReason.IMAGE_CORRUPTED);
 
         assertThat(report.getTeamId()).isEqualTo(team.getId());
-        verify(events).publish(any(PageReportedEvent.class));
     }
 
     @Test

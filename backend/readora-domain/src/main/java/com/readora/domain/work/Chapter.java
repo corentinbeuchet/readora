@@ -64,7 +64,6 @@ public class Chapter extends AggregateRoot<ChapterId> {
             this.pages.addAll(newPages);
         }
         this.updatedAt = Instant.now();
-        registerEvent(ChapterPagesUpdatedEvent.now(this.id, this.pages.size()));
     }
 
     public void publish(UserId publisherId) {

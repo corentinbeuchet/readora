@@ -54,7 +54,7 @@ public class ReaderCustomizationStepDefinitions {
         projects = new InMemoryProjectRepository();
         teams = new InMemoryTeamRepository();
         chapters = new InMemoryChapterRepository();
-        reports = new PageReportService(new InMemoryPageReportRepository(), chapters, projects, teams, new NoUserAccounts(), event -> { },
+        reports = new PageReportService(new InMemoryPageReportRepository(), chapters, projects, teams, new NoUserAccounts(),
                 Clock.systemUTC());
         refusal = null;
     }

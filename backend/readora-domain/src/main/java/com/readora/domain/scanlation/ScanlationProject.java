@@ -95,7 +95,6 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
 
         task.assignTo(userId);
         this.updatedAt = Instant.now();
-        registerEvent(TaskAssignedEvent.now(this.id, taskId, userId, task.getStage()));
     }
 
     public void submitTaskWork(Team team, TaskId taskId, UserId userId, @Nullable String assetUrl, int pageCount) {
@@ -126,11 +125,6 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
                 : current.nextStage();
         task.advanceStage(next);
         this.updatedAt = Instant.now();
-
-        registerEvent(TaskStageAdvancedEvent.now(this.id, taskId, current, next));
-        if (next == WorkflowStage.PUBLISHED) {
-            registerEvent(WorkflowCompletedEvent.now(this.id, task.getChapterNumber()));
-        }
     }
 
     /// Final QC approval: moves a task from `QC_REVIEW` to `PUBLISHED`.
@@ -151,8 +145,6 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
 
         task.advanceStage(WorkflowStage.PUBLISHED);
         this.updatedAt = Instant.now();
-        registerEvent(TaskStageAdvancedEvent.now(this.id, taskId, WorkflowStage.QC_REVIEW, WorkflowStage.PUBLISHED));
-        registerEvent(WorkflowCompletedEvent.now(this.id, task.getChapterNumber()));
         return task;
     }
 

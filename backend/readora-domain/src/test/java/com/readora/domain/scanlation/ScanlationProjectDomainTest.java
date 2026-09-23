@@ -55,7 +55,7 @@ class ScanlationProjectDomainTest {
     }
 
     @Test
-    @DisplayName("QC approval of a task in QC_REVIEW publishes it and completes the workflow")
+    @DisplayName("QC approval of a task in QC_REVIEW publishes it, once")
     void qcApprovalPublishesTask() {
         Team team = Team.create("Asura - Solo Leveling", null, UserId.of("Leader1"));
         ScanlationProject project = ScanlationProject.create("Asura - Solo Leveling", WorkId.generate(), team.getId());
@@ -66,9 +66,6 @@ class ScanlationProjectDomainTest {
         project.approveQualityCheck(team, task.getId(), UserId.of("Charlie"));
 
         assertThat(task.getStage()).isEqualTo(WorkflowStage.PUBLISHED);
-        assertThat(project.pollDomainEvents())
-                .hasAtLeastOneElementOfType(TaskStageAdvancedEvent.class)
-                .hasAtLeastOneElementOfType(WorkflowCompletedEvent.class);
         assertThatThrownBy(() -> project.approveQualityCheck(team, task.getId(), UserId.of("Charlie")))
                 .isInstanceOf(DomainValidationException.class);
     }

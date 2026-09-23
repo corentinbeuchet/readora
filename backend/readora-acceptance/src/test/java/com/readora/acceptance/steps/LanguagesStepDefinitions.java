@@ -50,7 +50,7 @@ public class LanguagesStepDefinitions {
         accounts.save(UserAccount.register(Email.of(EMAIL), "camille", hasher.hash("right-password")));
         // A refused login never issues tokens, so these ports must not be reached.
         auth = new AuthenticationService(accounts, unused(RefreshTokenRepositoryPort.class), hasher,
-                unused(TokenProviderPort.class), event -> { });
+                unused(TokenProviderPort.class));
         ratings = new RatingService(new InMemoryRatingRepository(), new InMemoryWorkRepository(), Clock.systemUTC());
         refusal = null;
     }

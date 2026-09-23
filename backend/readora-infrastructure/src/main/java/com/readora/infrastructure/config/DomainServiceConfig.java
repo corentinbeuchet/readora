@@ -120,10 +120,9 @@ public class DomainServiceConfig {
             RefreshTokenRepositoryPort refreshTokenRepository,
             PasswordHasherPort passwordHasher,
             TokenProviderPort tokenProvider,
-            EventPublisherPort eventPublisher,
             SecurityProperties securityProperties) {
         return transactional(new AuthenticationService(userRepository, refreshTokenRepository, passwordHasher, tokenProvider,
-                        eventPublisher, securityProperties.jwt().refreshReuseGrace()),
+                        securityProperties.jwt().refreshReuseGrace()),
                 AuthenticateUserUseCase.class, transactionManager);
     }
 
@@ -136,9 +135,8 @@ public class DomainServiceConfig {
     public ManageBookmarkUseCase manageBookmarkUseCase(
             BookmarkRepositoryPort bookmarkRepository,
             UserAccountRepositoryPort userRepository,
-            ChapterRepositoryPort chapterRepository,
-            EventPublisherPort eventPublisher) {
-        return transactional(new BookmarkService(bookmarkRepository, userRepository, chapterRepository, eventPublisher),
+            ChapterRepositoryPort chapterRepository) {
+        return transactional(new BookmarkService(bookmarkRepository, userRepository, chapterRepository),
                 ManageBookmarkUseCase.class, transactionManager);
     }
 
@@ -172,10 +170,9 @@ public class DomainServiceConfig {
             ChapterRepositoryPort chapterRepository,
             ScanlationProjectRepositoryPort projectRepository,
             TeamRepositoryPort teamRepository,
-            UserAccountRepositoryPort userRepository,
-            EventPublisherPort eventPublisher) {
+            UserAccountRepositoryPort userRepository) {
         return transactional(new PageReportService(reportRepository, chapterRepository, projectRepository, teamRepository, userRepository,
-                        eventPublisher, Clock.systemUTC()),
+                        Clock.systemUTC()),
                 ReportPageUseCase.class, transactionManager);
     }
 

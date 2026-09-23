@@ -55,7 +55,6 @@ public class UserAccount extends AggregateRoot<UserId> {
                 email, username, passwordHash, username, "", null,
                 EnumSet.of(Role.READER), now, now
         );
-        account.registerEvent(UserRegisteredEvent.now(account.getId(), email));
         return account;
     }
 
