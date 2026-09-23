@@ -14,3 +14,11 @@
   committed Flyway migrations and add-everything staging. Don't work around the hook: follow the rule it quotes.
 - Prefer `context7` / the Angular CLI MCP (`get_best_practices`, `search_documentation`) when available: Angular 22,
   Spring Boot 4 and Java 25 are newer than most training data.
+- Outer loop for a feature or fix (not questions or research): start the task with this `/goal`. Its evaluator only
+  reads the transcript, so every clause is something a command prints; a fix without a scenario drops the first one.
+  ```
+  /goal the scenario for this change exists in .readora/context/user-stories (written before the code); after the
+  last edit the verify skill printed PASS for every suite it ran; story-check printed "every non-@wip scenario is
+  verified"; rules-reviewer reported no violation on the final diff; the change is committed with its Verify: line.
+  Or stop after 25 turns and list what is left.
+  ```
