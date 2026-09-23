@@ -85,6 +85,13 @@ Feature: A reading experience as good as the best manga and webtoon apps
     Then he is told he is up to date
     And the main button is "Read again", which opens chapter 1
 
+  @should @ui
+  Scenario: A saved page in a chapter I already finished does not hide the next chapter
+    Given "Kenji" is Premium and his saved page is in chapter 2 of "Solo Leveling"
+    And he finished chapters 1 and 2
+    When he opens the page of "Solo Leveling"
+    Then the main button is "Continue with chapter 3"
+
   # Inspired by: WEBTOON "My" page
   @must
   Scenario: Finding what I was reading

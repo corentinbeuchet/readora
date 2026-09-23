@@ -48,10 +48,15 @@ export class WorkDetailPage {
   /** Bookmark of the current user for this work (only fetched with BOOKMARK_READ). */
   private readonly canReadBookmark = computed(() => this.auth.can('BOOKMARK_READ'));
   private readonly bookmarkEntry = this.bookmarksApi.forWorkResource(this.workId, this.canReadBookmark);
-  /** The bookmark to resume from; one without a chapter (its chapter was deleted) has nothing to resume. */
+  /**
+   * The saved page to resume from, only while its chapter is published and not finished yet: a bookmark in a chapter
+   * I finished (or one that is gone or unpublished) would hide "Continue with chapter N" or "Read again".
+   */
   protected readonly resumeBookmark = computed(() => {
     const bookmark = this.bookmarkEntry.hasValue() ? this.bookmarkEntry.value() : null;
-    return bookmark?.lastReadChapterId ? { chapterId: bookmark.lastReadChapterId, page: bookmark.lastReadPageIndex } : null;
+    const chapter = bookmark?.lastReadChapterId ? this.published().find((c) => c.id === bookmark.lastReadChapterId) : undefined;
+    if (!bookmark || !chapter || this.progress()?.finishedChapterNumbers.includes(chapter.chapterNumber)) return null;
+    return { chapterId: chapter.id, page: bookmark.lastReadPageIndex };
   });
 
   // Library and read markers (free with LIBRARY_USE).

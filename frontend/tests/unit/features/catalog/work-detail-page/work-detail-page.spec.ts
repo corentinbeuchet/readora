@@ -23,6 +23,18 @@ const WORK: Work = {
   facts: { alternativeTitles: [], artist: null, releaseYear: null, originalLanguage: null, contentRating: null }
 };
 
+/** A published chapter the "Continue reading" test has a bookmark in. */
+const CHAPTER_7 = {
+  id: 'chap-7',
+  workId: WORK.id,
+  chapterNumber: '7',
+  title: 'Chapter 7',
+  status: 'PUBLISHED' as const,
+  pageCount: 10,
+  publishedAt: null,
+  team: { id: 't-shadow', name: 'Shadow Scans' }
+};
+
 describe('WorkDetailPage', () => {
   let fixture: ComponentFixture<WorkDetailPage>;
   let http: HttpTestingController;
@@ -47,7 +59,7 @@ describe('WorkDetailPage', () => {
   it('"Continue reading" restores the saved page via ?page=N', async () => {
     await givenIAmSignedInWith(['BOOKMARK_READ', 'BOOKMARK_WRITE']);
 
-    await whenIOpenTheWorkPage({ chapters: ok([]), bookmark: { chapterId: 'chap-7', page: 5 } });
+    await whenIOpenTheWorkPage({ chapters: ok([{ ...CHAPTER_7 }]), bookmark: { chapterId: 'chap-7', page: 5 } });
 
     thenTheFirstActionIs('Continue reading (page 5)', '/read/chap-7?page=5');
   });
@@ -98,9 +110,21 @@ describe('WorkDetailPage', () => {
     });
 
     it('a bookmark whose chapter is gone does not hide the reading button', async () => {
-      await givenIAmOnTheWorkPage({ inLibrary: false, finished: [], next: 'c-1', bookmarkWithoutChapter: true });
+      await givenIAmOnTheWorkPage({ inLibrary: false, finished: [], next: 'c-1', bookmark: { chapterId: null, page: 1 } });
 
       thenICanContinueWith('Start reading', '/read/c-1');
+    });
+
+    it('A saved page in a chapter I already finished does not hide the next chapter', async () => {
+      await givenIAmOnTheWorkPage({ inLibrary: true, finished: ['c-1', 'c-2'], next: 'c-3', bookmark: { chapterId: 'c-2', page: 4 } });
+
+      thenICanContinueWith('Continue with chapter 3', '/read/c-3');
+    });
+
+    it('a saved page in a chapter I have not finished is where I continue', async () => {
+      await givenIAmOnTheWorkPage({ inLibrary: true, finished: ['c-1'], next: 'c-2', bookmark: { chapterId: 'c-2', page: 4 } });
+
+      thenICanContinueWith('Continue reading (page 4)', '/read/c-2?page=4');
     });
 
     it('Each chapter of a series names the team that translated it', async () => {
@@ -178,14 +202,15 @@ describe('WorkDetailPage', () => {
       inLibrary: boolean;
       finished: string[];
       next: string | null;
-      bookmarkWithoutChapter?: boolean;
+      /** Premium's saved page (`BOOKMARK_READ`); `chapterId: null` when its chapter was deleted. */
+      bookmark?: { chapterId: string | null; page: number };
       otherVersions?: { id: string; number: string; team: string }[];
       facts?: WorkFacts;
     }): Promise<void> {
       const versions = (state.otherVersions ?? []).map((v) => ({ ...CHAPTERS[0], id: v.id, chapterNumber: v.number, team: { id: `t-${v.team.toLowerCase().replaceAll(' ', '-')}`, name: v.team } }));
       // The API lists versions of a number next to each other, the first published first.
       const listed = [...CHAPTERS, ...versions].sort((a, b) => Number(a.chapterNumber) - Number(b.chapterNumber));
-      const permissions: Permission[] = state.bookmarkWithoutChapter ? ['LIBRARY_USE', 'BOOKMARK_READ'] : ['LIBRARY_USE'];
+      const permissions: Permission[] = state.bookmark ? ['LIBRARY_USE', 'BOOKMARK_READ'] : ['LIBRARY_USE'];
       await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions }));
       fixture = TestBed.createComponent(WorkDetailPage);
       fixture.componentRef.setInput('workId', WORK.id);
@@ -200,10 +225,10 @@ describe('WorkDetailPage', () => {
         entry.flush(fail('Not found'), { status: 404, statusText: 'Not Found' });
       }
       http.expectOne(`${API}/reading/works/${WORK.id}`).flush(ok(progressOf(state.finished, state.next)));
-      if (state.bookmarkWithoutChapter) {
+      if (state.bookmark) {
         http
           .expectOne(`${API}/bookmarks/${WORK.id}`)
-          .flush(ok({ workId: WORK.id, lastReadChapterId: null, lastReadPageIndex: 1, status: 'READING', updatedAt: '' }));
+          .flush(ok({ workId: WORK.id, lastReadChapterId: state.bookmark.chapterId, lastReadPageIndex: state.bookmark.page, status: 'READING', updatedAt: '' }));
       }
       await settle(fixture);
     }
