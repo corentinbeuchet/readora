@@ -25,6 +25,14 @@ public interface CommunityUseCase {
     record TeamMemberView(String username, Set<ScanlationRole> roles) {
     }
 
+    /// A reader found by name, to invite them to a team.
+    record ReaderRef(String username, String displayName) {
+    }
+
+    int READER_SEARCH_MIN = 2;
+    int READER_SEARCH_MAX = 50;
+    int READER_SEARCH_LIMIT = 8;
+
     /// A series the team translates, with the number of chapters the team published in it.
     record TeamSeries(Work work, long chapterCount) {
     }
@@ -49,4 +57,10 @@ public interface CommunityUseCase {
     void follow(UserId userId, TeamId teamId);
 
     void unfollow(UserId userId, TeamId teamId);
+
+    /// Readers whose username starts with `text`, by username (at most [#READER_SEARCH_LIMIT]).
+    ///
+    /// @throws com.readora.domain.common.DomainValidationException if `text` (trimmed) is shorter than
+    ///         [#READER_SEARCH_MIN] or longer than [#READER_SEARCH_MAX] characters
+    List<ReaderRef> findReaders(String text);
 }

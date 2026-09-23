@@ -19,6 +19,12 @@ export interface TeamSeries {
   chapterCount: number;
 }
 
+/** A reader found by the start of their username (`GET /users?q=`), to invite them to a team. */
+export interface ReaderRef {
+  username: string;
+  displayName: string;
+}
+
 export interface TeamProfile {
   id: string;
   name: string;

@@ -2,11 +2,12 @@ package com.readora.acceptance.fakes;
 
 import com.readora.application.port.out.CommunityQueryPort;
 import com.readora.domain.common.UserId;
+import com.readora.domain.identity.UserAccount;
 import com.readora.domain.library.ChapterRead;
 import com.readora.domain.library.LibraryEntry;
 import com.readora.domain.scanlation.TeamId;
-import com.readora.domain.work.Chapter;
 import com.readora.domain.social.ReadingStatus;
+import com.readora.domain.work.Chapter;
 import com.readora.domain.work.WorkId;
 
 import java.time.Instant;
@@ -55,6 +56,17 @@ public class InMemoryCommunity implements CommunityQueryPort {
                 .limit(topGenres).map(Map.Entry::getKey).toList();
         List<WorkId> completed = library.findByUser(userId, ReadingStatus.COMPLETED).stream().map(LibraryEntry::getWorkId).toList();
         return new ReadingStats(finished.size(), top, completed);
+    }
+
+    @Override
+    public List<ReaderName> readersStartingWith(String prefix, int limit) {
+        String lower = prefix.toLowerCase(java.util.Locale.ROOT);
+        return users.all().stream()
+                .filter(account -> account.getUsername().toLowerCase(java.util.Locale.ROOT).startsWith(lower))
+                .sorted(java.util.Comparator.comparing(UserAccount::getUsername))
+                .limit(limit)
+                .map(account -> new ReaderName(account.getUsername(), account.getDisplayName()))
+                .toList();
     }
 
     @Override

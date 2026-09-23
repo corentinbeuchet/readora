@@ -204,6 +204,26 @@ Feature: Community and scanlation teams
     When "Mina" tries to give "Aoi" the roles "PROOFREADER" in "Moon Scans"
     Then the change is refused because "Aoi" is not on the team
 
+  @should @ui
+  Scenario: Inviting finds a reader by the start of their name
+    Given reader "Mina" leads the team "Moon Scans"
+    When she types "bo" to invite someone to "Moon Scans"
+    Then "bob" is suggested, with their display name
+
+  @should @ui
+  Scenario: A leader changes the roles of a member, or removes them
+    Given reader "Mina" leads "Moon Scans", where "bob" is a translator
+    When she gives "bob" the roles Translator and Proofreader
+    Then the roster shows "bob" as Translator and Proofreader
+    When she removes "bob" from the team
+    Then "bob" is no longer in the roster
+
+  @should @ui
+  Scenario: A member leaves a team
+    Given reader "Bob" is a translator in "Moon Scans"
+    When he leaves "Moon Scans"
+    Then "Moon Scans" is no longer among his teams
+
   @should
   Scenario: A team always keeps a leader
     Given scanlator "Mina" leads the team "Moon Scans"

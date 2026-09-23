@@ -29,6 +29,11 @@ export class TeamsApi {
     return this.api.put<MyTeam>(`/teams/${teamId}/members/${encodeURIComponent(username)}`, { roles });
   }
 
+  /** A leader removes a member; a member removes themselves to leave the team. */
+  removeMember(teamId: string, username: string): Observable<MyTeam> {
+    return this.api.delete<MyTeam>(`/teams/${teamId}/members/${encodeURIComponent(username)}`);
+  }
+
   /** Invites a reader into the team; they join once they accept. */
   invite(teamId: string, username: string, roles: ScanlationRole[]): Observable<TeamInvitation> {
     return this.api.post<TeamInvitation>(`/teams/${teamId}/invitations`, { username, roles });

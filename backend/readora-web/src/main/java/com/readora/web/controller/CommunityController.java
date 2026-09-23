@@ -5,6 +5,7 @@ import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.TeamId;
 import com.readora.web.dto.ApiResponse;
 import com.readora.web.dto.PublicProfileDto;
+import com.readora.web.dto.ReaderRefDto;
 import com.readora.web.dto.TeamPageDto;
 import com.readora.web.security.AuthenticatedUser;
 import com.readora.web.security.CurrentUserProvider;
@@ -13,7 +14,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,6 +31,15 @@ public class CommunityController {
     public CommunityController(CommunityUseCase community, CurrentUserProvider currentUserProvider) {
         this.community = community;
         this.currentUserProvider = currentUserProvider;
+    }
+
+    /// Signed-in only: finding readers by name is for inviting them to a team, not for browsing accounts.
+    @GetMapping("/users")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
+    @Operation(summary = "Readers whose username starts with the text (to invite them to a team)")
+    public ResponseEntity<ApiResponse<List<ReaderRefDto>>> findReaders(@RequestParam("q") String text) {
+        return ResponseEntity.ok(ApiResponse.ok(community.findReaders(text).stream()
+                .map(reader -> new ReaderRefDto(reader.username(), reader.displayName())).toList()));
     }
 
     @GetMapping("/users/{username}/profile")

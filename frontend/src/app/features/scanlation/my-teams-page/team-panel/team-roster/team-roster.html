@@ -1,0 +1,57 @@
+<h3 #heading tabindex="-1" i18n="@@scanlation.roster.heading">Members</h3>
+@if (roster.isLoading() && !roster.hasValue()) {
+  <p class="muted" role="status" i18n="@@scanlation.roster.loading">Loading the members…</p>
+} @else if (roster.error()) {
+  <app-load-error [error]="roster.error()" (retry)="roster.reload()" i18n="@@scanlation.roster.loadError">Could not load the members.</app-load-error>
+} @else {
+  <ul class="roster">
+    @for (member of rows(); track member.username) {
+      <li class="member">
+        <span class="member-name">
+          {{ member.username }}
+          @if (member.isMe) {
+            <span class="muted" i18n="@@scanlation.roster.you">(you)</span>
+          }
+        </span>
+        <span class="role-list">
+          @for (role of member.roleNames; track role) {
+            <span class="badge">{{ role }}</span>
+          }
+        </span>
+        <span class="member-actions">
+          @if (member.isMe) {
+            <button type="button" class="btn btn-sm" [disabled]="changing.busyKey() === member.username" (click)="leave()"
+                    i18n="@@scanlation.roster.leave">Leave the team</button>
+          } @else if (leads()) {
+            <button type="button" class="btn btn-sm" [attr.aria-expanded]="editing()?.username === member.username"
+                    [attr.aria-controls]="`roles-${team().id}-${member.username}`" (click)="editRoles(member.username, member.roles)"
+                    i18n="@@scanlation.roster.changeRoles">Change roles<span class="sr-only"> of {{ member.username }}</span></button>
+            <button type="button" class="btn btn-sm" [disabled]="changing.busyKey() === member.username" (click)="remove(member.username)"
+                    i18n="@@scanlation.roster.remove">Remove<span class="sr-only"> {{ member.username }} from the team</span></button>
+          }
+        </span>
+        @if (editing(); as edit) {
+          @if (edit.username === member.username) {
+            <fieldset class="roles-editor" [id]="`roles-${team().id}-${member.username}`">
+              <legend i18n="@@scanlation.roster.rolesOf">Roles of {{ member.username }}</legend>
+              @for (role of allRoles; track role) {
+                <label class="role-choice">
+                  <input type="checkbox" [checked]="edit.roles.includes(role)" (change)="toggleRole(role, box.checked)" #box />
+                  {{ roleLabels[role] }}
+                </label>
+              }
+              <div class="editor-actions">
+                <button type="button" class="btn btn-primary btn-sm" [disabled]="edit.roles.length === 0 || changing.busy()" (click)="saveRoles()"
+                        i18n="@@scanlation.roster.saveRoles">Save the roles</button>
+                <button type="button" class="btn btn-sm" (click)="cancelEdit()" i18n="@@scanlation.roster.cancelRoles">Cancel</button>
+              </div>
+            </fieldset>
+          }
+        }
+      </li>
+    }
+  </ul>
+  @if (changing.error(); as message) {
+    <p class="form-error" role="alert">{{ message }}</p>
+  }
+}

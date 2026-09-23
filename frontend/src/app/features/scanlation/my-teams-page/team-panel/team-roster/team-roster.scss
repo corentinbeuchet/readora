@@ -1,0 +1,61 @@
+h3 {
+  font-size: var(--fs-md);
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.roster,
+.role-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.roster {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.member {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.member-name {
+  font-weight: var(--fw-semibold);
+}
+
+.role-list,
+.member-actions,
+.editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+}
+
+.member-actions {
+  margin-inline-start: auto;
+}
+
+.roles-editor {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.role-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.editor-actions {
+  flex-basis: 100%;
+}

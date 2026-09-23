@@ -102,6 +102,17 @@
     "scanlation.invitations.loading": "Chargement de vos invitations…",
     "scanlation.invitations.loadError": "Impossible de charger vos invitations.",
     "scanlation.teams.invitations.loading": "Chargement des invitations…",
-    "scanlation.teams.invitations.loadError": "Impossible de charger les invitations en attente de réponse."
+    "scanlation.teams.invitations.loadError": "Impossible de charger les invitations en attente de réponse.",
+    "scanlation.teams.member.usernameHint": "Tapez le début de son nom d'utilisateur pour voir des suggestions.",
+    "scanlation.roster.heading": "Membres",
+    "scanlation.roster.loading": "Chargement des membres…",
+    "scanlation.roster.loadError": "Impossible de charger les membres.",
+    "scanlation.roster.you": "(vous)",
+    "scanlation.roster.leave": "Quitter l'équipe",
+    "scanlation.roster.changeRoles": "Changer les rôles{$START_TAG_SPAN} de {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "scanlation.roster.remove": "Retirer{$START_TAG_SPAN} {$INTERPOLATION} de l'équipe{$CLOSE_TAG_SPAN}",
+    "scanlation.roster.rolesOf": "Rôles de {$INTERPOLATION}",
+    "scanlation.roster.saveRoles": "Enregistrer les rôles",
+    "scanlation.roster.cancelRoles": "Annuler"
   }
 }

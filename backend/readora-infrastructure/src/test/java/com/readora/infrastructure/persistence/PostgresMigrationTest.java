@@ -1,7 +1,11 @@
 package com.readora.infrastructure.persistence;
 
+import com.readora.application.port.out.CommunityQueryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.UserId;
+import com.readora.domain.identity.Email;
+import com.readora.domain.identity.PasswordHash;
+import com.readora.domain.identity.UserAccount;
 import com.readora.domain.library.ChapterRead;
 import com.readora.domain.library.LibraryEntry;
 import com.readora.domain.rating.Review;
@@ -30,6 +34,7 @@ import com.readora.infrastructure.persistence.adapter.ReadingListRepositoryAdapt
 import com.readora.infrastructure.persistence.adapter.ScanlationProjectRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.TeamInvitationRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.TeamRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.UserAccountRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.WorkRepositoryAdapter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -375,6 +380,18 @@ class PostgresMigrationTest {
         assertThat(discovery.findLatestReleases(reader, 0, 10)).extracting(r -> r.chapterId()).contains(chapter.getId());
         assertThat(community.unfollow(reader, team.getId())).isTrue();
         assertThat(community.usernames(List.of(reader))).isEmpty();
+    }
+
+    @Autowired
+    private UserAccountRepositoryAdapter userRepository;
+
+    @Test
+    @DisplayName("Readers are found by the start of their username on PostgreSQL, case-insensitively and literally")
+    void readersByNameRunOnPostgres() {
+        userRepository.save(UserAccount.register(Email.of("pg_finder@readora.test"), "PgFinder", PasswordHash.of("$2a$hash")));
+
+        assertThat(community.readersStartingWith("pgfin", 8)).extracting(CommunityQueryPort.ReaderName::username).containsExactly("PgFinder");
+        assertThat(community.readersStartingWith("pg%", 8)).isEmpty();
     }
 
     @Autowired

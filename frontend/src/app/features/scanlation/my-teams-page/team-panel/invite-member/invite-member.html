@@ -1,0 +1,60 @@
+<details class="team-tool">
+  <summary i18n="@@scanlation.teams.member.summary">Invite a member</summary>
+  <form class="form tool-form" (submit)="invite($event)" novalidate>
+    <div class="field">
+      <label [for]="`member-username-${team().id}`" i18n="@@scanlation.teams.member.username">Username</label>
+      <input [id]="`member-username-${team().id}`" type="text" autocomplete="off" [attr.list]="`member-suggestions-${team().id}`"
+             [formField]="memberForm.username" [appAriaInvalid]="memberForm.username"
+             [attr.aria-describedby]="`member-username-hint-${team().id} member-username-error-${team().id}`" />
+      <datalist [id]="`member-suggestions-${team().id}`">
+        @for (reader of suggestions(); track reader.username) {
+          <option [value]="reader.username">{{ reader.displayName }}</option>
+        }
+      </datalist>
+      <p [id]="`member-username-hint-${team().id}`" class="muted field-hint" i18n="@@scanlation.teams.member.usernameHint">Type the start of their username to see suggestions.</p>
+      <app-field-errors [id]="`member-username-error-${team().id}`" [field]="memberForm.username" />
+    </div>
+    <div class="field">
+      <label [for]="`member-role-${team().id}`" i18n="@@scanlation.teams.member.role">Role</label>
+      <select [id]="`member-role-${team().id}`" [formField]="memberForm.role">
+        @for (option of roles; track option.role) {
+          <option [value]="option.role">{{ option.label }}</option>
+        }
+      </select>
+    </div>
+    <button type="submit" class="btn" [disabled]="saving.busy()" i18n="@@scanlation.teams.member.submit">Send the invitation</button>
+  </form>
+  @if (saving.error(); as message) {
+    <p class="form-error" role="alert">{{ message }}</p>
+  }
+  <p class="muted" role="status">
+    @if (invited(); as username) {
+      <ng-container i18n="@@scanlation.teams.member.invited">{{ username }} is invited and joins the team once they accept.</ng-container>
+    }
+  </p>
+</details>
+
+@if (invitations.status() === 'loading') {
+  <p class="muted" role="status" i18n="@@scanlation.teams.invitations.loading">Loading the invitations…</p>
+} @else if (invitations.error()) {
+  <app-load-error (retry)="invitations.reload()" i18n="@@scanlation.teams.invitations.loadError">Could not load the invitations waiting for an answer.</app-load-error>
+} @else if (invitations.value().length > 0) {
+  <h3 i18n="@@scanlation.teams.invitations.heading">Waiting for an answer</h3>
+  <ul class="invitation-list">
+    @for (invitation of invitations.value(); track invitation.id) {
+      <li class="invitation">
+        <span class="invitee">{{ invitation.invitee }}</span>
+        <span class="role-list">
+          @for (role of invitation.roles; track role) {
+            <span class="badge">{{ roleLabels[role] }}</span>
+          }
+        </span>
+        <button type="button" class="btn btn-sm" [disabled]="cancelling.busyKey() === invitation.id" (click)="cancel(invitation)"
+                i18n="@@scanlation.teams.invitations.cancel">Cancel<span class="sr-only"> the invitation of {{ invitation.invitee }}</span></button>
+      </li>
+    }
+  </ul>
+  @if (cancelling.error(); as message) {
+    <p class="form-error" role="alert">{{ message }}</p>
+  }
+}

@@ -33,8 +33,12 @@ describe('MyTeamsPage (US-12)', () => {
   });
 
   afterEach(() => {
-    // A leader's panel loads the team's invitations waiting for an answer (answered explicitly where a test is about them).
+    // Each panel loads its roster (own spec: team-roster) and a leader's its invitations waiting for an answer (own
+    // spec: invite-member), unless a test answered them.
     http.match((request) => /\/teams\/[^/]+\/invitations$/.test(request.url)).forEach((request) => request.flush(ok([])));
+    http.match((request) => /\/teams\/[^/]+$/.test(request.url)).forEach((request) => request.flush(ok(null)));
+    // Typing a username asks for suggestions after a pause (own spec: invite-member).
+    http.match((request) => request.url === `${API}/users`).forEach((request) => request.flush(ok([])));
     http.verify();
   });
 
@@ -176,6 +180,16 @@ describe('MyTeamsPage (US-12)', () => {
     thenICanSee('mina invited you to join Sun Scans');
   });
 
+  it('A member leaves a team', async () => {
+    await givenIAmOnMyTeams({ teams: [team({ myRoles: ['TRANSLATOR'] })] });
+    await givenTheRosterOfMoonScansIs([{ username: 'mina', roles: ['LEADER'] }, { username: 'reader', roles: ['TRANSLATOR'] }]);
+
+    await whenILeaveTheTeam({ thenMyTeamsAre: [] });
+
+    thenTheRequestWas('DELETE', `${API}/teams/t-1/members/reader`, null);
+    thenMyTeamsAre([]);
+  });
+
   it('declining an invitation leaves my teams as they are', async () => {
     await givenIAmOnMyTeams({ teams: [], invitations: [invitation()] });
 
@@ -268,10 +282,26 @@ describe('MyTeamsPage (US-12)', () => {
     const select = fixture.nativeElement.querySelector('#member-role-t-1') as HTMLSelectElement;
     select.value = member.role;
     select.dispatchEvent(new Event('input'));
-    form('details:nth-of-type(2) form').dispatchEvent(new Event('submit', { cancelable: true }));
+    form('app-invite-member form').dispatchEvent(new Event('submit', { cancelable: true }));
     await settle(fixture);
     lastRequest = http.expectOne(`${API}/teams/t-1/invitations`);
     lastRequest.flush(ok(invitation({ id: 'i-2', teamId: 't-1', teamName: 'Moon Scans', invitee: member.username, roles: [member.role] })));
+    await settle(fixture);
+  }
+
+  /** Signed-in tests are "reader" (`mockUser`), so a roster with "reader" lists me. */
+  async function givenTheRosterOfMoonScansIs(members: { username: string; roles: ScanlationRole[] }[]): Promise<void> {
+    http.expectOne(`${API}/teams/t-1`).flush(ok({ id: 't-1', name: 'Moon Scans', description: null, series: [], members, latestChapters: [], followers: 0, following: false }));
+    await settle(fixture);
+  }
+
+  async function whenILeaveTheTeam(after: { thenMyTeamsAre: MyTeam[] }): Promise<void> {
+    button('Leave the team').click();
+    await settle(fixture);
+    lastRequest = http.expectOne((request) => request.method === 'DELETE');
+    lastRequest.flush(ok(team()));
+    await settle(fixture);
+    http.expectOne(`${API}/teams/mine`).flush(ok(after.thenMyTeamsAre));
     await settle(fixture);
   }
 

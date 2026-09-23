@@ -6,6 +6,7 @@ import com.readora.application.port.out.ScanlationProjectRepositoryPort;
 import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
+import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.NotFoundException;
 import com.readora.domain.common.UserId;
 import com.readora.domain.identity.UserAccount;
@@ -42,6 +43,17 @@ public class CommunityService implements CommunityUseCase {
         this.projects = Objects.requireNonNull(projects, "ScanlationProjectRepositoryPort cannot be null");
         this.works = Objects.requireNonNull(works, "WorkRepositoryPort cannot be null");
         this.clock = Objects.requireNonNull(clock, "Clock cannot be null");
+    }
+
+    @Override
+    public List<ReaderRef> findReaders(String text) {
+        String prefix = text == null ? "" : text.trim();
+        if (prefix.length() < READER_SEARCH_MIN || prefix.length() > READER_SEARCH_MAX) {
+            throw new DomainValidationException("Type between " + READER_SEARCH_MIN + " and " + READER_SEARCH_MAX + " characters of a username");
+        }
+        return community.readersStartingWith(prefix, READER_SEARCH_LIMIT).stream()
+                .map(reader -> new ReaderRef(reader.username(), reader.displayName()))
+                .toList();
     }
 
     @Override

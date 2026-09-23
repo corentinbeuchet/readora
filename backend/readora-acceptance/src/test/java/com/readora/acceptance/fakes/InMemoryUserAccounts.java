@@ -13,6 +13,11 @@ public class InMemoryUserAccounts implements UserAccountRepositoryPort {
 
     private final Map<UserId, UserAccount> accounts = new ConcurrentHashMap<>();
 
+    /// Every stored account, for fakes of query ports.
+    public java.util.Collection<UserAccount> all() {
+        return accounts.values();
+    }
+
     @Override
     public Optional<UserAccount> findById(UserId id) {
         return Optional.ofNullable(accounts.get(id));

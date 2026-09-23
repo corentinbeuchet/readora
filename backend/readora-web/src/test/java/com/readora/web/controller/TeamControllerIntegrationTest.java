@@ -127,6 +127,24 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
     }
 
     @Test
+    @DisplayName("A signed-in reader finds readers by the start of their username, to invite them; guests cannot")
+    void findReadersByName() throws Exception {
+        Session mina = register();
+        Session bob = register();
+        String start = bob.username().substring(0, 6);
+
+        mockMvc.perform(get("/api/v1/users").param("q", start)).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/users").param("q", start.toUpperCase()).header("Authorization", mina.bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[*].username", org.hamcrest.Matchers.hasItem(bob.username())));
+        mockMvc.perform(get("/api/v1/users").param("q", "e").header("Authorization", mina.bearer()))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/v1/users").param("q", "%%").header("Authorization", mina.bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(0));
+    }
+
+    @Test
     @DisplayName("An invitation waits for the reader's answer: only they accept or decline it, the leader may cancel it")
     void invitationFlow() throws Exception {
         Session mina = register();

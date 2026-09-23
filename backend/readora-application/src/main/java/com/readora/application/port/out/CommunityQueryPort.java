@@ -27,6 +27,12 @@ public interface CommunityQueryPort {
     /// Usernames of the given users that exist.
     Map<UserId, String> usernames(Collection<UserId> userIds);
 
+    record ReaderName(String username, String displayName) {
+    }
+
+    /// Readers whose username starts with `prefix` (case-insensitive, taken literally), by username, at most `limit`.
+    List<ReaderName> readersStartingWith(String prefix, int limit);
+
     /// A published chapter as a team page lists it: no pages are loaded.
     record PublishedChapter(ChapterId id, WorkId workId, ChapterNumber number, String title, int pageCount, Instant publishedAt) {
     }
