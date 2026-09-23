@@ -61,7 +61,7 @@ describe('Shell navigation', () => {
 
   it('Team tools live in the account menu', async () => {
     givenIAmOnTheSite();
-    await whenISignInWithoutTheNotificationBell(['PROJECT_VIEW', 'WORK_CREATE']);
+    await whenISignInWithoutTheNotificationBell([]);
 
     whenIOpenTheAccountMenu();
 
@@ -70,13 +70,13 @@ describe('Shell navigation', () => {
     thenTheNavigationLinksAre(['Home', 'Browse', 'Updates', 'Rankings', 'Lists']);
   });
 
-  it('a reader has no team tools in the account menu', async () => {
+  it('only moderators find Moderation in the team tools', async () => {
     givenIAmOnTheSite();
-    await whenISignInWithoutTheNotificationBell([]);
+    await whenISignInWithoutTheNotificationBell(['COMMENT_MODERATE']);
 
     whenIOpenTheAccountMenu();
 
-    thenTheAccountMenuOffers(['Profile', 'History', 'Log out']);
+    thenTheAccountMenuOffers(['Profile', 'History', 'Scanlation workspace', 'Upload Studio', 'Moderation', 'Log out']);
   });
 
   it('navigates exactly once per click and marks the current page', async () => {

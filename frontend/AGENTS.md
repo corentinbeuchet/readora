@@ -199,8 +199,10 @@ interface is neutral and the cover art is the colour on the page.
   on bookmarks, assignee name on tasks; a new `og-default.png` in the new palette.
 
 ## Routing & auth
-- Every route uses `loadComponent`. Permissions in route data: `canActivate: [permissionGuard], data: { permission: 'PROJECT_VIEW' }`.
-- UI gating via `*appHasPermission="'CHAPTER_PUBLISH'"`, not ad-hoc `@if (auth.can(...))`.
+- Every route uses `loadComponent`. Permissions in route data: `canActivate: [permissionGuard], data: { permission: 'COMMENT_MODERATE' }`.
+- UI gating via `*appHasPermission="'COMMENT_MODERATE'"`, not ad-hoc `@if (auth.can(...))`. Team tools are gated by my
+  roles in the team (`leadsTeam`, `publishesForTeam`, `canClaim(task, myRoles)` in `core/models/scanlation.ts`), not by
+  account permissions.
 - Every route has a server route (unit-tested): public with params -> `Prerender` + `fallback: PrerenderFallback.Client`,
   private/live -> `RenderMode.Client`.
 - Route and query params arrive as inputs (`withComponentInputBinding`); no `ActivatedRoute.snapshot`.

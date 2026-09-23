@@ -1,5 +1,6 @@
 package com.readora.application.port.in;
 
+import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.Team;
@@ -64,6 +65,11 @@ public interface BrowseCatalogUseCase {
     record ProjectBoard(ScanlationProject project, Team team) {
     }
 
-    Optional<ProjectBoard> getProject(ProjectId projectId);
-    List<ProjectBoard> listProjectsByWork(WorkId workId);
+    /// A task board, for the members of its team (and admins).
+    ///
+    /// @throws com.readora.domain.common.AccessDeniedDomainException if the viewer is not on the team
+    Optional<ProjectBoard> getProject(ProjectId projectId, UserId viewer);
+
+    /// The task boards of a series that the viewer's teams run (every board for an admin).
+    List<ProjectBoard> listProjectsByWork(WorkId workId, UserId viewer);
 }

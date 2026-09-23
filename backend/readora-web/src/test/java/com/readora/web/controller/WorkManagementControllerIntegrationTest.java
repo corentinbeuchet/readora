@@ -46,9 +46,9 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
     private ScanlationProjectRepositoryPort projectRepository;
 
     @Test
-    @DisplayName("SCANLATOR creates a new Work, which auto-creates a ScanlationProject and appears in catalog")
+    @DisplayName("A reader creates a new Work, which auto-creates a ScanlationProject and appears in catalog")
     void createWorkSuccess() throws Exception {
-        Session scanlator = registerScanlator();
+        Session scanlator = register();
 
         CreateWorkRequest request = new CreateWorkRequest(
                 "Chainsaw Man",
@@ -86,30 +86,9 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
     }
 
     @Test
-    @DisplayName("Unauthenticated or READER user without WORK_CREATE permission receives 403 on create work")
-    void readerCannotCreateWork() throws Exception {
-        Session reader = register();
-
-        CreateWorkRequest request = new CreateWorkRequest(
-                "Unauthorized Manga",
-                "Synopsis",
-                WorkType.MANGA,
-                WorkStatus.ONGOING, null, null,
-                null,
-                Set.of("Action")
-        );
-
-        mockMvc.perform(post("/api/v1/works")
-                        .header("Authorization", reader.bearer())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
     @DisplayName("Direct publish chapter with pages creates published chapter and is viewable in reader")
     void directPublishChapterFlow() throws Exception {
-        Session scanlator = registerScanlator();
+        Session scanlator = register();
 
         // 1. Create work
         CreateWorkRequest createWorkReq = new CreateWorkRequest(
@@ -172,8 +151,8 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("A scanlator publishes neither for a team they are not on, nor for their own team into a series it does not work on")
     void directPublishIntoForeignWorkIsForbidden() throws Exception {
-        Session owner = registerScanlator();
-        Session intruder = registerScanlator();
+        Session owner = register();
+        Session intruder = register();
 
         CreateWorkRequest createWorkReq = new CreateWorkRequest(
                 "The Beginning After The End", "Reincarnation.", WorkType.MANHWA, WorkStatus.ONGOING, null, null, null, Set.of("Fantasy"));
@@ -210,7 +189,7 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Create work followed by scanlation chapter task creation succeeds without unique constraint violations")
     void createWorkAndUploadScanlationTaskFlow() throws Exception {
-        Session scanlator = registerScanlator();
+        Session scanlator = register();
 
         // 1. Create work (creates default project with scanlator as LEADER member)
         CreateWorkRequest createWorkReq = new CreateWorkRequest(

@@ -4,7 +4,7 @@ import { APIRequestContext, Page, expect } from '@playwright/test';
 export const API_URL = (process.env['E2E_API_URL'] ?? 'http://localhost:8080/api/v1').replace(/\/+$/, '');
 
 /**
- * Account allowed to create series and publish chapters (`WORK_CREATE`). Defaults to the `admin` dev seed account
+ * Account that publishes the chapters tests read (any reader could, through a team). Defaults to the `admin` dev seed account
  * (Spring profile `local`, see AGENTS.md); against another environment set E2E_PUBLISHER_EMAIL / E2E_PUBLISHER_PASSWORD.
  */
 export const PUBLISHER = {
@@ -49,12 +49,12 @@ export async function thenNoNavigationLabelIsClipped(page: Page, navigationName:
     .toEqual([]);
 }
 
-/** Team tools (US-14) are entries of the account menu, for scanlators, uploaders and moderators only. */
-export async function thenTheAccountMenuHasNoTeamTools(page: Page): Promise<void> {
+/** Team tools (US-14) are entries of the account menu: every reader can start or join a team; Moderation is for moderators. */
+export async function thenTheAccountMenuOffersTeamToolsButNotModeration(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Account menu' }).click();
-  await expect(page.getByRole('menuitem', { name: 'Profile' })).toBeVisible();
-  await expect(page.getByRole('menuitem', { name: 'Scanlation workspace' })).toHaveCount(0);
-  await expect(page.getByRole('menuitem', { name: 'Upload Studio' })).toHaveCount(0);
+  await expect(page.getByRole('menuitem', { name: 'Scanlation workspace' })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: 'Upload Studio' })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: 'Moderation' })).toHaveCount(0);
   await page.keyboard.press('Escape');
 }
 

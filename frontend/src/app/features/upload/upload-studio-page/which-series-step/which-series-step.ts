@@ -49,7 +49,7 @@ export class WhichSeriesStep {
   private readonly found = signal<WorkSummary[] | null>(null);
   protected readonly searchedText = signal('');
 
-  private readonly canSeeTeams = computed(() => this.auth.can('PROJECT_VIEW'));
+  private readonly canSeeTeams = computed(() => this.auth.can('LIBRARY_USE'));
   private readonly myTeams = this.teamsApi.mineResource(this.canSeeTeams);
   /** Teams I can publish for (leaders and quality checkers). */
   private readonly publishingTeams = computed(() => (this.myTeams.hasValue() ? this.myTeams.value().filter(publishesForTeam) : []));

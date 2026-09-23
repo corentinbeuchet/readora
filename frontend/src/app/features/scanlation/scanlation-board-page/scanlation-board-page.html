@@ -24,7 +24,7 @@
         }
       </div>
       <div class="header-actions">
-        <a *appHasPermission="'WORK_CREATE'" routerLink="/upload" class="btn btn-primary btn-upload" i18n="@@scanlation.board.uploadStudio">
+        <a routerLink="/upload" class="btn btn-primary btn-upload" i18n="@@scanlation.board.uploadStudio">
           + Upload Studio
         </a>
       </div>
@@ -63,19 +63,19 @@
 
                 <div class="task-actions">
                   @if (row.canClaim) {
-                    <button *appHasPermission="'TASK_CLAIM'" type="button" class="btn btn-claim"
+                    <button type="button" class="btn btn-claim"
                             (click)="claim(task)" [disabled]="action.busyKey() === task.id" i18n="@@scanlation.board.claim">
                       Claim
                     </button>
                   }
                   @if (row.canSubmit) {
-                    <button *appHasPermission="'TASK_SUBMIT'" type="button" class="btn btn-submit"
+                    <button type="button" class="btn btn-submit"
                             (click)="openSubmit(task)" [disabled]="action.busyKey() === task.id" i18n="@@scanlation.board.submitWork">
                       Submit work
                     </button>
                   }
                   @if (row.canPublish) {
-                    <button *appHasPermission="'CHAPTER_PUBLISH'" type="button" class="btn btn-primary btn-publish"
+                    <button type="button" class="btn btn-primary btn-publish"
                             (click)="publish(task)" [disabled]="action.busyKey() === task.id" i18n="@@scanlation.board.publish">
                       Publish
                     </button>

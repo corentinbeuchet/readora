@@ -28,7 +28,7 @@ class NotificationIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Publishing a chapter notifies library readers (not muted ones); the bell counts and clears")
     void newChapterNotifications() throws Exception {
-        Session team = registerScanlator();
+        Session team = register();
         String workId = createWork(team);
         Session kenji = register();
         Session muted = register();
@@ -57,7 +57,7 @@ class NotificationIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("A reply notifies the parent comment's author, never yourself; muting needs the series in the library")
     void replyNotifications() throws Exception {
-        Session team = registerScanlator();
+        Session team = register();
         String workId = createWork(team);
         String chapterId = publish(team, workId, "1");
         Session kenji = register();

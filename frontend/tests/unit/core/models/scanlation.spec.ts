@@ -20,10 +20,22 @@ describe('scanlation task rules', () => {
     ['CLEANING', 'IN_PROGRESS', 'alice', false],
     ['TRANSLATING', 'COMPLETED', null, false],
     ['PUBLISHED', 'PENDING', null, false]
-  ])('a %s task that is %s and held by %s can be claimed: %s', (stage, status, assigneeId, claimable) => {
+  ])('a %s task that is %s and held by %s can be claimed by a leader: %s', (stage, status, assigneeId, claimable) => {
     givenATask({ stage, status, assigneeId });
 
-    thenICanClaimIt(claimable);
+    thenICanClaimIt(claimable, ['LEADER']);
+  });
+
+  it.each<[WorkflowStage, ScanlationRole, boolean]>([
+    ['RAW_UPLOADED', 'CLEANER_REDRAWER', true],
+    ['TRANSLATING', 'TRANSLATOR', true],
+    ['TRANSLATING', 'CLEANER_REDRAWER', false],
+    ['QC_REVIEW', 'QUALITY_CHECKER', true],
+    ['QC_REVIEW', 'PROOFREADER', false]
+  ])('an open %s task can be claimed by a %s: %s', (stage, role, claimable) => {
+    givenATask({ stage });
+
+    thenICanClaimIt(claimable, [role]);
   });
 
   it.each<[WorkflowStage, string | null, boolean]>([
@@ -42,10 +54,16 @@ describe('scanlation task rules', () => {
     ['QC_REVIEW', true],
     ['PROOFREADING', false],
     ['PUBLISHED', false]
-  ])('a %s task can be published: %s', (stage, publishable) => {
+  ])('a %s task can be published by a quality checker: %s', (stage, publishable) => {
     givenATask({ stage });
 
-    thenICanPublishIt(publishable);
+    thenICanPublishIt(publishable, ['QUALITY_CHECKER']);
+  });
+
+  it('a translator cannot publish a task in QC review', () => {
+    givenATask({ stage: 'QC_REVIEW' });
+
+    thenICanPublishIt(false, ['TRANSLATOR']);
   });
 
   it('an unassigned task belongs to nobody, even a signed-out user', () => {
@@ -58,16 +76,16 @@ describe('scanlation task rules', () => {
     task = { id: 't1', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, assetPackageUrl: null, pageCount: 20, updatedAt: '2026-09-13T00:00:00Z', ...overrides };
   }
 
-  function thenICanClaimIt(expected: boolean): void {
-    expect(canClaim(task)).toBe(expected);
+  function thenICanClaimIt(expected: boolean, myRoles: ScanlationRole[]): void {
+    expect(canClaim(task, myRoles)).toBe(expected);
   }
 
   function thenCanSubmitIt(userId: string | null, expected: boolean): void {
     expect(canSubmit(task, userId)).toBe(expected);
   }
 
-  function thenICanPublishIt(expected: boolean): void {
-    expect(canPublish(task)).toBe(expected);
+  function thenICanPublishIt(expected: boolean, myRoles: ScanlationRole[]): void {
+    expect(canPublish(task, myRoles)).toBe(expected);
   }
 
   function thenItIsAssignedTo(userId: string | null, expected: boolean): void {

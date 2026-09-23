@@ -23,11 +23,11 @@ Feature: Home and navigation
 
   @ui @should
   Scenario: Team tools live in the account menu
-    Given scanlator "Leader" is signed in
+    Given reader "Camille" is signed in
     When they open the account menu
-    Then it offers "Scanlation workspace" and "Upload Studio"
+    Then it offers "Scanlation workspace" and "Upload Studio", since any reader can start or join a team
     But the navigation does not
-    And the account menu of reader "Camille" has no team tools
+    And only a moderator's account menu also offers "Moderation"
 
   @ui @must
   Scenario: A visitor sees what is read this week

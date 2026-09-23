@@ -48,8 +48,8 @@
             @if (hasTeamTools()) {
               <div role="separator" class="menu-separator"></div>
               <div role="group" class="menu-group" aria-label="Team tools" i18n-aria-label="@@shell.menu.team">
-                <button *appHasPermission="'PROJECT_VIEW'" type="button" ngMenuItem value="/scanlation" i18n="@@shell.menu.scanlation">Scanlation workspace</button>
-                <button *appHasPermission="'WORK_CREATE'" type="button" ngMenuItem value="/upload" i18n="@@shell.menu.upload">Upload Studio</button>
+                <button type="button" ngMenuItem value="/scanlation" i18n="@@shell.menu.scanlation">Scanlation workspace</button>
+                <button type="button" ngMenuItem value="/upload" i18n="@@shell.menu.upload">Upload Studio</button>
                 <button *appHasPermission="'COMMENT_MODERATE'" type="button" ngMenuItem value="/moderation" i18n="@@shell.menu.moderation">Moderation</button>
               </div>
               <div role="separator" class="menu-separator"></div>

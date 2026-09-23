@@ -8,7 +8,7 @@ import { SeriesForm } from './series-form/series-form';
 
 /**
  * Where the leaders of a team correct the page of a series they translate (US-04), reached from "My teams". The
- * server decides who may save: the page only needs `WORK_CREATE` to open.
+ * server decides who may save: the page only needs a signed-in reader to open.
  */
 @Component({
   selector: 'app-edit-series-page',

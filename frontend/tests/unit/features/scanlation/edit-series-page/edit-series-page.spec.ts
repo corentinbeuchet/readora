@@ -129,7 +129,7 @@ describe('EditSeriesPage (US-04)', () => {
   });
 
   async function givenIAmInMyTeamWorkspace(team: MyTeam): Promise<void> {
-    await givenIAmSignedInWith(['PROJECT_VIEW', 'WORK_CREATE']);
+    await givenIAmSignedInWith(['LIBRARY_USE']);
     harness = await RouterTestingHarness.create();
     const opening = harness.navigateByUrl('/scanlation');
     await settle(harness);
@@ -139,7 +139,7 @@ describe('EditSeriesPage (US-04)', () => {
   }
 
   async function givenIEditTheSeries(work: Work): Promise<void> {
-    await givenIAmSignedInWith(['PROJECT_VIEW', 'WORK_CREATE']);
+    await givenIAmSignedInWith(['LIBRARY_USE']);
     harness = await RouterTestingHarness.create();
     const opening = harness.navigateByUrl(`/scanlation/series/${work.id}`);
     await settle(harness);
@@ -149,7 +149,7 @@ describe('EditSeriesPage (US-04)', () => {
   }
 
   async function givenTheSeriesDoesNotExist(workId: string): Promise<void> {
-    await givenIAmSignedInWith(['PROJECT_VIEW', 'WORK_CREATE']);
+    await givenIAmSignedInWith(['LIBRARY_USE']);
     harness = await RouterTestingHarness.create();
     const opening = harness.navigateByUrl(`/scanlation/series/${workId}`);
     await settle(harness);

@@ -24,8 +24,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-/// Running a team (US-12). `WORK_CREATE` is what scanlators and admins have and readers lack; on top of it the use
-/// case requires the caller to lead the team.
+/// Running a team (US-12). Any signed-in reader may start a team; what they may do in it comes from their roles in
+/// that team, which the use case checks (leaders manage the roster and the series).
 @RestController
 @RequestMapping("/api/v1/teams")
 @Tag(name = "Teams", description = "Creating a scanlation team, its roster and its series (US-12)")
@@ -42,7 +42,7 @@ public class TeamController {
     }
 
     @GetMapping("/mine")
-    @PreAuthorize("hasAuthority('PROJECT_VIEW')")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "The teams I belong to, with their task boards")
     public ResponseEntity<ApiResponse<List<MyTeamDto>>> mine() {
         UserId me = currentUserProvider.requireUserId();
@@ -50,7 +50,7 @@ public class TeamController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('WORK_CREATE')")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "Create a team; I become its leader")
     public ResponseEntity<ApiResponse<MyTeamDto>> create(@Valid @RequestBody CreateTeamRequest request) {
         UserId me = currentUserProvider.requireUserId();
@@ -59,7 +59,7 @@ public class TeamController {
     }
 
     @PutMapping("/{teamId}/members/{username}")
-    @PreAuthorize("hasAuthority('WORK_CREATE')")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "Add a member to my team, or change their roles (team leaders)")
     public ResponseEntity<ApiResponse<MyTeamDto>> setMember(@PathVariable UUID teamId, @PathVariable String username,
                                                             @Valid @RequestBody TeamMemberRequest request) {
@@ -77,11 +77,12 @@ public class TeamController {
     }
 
     @PostMapping("/{teamId}/series")
-    @PreAuthorize("hasAuthority('WORK_CREATE')")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "Start my team's task board for an existing series (team leaders)")
     public ResponseEntity<ApiResponse<ScanlationProjectDto>> addSeries(@PathVariable UUID teamId, @Valid @RequestBody TeamSeriesRequest request) {
-        ScanlationProject project = teams.addSeries(currentUserProvider.requireUserId(), TeamId.of(teamId), WorkId.of(request.workId()));
-        return catalog.getProject(project.getId())
+        UserId me = currentUserProvider.requireUserId();
+        ScanlationProject project = teams.addSeries(me, TeamId.of(teamId), WorkId.of(request.workId()));
+        return catalog.getProject(project.getId(), me)
                 .map(board -> ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(ScanlationProjectDto.fromDomain(board))))
                 .orElseThrow();
     }

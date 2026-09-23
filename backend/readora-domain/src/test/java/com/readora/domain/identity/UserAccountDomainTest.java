@@ -24,13 +24,12 @@ class UserAccountDomainTest {
     }
 
     @Test
-    @DisplayName("Granting SCANLATOR adds pipeline permissions; ADMIN grants everything")
+    @DisplayName("Granting MODERATOR adds moderation; ADMIN grants everything")
     void grantRoleExtendsPermissions() {
         UserAccount account = newReader();
-        account.grantRole(Role.SCANLATOR);
+        account.grantRole(Role.MODERATOR);
 
-        assertThat(account.can(Permission.TASK_CLAIM)).isTrue();
-        assertThat(account.can(Permission.CHAPTER_PUBLISH)).isTrue();
+        assertThat(account.can(Permission.COMMENT_MODERATE)).isTrue();
         assertThat(account.can(Permission.USER_MANAGE)).isFalse();
 
         account.grantRole(Role.ADMIN);
@@ -61,11 +60,10 @@ class UserAccountDomainTest {
     }
 
     @Test
-    @DisplayName("Moderators can moderate comments; readers and scanlators cannot")
+    @DisplayName("Moderators can moderate comments; readers cannot")
     void moderatorRole() {
         assertThat(Role.MODERATOR.permissions()).contains(Permission.COMMENT_MODERATE, Permission.COMMENT_REPORT, Permission.COMMENT_WRITE);
         assertThat(Role.READER.permissions()).doesNotContain(Permission.COMMENT_MODERATE);
-        assertThat(Role.SCANLATOR.permissions()).doesNotContain(Permission.COMMENT_MODERATE);
         assertThat(Role.ADMIN.permissions()).contains(Permission.COMMENT_MODERATE);
     }
 }

@@ -108,10 +108,10 @@ describe('MyTeamsPage (US-12)', () => {
     thenICanSee('Give your team a name');
   });
 
-  it('readers who only view boards cannot create a team', async () => {
-    await givenIAmOnMyTeams({ teams: [team({ myRoles: ['TRANSLATOR'] })], permissions: ['PROJECT_VIEW'] });
+  it('a translator in one team can still start their own team', async () => {
+    await givenIAmOnMyTeams({ teams: [team({ myRoles: ['TRANSLATOR'] })], permissions: ['LIBRARY_USE'] });
 
-    thenThereIsNoNewTeamForm();
+    thenThereIsANewTeamForm();
   });
 
   it('a leader adds an existing series: the ones the team already has are left out', async () => {
@@ -137,7 +137,7 @@ describe('MyTeamsPage (US-12)', () => {
   });
 
   async function givenIAmOnMyTeams(given: { teams: MyTeam[]; permissions?: Permission[] }): Promise<void> {
-    await givenIAmSignedInWith(given.permissions ?? ['PROJECT_VIEW', 'WORK_CREATE']);
+    await givenIAmSignedInWith(given.permissions ?? ['LIBRARY_USE']);
     fixture = TestBed.createComponent(MyTeamsPage);
     await settle(fixture);
     http.expectOne(`${API}/teams/mine`).flush(ok(given.teams));
@@ -145,7 +145,7 @@ describe('MyTeamsPage (US-12)', () => {
   }
 
   async function givenMyTeamsFailToLoad(): Promise<void> {
-    await givenIAmSignedInWith(['PROJECT_VIEW', 'WORK_CREATE']);
+    await givenIAmSignedInWith(['LIBRARY_USE']);
     fixture = TestBed.createComponent(MyTeamsPage);
     await settle(fixture);
     http.expectOne(`${API}/teams/mine`).flush(fail('boom'), { status: 500, statusText: 'Server Error' });
@@ -244,8 +244,8 @@ describe('MyTeamsPage (US-12)', () => {
     expect(rows.map((span) => span.textContent!.trim())).toEqual(titles);
   }
 
-  function thenThereIsNoNewTeamForm(): void {
-    expect(fixture.nativeElement.querySelector('.new-team')).toBeNull();
+  function thenThereIsANewTeamForm(): void {
+    expect(fixture.nativeElement.querySelector('.new-team')).not.toBeNull();
   }
 
   function thenTheRequestWas(method: string, url: string, body: unknown): void {

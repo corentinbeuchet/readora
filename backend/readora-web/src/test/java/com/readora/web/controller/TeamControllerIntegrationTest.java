@@ -28,7 +28,7 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("A scanlator creates a team, becomes its leader and finds it under 'my teams'; the name is taken once")
     void scanlatorCreatesATeam() throws Exception {
-        Session mina = registerScanlator();
+        Session mina = register();
         String name = "Moon Scans " + UUID.randomUUID();
 
         var created = whenICreateTheTeam(mina, name).andExpect(status().isCreated())
@@ -45,26 +45,26 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.members[0].username").value(mina.username()))
                 .andExpect(jsonPath("$.data.series.length()").value(0));
-        whenICreateTheTeam(registerScanlator(), name.toUpperCase())
+        whenICreateTheTeam(register(), name.toUpperCase())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("TEAM_NAME_TAKEN"));
     }
 
     @Test
-    @DisplayName("Readers and guests cannot create a team, and 'my teams' needs a session")
-    void onlyScanlatorsCreateTeams() throws Exception {
+    @DisplayName("Any reader can create a team; guests cannot, and 'my teams' needs a session")
+    void anyReaderCreatesATeam() throws Exception {
         mockMvc.perform(post("/api/v1/teams").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Nope\"}"))
                 .andExpect(status().isUnauthorized());
-        whenICreateTheTeam(register(), "Reader Scans " + UUID.randomUUID()).andExpect(status().isForbidden());
+        whenICreateTheTeam(register(), "Reader Scans " + UUID.randomUUID()).andExpect(status().isCreated());
         mockMvc.perform(get("/api/v1/teams/mine")).andExpect(status().isUnauthorized());
     }
 
     @Test
     @DisplayName("A leader adds an existing series to the team; another team's member cannot, and twice is refused")
     void leaderAddsAnExistingSeries() throws Exception {
-        Session shadowLeader = registerScanlator();
+        Session shadowLeader = register();
         String workId = givenASeriesCreatedBy(shadowLeader);
-        Session mina = registerScanlator();
+        Session mina = register();
         String moonScans = givenATeamLedBy(mina);
 
         whenIAddTheSeries(shadowLeader, moonScans, workId)
@@ -81,7 +81,8 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
 
         mockMvc.perform(get("/api/v1/teams/" + moonScans)).andExpect(jsonPath("$.data.series.length()").value(1));
         mockMvc.perform(get("/api/v1/works/" + workId + "/projects").header("Authorization", mina.bearer()))
-                .andExpect(jsonPath("$.data.length()").value(2));
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].teamId").value(moonScans));
         mockMvc.perform(get("/api/v1/teams/mine").header("Authorization", mina.bearer()))
                 .andExpect(jsonPath("$.data[0].boards[0].work.id").value(workId))
                 .andExpect(jsonPath("$.data[0].boards[0].work.title").isString())
@@ -92,8 +93,8 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Only a leader changes the roster; a member (even a plain reader) may leave; the last leader cannot")
     void rosterRules() throws Exception {
-        Session mina = registerScanlator();
-        Session bob = registerScanlator();
+        Session mina = register();
+        Session bob = register();
         Session aoi = register();
         String team = givenATeamLedBy(mina);
 
@@ -128,8 +129,8 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("A new series can belong to one of my teams; only its leaders may do that")
     void newSeriesForMyTeam() throws Exception {
-        Session mina = registerScanlator();
-        Session bob = registerScanlator();
+        Session mina = register();
+        Session bob = register();
         String moonScans = givenATeamLedBy(mina);
 
         whenICreateASeriesFor(bob, moonScans).andExpect(status().isForbidden());
@@ -146,10 +147,10 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Two teams publish the same chapter: one row per version, next stays with the team, progress follows the number")
     void twoTeamsPublishTheSameChapter() throws Exception {
-        Session shadowLeader = registerScanlator();
+        Session shadowLeader = register();
         String workId = givenASeriesCreatedBy(shadowLeader);
         String shadow = teamOf(shadowLeader, workId);
-        Session mina = registerScanlator();
+        Session mina = register();
         String moon = givenATeamLedBy(mina);
         whenIAddTheSeries(mina, moon, workId).andExpect(status().isCreated());
 

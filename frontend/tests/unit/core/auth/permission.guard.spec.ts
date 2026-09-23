@@ -20,25 +20,25 @@ describe('authGuard / permissionGuard', () => {
   afterEach(() => http.verify());
 
   it('authGuard redirects anonymous users to /login with returnUrl', () => {
-    whenTheGuardChecks(authGuard, '/scanlation/p-1');
+    whenTheGuardChecks(authGuard, '/moderation');
 
-    thenIAmRedirectedTo('/login?returnUrl=%2Fscanlation%2Fp-1');
+    thenIAmRedirectedTo('/login?returnUrl=%2Fmoderation');
   });
 
   it('authGuard lets authenticated users through; guestGuard sends them to /profile', async () => {
     await givenIAmSignedInWith(['COMMENT_WRITE']);
 
-    whenTheGuardChecks(authGuard, '/scanlation/p-1');
+    whenTheGuardChecks(authGuard, '/moderation');
 
     thenIAmLetThrough();
 
-    whenTheGuardChecks(guestGuard, '/scanlation/p-1');
+    whenTheGuardChecks(guestGuard, '/moderation');
 
     thenIAmRedirectedTo('/profile');
   });
 
   it('permissionGuard redirects anonymous users to login', () => {
-    whenTheGuardChecks(permissionGuard, '/scanlation/p-1', { permission: 'PROJECT_VIEW' });
+    whenTheGuardChecks(permissionGuard, '/moderation', { permission: 'COMMENT_MODERATE' });
 
     thenIAmRedirectedToAUrlContaining('/login');
   });
@@ -46,23 +46,23 @@ describe('authGuard / permissionGuard', () => {
   it('permissionGuard redirects readers lacking the permission to /forbidden', async () => {
     await givenIAmSignedInWith(['COMMENT_WRITE', 'COMMENT_UPVOTE']);
 
-    whenTheGuardChecks(permissionGuard, '/scanlation/p-1', { permission: 'PROJECT_VIEW' });
+    whenTheGuardChecks(permissionGuard, '/moderation', { permission: 'COMMENT_MODERATE' });
 
-    thenIAmRedirectedTo('/forbidden?from=%2Fscanlation%2Fp-1');
+    thenIAmRedirectedTo('/forbidden?from=%2Fmoderation');
   });
 
-  it('permissionGuard allows scanlators with PROJECT_VIEW (single and multiple permissions)', async () => {
-    await givenIAmSignedInWith(['COMMENT_WRITE', 'PROJECT_VIEW', 'TASK_CLAIM']);
+  it('permissionGuard allows moderators with COMMENT_MODERATE (single and multiple permissions)', async () => {
+    await givenIAmSignedInWith(['COMMENT_WRITE', 'COMMENT_MODERATE', 'LIBRARY_USE']);
 
-    whenTheGuardChecks(permissionGuard, '/scanlation/p-1', { permission: 'PROJECT_VIEW' });
-
-    thenIAmLetThrough();
-
-    whenTheGuardChecks(permissionGuard, '/scanlation/p-1', { permissions: ['PROJECT_VIEW', 'TASK_CLAIM'] });
+    whenTheGuardChecks(permissionGuard, '/moderation', { permission: 'COMMENT_MODERATE' });
 
     thenIAmLetThrough();
 
-    whenTheGuardChecks(permissionGuard, '/scanlation/p-1', { permissions: ['PROJECT_VIEW', 'CHAPTER_PUBLISH'] });
+    whenTheGuardChecks(permissionGuard, '/moderation', { permissions: ['COMMENT_MODERATE', 'LIBRARY_USE'] });
+
+    thenIAmLetThrough();
+
+    whenTheGuardChecks(permissionGuard, '/moderation', { permissions: ['COMMENT_MODERATE', 'USER_MANAGE'] });
 
     thenIAmRedirected();
   });

@@ -86,9 +86,25 @@ export interface CreateTaskRequest {
   pageCount: number;
 }
 
-/** An open task nobody holds yet; published or completed work can't be claimed. */
-export function canClaim(task: WorkflowTask): boolean {
-  return task.stage !== 'PUBLISHED' && task.status !== 'COMPLETED' && !task.assigneeId;
+/** The team role that works on each stage (backend `WorkflowStage.requiredRole`). */
+const STAGE_ROLE: Record<WorkflowStage, ScanlationRole> = {
+  RAW_UPLOADED: 'CLEANER_REDRAWER',
+  CLEANING: 'CLEANER_REDRAWER',
+  TRANSLATING: 'TRANSLATOR',
+  TYPESETTING: 'TYPESETTER',
+  PROOFREADING: 'PROOFREADER',
+  QC_REVIEW: 'QUALITY_CHECKER',
+  PUBLISHED: 'QUALITY_CHECKER'
+};
+
+/** A member works on a stage with its role; a leader counts as every role. The server enforces it too. */
+export function worksOnStage(roles: readonly ScanlationRole[], stage: WorkflowStage): boolean {
+  return roles.includes('LEADER') || roles.includes(STAGE_ROLE[stage]);
+}
+
+/** An open task nobody holds yet, in a stage I work on; published or completed work can't be claimed. */
+export function canClaim(task: WorkflowTask, myRoles: readonly ScanlationRole[]): boolean {
+  return task.stage !== 'PUBLISHED' && task.status !== 'COMPLETED' && !task.assigneeId && worksOnStage(myRoles, task.stage);
 }
 
 /** Only the assignee submits, and QC review ends with a publish, not a submit. */
@@ -96,9 +112,9 @@ export function canSubmit(task: WorkflowTask, userId: string | null): boolean {
   return task.stage !== 'PUBLISHED' && task.stage !== 'QC_REVIEW' && isAssignedTo(task, userId);
 }
 
-/** A chapter is published from the QC review stage. */
-export function canPublish(task: WorkflowTask): boolean {
-  return task.stage === 'QC_REVIEW';
+/** A chapter is published from the QC review stage, by a quality checker or a leader. */
+export function canPublish(task: WorkflowTask, myRoles: readonly ScanlationRole[]): boolean {
+  return task.stage === 'QC_REVIEW' && worksOnStage(myRoles, task.stage);
 }
 
 export function isAssignedTo(task: WorkflowTask, userId: string | null): boolean {

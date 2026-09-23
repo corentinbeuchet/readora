@@ -35,16 +35,16 @@ class LocalSeedIntegrationTest extends AuthTestSupport {
 
     @ParameterizedTest(name = "{0} can log in and has {1}")
     @CsvSource({
-            "reader,      LIBRARY_USE,     TASK_CLAIM",
-            "kenji,       LIBRARY_USE,     TASK_CLAIM",
-            "admin,       USER_MANAGE,     NONE",
+            "reader,      LIBRARY_USE,      COMMENT_MODERATE",
+            "kenji,       LIBRARY_USE,      COMMENT_MODERATE",
+            "admin,       USER_MANAGE,      NONE",
             "moderator,   COMMENT_MODERATE, USER_MANAGE",
-            "leader,      TASK_CLAIM,      USER_MANAGE",
-            "cleaner,     TASK_CLAIM,      USER_MANAGE",
-            "translator,  TASK_SUBMIT,     USER_MANAGE",
-            "typesetter,  TASK_SUBMIT,     USER_MANAGE",
-            "proofreader, TASK_SUBMIT,     USER_MANAGE",
-            "quality,     CHAPTER_PUBLISH, USER_MANAGE"
+            "leader,      LIBRARY_USE,      USER_MANAGE",
+            "cleaner,     LIBRARY_USE,      USER_MANAGE",
+            "translator,  LIBRARY_USE,      USER_MANAGE",
+            "typesetter,  LIBRARY_USE,      USER_MANAGE",
+            "proofreader, LIBRARY_USE,      USER_MANAGE",
+            "quality,     LIBRARY_USE,      USER_MANAGE"
     })
     @DisplayName("Every seeded account logs in with the dev password and gets its role's permissions")
     void seededAccountsLogIn(String username, String expectedPermission, String absentPermission) throws Exception {

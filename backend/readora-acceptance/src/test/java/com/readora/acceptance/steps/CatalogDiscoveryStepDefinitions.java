@@ -60,7 +60,7 @@ public class CatalogDiscoveryStepDefinitions {
         works = new InMemoryWorkRepository();
         projects = new InMemoryProjectRepository();
         teams = new InMemoryTeamRepository();
-        catalog = new CatalogService(works, new InMemoryChapterRepository(), projects, teams);
+        catalog = new CatalogService(works, new InMemoryChapterRepository(), projects, teams, new NoUserAccounts());
         seriesEditing = new WorkManagementService(works, new InMemoryChapterRepository(), projects, teams, new NoUserAccounts(), event -> { },
                 Clock.systemUTC());
         results = List.of();

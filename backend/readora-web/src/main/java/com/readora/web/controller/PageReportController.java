@@ -42,7 +42,7 @@ public class PageReportController {
     }
 
     @GetMapping("/scanlation/projects/{projectId}/page-reports")
-    @PreAuthorize("hasAuthority('PROJECT_VIEW')")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "Open page reports on the project's chapters (team members and admins)")
     public ResponseEntity<ApiResponse<List<PageReportDto>>> openReports(@PathVariable UUID projectId) {
         List<PageReportDto> reports = reportPageUseCase.openReports(currentUserProvider.requireUserId(), ProjectId.of(projectId)).stream()
@@ -52,7 +52,7 @@ public class PageReportController {
     }
 
     @PostMapping("/page-reports/{reportId}/resolve")
-    @PreAuthorize("hasAuthority('PROJECT_VIEW')")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "Mark a page report as fixed (the chapter's team or an admin)")
     public ResponseEntity<ApiResponse<PageReportDto>> resolve(@PathVariable UUID reportId) {
         var report = reportPageUseCase.resolve(currentUserProvider.requireUserId(), PageReportId.of(reportId));

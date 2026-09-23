@@ -11,8 +11,8 @@ import { provideHttpTesting } from '../../test-utils';
   imports: [HasPermissionDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <button *appHasPermission="'CHAPTER_PUBLISH'" type="button" class="publish">Publish</button>
-    <span *appHasPermission="['TASK_CLAIM', 'TASK_SUBMIT']; mode: 'any'" class="any">Any</span>
+    <button *appHasPermission="'COMMENT_MODERATE'" type="button" class="publish">Hide</button>
+    <span *appHasPermission="['COMMENT_MODERATE', 'USER_MANAGE']; mode: 'any'" class="any">Any</span>
     <ng-container *appHasPermission="'LIBRARY_USE'; else logIn"><p class="save">Save progress</p></ng-container>
     <ng-template #logIn><p class="upsell">Log in to save</p></ng-template>
   `
@@ -48,14 +48,14 @@ describe('HasPermissionDirective', () => {
     thenISee('upsell');
   });
 
-  it('hides Publish for a plain reader, shows it for a scanlator, and reacts to store changes', async () => {
+  it('hides Hide for a plain reader, shows it for a moderator, and reacts to store changes', async () => {
     await givenIAmSignedInWith(['COMMENT_WRITE', 'COMMENT_UPVOTE']);
 
     whenTheHostRenders();
 
     thenIDoNotSee('publish');
 
-    whenMyPermissionsBecome(['CHAPTER_PUBLISH', 'TASK_SUBMIT']);
+    whenMyPermissionsBecome(['COMMENT_MODERATE', 'COMMENT_WRITE']);
 
     thenISee('publish');
     thenISee('any');

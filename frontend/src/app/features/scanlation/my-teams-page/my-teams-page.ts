@@ -23,7 +23,7 @@ export class MyTeamsPage {
   private readonly api = inject(TeamsApi);
   private readonly auth = inject(AuthStore);
 
-  private readonly canView = computed(() => this.auth.can('PROJECT_VIEW'));
+  private readonly canView = computed(() => this.auth.can('LIBRARY_USE'));
   protected readonly teams = this.api.mineResource(this.canView);
   protected readonly creating = asyncAction();
   protected readonly model = signal({ name: '', description: '' });

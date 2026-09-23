@@ -66,7 +66,7 @@ class PostgresLocalSeedTest {
         UserAccount kenji = users.findByEmail(Email.of("kenji@readora.local")).orElseThrow();
         assertThat(kenji.can(Permission.LIBRARY_USE)).isTrue();
         assertThat(users.findByEmail(Email.of("admin@readora.local")).orElseThrow().can(Permission.USER_MANAGE)).isTrue();
-        assertThat(users.findByEmail(Email.of("quality@readora.local")).orElseThrow().can(Permission.CHAPTER_PUBLISH)).isTrue();
+        assertThat(users.findByEmail(Email.of("quality@readora.local")).orElseThrow().can(Permission.USER_MANAGE)).isFalse();
         assertThat(users.findByEmail(Email.of("moderator@readora.local")).orElseThrow().can(Permission.COMMENT_MODERATE)).isTrue();
         assertThat(ratings.findTopRated(5, 10)).hasSize(2);
 

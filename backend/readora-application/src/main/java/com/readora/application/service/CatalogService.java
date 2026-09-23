@@ -1,5 +1,9 @@
 package com.readora.application.service;
 
+import com.readora.domain.identity.Permission;
+import com.readora.domain.common.UserId;
+import com.readora.domain.common.AccessDeniedDomainException;
+import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.application.port.in.BrowseCatalogUseCase;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
@@ -32,13 +36,16 @@ public class CatalogService implements BrowseCatalogUseCase {
     private final ChapterRepositoryPort chapterRepository;
     private final ScanlationProjectRepositoryPort projectRepository;
     private final TeamRepositoryPort teamRepository;
+    private final UserAccountRepositoryPort userRepository;
 
     public CatalogService(WorkRepositoryPort workRepository, ChapterRepositoryPort chapterRepository,
-                          ScanlationProjectRepositoryPort projectRepository, TeamRepositoryPort teamRepository) {
+                          ScanlationProjectRepositoryPort projectRepository, TeamRepositoryPort teamRepository,
+                          UserAccountRepositoryPort userRepository) {
         this.workRepository = Objects.requireNonNull(workRepository, "WorkRepositoryPort cannot be null");
         this.chapterRepository = Objects.requireNonNull(chapterRepository, "ChapterRepositoryPort cannot be null");
         this.projectRepository = Objects.requireNonNull(projectRepository, "ScanlationProjectRepositoryPort cannot be null");
         this.teamRepository = Objects.requireNonNull(teamRepository, "TeamRepositoryPort cannot be null");
+        this.userRepository = Objects.requireNonNull(userRepository, "UserAccountRepositoryPort cannot be null");
     }
 
     @Override
@@ -87,18 +94,28 @@ public class CatalogService implements BrowseCatalogUseCase {
     }
 
     @Override
-    public Optional<ProjectBoard> getProject(ProjectId projectId) {
-        return projectRepository.findById(projectId)
+    public Optional<ProjectBoard> getProject(ProjectId projectId, UserId viewer) {
+        Optional<ProjectBoard> board = projectRepository.findById(projectId)
                 .flatMap(project -> teamRepository.findById(project.getTeamId()).map(team -> new ProjectBoard(project, team)));
+        if (board.isPresent() && board.get().team().findMember(viewer).isEmpty() && !isAdmin(viewer)) {
+            throw new AccessDeniedDomainException("Only the team's members can open its task board");
+        }
+        return board;
     }
 
     @Override
-    public List<ProjectBoard> listProjectsByWork(WorkId workId) {
+    public List<ProjectBoard> listProjectsByWork(WorkId workId, UserId viewer) {
+        boolean admin = isAdmin(viewer);
         List<ScanlationProject> projects = projectRepository.findByWorkId(workId);
         Map<TeamId, Team> teams = teamRepository.findAllById(projects.stream().map(ScanlationProject::getTeamId).toList()).stream()
                 .collect(Collectors.toMap(Team::getId, team -> team));
         return projects.stream()
                 .flatMap(project -> Optional.ofNullable(teams.get(project.getTeamId())).map(team -> new ProjectBoard(project, team)).stream())
+                .filter(board -> admin || board.team().findMember(viewer).isPresent())
                 .toList();
+    }
+
+    private boolean isAdmin(UserId userId) {
+        return userRepository.findById(userId).map(account -> account.can(Permission.USER_MANAGE)).orElse(false);
     }
 }

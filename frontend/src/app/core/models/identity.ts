@@ -1,12 +1,7 @@
 export const PERMISSIONS = [
   'COMMENT_WRITE',
   'COMMENT_UPVOTE',
-  'TASK_CLAIM',
-  'TASK_SUBMIT',
-  'CHAPTER_PUBLISH',
-  'PROJECT_VIEW',
   'USER_MANAGE',
-  'WORK_CREATE',
   'LIBRARY_USE',
   'PAGE_REPORT',
   'RATE_WORK',
@@ -16,12 +11,11 @@ export const PERMISSIONS = [
 
 export type Permission = (typeof PERMISSIONS)[number];
 
-export type Role = 'READER' | 'SCANLATOR' | 'MODERATOR' | 'ADMIN';
+export type Role = 'READER' | 'MODERATOR' | 'ADMIN';
 
 /** Display names for the codes above (the API sends the codes). */
 export const ROLE_LABELS: Record<Role, string> = {
   READER: $localize`:@@role.reader:Reader`,
-  SCANLATOR: $localize`:@@role.scanlator:Scanlator`,
   MODERATOR: $localize`:@@role.moderator:Moderator`,
   ADMIN: $localize`:@@role.admin:Admin`
 };

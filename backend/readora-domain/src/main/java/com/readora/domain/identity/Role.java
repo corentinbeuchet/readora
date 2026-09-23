@@ -10,19 +10,6 @@ public enum Role {
     /// A reader who also looks after discussions (US-11).
     MODERATOR(EnumSet.of(Permission.COMMENT_WRITE, Permission.COMMENT_UPVOTE, Permission.LIBRARY_USE, Permission.PAGE_REPORT,
             Permission.RATE_WORK, Permission.COMMENT_REPORT, Permission.COMMENT_MODERATE)),
-    SCANLATOR(EnumSet.of(
-            Permission.COMMENT_WRITE,
-            Permission.COMMENT_UPVOTE,
-            Permission.LIBRARY_USE,
-            Permission.PAGE_REPORT,
-            Permission.RATE_WORK,
-            Permission.COMMENT_REPORT,
-            Permission.PROJECT_VIEW,
-            Permission.TASK_CLAIM,
-            Permission.TASK_SUBMIT,
-            Permission.CHAPTER_PUBLISH,
-            Permission.WORK_CREATE
-    )),
     ADMIN(EnumSet.allOf(Permission.class));
 
     private final Set<Permission> permissions;

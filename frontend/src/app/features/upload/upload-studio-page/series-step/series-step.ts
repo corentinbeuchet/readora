@@ -34,7 +34,7 @@ export class SeriesStep {
 
   private readonly auth = inject(AuthStore);
   private readonly catalogApi = inject(CatalogApi);
-  private readonly canSeeTeams = computed(() => !this.existing() && this.auth.can('PROJECT_VIEW'));
+  private readonly canSeeTeams = computed(() => !this.existing() && this.auth.can('LIBRARY_USE'));
   private readonly myTeams = inject(TeamsApi).mineResource(this.canSeeTeams);
   /** Teams I lead: a new series can belong to one of them instead of getting a team of its own. */
   protected readonly ledTeams = computed(() => (this.myTeams.hasValue() ? this.myTeams.value().filter(leadsTeam) : []));

@@ -132,8 +132,8 @@ class SecurityRulesIntegrationTest extends AuthTestSupport {
     }
 
     @Test
-    @DisplayName("Bookmarks need a signed-in reader (401); a READER gets 403 on publish; anonymous refresh path unaffected")
-    void bookmarksNeedAnAccountAndReadersCannotPublish() throws Exception {
+    @DisplayName("Bookmarks need a signed-in reader (401); a reader outside the team cannot publish (400) nor open its board (403)")
+    void bookmarksNeedAnAccountAndOutsidersCannotPublish() throws Exception {
         Session reader = register();
 
         mockMvc.perform(put("/api/v1/bookmarks/" + work.getId().value() + "/progress")
@@ -151,7 +151,7 @@ class SecurityRulesIntegrationTest extends AuthTestSupport {
 
         mockMvc.perform(post("/api/v1/scanlation/projects/" + project.getId().value() + "/tasks/" + task.getId().value() + "/publish")
                         .header("Authorization", reader.bearer()))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isBadRequest());
 
         mockMvc.perform(get("/api/v1/scanlation/projects/" + project.getId().value())
                         .header("Authorization", reader.bearer()))
@@ -159,9 +159,9 @@ class SecurityRulesIntegrationTest extends AuthTestSupport {
     }
 
     @Test
-    @DisplayName("SCANLATOR passes the permission gate; non-membership is then rejected by the domain (400)")
-    void scanlatorPassesGateButDomainRulesStillApply() throws Exception {
-        Session scanlator = registerScanlator();
+    @DisplayName("A reader outside the team cannot open its board (403) nor claim its tasks (400)")
+    void outsiderIsStoppedByTheTeamRules() throws Exception {
+        Session scanlator = register();
 
         Team team = teamRepository.save(Team.create("Team Tower " + java.util.UUID.randomUUID(), null, UserId.of("leader-2")));
         ScanlationProject project = ScanlationProject.create("Team Tower", work.getId(), team.getId());
@@ -170,9 +170,7 @@ class SecurityRulesIntegrationTest extends AuthTestSupport {
 
         mockMvc.perform(get("/api/v1/scanlation/projects/" + project.getId().value())
                         .header("Authorization", scanlator.bearer()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.name").value("Team Tower"))
-                .andExpect(jsonPath("$.data.tasks.length()").value(1));
+                .andExpect(status().isForbidden());
 
         mockMvc.perform(post("/api/v1/scanlation/projects/" + project.getId().value() + "/tasks/" + task.getId().value() + "/claim")
                         .header("Authorization", scanlator.bearer()))

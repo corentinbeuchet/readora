@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
 import { test as base, expect } from './support/fixtures';
-import { signUp, thenTheAccountMenuHasNoTeamTools } from './support/helpers';
+import { signUp, thenTheAccountMenuOffersTeamToolsButNotModeration } from './support/helpers';
 
 const test = base.extend<{
   /** A second, independent browser session (its own context: cookies and storage are not shared with `page`). */
@@ -21,15 +21,14 @@ test.describe('Scanlation Collaborative Multi-Role Pipeline Suite', () => {
     await thenICanSeeTheHeading(page, 'Log in');
   });
 
-  test('a plain reader is forbidden from the workspace and sees no Scanlation menu entry', async ({ page }) => {
+  test('a new reader finds the team tools, but no board of a team they are not on', async ({ page }) => {
     await givenIAmSignedUpAs(page, 'reader');
 
-    await thenTheAccountMenuHasNoTeamTools(page);
+    await thenTheAccountMenuOffersTeamToolsButNotModeration(page);
 
     await whenIVisit(page, '/scanlation/00000000-0000-0000-0000-000000000000');
 
-    await thenIAmOn(page, /\/forbidden/);
-    await thenICanSeeTheHeading(page, 'Access denied');
+    await thenICanSeeTheHeading(page, 'Project unavailable');
   });
 
   test('two collaborators have isolated sessions (one browser context each)', async ({ page, otherSession }) => {

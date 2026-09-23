@@ -363,7 +363,7 @@ describe('UploadStudioPage', () => {
 
     /** `/upload` with no series picked and "create" not chosen: the "Which series?" step, which loads my teams. */
     async function givenIOpenTheStudioWithoutASeries(server: { myTeams: (typeof MOON_SCANS)[] }): Promise<void> {
-      await givenIAmSignedInWith(['PROJECT_VIEW', 'WORK_CREATE']);
+      await givenIAmSignedInWith(['LIBRARY_USE']);
       fixture.componentRef.setInput('create', undefined);
       await settleStudio();
       http.expectOne(`${API}/teams/mine`).flush(ok(server.myTeams));
@@ -436,7 +436,7 @@ describe('UploadStudioPage', () => {
     }
 
     async function givenILeadTheTeams(teams: (typeof MOON_SCANS)[]): Promise<void> {
-      await givenIAmSignedInWith(['PROJECT_VIEW', 'WORK_CREATE']);
+      await givenIAmSignedInWith(['LIBRARY_USE']);
       await settleStudio();
       http.expectOne(`${API}/teams/mine`).flush(ok(teams));
       await settleStudio();

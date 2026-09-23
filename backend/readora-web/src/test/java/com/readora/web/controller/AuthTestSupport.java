@@ -2,8 +2,6 @@ package com.readora.web.controller;
 
 import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.UserAccountRepositoryPort;
-import com.readora.domain.identity.Role;
-import com.readora.domain.identity.UserAccount;
 import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamId;
@@ -23,7 +21,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /// Shared helpers for controller integration tests: registers users through the real API
-/// and returns their tokens; can promote users to `SCANLATOR` through the repository port.
+/// and returns their tokens.
 abstract class AuthTestSupport {
 
     static final String REFRESH_COOKIE = "readora_refresh";
@@ -69,14 +67,6 @@ abstract class AuthTestSupport {
                 .andReturn();
         JsonNode user = objectMapper.readTree(result.getResponse().getContentAsString()).path("data").path("user");
         return toSession(result.getResponse(), email, user.path("username").asString());
-    }
-
-    protected Session registerScanlator() throws Exception {
-        Session reader = register();
-        UserAccount account = userAccountRepository.findById(UserId.of(reader.userId())).orElseThrow();
-        account.grantRole(Role.SCANLATOR);
-        userAccountRepository.save(account);
-        return login(reader.email());
     }
 
     protected JsonNode json(MvcResult result) throws Exception {

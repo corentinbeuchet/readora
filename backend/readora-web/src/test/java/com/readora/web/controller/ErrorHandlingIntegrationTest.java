@@ -34,7 +34,7 @@ class ErrorHandlingIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Claiming a task in an unknown project returns 404")
     void unknownProjectIsNotFound() throws Exception {
-        Session scanlator = registerScanlator();
+        Session scanlator = register();
 
         mockMvc.perform(post("/api/v1/scanlation/projects/" + UUID.randomUUID() + "/tasks/" + UUID.randomUUID() + "/claim")
                         .header("Authorization", scanlator.bearer()))

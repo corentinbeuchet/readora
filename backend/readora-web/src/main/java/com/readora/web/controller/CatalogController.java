@@ -89,17 +89,17 @@ public class CatalogController {
     }
 
     @GetMapping("/{workId}/projects")
-    @PreAuthorize("hasAuthority('PROJECT_VIEW') or hasAuthority('WORK_CREATE')")
-    @Operation(summary = "List scanlation projects of a work")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
+    @Operation(summary = "List the task boards my teams run for a work")
     public ResponseEntity<ApiResponse<List<ScanlationProjectDto>>> listProjects(@PathVariable UUID workId) {
-        List<ScanlationProjectDto> projects = browseCatalogUseCase.listProjectsByWork(WorkId.of(workId)).stream()
+        List<ScanlationProjectDto> projects = browseCatalogUseCase.listProjectsByWork(WorkId.of(workId), currentUserProvider.requireUserId()).stream()
                 .map(ScanlationProjectDto::fromDomain)
                 .toList();
         return ResponseEntity.ok(ApiResponse.ok(projects));
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('WORK_CREATE')")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "Create a new manga / comic work")
     public ResponseEntity<ApiResponse<WorkDto>> createWork(
             @Valid @RequestBody CreateWorkRequest request
@@ -121,7 +121,7 @@ public class CatalogController {
     }
 
     @PutMapping("/{workId}")
-    @PreAuthorize("hasAuthority('WORK_CREATE')")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "Replace the description of a series (leaders of a team that translates it, or an admin)")
     public ResponseEntity<ApiResponse<WorkDto>> updateWork(@PathVariable UUID workId, @Valid @RequestBody UpdateWorkRequest request) {
         var description = new ManageWorkUseCase.WorkDescription(
@@ -140,7 +140,7 @@ public class CatalogController {
     }
 
     @PostMapping("/{workId}/chapters/direct")
-    @PreAuthorize("hasAuthority('CHAPTER_PUBLISH') or hasAuthority('WORK_CREATE')")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "Directly publish a chapter with pages for a work")
     public ResponseEntity<ApiResponse<ChapterDto>> directPublishChapter(
             @PathVariable UUID workId,

@@ -17,6 +17,7 @@ import com.readora.application.port.in.CommunityUseCase.TeamPage;
 import com.readora.application.port.in.CommunityUseCase.TeamSeries;
 import com.readora.application.port.in.DiscoverUseCase.Release;
 import com.readora.application.port.in.ManageLibraryUseCase.ExportRow;
+import com.readora.application.service.CatalogService;
 import com.readora.application.service.ChapterReadingService;
 import com.readora.application.service.WorkManagementService;
 import com.readora.application.service.CommunityService;
@@ -31,6 +32,7 @@ import com.readora.domain.common.UserId;
 import com.readora.domain.identity.Email;
 import com.readora.domain.identity.PasswordHash;
 import com.readora.domain.identity.UserAccount;
+import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.ScanlationRole;
 import com.readora.domain.scanlation.Team;
@@ -57,6 +59,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /// US-12 Community and scanlation teams.
 public class CommunityStepDefinitions {
@@ -68,6 +71,7 @@ public class CommunityStepDefinitions {
     private InMemoryUserAccounts users;
     private CommunityService community;
     private TeamManagementService teamManagement;
+    private CatalogService catalog;
     private WorkManagementService publishing;
     private ChapterReadingService chapterReader;
     private ChapterReading opened;
@@ -95,6 +99,7 @@ public class CommunityStepDefinitions {
         Clock clock = Clock.systemUTC();
         community = new CommunityService(users, communityQueries, teams, projects, works, clock);
         teamManagement = new TeamManagementService(teams, projects, works, users, clock);
+        catalog = new CatalogService(works, chapters, projects, teams, users);
         publishing = new WorkManagementService(works, chapters, projects, teams, users, event -> { }, clock);
         chapterReader = new ChapterReadingService(chapters, works, teams, new FakeStorage());
         refusal = null;
@@ -166,8 +171,10 @@ public class CommunityStepDefinitions {
     }
 
     @Given("scanlator {string} leads the team {string}")
+    @Given("reader {string} leads the team {string}")
     @When("scanlator {string} creates the team {string}")
-    public void scanlatorCreatesTheTeam(String scanlator, String teamName) {
+    @When("reader {string} creates the team {string}")
+    public void createsTheTeam(String scanlator, String teamName) {
         try {
             teamManagement.createTeam(account(scanlator), teamName, null);
         } catch (RuntimeException e) {
@@ -228,6 +235,24 @@ public class CommunityStepDefinitions {
         assertThat(projects.findByTeamId(moon.getId())).singleElement()
                 .satisfies(board -> assertThat(works.findById(board.getWorkId()).orElseThrow().getTitle()).isEqualTo(title));
         assertThat(projects.findByWorkId(projects.findByTeamId(moon.getId()).getFirst().getWorkId())).hasSize(2);
+    }
+
+    @Then("{string} can open the task board of {string} for {string}")
+    public void canOpenTheTaskBoard(String member, String teamName, String title) {
+        assertThat(catalog.getProject(boardOf(teamName, title), account(member))).isPresent();
+    }
+
+    @Then("{string} cannot open the task board of {string} for {string}")
+    public void cannotOpenTheTaskBoard(String outsider, String teamName, String title) {
+        ProjectId board = boardOf(teamName, title);
+        UserId stranger = account(outsider);
+        assertThatThrownBy(() -> catalog.getProject(board, stranger)).isInstanceOf(AccessDeniedDomainException.class);
+    }
+
+    private ProjectId boardOf(String teamName, String title) {
+        return projects.findByTeamId(teamNamed(teamName).getId()).stream()
+                .filter(project -> works.findById(project.getWorkId()).orElseThrow().getTitle().equals(title))
+                .findFirst().orElseThrow().getId();
     }
 
     @Then("the page of the team {string} lists the series {string}")

@@ -16,6 +16,6 @@ public interface DirectPublishChapterUseCase {
     /// @throws com.readora.domain.common.DomainValidationException `TEAM_NOT_ON_SERIES` if the team has no task board
     ///         for the series (a leader adds the series to the team first)
     /// @throws com.readora.domain.common.AccessDeniedDomainException unless the publisher is a leader or quality checker
-    ///         of that team (or an admin): the global `CHAPTER_PUBLISH` permission is not enough
+    ///         of that team (or an admin)
     Chapter directPublishChapter(WorkId workId, TeamId teamId, String chapterNumber, String title, List<PageAsset> pages, UserId publisherId);
 }

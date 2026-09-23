@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { CreateTaskRequest, ScanlationProject, SubmitTaskRequest, WorkflowTask } from '@app/core/models/scanlation';
 import { ApiClient, parseEnvelope } from './api-client';
 
-/** `/api/v1/scanlation/projects` — needs `PROJECT_VIEW` / `TASK_CLAIM` / `TASK_SUBMIT` / `CHAPTER_PUBLISH`. */
+/** `/api/v1/scanlation/projects`: team members only; what each may do follows their roles in the team (server-checked). */
 @Service()
 export class ScanlationApi {
   private readonly api = inject(ApiClient);

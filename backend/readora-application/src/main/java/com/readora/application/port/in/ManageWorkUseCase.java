@@ -46,7 +46,7 @@ public interface ManageWorkUseCase {
     Work createWork(NewWork work, UserId creatorId);
 
     /// Replaces the description of a series. Allowed to the leaders of a team that translates it (has a task board
-    /// for it) and to admins: the global `WORK_CREATE` permission is not enough.
+    /// for it) and to admins.
     ///
     /// @throws com.readora.domain.common.NotFoundException if the series does not exist
     /// @throws com.readora.domain.common.AccessDeniedDomainException for anyone else

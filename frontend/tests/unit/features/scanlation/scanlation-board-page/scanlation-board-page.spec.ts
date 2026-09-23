@@ -23,7 +23,7 @@ const PROJECT: ScanlationProject = {
   tasks: [RAW_TASK, MY_TASK, QC_TASK]
 };
 
-describe('ScanlationBoardPage (API-driven, permission gated)', () => {
+describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
   let fixture: ComponentFixture<ScanlationBoardPage>;
   let http: HttpTestingController;
   let lastRequest: TestRequest;
@@ -42,7 +42,7 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
   afterEach(() => http.verify());
 
   it('loads the project from the API and groups tasks by stage', async () => {
-    await givenIAmSignedInWith(['PROJECT_VIEW']);
+    await givenIAmSignedInWith(['LIBRARY_USE']);
     await givenIOpenTheBoard(PROJECT);
 
     thenTheTitleShows('FlameScans Solo Leveling');
@@ -52,7 +52,7 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
   });
 
   it('says a missing project does not exist, with nothing to retry', async () => {
-    await givenIAmSignedInWith(['PROJECT_VIEW']);
+    await givenIAmSignedInWith(['LIBRARY_USE']);
 
     await whenTheProjectFailsToLoad({ status: 404 });
 
@@ -61,7 +61,7 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
   });
 
   it('offers Retry when the project cannot be reached, and Retry loads the board', async () => {
-    await givenIAmSignedInWith(['PROJECT_VIEW']);
+    await givenIAmSignedInWith(['LIBRARY_USE']);
 
     await whenTheProjectFailsToLoad({ status: 0 });
 
@@ -73,17 +73,17 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
     thenTheBoardHasTasks(3);
   });
 
-  it('a reader-like member with PROJECT_VIEW only sees no Claim / Submit / Publish buttons', async () => {
-    await givenIAmSignedInWith(['PROJECT_VIEW']);
-    await givenIOpenTheBoard(PROJECT);
+  it('a member sees no Claim or Publish on stages outside their roles', async () => {
+    await givenIAmSignedInWith(['LIBRARY_USE']);
+    await givenIOpenTheBoard({ ...PROJECT, members: [{ userId: 'user-1', roles: ['TRANSLATOR'] }], tasks: [RAW_TASK, QC_TASK] });
 
     thenISeeClaimButtons(0);
     thenISeeSubmitButtons(0);
     thenISeePublishButtons(0);
   });
 
-  it('a SCANLATOR sees Claim on unassigned tasks, Submit on their own task and Publish on QC tasks', async () => {
-    await givenIAmSignedInWith(['PROJECT_VIEW', 'TASK_CLAIM', 'TASK_SUBMIT', 'CHAPTER_PUBLISH']);
+  it('a member sees Claim in the stages they work on, Submit on their own task and Publish on QC tasks', async () => {
+    await givenIAmSignedInWith(['LIBRARY_USE']);
     await givenIOpenTheBoard(PROJECT);
 
     thenISeeClaimButtons(2);
@@ -92,7 +92,7 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
   });
 
   it('Claim calls the API and updates the board from the response', async () => {
-    await givenIAmSignedInWith(['PROJECT_VIEW', 'TASK_CLAIM']);
+    await givenIAmSignedInWith(['LIBRARY_USE']);
     await givenIOpenTheBoard(PROJECT);
 
     await whenIClaim(RAW_TASK, { assignedTo: 'user-1' });
@@ -104,7 +104,7 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
   });
 
   it('Submit opens a Signal Forms dialog, validates, then posts assetUrl/pageCount and advances the task', async () => {
-    await givenIAmSignedInWith(['PROJECT_VIEW', 'TASK_SUBMIT']);
+    await givenIAmSignedInWith(['LIBRARY_USE']);
     await givenIOpenTheBoard(PROJECT);
 
     await whenIOpenTheSubmitDialogFor(MY_TASK);
@@ -125,7 +125,7 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
   });
 
   it('Publish calls the API and moves the task to PUBLISHED; API errors are shown', async () => {
-    await givenIAmSignedInWith(['PROJECT_VIEW', 'CHAPTER_PUBLISH']);
+    await givenIAmSignedInWith(['LIBRARY_USE']);
     await givenIOpenTheBoard(PROJECT);
 
     await whenIPublishButItIsRefused(QC_TASK, 'User is not a member of this project');
@@ -139,8 +139,8 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
     thenColumnHasTasks('QC_REVIEW', 0);
   });
 
-  it('Upload Studio link is rendered and points to /upload for users with WORK_CREATE permission', async () => {
-    await givenIAmSignedInWith(['PROJECT_VIEW', 'WORK_CREATE']);
+  it('Upload Studio link is rendered and points to /upload for every member', async () => {
+    await givenIAmSignedInWith(['LIBRARY_USE']);
     await givenIOpenTheBoard(PROJECT);
 
     thenThereIsAnUploadStudioLink();
@@ -149,7 +149,7 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
   });
 
   it('does not show the previous project while another one loads or when it fails', async () => {
-    await givenIAmSignedInWith(['PROJECT_VIEW']);
+    await givenIAmSignedInWith(['LIBRARY_USE']);
     await givenIOpenTheBoard(PROJECT);
 
     thenTheTitleShows('FlameScans Solo Leveling');
@@ -191,7 +191,7 @@ describe('ScanlationBoardPage (API-driven, permission gated)', () => {
     });
 
     async function givenTheSubmitDialogIsOpenFromItsButton(task: WorkflowTask): Promise<void> {
-      await givenIAmSignedInWith(['PROJECT_VIEW', 'TASK_SUBMIT']);
+      await givenIAmSignedInWith(['LIBRARY_USE']);
       await givenIOpenTheBoard(PROJECT);
       trigger = taskButton(task, '.btn-submit');
       trigger.focus();

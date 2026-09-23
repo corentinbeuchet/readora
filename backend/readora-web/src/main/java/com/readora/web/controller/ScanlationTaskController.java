@@ -34,7 +34,7 @@ public class ScanlationTaskController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('TASK_CLAIM') or hasAuthority('WORK_CREATE')")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "Upload raw chapter package and create workflow task")
     public ResponseEntity<ApiResponse<WorkflowTaskDto>> createTask(
             @PathVariable UUID projectId,
@@ -51,7 +51,7 @@ public class ScanlationTaskController {
     }
 
     @PostMapping("/{taskId}/claim")
-    @PreAuthorize("hasAuthority('TASK_CLAIM')")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "Claim a workflow task for the authenticated scanlator")
     public ResponseEntity<ApiResponse<WorkflowTaskDto>> claimTask(
             @PathVariable UUID projectId,
@@ -62,7 +62,7 @@ public class ScanlationTaskController {
     }
 
     @PostMapping("/{taskId}/submit")
-    @PreAuthorize("hasAuthority('TASK_SUBMIT')")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "Submit task work package and advance stage")
     public ResponseEntity<ApiResponse<WorkflowTaskDto>> submitWork(
             @PathVariable UUID projectId,
@@ -80,7 +80,7 @@ public class ScanlationTaskController {
     }
 
     @PostMapping("/{taskId}/publish")
-    @PreAuthorize("hasAuthority('CHAPTER_PUBLISH')")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "QC approve and publish chapter")
     public ResponseEntity<ApiResponse<String>> publishFromQC(
             @PathVariable UUID projectId,

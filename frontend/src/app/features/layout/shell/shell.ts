@@ -35,7 +35,8 @@ export class Shell {
   /** The page shown (with its query), so the footer can offer the same page in another language. */
   protected readonly url = signal(this.router.url);
   /** Scanlators, uploaders and moderators get a "Team tools" group in the account menu (US-14). */
-  protected readonly hasTeamTools = computed(() => this.auth.hasAnyPermission('PROJECT_VIEW', 'WORK_CREATE', 'COMMENT_MODERATE'));
+  /** Any signed-in reader can start or join a team; Moderation is added for moderators. */
+  protected readonly hasTeamTools = computed(() => this.auth.isAuthenticated());
   /** Path of the page shown (no query or fragment); `null` before the first navigation. */
   private currentPath: string | null = null;
 

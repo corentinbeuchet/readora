@@ -34,7 +34,7 @@ class WorkFactsIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("A new series has no facts until someone fills them in; they can also be given when it is created")
     void aSeriesStartsWithoutFacts() throws Exception {
-        Session mina = registerScanlator();
+        Session mina = register();
 
         String bare = givenASeriesCreatedBy(mina, null);
         String described = givenASeriesCreatedBy(mina, SOLO_LEVELING_FACTS);
@@ -46,7 +46,7 @@ class WorkFactsIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("A leader of a team of the series replaces its description; everyone then reads the facts, normalised")
     void aTeamLeaderEditsTheSeries() throws Exception {
-        Session mina = registerScanlator();
+        Session mina = register();
         String workId = givenASeriesCreatedBy(mina, null);
 
         whenTheSeriesIsDescribed(mina, workId, description("Solo Leveling", SOLO_LEVELING_FACTS))
@@ -60,7 +60,7 @@ class WorkFactsIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Editing again replaces the facts: titles left out are removed, their order is the one sent")
     void anEditReplacesTheFacts() throws Exception {
-        Session mina = registerScanlator();
+        Session mina = register();
         String workId = givenASeriesCreatedBy(mina, SOLO_LEVELING_FACTS);
 
         whenTheSeriesIsDescribed(mina, workId, description("Solo Leveling", "{\"alternativeTitles\":[\"Only I Level Up\",\"Solo\"]}"))
@@ -77,10 +77,10 @@ class WorkFactsIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Guests, readers, scanlators of other teams and non-leader members cannot edit a series; an admin can")
     void onlyLeadersOfTheSeriesOrAdminsEdit() throws Exception {
-        Session mina = registerScanlator();
+        Session mina = register();
         String workId = givenASeriesCreatedBy(mina, null);
-        Session tom = registerScanlator();
-        Session aoi = registerScanlator();
+        Session tom = register();
+        Session aoi = register();
         givenAMemberOfTheTeamOf(mina, workId, aoi, "TRANSLATOR");
         String hijack = description("Hijacked", "{}");
 
@@ -100,9 +100,9 @@ class WorkFactsIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("The body never says who edits: an editorId in it is ignored, the JWT decides")
     void theEditorComesFromTheToken() throws Exception {
-        Session mina = registerScanlator();
+        Session mina = register();
         String workId = givenASeriesCreatedBy(mina, null);
-        Session tom = registerScanlator();
+        Session tom = register();
         String forged = description("Hijacked", "{}").replaceFirst("\\{", "{\"editorId\":\"" + mina.userId() + "\",\"userId\":\"" + mina.userId() + "\",");
 
         whenTheSeriesIsDescribed(tom, workId, forged).andExpect(status().isForbidden());
@@ -111,7 +111,7 @@ class WorkFactsIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Facts out of bounds are refused with 400: 11 titles, a year before 1900, an unknown language")
     void factsOutOfBoundsAreRefused() throws Exception {
-        Session mina = registerScanlator();
+        Session mina = register();
         String workId = givenASeriesCreatedBy(mina, null);
         String elevenTitles = "{\"alternativeTitles\":[\"1\",\"2\",\"3\",\"4\",\"5\",\"6\",\"7\",\"8\",\"9\",\"10\",\"11\"]}";
 
@@ -126,7 +126,7 @@ class WorkFactsIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Editing a series that does not exist answers 404")
     void anUnknownSeriesIsNotFound() throws Exception {
-        whenTheSeriesIsDescribed(registerScanlator(), UUID.randomUUID().toString(), description("Ghost", "{}")).andExpect(status().isNotFound());
+        whenTheSeriesIsDescribed(register(), UUID.randomUUID().toString(), description("Ghost", "{}")).andExpect(status().isNotFound());
     }
 
     private String givenASeriesCreatedBy(Session scanlator, String facts) throws Exception {

@@ -25,7 +25,7 @@ class StorageControllerIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Authenticated user can upload an image asset")
     void uploadImageAssetSuccess() throws Exception {
-        Session session = registerScanlator();
+        Session session = register();
 
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -60,7 +60,7 @@ class StorageControllerIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("An uploaded page also gets a public 720 px JPEG copy for the data saver")
     void uploadedPageGetsALiteCopy() throws Exception {
-        Session session = registerScanlator();
+        Session session = register();
         java.awt.image.BufferedImage image = new java.awt.image.BufferedImage(1440, 2000, java.awt.image.BufferedImage.TYPE_INT_RGB);
         java.util.Random random = new java.util.Random(7);
         for (int y = 0; y < image.getHeight(); y++) {
@@ -90,7 +90,7 @@ class StorageControllerIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Empty file upload throws bad request / validation exception")
     void uploadEmptyFileFails() throws Exception {
-        Session session = registerScanlator();
+        Session session = register();
 
         MockMultipartFile emptyFile = new MockMultipartFile(
                 "file",
@@ -109,7 +109,7 @@ class StorageControllerIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Unsupported file type (.exe) is rejected")
     void uploadUnsupportedTypeFails() throws Exception {
-        Session session = registerScanlator();
+        Session session = register();
 
         MockMultipartFile exeFile = new MockMultipartFile(
                 "file",
@@ -129,7 +129,7 @@ class StorageControllerIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Upload into a folder containing '..' is rejected")
     void uploadWithTraversalFolderFails() throws Exception {
-        Session session = registerScanlator();
+        Session session = register();
         MockMultipartFile file = new MockMultipartFile("file", "cover.png", "image/png", "img".getBytes());
 
         mockMvc.perform(multipart("/api/v1/storage/upload")

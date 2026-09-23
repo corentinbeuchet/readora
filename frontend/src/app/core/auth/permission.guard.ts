@@ -16,7 +16,7 @@ export function requiredPermissions(route: ActivatedRouteSnapshot): Permission[]
  * Route guard: anonymous users go to `/login?returnUrl=…`, authenticated users lacking
  * one of the required permissions go to `/forbidden`.
  *
- * Usage: `{ path: 'scanlation/:projectId', canActivate: [permissionGuard], data: { permission: 'PROJECT_VIEW' } }`
+ * Usage: `{ path: 'moderation', canActivate: [permissionGuard], data: { permission: 'COMMENT_MODERATE' } }`
  */
 export const permissionGuard: CanActivateFn = (route, state) => {
   const store = inject(AuthStore);

@@ -66,7 +66,7 @@ class ValidationLimitsIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Direct publish rejects an over-long chapter number and duplicate page numbers with 400")
     void directPublishLimits() throws Exception {
-        Session scanlator = registerScanlator();
+        Session scanlator = register();
         var createWorkRes = mockMvc.perform(post("/api/v1/works")
                         .header("Authorization", scanlator.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -95,7 +95,7 @@ class ValidationLimitsIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Each list element is validated: an over-long page description or list note is rejected with 400")
     void listElementsAreValidated() throws Exception {
-        Session scanlator = registerScanlator();
+        Session scanlator = register();
         var createWorkRes = mockMvc.perform(post("/api/v1/works")
                         .header("Authorization", scanlator.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -125,7 +125,7 @@ class ValidationLimitsIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("A work with a non-URL cover or a blank genre is rejected with 400")
     void createWorkLimits() throws Exception {
-        Session scanlator = registerScanlator();
+        Session scanlator = register();
 
         mockMvc.perform(post("/api/v1/works")
                         .header("Authorization", scanlator.bearer())

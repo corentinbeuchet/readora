@@ -23,9 +23,9 @@ SELECT v.id, v.email, v.username, '$2a$10$h4Sf.74pdhE2fAwSA88J9uFUWM2M4gbKdr8And
        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
 FROM (
     SELECT '00000000-0000-4000-8000-000000000021' AS id, 'leader2@readora.local' AS email, 'leader2' AS username,
-           'Mina (Moonlight Scans)' AS display_name, 'Leads Moonlight Scans (seed)' AS bio, 'READER,SCANLATOR' AS roles
+           'Mina (Moonlight Scans)' AS display_name, 'Leads Moonlight Scans (seed)' AS bio, 'READER' AS roles
     UNION ALL SELECT '00000000-0000-4000-8000-000000000031', 'leader3@readora.local', 'leader3',
-           'Aurore', 'Leads Equipe Aurore (seed)', 'READER,SCANLATOR'
+           'Aurore', 'Leads Equipe Aurore (seed)', 'READER'
     UNION ALL SELECT '00000000-0000-4000-8000-000000000041', 'yuki@readora.local', 'yuki',
            'Yuki', 'Reads everything twice (seed)', 'READER'
     UNION ALL SELECT '00000000-0000-4000-8000-000000000042', 'sam@readora.local', 'sam',

@@ -36,9 +36,9 @@ describe('AuthStore', () => {
     thenTheLoginWasAPostWithCredentials();
     thenIAmSignedInWithToken('jwt-1');
     thenICan('COMMENT_WRITE');
-    thenICannot('CHAPTER_PUBLISH');
-    thenIHaveAnyOf('CHAPTER_PUBLISH', 'COMMENT_UPVOTE');
-    thenIDoNotHaveAllOf('CHAPTER_PUBLISH', 'COMMENT_UPVOTE');
+    thenICannot('COMMENT_MODERATE');
+    thenIHaveAnyOf('COMMENT_MODERATE', 'COMMENT_UPVOTE');
+    thenIDoNotHaveAllOf('COMMENT_MODERATE', 'COMMENT_UPVOTE');
     thenTheTokenIsNotStored('jwt-1');
   });
 

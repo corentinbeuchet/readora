@@ -48,7 +48,7 @@ export const routes: Routes = [
     path: 'upload',
     loadComponent: () => import('@app/features/upload/upload-studio-page/upload-studio-page').then((m) => m.UploadStudioPage),
     canActivate: [permissionGuard],
-    data: { permission: 'WORK_CREATE' }
+    data: { permission: 'LIBRARY_USE' }
   },
   { path: 'read', redirectTo: 'works', pathMatch: 'full' },
   {
@@ -59,19 +59,19 @@ export const routes: Routes = [
     path: 'scanlation',
     loadComponent: () => import('@app/features/scanlation/my-teams-page/my-teams-page').then((m) => m.MyTeamsPage),
     canActivate: [permissionGuard],
-    data: { permission: 'PROJECT_VIEW' }
+    data: { permission: 'LIBRARY_USE' }
   },
   {
     path: 'scanlation/series/:workId',
     loadComponent: () => import('@app/features/scanlation/edit-series-page/edit-series-page').then((m) => m.EditSeriesPage),
     canActivate: [permissionGuard],
-    data: { permission: 'WORK_CREATE' }
+    data: { permission: 'LIBRARY_USE' }
   },
   {
     path: 'scanlation/:projectId',
     loadComponent: () => import('@app/features/scanlation/scanlation-board-page/scanlation-board-page').then((m) => m.ScanlationBoardPage),
     canActivate: [permissionGuard],
-    data: { permission: 'PROJECT_VIEW' }
+    data: { permission: 'LIBRARY_USE' }
   },
 
   {

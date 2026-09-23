@@ -32,7 +32,7 @@ class CommunityIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Profiles and team pages are public; following a team feeds 'My library' updates; export is CSV or JSON")
     void communityFlow() throws Exception {
-        Session leader = registerScanlator();
+        Session leader = register();
         String title = "Team Work, \"quoted\" " + UUID.randomUUID();
         var work = mockMvc.perform(post("/api/v1/works").header("Authorization", leader.bearer()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"" + title.replace("\"", "\\\"") + "\",\"type\":\"MANHWA\",\"genres\":[\"Action\"]}"))

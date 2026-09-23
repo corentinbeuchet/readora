@@ -60,9 +60,9 @@ class ScanlationTaskControllerIntegrationTest extends AuthTestSupport {
     }
 
     @Test
-    @DisplayName("SCANLATOR member can upload chapter task and receive 201 Created")
+    @DisplayName("A team member can upload a chapter task and receives 201 Created")
     void scanlatorMemberUploadsChapterTask() throws Exception {
-        Session scanlator = registerScanlator();
+        Session scanlator = register();
         team.addMember(TeamMember.of(UserId.of(scanlator.userId()), ScanlationRole.CLEANER_REDRAWER));
         teamRepository.save(team);
 
@@ -82,22 +82,9 @@ class ScanlationTaskControllerIntegrationTest extends AuthTestSupport {
     }
 
     @Test
-    @DisplayName("READER is forbidden from uploading a chapter task")
-    void readerIsForbiddenFromUploadingChapterTask() throws Exception {
-        Session reader = register();
-        CreateTaskRequest request = new CreateTaskRequest(BigDecimal.valueOf(1), "scans/solo/1/raw.zip", 22);
-
-        mockMvc.perform(post("/api/v1/scanlation/projects/" + project.getId().value() + "/tasks")
-                        .header("Authorization", reader.bearer())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    @DisplayName("SCANLATOR non-member receives 400 Bad Request when trying to upload")
+    @DisplayName("A reader outside the team receives 400 Bad Request when trying to upload")
     void scanlatorNonMemberRejectedByDomain() throws Exception {
-        Session scanlator = registerScanlator();
+        Session scanlator = register();
         CreateTaskRequest request = new CreateTaskRequest(BigDecimal.valueOf(1), "scans/solo/1/raw.zip", 22);
 
         mockMvc.perform(post("/api/v1/scanlation/projects/" + project.getId().value() + "/tasks")
@@ -111,7 +98,7 @@ class ScanlationTaskControllerIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Duplicate chapter number upload returns 400 Bad Request")
     void duplicateChapterUploadReturnsBadRequest() throws Exception {
-        Session scanlator = registerScanlator();
+        Session scanlator = register();
         team.addMember(TeamMember.of(UserId.of(scanlator.userId()), ScanlationRole.LEADER));
         teamRepository.save(team);
 
@@ -134,7 +121,7 @@ class ScanlationTaskControllerIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Invalid task payload returns 400 Bad Request")
     void invalidTaskPayloadReturnsBadRequest() throws Exception {
-        Session scanlator = registerScanlator();
+        Session scanlator = register();
         team.addMember(TeamMember.of(UserId.of(scanlator.userId()), ScanlationRole.LEADER));
         teamRepository.save(team);
 

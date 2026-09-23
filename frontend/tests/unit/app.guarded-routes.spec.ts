@@ -32,10 +32,10 @@ describe('guarded routes (real router)', () => {
   });
 
   it.each([
-    ['/upload', 'WORK_CREATE'],
-    ['/moderation', 'COMMENT_MODERATE']
-  ])('sends a reader without the permission from %s to /forbidden', async (url) => {
-    await givenIAmSignedInWith(['LIBRARY_USE']);
+    ['/upload', []],
+    ['/moderation', ['LIBRARY_USE']]
+  ] as [string, Permission[]][])('sends a user without the permission from %s to /forbidden', async (url, permissions) => {
+    await givenIAmSignedInWith(permissions);
 
     await whenIOpen(url);
 
@@ -43,7 +43,7 @@ describe('guarded routes (real router)', () => {
   });
 
   it.each([
-    ['/upload', 'WORK_CREATE'],
+    ['/upload', 'LIBRARY_USE'],
     ['/moderation', 'COMMENT_MODERATE']
   ] as [string, Permission][])('lets a user with the permission open %s', async (url, permission) => {
     await givenIAmSignedInWith([permission]);

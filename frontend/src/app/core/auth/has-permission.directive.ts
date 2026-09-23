@@ -6,8 +6,8 @@ import { AuthStore } from './auth-store';
  * Structural directive that renders its host only when the current user holds the permission(s).
  *
  * ```html
- * <button *appHasPermission="'CHAPTER_PUBLISH'" type="button">Publish</button>
- * <ng-container *appHasPermission="['TASK_CLAIM', 'TASK_SUBMIT']; else upsell">…</ng-container>
+ * <button *appHasPermission="'COMMENT_MODERATE'" type="button">Hide</button>
+ * <ng-container *appHasPermission="['COMMENT_WRITE', 'COMMENT_UPVOTE']; else logIn">…</ng-container>
  * ```
  */
 @Directive({ selector: '[appHasPermission]' })

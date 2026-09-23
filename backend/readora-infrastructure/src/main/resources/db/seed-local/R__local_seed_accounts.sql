@@ -28,17 +28,17 @@ FROM (
     UNION ALL SELECT '00000000-0000-4000-8000-000000000004', 'moderator@readora.local', 'moderator',
            'Local Moderator', 'Comment moderator (seed)', 'MODERATOR,READER'
     UNION ALL SELECT '00000000-0000-4000-8000-000000000011', 'leader@readora.local', 'leader',
-           'Team Leader', 'Scanlation team leader (seed)', 'READER,SCANLATOR'
+           'Team Leader', 'Scanlation team leader (seed)', 'READER'
     UNION ALL SELECT '00000000-0000-4000-8000-000000000012', 'cleaner@readora.local', 'cleaner',
-           'Team Cleaner', 'Cleaner / redrawer (seed)', 'READER,SCANLATOR'
+           'Team Cleaner', 'Cleaner / redrawer (seed)', 'READER'
     UNION ALL SELECT '00000000-0000-4000-8000-000000000013', 'translator@readora.local', 'translator',
-           'Team Translator', 'Translator (seed)', 'READER,SCANLATOR'
+           'Team Translator', 'Translator (seed)', 'READER'
     UNION ALL SELECT '00000000-0000-4000-8000-000000000014', 'typesetter@readora.local', 'typesetter',
-           'Team Typesetter', 'Typesetter (seed)', 'READER,SCANLATOR'
+           'Team Typesetter', 'Typesetter (seed)', 'READER'
     UNION ALL SELECT '00000000-0000-4000-8000-000000000015', 'proofreader@readora.local', 'proofreader',
-           'Team Proofreader', 'Proofreader (seed)', 'READER,SCANLATOR'
+           'Team Proofreader', 'Proofreader (seed)', 'READER'
     UNION ALL SELECT '00000000-0000-4000-8000-000000000016', 'quality@readora.local', 'quality',
-           'Team Quality Checker', 'Quality checker (seed)', 'READER,SCANLATOR'
+           'Team Quality Checker', 'Quality checker (seed)', 'READER'
 ) v
 WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = v.id OR u.email = v.email OR u.username = v.username);
 

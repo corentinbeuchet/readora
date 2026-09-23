@@ -94,12 +94,21 @@ Feature: Community and scanlation teams
     And "Mina" publishes chapter 9 of "Solo Leveling" for "Moon Scans"
     Then chapter 9 of "Solo Leveling" is credited to "Moon Scans"
 
-  # Inspired by: MangaDex groups (anyone who uploads can start a group; a group works on many titles)
-  @should
-  Scenario: A scanlator creates a team
-    When scanlator "Mina" creates the team "Moon Scans"
+  # Inspired by: MangaDex groups (any account can start a group; a group works on many titles). What a member may do
+  # comes from their roles in the team, never from an account role.
+  @must
+  Scenario: Any reader can start a team
+    When reader "Mina" creates the team "Moon Scans"
     Then "Mina" is the leader of "Moon Scans"
     And the page of the team "Moon Scans" lists no series yet
+
+  @must
+  Scenario: A task board is open to its team only
+    Given reader "Mina" leads the team "Moon Scans"
+    And "Mina" added "Bob" to "Moon Scans" as "TRANSLATOR"
+    And "Mina" adds the series "Solo Leveling" to "Moon Scans"
+    Then "Bob" can open the task board of "Moon Scans" for "Solo Leveling"
+    And "Aoi" cannot open the task board of "Moon Scans" for "Solo Leveling"
 
   @should
   Scenario: A team name is taken only once

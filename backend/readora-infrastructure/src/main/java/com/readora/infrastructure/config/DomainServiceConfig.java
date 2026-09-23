@@ -227,8 +227,9 @@ public class DomainServiceConfig {
             WorkRepositoryPort workRepository,
             ChapterRepositoryPort chapterRepository,
             ScanlationProjectRepositoryPort projectRepository,
-            TeamRepositoryPort teamRepository) {
-        return transactional(new CatalogService(workRepository, chapterRepository, projectRepository, teamRepository),
+            TeamRepositoryPort teamRepository,
+            UserAccountRepositoryPort userRepository) {
+        return transactional(new CatalogService(workRepository, chapterRepository, projectRepository, teamRepository, userRepository),
                 BrowseCatalogUseCase.class, transactionManager);
     }
 }

@@ -48,8 +48,8 @@ class PageReportIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("A reader reports a page once; the team sees it and marks it fixed; others are refused")
     void reportAndFix() throws Exception {
-        Session leader = registerScanlator();
-        Session outsider = registerScanlator();
+        Session leader = register();
+        Session outsider = register();
         Session kenji = register();
         Work work = workRepository.save(Work.create("Report Work", "S", WorkType.MANHWA, "c.webp", Set.of("Action")));
         Team shadowScans = teamRepository.save(Team.create("Shadow Scans " + java.util.UUID.randomUUID(), null, UserId.of(leader.userId())));

@@ -153,7 +153,7 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
     /// The chapter is published as `teamId`'s version: the team must work on the series (have a task board for it),
     /// and the publisher must be one of its leaders or quality checkers, or an admin.
     ///
-    /// @throws AccessDeniedDomainException for anyone else: the global `CHAPTER_PUBLISH` permission is not enough
+    /// @throws AccessDeniedDomainException for anyone else
     private void authorizePublisher(WorkId workId, TeamId teamId, UserId publisherId) {
         Team team = teamRepository.findById(teamId).orElseThrow(() -> new NotFoundException("Team", teamId));
         boolean onTheTeam = team.findMember(publisherId).filter(m -> m.hasRole(ScanlationRole.QUALITY_CHECKER)).isPresent();

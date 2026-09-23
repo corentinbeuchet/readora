@@ -4,6 +4,7 @@ import com.readora.application.port.in.BrowseCatalogUseCase;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.web.dto.ApiResponse;
 import com.readora.web.dto.ScanlationProjectDto;
+import com.readora.web.security.CurrentUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
@@ -21,16 +22,18 @@ import java.util.UUID;
 public class ScanlationProjectController {
 
     private final BrowseCatalogUseCase browseCatalogUseCase;
+    private final CurrentUserProvider currentUserProvider;
 
-    public ScanlationProjectController(BrowseCatalogUseCase browseCatalogUseCase) {
+    public ScanlationProjectController(BrowseCatalogUseCase browseCatalogUseCase, CurrentUserProvider currentUserProvider) {
         this.browseCatalogUseCase = browseCatalogUseCase;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @GetMapping("/{projectId}")
-    @PreAuthorize("hasAuthority('PROJECT_VIEW')")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "Get a scanlation project with its members and tasks")
     public ResponseEntity<ApiResponse<ScanlationProjectDto>> getProject(@PathVariable UUID projectId) {
-        return browseCatalogUseCase.getProject(ProjectId.of(projectId))
+        return browseCatalogUseCase.getProject(ProjectId.of(projectId), currentUserProvider.requireUserId())
                 .map(project -> ResponseEntity.ok(ApiResponse.ok(ScanlationProjectDto.fromDomain(project))))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

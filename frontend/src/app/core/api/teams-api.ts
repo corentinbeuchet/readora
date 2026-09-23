@@ -5,8 +5,8 @@ import { MyTeam, ScanlationProject, ScanlationRole } from '@app/core/models/scan
 import { ApiClient, parseEnvelope } from './api-client';
 
 /**
- * Running a team (US-12), `/api/v1/teams`: needs `WORK_CREATE` (scanlators), and the server also requires the
- * caller to lead the team. The public team page is on `CommunityApi`.
+ * Running a team (US-12), `/api/v1/teams`: any signed-in reader; the server requires the caller to lead the team
+ * for roster and series changes. The public team page is on `CommunityApi`.
  */
 @Service()
 export class TeamsApi {

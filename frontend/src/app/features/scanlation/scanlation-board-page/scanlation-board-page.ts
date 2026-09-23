@@ -5,7 +5,6 @@ import { firstValueFrom } from 'rxjs';
 import { ScanlationApi } from '@app/core/api/scanlation-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { Dialog } from '@app/shared/ui/dialog/dialog';
-import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { TASK_STATUS_LABELS, WorkflowTask, canClaim, canPublish, canSubmit, isAssignedTo } from '@app/core/models/scanlation';
 import { SeoService } from '@app/core/seo/seo.service';
 import { STAGES, STAGE_LABELS, tasksByStage, withTask, withTaskStage } from './scanlation-board';
@@ -22,7 +21,7 @@ interface SubmitModel {
 
 @Component({
   selector: 'app-scanlation-board-page',
-  imports: [FieldErrors, AriaInvalidDirective, RouterLink, FormField, HasPermissionDirective, Dialog, PageReportsPanel, LoadError],
+  imports: [FieldErrors, AriaInvalidDirective, RouterLink, FormField, Dialog, PageReportsPanel, LoadError],
   templateUrl: './scanlation-board-page.html',
   styleUrl: './scanlation-board-page.scss'
 })
@@ -44,20 +43,23 @@ export class ScanlationBoardPage {
   protected readonly submitTarget = signal<WorkflowTask | null>(null);
 
   protected readonly currentUserId = computed(() => this.auth.user()?.id ?? null);
+  /** My roles in the board's team: what I may claim and publish follows them. */
+  private readonly myRoles = computed(() => this.currentProject()?.members.find((m) => m.userId === this.currentUserId())?.roles ?? []);
 
   /** One entry per column, with what the current user may do on each task (computed once, not per template call). */
   protected readonly columns = computed(() => {
     const byStage = tasksByStage(this.currentProject());
     const me = this.currentUserId();
+    const roles = this.myRoles();
     return STAGES.map((stage) => ({
       ...stage,
       tasks: byStage[stage.key].map((task) => {
         return {
           task,
           mine: isAssignedTo(task, me),
-          canClaim: canClaim(task),
+          canClaim: canClaim(task, roles),
           canSubmit: canSubmit(task, me),
-          canPublish: canPublish(task)
+          canPublish: canPublish(task, roles)
         };
       })
     }));

@@ -7,8 +7,9 @@ How access works in Readora. The code is the reference: `Role` and `Permission` 
 There are two layers, and no paid plans (Premium was removed on 2026-09-23):
 
 1. **Account role** (`Role`): gives a set of permissions, carried in the JWT. The server checks them on every write.
+   Team tools are not an account role: any signed-in reader can start or join a team.
 2. **Team role** (`ScanlationRole`): decides what a member may do inside a scanlation team. Services check it
-   (membership, stage, assignee), on top of the permission.
+   (membership, stage, assignee); the UI mirrors it from the team data.
 
 ## 1. Account roles
 
@@ -16,7 +17,6 @@ There are two layers, and no paid plans (Premium was removed on 2026-09-23):
 |---|---|---|
 | `READER` | every new account | `COMMENT_WRITE`, `COMMENT_UPVOTE`, `COMMENT_REPORT`, `LIBRARY_USE`, `PAGE_REPORT`, `RATE_WORK` |
 | `MODERATOR` | looks after discussions (US-11) | reader permissions + `COMMENT_MODERATE` |
-| `SCANLATOR` | team members | reader permissions + `PROJECT_VIEW`, `TASK_CLAIM`, `TASK_SUBMIT`, `CHAPTER_PUBLISH`, `WORK_CREATE` |
 | `ADMIN` | operators | every permission |
 
 ## 2. What each permission allows
@@ -27,15 +27,10 @@ There are two layers, and no paid plans (Premium was removed on 2026-09-23):
 | `COMMENT_UPVOTE` | upvote comments | upvote button |
 | `COMMENT_REPORT` | report a comment to the moderators | report button |
 | `COMMENT_MODERATE` | see the report queue, hide comments, dismiss reports | `/moderation` |
-| `LIBRARY_USE` | library, reading history, read markers, bookmarks and progress sync, reading lists, team follows, notifications, export | `/library`, `/history`, reader progress |
+| `LIBRARY_USE` | everything a signed-in reader does: library, history, read markers, bookmarks and progress sync, reading lists, team follows, notifications, export, and the team tools (start or join a team, its boards, the upload studio) | `/library`, `/history`, `/scanlation`, `/upload` |
 | `PAGE_REPORT` | report a page that doesn't display (US-06) | reader "Report page" |
 | `RATE_WORK` | rate and review series, mark reviews helpful (US-09) | ratings section |
-| `PROJECT_VIEW` | see my teams, their task boards and page reports | `/scanlation` |
-| `TASK_CLAIM` | upload a raw chapter as a task, claim a task | board |
-| `TASK_SUBMIT` | submit work on a claimed task | board |
-| `CHAPTER_PUBLISH` | publish from QC, publish a chapter directly | board, upload studio |
-| `WORK_CREATE` | create series and teams, edit a series page, add members and series to a team | upload studio, team pages |
-| `USER_MANAGE` | admin override in the services (act on any team, series or report) | none |
+| `USER_MANAGE` | admin override in the services (act on any team, series, board or report) | none |
 
 Anonymous visitors can read: works, chapters, comments, updates, rankings, public lists, team and user profiles, and
 stored assets (the `permitAll` GET matchers in `SecurityConfig`). Everything else needs a signed-in account.

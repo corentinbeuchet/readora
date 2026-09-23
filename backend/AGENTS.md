@@ -50,7 +50,7 @@
   (`TEAM_NOT_ON_SERIES`). A payload that shows a chapter carries its `TeamCredit` (id + name).
 - A series has no owner: several teams may translate it. Its description (`Work.describe`, `PUT /works/{id}`, which
   replaces the whole description, facts included) is edited by a leader of any team that has a project on it, or an
-  admin (`WorkManagementService.requireSeriesLeaderOrAdmin`); `WORK_CREATE` alone is not enough. The optional facts
+  admin (`WorkManagementService.requireSeriesLeaderOrAdmin`). The optional facts
   are the value object `WorkFacts` (other titles, artist, year, original language, content rating): `null` or no
   title means "not filled in", never a default.
 - A chapter number may exist in several teams' versions (unique per `(work, number, team)`). Anything about "the

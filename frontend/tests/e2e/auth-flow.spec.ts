@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
 import { test, expect } from './support/fixtures';
-import { PASSWORD, thenTheAccountMenuHasNoTeamTools, uniqueSuffix } from './support/helpers';
+import { PASSWORD, thenTheAccountMenuOffersTeamToolsButNotModeration, uniqueSuffix } from './support/helpers';
 
 interface Account {
   email: string;
@@ -36,7 +36,7 @@ test.describe('Authentication flow', () => {
     await thenMyProfileIsShownFor(page, me.username);
     await thenICanSeeTheTab(page, 'Overview');
     await thenMyDisplayNameIs(page, me.username);
-    await thenTheAccountMenuHasNoTeamTools(page);
+    await thenTheAccountMenuOffersTeamToolsButNotModeration(page);
 
     await whenIOpenTheTab(page, 'Bookmarks');
 
