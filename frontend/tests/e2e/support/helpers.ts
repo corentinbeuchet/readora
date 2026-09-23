@@ -249,11 +249,32 @@ export async function publishCommentedChapter(request: APIRequestContext, option
 }
 
 /** A commented chapter whose comment the publisher account reported as spam, so it waits in the moderation queue. */
-export async function publishReportedComment(request: APIRequestContext): Promise<PostedComment> {
+export async function publishReportedComment(request: APIRequestContext): Promise<PostedComment & { reportId: string }> {
   const comment = await publishCommentedChapter(request);
   const headers = await givenIAmThePublisher(request);
-  await data(await request.post(`${API_URL}/comments/${comment.commentId}/reports`, { headers, data: { reason: 'SPAM' } }));
-  return comment;
+  const { reportId } = await data<{ reportId: string }>(
+    await request.post(`${API_URL}/comments/${comment.commentId}/reports`, { headers, data: { reason: 'SPAM' } })
+  );
+  return { ...comment, reportId };
+}
+
+/**
+ * Closes a report the test left open: the queue lists only the 100 oldest open reports, so reports left behind by
+ * earlier runs would push the next runs' reports out of it. A report the test already hid or dismissed is refused (4xx).
+ */
+export async function dismissReportIfOpen(request: APIRequestContext, reportId: string): Promise<void> {
+  const headers = await givenIAmThePublisher(request);
+  const response = await request.post(`${API_URL}/moderation/reports/${reportId}/dismiss`, { headers });
+  expect(response.status(), `dismiss ${reportId}: ${await response.text()}`).toBeLessThan(500);
+}
+
+/** Closes the open reports readers made on a comment during a test (reported through the UI, so no id is known). */
+export async function dismissReportsOn(request: APIRequestContext, commentId: string): Promise<void> {
+  const headers = await givenIAmThePublisher(request);
+  const queue = await data<{ reportId: string; commentId: string }[]>(await request.get(`${API_URL}/moderation/reports`, { headers }));
+  for (const item of queue.filter((report) => report.commentId === commentId)) {
+    await dismissReportIfOpen(request, item.reportId);
+  }
 }
 
 /** The comments anyone (signed out) is shown for a chapter. */

@@ -1,6 +1,15 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test as base } from '@playwright/test';
-import { PostedComment, publishChapter, publishCommentedChapter, publishReportedComment, publishSeriesByTwoTeams, publishSeriesWithFacts } from './helpers';
+import {
+  PostedComment,
+  dismissReportIfOpen,
+  dismissReportsOn,
+  publishChapter,
+  publishCommentedChapter,
+  publishReportedComment,
+  publishSeriesByTwoTeams,
+  publishSeriesWithFacts
+} from './helpers';
 
 /**
  * Readora's `test`: Playwright fixtures are the "Given" step. A fixture only runs for the tests that ask for it, and
@@ -17,7 +26,7 @@ export const test = base.extend<{
   commentedChapter: PostedComment;
   /** Same, but the comment is marked as a spoiler. */
   spoilerComment: PostedComment;
-  /** A new published chapter whose one comment was reported and waits in the moderation queue (US-11). */
+  /** A new published chapter whose one comment was reported and waits in the moderation queue (US-11); closed after. */
   reportedComment: PostedComment;
   /** An axe scan of the current page against WCAG 2.0/2.1/2.2 A and AA (`await axe().analyze()`). */
   axe: () => AxeBuilder;
@@ -60,13 +69,18 @@ export const test = base.extend<{
     await use(await publishSeriesWithFacts(request));
   },
   commentedChapter: async ({ request }, use) => {
-    await use(await publishCommentedChapter(request));
+    const commented = await publishCommentedChapter(request);
+    await use(commented);
+    // A test may report the comment through the UI; the moderation queue must not keep it (it lists 100 reports).
+    await dismissReportsOn(request, commented.commentId);
   },
   spoilerComment: async ({ request }, use) => {
     await use(await publishCommentedChapter(request, { spoiler: true }));
   },
   reportedComment: async ({ request }, use) => {
-    await use(await publishReportedComment(request));
+    const reported = await publishReportedComment(request);
+    await use(reported);
+    await dismissReportIfOpen(request, reported.reportId);
   },
   axe: async ({ page }, use) => {
     await use(() => new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']));
