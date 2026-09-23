@@ -94,16 +94,6 @@ export interface UpdateProfileRequest {
   avatarUrl: string | null;
 }
 
-export interface CheckoutSession {
-  sessionId: string;
-  url: string;
-}
-
 export function hasActivePremium(sub: Subscription | null): boolean {
   return sub?.active === true && sub.plan === 'PREMIUM';
-}
-
-/** A paid plan that still renews: free plans have nothing to cancel, a cancellation is only asked once. */
-export function canCancelSubscription(sub: Subscription | null): boolean {
-  return !!sub && sub.plan !== 'FREE' && sub.status !== 'CANCELED' && !sub.cancelAtPeriodEnd;
 }

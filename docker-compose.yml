@@ -83,7 +83,6 @@ services:
       AWS_S3_PATH_STYLE_ACCESS_ENABLED: "true"
       CLOUDFRONT_DOMAIN: ${CLOUDFRONT_DOMAIN:-http://localhost:9000/readora-media-dev}
 
-      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:4200}
       READORA_CORS_ALLOWED_ORIGINS: ${READORA_CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://localhost:4201}
       READORA_COOKIE_SECURE: "false"
       # Login/register/refresh per IP per minute (production default 10, kept here so rate-limit bugs show up
@@ -92,9 +91,6 @@ services:
 
       READORA_JWT_SECRET: ${READORA_JWT_SECRET:-local-compose-readora-jwt-secret-change-me-0123456789}
 
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
-      STRIPE_PREMIUM_PRICE_ID: ${STRIPE_PREMIUM_PRICE_ID:-}
 
     ports:
       - "8080:8080"

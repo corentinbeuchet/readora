@@ -48,11 +48,9 @@ class UserAccountDomainTest {
         assertThat(expired.can(Permission.BOOKMARK_WRITE)).isFalse();
 
         UserAccount canceled = newReader();
-        canceled.activateSubscription(Subscription.active(SubscriptionPlan.PREMIUM, Instant.now().plus(Duration.ofDays(30)), "cus_2", "sub_2"));
-        canceled.cancelSubscription();
+        canceled.activateSubscription(new Subscription(SubscriptionPlan.PREMIUM, SubscriptionStatus.CANCELED,
+                Instant.now().plus(Duration.ofDays(30)), null, null, null, null, false, Instant.now()));
         assertThat(canceled.can(Permission.BOOKMARK_WRITE)).isFalse();
-        assertThat(canceled.getSubscription().getStatus()).isEqualTo(SubscriptionStatus.CANCELED);
-        assertThat(canceled.getDomainEvents()).anySatisfy(e -> assertThat(e).isInstanceOf(SubscriptionCanceledEvent.class));
     }
 
     @Test
@@ -63,34 +61,6 @@ class UserAccountDomainTest {
 
         assertThat(account.getSubscription().isActive(Instant.now())).isFalse();
         assertThat(account.can(Permission.BOOKMARK_WRITE)).isFalse();
-    }
-
-    @Test
-    @DisplayName("Scheduling cancellation keeps access until the paid period ends")
-    void scheduledCancellationKeepsAccessUntilPeriodEnd() {
-        UserAccount account = newReader();
-        Instant periodEnd = Instant.now().plus(Duration.ofDays(10));
-        account.activateSubscription(Subscription.active(SubscriptionPlan.PREMIUM, periodEnd, "cus_1", "sub_1"));
-
-        account.scheduleSubscriptionCancellation();
-
-        assertThat(account.getSubscription().isCancelAtPeriodEnd()).isTrue();
-        assertThat(account.can(Permission.BOOKMARK_WRITE)).isTrue();
-        assertThat(account.getSubscription().isActive(periodEnd.plusSeconds(1))).isFalse();
-        assertThat(account.getDomainEvents()).anySatisfy(e -> assertThat(e).isInstanceOf(SubscriptionCanceledEvent.class));
-    }
-
-    @Test
-    @DisplayName("Provider events older than the last applied one are stale")
-    void olderEventsAreStale() {
-        Instant t = Instant.parse("2026-09-01T10:00:00Z");
-        Subscription applied = Subscription.active(SubscriptionPlan.PREMIUM, t.plus(Duration.ofDays(30)), "cus", "sub")
-                .withLastEvent("evt_2", t);
-
-        assertThat(applied.isStale(t.minusSeconds(1))).isTrue();
-        assertThat(applied.isStale(t)).isFalse();
-        assertThat(applied.isStale(t.plusSeconds(1))).isFalse();
-        assertThat(applied.withLastEvent("evt_old", t.minusSeconds(30)).getLastEventAt()).isEqualTo(t);
     }
 
     @Test

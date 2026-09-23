@@ -35,7 +35,6 @@
         <cucumber.version>7.34.7</cucumber.version>
         <springdoc.version>3.1.0</springdoc.version>
         <aws.sdk.version>2.54.17</aws.sdk.version>
-        <stripe.version>33.4.2</stripe.version>
         <errorprone.version>2.50.0</errorprone.version>
         <nullaway.version>0.14.1</nullaway.version>
         <twelvemonkeys.version>3.15.2</twelvemonkeys.version>
@@ -89,13 +88,6 @@
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>${springdoc.version}</version>
-            </dependency>
-
-            <!-- Stripe payments -->
-            <dependency>
-                <groupId>com.stripe</groupId>
-                <artifactId>stripe-java</artifactId>
-                <version>${stripe.version}</version>
             </dependency>
 
             <!-- ImageIO plugins: read WebP uploads to make data-saver copies (US-07) -->

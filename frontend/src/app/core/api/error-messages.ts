@@ -47,8 +47,6 @@ export function errorMessageForCode(code: string | null, retryAfterSeconds: numb
       return $localize`:@@error.emptyFile:This file is empty.`;
     case 'STORAGE_UNAVAILABLE':
       return $localize`:@@error.storageUnavailable:File storage is unavailable right now. Please try again later.`;
-    case 'PAYMENT_FAILED':
-      return $localize`:@@error.paymentFailed:The payment provider could not complete the request. Please try again later.`;
     case 'EMAIL_TAKEN':
       return $localize`:@@error.emailTaken:An account already uses this email.`;
     case 'USERNAME_TAKEN':
@@ -65,12 +63,8 @@ export function errorMessageForCode(code: string | null, retryAfterSeconds: numb
       return $localize`:@@error.listDuplicateSeries:This series is already in the list.`;
     case 'ALREADY_HANDLED':
       return $localize`:@@error.alreadyHandled:This has already been handled.`;
-    case 'NO_ACTIVE_SUBSCRIPTION':
-      return $localize`:@@error.noActiveSubscription:You have no active subscription to cancel.`;
     case 'CHAPTER_NOT_PUBLISHED':
       return $localize`:@@error.chapterNotPublished:This chapter is not published yet.`;
-    case 'CANCELLATION_ALREADY_SCHEDULED':
-      return $localize`:@@error.cancellationAlreadyScheduled:Your subscription is already set to end with this period.`;
     default:
       return undefined;
   }

@@ -35,10 +35,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
         "aws.s3.bucket-name=test-bucket",
         "aws.s3.region=us-east-1",
         "aws.cloudfront.domain=https://cdn-test.readora.com",
-        "readora.security.jwt.secret=test-secret-at-least-32-bytes-long-1234567890",
-        "readora.stripe.secret-key=sk_test_123",
-        "readora.stripe.webhook-secret=whsec_123",
-        "readora.stripe.premium-price-id=price_123"
+        "readora.security.jwt.secret=test-secret-at-least-32-bytes-long-1234567890"
 })
 class UseCaseTransactionsTest {
 

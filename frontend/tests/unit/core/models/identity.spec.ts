@@ -1,4 +1,4 @@
-import { Subscription, SubscriptionPlan, SubscriptionStatus, canCancelSubscription, hasActivePremium } from '@app/core/models/identity';
+import { Subscription, SubscriptionPlan, hasActivePremium } from '@app/core/models/identity';
 
 describe('subscription rules', () => {
   let subscription: Subscription | null;
@@ -13,23 +13,10 @@ describe('subscription rules', () => {
     thenIHavePremium(premium);
   });
 
-  it('a signed-out reader has no premium and nothing to cancel', () => {
+  it('a signed-out reader has no premium', () => {
     givenIHaveNoSubscription();
 
     thenIHavePremium(false);
-    thenICanCancel(false);
-  });
-
-  it.each<[SubscriptionPlan, SubscriptionStatus, boolean, boolean]>([
-    ['PREMIUM', 'ACTIVE', false, true],
-    ['PREMIUM', 'PAST_DUE', false, true],
-    ['PREMIUM', 'ACTIVE', true, false],
-    ['PREMIUM', 'CANCELED', false, false],
-    ['FREE', 'ACTIVE', false, false]
-  ])('a %s plan that is %s, cancel at period end %s, can be cancelled: %s', (plan, status, cancelAtPeriodEnd, cancellable) => {
-    givenMySubscription({ plan, status, cancelAtPeriodEnd });
-
-    thenICanCancel(cancellable);
   });
 
   function givenMySubscription(overrides: Partial<Subscription>): void {
@@ -42,9 +29,5 @@ describe('subscription rules', () => {
 
   function thenIHavePremium(expected: boolean): void {
     expect(hasActivePremium(subscription)).toBe(expected);
-  }
-
-  function thenICanCancel(expected: boolean): void {
-    expect(canCancelSubscription(subscription)).toBe(expected);
   }
 });

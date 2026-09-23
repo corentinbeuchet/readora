@@ -72,10 +72,7 @@ test.describe('Authentication flow', () => {
     await whenIVisit(page, '/subscription');
 
     await thenICanSeeTheHeading(page, 'Choose your plan');
-
-    await whenIClickTheButton(page, 'Subscribe with Stripe');
-
-    await thenIAmOn(page, /\/login\?returnUrl=%2Fsubscription/);
+    await thenICanSeeTheText(page, "Premium can't be bought yet");
   });
 });
 
@@ -91,10 +88,6 @@ async function whenIVisit(page: Page, url: string): Promise<void> {
 
 async function whenIReload(page: Page): Promise<void> {
   await page.reload();
-}
-
-async function whenIClickTheButton(page: Page, name: string): Promise<void> {
-  await page.getByRole('button', { name }).click();
 }
 
 async function whenISubmitTheSignUpForm(page: Page): Promise<void> {
@@ -134,6 +127,10 @@ async function whenIRetryWithThePassword(page: Page, password: string): Promise<
 
 async function thenIAmOn(page: Page, url: string | RegExp): Promise<void> {
   await expect(page).toHaveURL(url);
+}
+
+async function thenICanSeeTheText(page: Page, text: string): Promise<void> {
+  await expect(page.getByText(text)).toBeVisible();
 }
 
 async function thenICanSeeTheHeading(page: Page, name: string): Promise<void> {

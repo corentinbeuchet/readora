@@ -21,7 +21,6 @@
     "error.unsupportedFileFormat": "This file format is not supported.",
     "error.emptyFile": "This file is empty.",
     "error.storageUnavailable": "File storage is unavailable right now. Please try again later.",
-    "error.paymentFailed": "The payment provider could not complete the request. Please try again later.",
     "error.emailTaken": "An account already uses this email.",
     "error.usernameTaken": "This username is already taken.",
     "error.taskAlreadyClaimed": "Someone else has already claimed this task.",
@@ -30,8 +29,6 @@
     "error.ownContent": "You can't do this on your own content.",
     "error.listDuplicateSeries": "This series is already in the list.",
     "error.alreadyHandled": "This has already been handled.",
-    "error.noActiveSubscription": "You have no active subscription to cancel.",
-    "error.chapterNotPublished": "This chapter is not published yet.",
-    "error.cancellationAlreadyScheduled": "Your subscription is already set to end with this period."
+    "error.chapterNotPublished": "This chapter is not published yet."
   }
 }

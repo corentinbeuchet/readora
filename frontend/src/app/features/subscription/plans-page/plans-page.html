@@ -2,10 +2,6 @@
   <h1 i18n="@@subscription.plans.title">Choose your plan</h1>
   <p class="muted" i18n="@@subscription.plans.intro">Reading is always free. Premium unlocks bookmarks and synced reading progress.</p>
 
-  @if (error(); as message) {
-    <p class="form-error" role="alert">{{ message }}</p>
-  }
-
   <div class="plans">
     <article class="card plan" [class.plan-current]="!isPremium()">
       <h2 i18n="@@subscription.plans.free">Free</h2>
@@ -34,30 +30,10 @@
       @if (isPremium()) {
         <span class="badge badge-premium" i18n="@@subscription.plans.currentPlan">Current plan</span>
         @if (subscription()?.currentPeriodEnd; as periodEnd) {
-          @if (subscription()?.cancelAtPeriodEnd) {
-            <p class="muted" role="status" i18n="@@subscription.plans.cancelled">Cancelled — Premium ends {{ periodEnd | date: 'mediumDate' }}</p>
-          } @else {
-            <p class="muted" i18n="@@subscription.plans.renews">Renews {{ periodEnd | date: 'mediumDate' }}</p>
-          }
-        }
-        @if (canCancel()) {
-          <button type="button" class="btn btn-danger" (click)="cancel()" [disabled]="busy() !== null">
-            @if (busy() === 'cancel') {
-              <ng-container i18n="@@subscription.plans.cancelling">Cancelling…</ng-container>
-            } @else {
-              <ng-container i18n="@@subscription.plans.cancel">Cancel subscription</ng-container>
-            }
-          </button>
+          <p class="muted" i18n="@@subscription.plans.premiumUntil">Premium until {{ periodEnd | date: 'mediumDate' }}</p>
         }
       } @else {
-        <button type="button" class="btn btn-primary btn-subscribe" (click)="subscribe()" [disabled]="busy() !== null">
-          @if (busy() === 'checkout') {
-            <ng-container i18n="@@subscription.plans.redirecting">Redirecting to Stripe…</ng-container>
-          } @else {
-            <ng-container i18n="@@subscription.plans.subscribe">Subscribe with Stripe</ng-container>
-          }
-        </button>
-        <p class="muted small" i18n="@@subscription.plans.secure">Secure payment by Stripe. Cancel anytime.</p>
+        <p class="muted" i18n="@@subscription.plans.comingSoon">Premium can't be bought yet: payments are coming soon.</p>
       }
     </article>
   </div>

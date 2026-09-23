@@ -54,7 +54,7 @@ import static com.readora.infrastructure.config.UseCaseTransactions.transactiona
 /// Wires the framework-free application services. Every `port.in` bean is wrapped by
 /// [UseCaseTransactions#transactional] so each use-case call is atomic.
 @Configuration
-@EnableConfigurationProperties({SecurityProperties.class, StripeProperties.class, CommentProperties.class})
+@EnableConfigurationProperties({SecurityProperties.class, CommentProperties.class})
 public class DomainServiceConfig {
 
     private final PlatformTransactionManager transactionManager;
@@ -145,11 +145,8 @@ public class DomainServiceConfig {
     }
 
     @Bean
-    public ManageSubscriptionUseCase manageSubscriptionUseCase(
-            UserAccountRepositoryPort userRepository,
-            PaymentPort paymentPort,
-            EventPublisherPort eventPublisher) {
-        return transactional(new SubscriptionService(userRepository, paymentPort, eventPublisher),
+    public ManageSubscriptionUseCase manageSubscriptionUseCase(UserAccountRepositoryPort userRepository) {
+        return transactional(new SubscriptionService(userRepository),
                 ManageSubscriptionUseCase.class, transactionManager);
     }
 

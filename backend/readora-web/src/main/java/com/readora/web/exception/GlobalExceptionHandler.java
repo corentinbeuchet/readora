@@ -4,8 +4,6 @@ import com.readora.domain.common.CodedException;
 import com.readora.domain.common.ErrorCodes;
 import com.readora.application.exception.CommentRateLimitedException;
 import com.readora.application.exception.StorageUnavailableException;
-import com.readora.application.exception.PaymentProviderException;
-import com.readora.application.exception.WebhookVerificationException;
 import com.readora.domain.common.AccessDeniedDomainException;
 import com.readora.domain.common.ConcurrentModificationDomainException;
 import com.readora.domain.common.DomainValidationException;
@@ -128,21 +126,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(coded(ex));
     }
 
-    @ExceptionHandler(WebhookVerificationException.class)
-    public ResponseEntity<ApiResponse<Void>> handleWebhookVerification(WebhookVerificationException ex) {
-        log.warn("Rejected payment webhook: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(coded(ex));
-    }
-
     @ExceptionHandler(StorageUnavailableException.class)
     public ResponseEntity<ApiResponse<Void>> handleStorageUnavailable(StorageUnavailableException ex) {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(coded(ex));
-    }
-
-    @ExceptionHandler(PaymentProviderException.class)
-    public ResponseEntity<ApiResponse<Void>> handlePaymentProvider(PaymentProviderException ex) {
-        log.error("Payment provider failure: {}", ex.getMessage(), ex);
-        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(coded(ex));
     }
 
     @ExceptionHandler(Exception.class)

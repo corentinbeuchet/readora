@@ -41,7 +41,7 @@ export class ProfileForm {
 
   constructor() {
     // Seed the form from the bound profile. A refreshed profile object (e.g. AuthStore reloading the
-    // user after a checkout) must not overwrite what the user is typing: only a pristine form, or a
+    // user after a token refresh) must not overwrite what the user is typing: only a pristine form, or a
     // different user, is re-seeded.
     effect(() => {
       const p = this.profile();

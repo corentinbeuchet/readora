@@ -107,32 +107,6 @@ public class UserAccount extends AggregateRoot<UserId> {
         registerEvent(SubscriptionActivatedEvent.now(this.id, newSubscription.getPlan(), newSubscription.getCurrentPeriodEnd()));
     }
 
-    public void updateSubscription(Subscription updatedSubscription) {
-        this.subscription = Objects.requireNonNull(updatedSubscription, "Subscription cannot be null");
-        this.updatedAt = Instant.now();
-    }
-
-    public void cancelSubscription() {
-        if (this.subscription.getPlan() == SubscriptionPlan.FREE) {
-            return;
-        }
-        SubscriptionPlan previousPlan = this.subscription.getPlan();
-        this.subscription = this.subscription.withStatus(SubscriptionStatus.CANCELED);
-        this.updatedAt = Instant.now();
-        registerEvent(SubscriptionCanceledEvent.now(this.id, previousPlan));
-    }
-
-    /// The user stopped renewal: access continues until the paid period ends, when the provider's deletion
-    /// event cancels the subscription for good.
-    public void scheduleSubscriptionCancellation() {
-        if (this.subscription.getPlan() == SubscriptionPlan.FREE || this.subscription.isCancelAtPeriodEnd()) {
-            return;
-        }
-        this.subscription = this.subscription.withCancelAtPeriodEnd(true);
-        this.updatedAt = Instant.now();
-        registerEvent(SubscriptionCanceledEvent.now(this.id, this.subscription.getPlan()));
-    }
-
     public void grantRole(Role role) {
         Objects.requireNonNull(role, "Role cannot be null");
         if (this.roles.add(role)) {

@@ -63,7 +63,7 @@ export class SeoService {
     this.setAlternates(page.noindex || this.isAbsolute(path) ? null : path);
   }
 
-  /** Shortcut for private pages (profile, auth, checkout…). */
+  /** Shortcut for private pages (profile, auth…). */
   private_(title: string): void {
     this.update({ title, noindex: true });
   }

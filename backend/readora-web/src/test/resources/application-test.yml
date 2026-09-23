@@ -24,8 +24,6 @@ aws:
     domain: https://cdn-test.readora.com
 
 readora:
-  frontend:
-    base-url: http://localhost:4200
   cors:
     allowed-origins: http://localhost:4200
   jobs:
@@ -43,7 +41,3 @@ readora:
       refresh-ttl: P30D
       # Reuse of a rotated refresh token is treated as theft immediately in tests.
       refresh-reuse-grace: PT0S
-  stripe:
-    secret-key: sk_test_dummy
-    webhook-secret: whsec_test_dummy
-    premium-price-id: price_test_premium

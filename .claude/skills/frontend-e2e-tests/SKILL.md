@@ -30,7 +30,7 @@ Support: `tests/e2e/support/fixtures.ts` (`test` with fixtures) and `tests/e2e/s
 - Unique values come from `uniqueSuffix()` called **inside** the test or fixture (not at describe scope: a retry must
   get new data).
 - Tests run `fullyParallel`: no shared accounts that tests mutate, no ordering between tests, no `test.describe.serial`.
-- Third-party services (Stripe) are stubbed with `page.route`; never our own backend.
+- Third-party services (a payment provider, when there is one again) are stubbed with `page.route`; never our own backend.
 
 ## Locators and assertions
 - Locators by role and accessible name (`getByRole('button', { name: 'Paged' })`), label (`getByLabel`), then text.

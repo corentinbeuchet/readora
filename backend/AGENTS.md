@@ -7,7 +7,7 @@
 - Controllers call **only** `port.in` use cases. `web` never depends on `port.out`, `application.service` or
   `infrastructure` (ArchUnit-enforced). Exceptions adapters throw and web maps live in `application.exception`;
   JWT claim names in `application.auth.TokenClaims`.
-- In-ports never expose out-port types; define the use case's own records (e.g. `ManageSubscriptionUseCase.CheckoutRedirect`).
+- In-ports never expose out-port types; define the use case's own records (e.g. `ManageTeamUseCase.MyTeam` / `Board`).
 - Shared-kernel types live in `domain.common` (`UserId`, `NotFoundException`, `ConcurrentModificationDomainException`).
 - ArchUnit also enforces: `port.in` = interfaces named `*UseCase`, `port.out` = interfaces named `*Port`,
   `@Entity` classes are `*JpaEntity` in `infrastructure.persistence.entity`, `*Adapter` implements an out-port,
@@ -38,7 +38,7 @@
   `DomainServiceConfig`, so each use-case call is one transaction (application layer stays Spring-free). Register new
   use cases the same way; pure I/O use cases (e.g. `ManageAssetsUseCase`) are not wrapped so they don't hold a DB
   connection. `InvalidCredentialsException` commits (security side effects stick).
-  Validate/mutate all aggregates in memory before the first save. External calls (Stripe) must be idempotent.
+  Validate/mutate all aggregates in memory before the first save. External calls (S3) must be idempotent.
 - Every write on a resource checks ownership/membership, not just the global permission (e.g. publisher must belong to the work's project).
   Membership lives on the `Team` (one roster, roles valid for all its series), never on the `ScanlationProject` (a
   team's task board for one series): load the project's team and check there (model: `ScanlationProject.requireMember`,
@@ -105,7 +105,12 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
   fields the client must always send; optional flags are `@Nullable Boolean` with a default in the controller.
 
 ## Integrations
-- Vendor SDK types never leave infrastructure — translate to the port's records (model: `StripePaymentAdapter` → `PaymentEvent`).
+- Payments were removed on 2026-09-23 (Stripe checkout, cancel, webhooks): Premium is granted outside the app until a
+  payments feature comes back. The `subscriptions` table keeps its `stripe_*` columns; bring the flow back from git
+  (`git log --oneline -- backend/readora-infrastructure/src/main/java/com/readora/infrastructure/payment`) and follow the
+  webhook rules below.
+- Vendor SDK types never leave infrastructure — translate to the port's types (model: `S3StorageAdapter`: S3 SDK types stay
+  inside, `StoragePort` speaks keys, URLs and bytes).
 - Fail closed: unknown status/price/plan → reject or ignore with a WARN log, never grant access.
 - Webhooks: idempotent and order-safe (compare event timestamps, not just the last event id).
 
@@ -133,7 +138,7 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 - Errors are RFC 9457 `ProblemDetail` (`spring.mvc.problemdetails.enabled=true`, off by default).
 - Outbound HTTP: `RestClient` or `@HttpExchange` interfaces registered with `@ImportHttpServices`; never `RestTemplate`.
 - Resilience from Framework 7 core: `@Retryable` / `@ConcurrencyLimit` (enable with `@EnableResilientMethods`) on
-  infrastructure adapters calling S3/Stripe — never retry inside a DB transaction; only retry idempotent calls.
+  infrastructure adapters calling S3 or another provider — never retry inside a DB transaction; only retry idempotent calls.
 - Jackson 3 only (`tools.jackson.*` packages, `JsonMapper`); no `com.fasterxml.jackson.databind` imports.
 - Security 7: lambda DSL only, `authorizeHttpRequests`, `PathPatternRequestMatcher`; no `.and()`, no Ant/MVC matchers.
 - Starters are modular: every technology needs its own `spring-boot-starter-*` (e.g. `spring-boot-starter-flyway`).
@@ -186,16 +191,16 @@ Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = repor
 - R13 `POST /storage/upload` is `isAuthenticated()` only (any reader, 50 MB); `AssetService` skips the content-type
   allow-list when the type is blank and allows `application/octet-stream`.
 - R14 `UseCaseTransactions` never sets `readOnly`: query-only use cases run read-write, adapters' `readOnly = true` is ignored.
-- Same sweep as R4 still to do (survey): uncoded reader-visible rules in `WorkManagementService`, `ReaderSocialService`, `SubscriptionService`.
+- Same sweep as R4 still to do (survey): uncoded reader-visible rules in `WorkManagementService`, `ReaderSocialService`.
 - R19/R20 (survey) Rankings query: three correlated counts per work; missing indexes `chapter_reads(work_id, read_at)`,
   `refresh_tokens(expires_at)`; `%text%` search on unindexed title/author.
 - R21/R22 (survey) Unbounded lists (chapter comments, work chapters, library list/export, bookmarks, `GET /teams/mine`);
   the chapter list loads every page row for `pageCount`. The chapter list now has one item per team version: when it
   gets paginated, paginate by chapter number on the server, so the versions of a number never split across pages.
-- R23/R24 (survey) Scanlation "not a member" answers 400 instead of 403; `ProfileController` PUT and
-  `SubscriptionController` checkout/cancel lack `@PreAuthorize`; `/api/v1/auth/me` sits under a `permitAll` prefix.
-- R25/R27/R28 (survey) Stripe calls inside the DB transaction; 9 of 19 application services without unit tests
-  (`SubscriptionService` first); no graceful shutdown, structured logs or correlation id.
+- R23/R24 (survey) Scanlation "not a member" answers 400 instead of 403; `ProfileController` PUT lacks `@PreAuthorize`;
+  `/api/v1/auth/me` sits under a `permitAll` prefix.
+- R27/R28 (survey) Several application services without unit tests; no graceful shutdown, structured logs or
+  correlation id.
 
 CI / deploy (same review; nothing here has ever run, the repository has no remote). Open, needs a decision: default JWT
 secret and DB password still in `application.yml` (only `production` is guarded); deploys don't wait for App Runner

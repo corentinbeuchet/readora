@@ -31,18 +31,12 @@ aws:
     domain: ${CLOUDFRONT_DOMAIN:https://cdn.readora.com}
 
 readora:
-  frontend:
-    base-url: ${FRONTEND_BASE_URL:https://readora.com}
   cors:
     allowed-origins: ${READORA_CORS_ALLOWED_ORIGINS:https://readora.com}
   security:
     cookie-secure: true
     jwt:
       secret: ${READORA_JWT_SECRET}
-  stripe:
-    secret-key: ${STRIPE_SECRET_KEY}
-    webhook-secret: ${STRIPE_WEBHOOK_SECRET}
-    premium-price-id: ${STRIPE_PREMIUM_PRICE_ID}
 
 server:
   forward-headers-strategy: native

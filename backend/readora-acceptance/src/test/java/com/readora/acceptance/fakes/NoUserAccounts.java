@@ -25,16 +25,6 @@ public class NoUserAccounts implements UserAccountRepositoryPort {
     }
 
     @Override
-    public Optional<UserAccount> findByExternalCustomerId(String externalCustomerId) {
-        return Optional.empty();
-    }
-
-    @Override
-    public Optional<UserAccount> findByExternalSubscriptionId(String externalSubscriptionId) {
-        return Optional.empty();
-    }
-
-    @Override
     public boolean existsByEmail(Email email) {
         return false;
     }

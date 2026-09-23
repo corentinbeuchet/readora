@@ -56,38 +56,6 @@ public final class Subscription implements Serializable {
         return statusOk && currentPeriodEnd.isAfter(now);
     }
 
-    /// @return true if a provider event that happened at `eventAt` predates the last one applied
-    public boolean isStale(@Nullable Instant eventAt) {
-        return lastEventAt != null && eventAt != null && eventAt.isBefore(lastEventAt);
-    }
-
-    public Subscription withStatus(SubscriptionStatus newStatus) {
-        return new Subscription(plan, newStatus, currentPeriodEnd, externalCustomerId, externalSubscriptionId, lastEventId,
-                lastEventAt, cancelAtPeriodEnd, Instant.now());
-    }
-
-    public Subscription withPeriodEnd(@Nullable Instant newPeriodEnd) {
-        return new Subscription(plan, status, newPeriodEnd, externalCustomerId, externalSubscriptionId, lastEventId,
-                lastEventAt, cancelAtPeriodEnd, Instant.now());
-    }
-
-    /// Records the provider event just applied (idempotency by id, ordering by time).
-    public Subscription withLastEvent(@Nullable String eventId, @Nullable Instant eventAt) {
-        @Nullable Instant latest = lastEventAt == null || (eventAt != null && eventAt.isAfter(lastEventAt)) ? eventAt : lastEventAt;
-        return new Subscription(plan, status, currentPeriodEnd, externalCustomerId, externalSubscriptionId, eventId,
-                latest, cancelAtPeriodEnd, Instant.now());
-    }
-
-    public Subscription withExternalIds(@Nullable String customerId, @Nullable String subscriptionId) {
-        return new Subscription(plan, status, currentPeriodEnd, customerId, subscriptionId, lastEventId,
-                lastEventAt, cancelAtPeriodEnd, Instant.now());
-    }
-
-    public Subscription withCancelAtPeriodEnd(boolean cancel) {
-        return new Subscription(plan, status, currentPeriodEnd, externalCustomerId, externalSubscriptionId, lastEventId,
-                lastEventAt, cancel, Instant.now());
-    }
-
     public SubscriptionPlan getPlan() {
         return plan;
     }

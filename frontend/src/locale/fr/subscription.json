@@ -1,16 +1,6 @@
 {
   "locale": "fr",
   "translations": {
-    "subscription.checkout.thanks": "Merci !",
-    "subscription.checkout.active": "Votre abonnement Premium est actif. Les marque-pages sont maintenant disponibles.",
-    "subscription.checkout.goToProfile": "Aller à mon profil",
-    "subscription.checkout.confirming": " Nous confirmons votre paiement auprès de Stripe. Cela prend généralement quelques secondes. ",
-    "subscription.checkout.checking": "Vérification…",
-    "subscription.checkout.checkAgain": "Vérifier à nouveau",
-    "subscription.checkout.cancelled": "Paiement annulé",
-    "subscription.checkout.noCharge": "Aucun montant n'a été prélevé. Vous pouvez vous abonner quand vous le souhaitez.",
-    "subscription.checkout.backToPlans": "Retour aux formules",
-    "subscription.checkout.seoTitle": "Paiement",
     "subscription.plans.title": "Choisissez votre formule",
     "subscription.plans.intro": "La lecture est toujours gratuite. Premium débloque les marque-pages et la synchronisation de votre progression.",
     "subscription.plans.free": "Gratuit",
@@ -18,13 +8,6 @@
     "subscription.plans.createAccount": "Créer un compte gratuit",
     "subscription.plans.currentPlan": "Formule actuelle",
     "subscription.plans.premium": "Premium {$START_TAG_SPAN}Populaire{$CLOSE_TAG_SPAN}",
-    "subscription.plans.cancelled": "Résilié — Premium prend fin le {$INTERPOLATION}",
-    "subscription.plans.renews": "Renouvellement le {$INTERPOLATION}",
-    "subscription.plans.cancelling": "Résiliation…",
-    "subscription.plans.cancel": "Résilier l'abonnement",
-    "subscription.plans.redirecting": "Redirection vers Stripe…",
-    "subscription.plans.subscribe": "S'abonner avec Stripe",
-    "subscription.plans.secure": "Paiement sécurisé par Stripe. Résiliable à tout moment.",
     "subscription.plans.premiumBookmarks": "Marque-pages et progression de lecture synchronisés sur tous vos appareils",
     "subscription.plans.premiumContinue": "Reprenez votre lecture depuis votre profil",
     "subscription.plans.premiumSupport": "Soutenez les équipes de scantrad que vous aimez",
@@ -33,9 +16,7 @@
     "subscription.plans.freeUpvote": "Votez pour les meilleurs commentaires",
     "subscription.plans.seoTitle": "Formules — Gratuite et Premium",
     "subscription.plans.seoDescription": "La lecture est toujours gratuite sur Readora. Passez à Premium pour les marque-pages et la synchronisation de votre progression.",
-    "subscription.plans.untrustedCheckout": "Impossible de lancer le paiement : page de paiement inattendue. Contactez l'assistance.",
-    "subscription.plans.checkoutError": "Impossible de lancer le paiement",
-    "subscription.plans.confirmCancel": "Résilier votre abonnement Premium ? Vous gardez Premium jusqu'à la fin de la période en cours.",
-    "subscription.plans.cancelError": "Impossible de résilier l'abonnement"
+    "subscription.plans.premiumUntil": "Premium jusqu’au {$INTERPOLATION}",
+    "subscription.plans.comingSoon": "Premium ne peut pas encore être acheté : le paiement arrive bientôt."
   }
 }

@@ -209,7 +209,7 @@ interface is neutral and the cover art is the colour on the page.
   Only the non-secret `readora.has-session` hint is stored: bootstrap skips `POST /auth/refresh` without it, so
   anonymous page loads don't spend the backend's per-IP auth rate limit (10/min).
 - Validate redirect targets: `returnUrl` must start with `/` and not `//` (model: `login-page.ts`); external redirects
-  (Stripe) must check the host. Never send the user's identity in request bodies.
+  (a payment page, when payments come back) must check the host. Never send the user's identity in request bodies.
 
 ## SSR
 - No direct `window`, `document`, `navigator`, `localStorage`. Use `inject(DOCUMENT)` / `DOCUMENT.defaultView?`, and
@@ -224,7 +224,7 @@ interface is neutral and the cover art is the colour on the page.
 - Security: `security.allowedHosts` (or `NG_ALLOWED_HOSTS`) set for SSR; CSP via a per-request nonce (`autoCsp` cannot be combined with SSR in 22.1, see F23; the theme script in `index.html` then needs its hash); keep
   Trusted Types compatible; build `SafeValue`s as close to the input as possible and never bypass sanitization on
   user content.
-- Browser side effects go behind an overridable method (model: `plans-page.ts` `protected redirectTo(url)`).
+- Browser side effects go behind an overridable method (model: `library-page.ts` `protected saveFile(file, name)`).
 
 ## Browser resources
 - Every `URL.createObjectURL` is revoked (on remove, replace, reset and destroy).
@@ -264,7 +264,7 @@ interface is neutral and the cover art is the colour on the page.
 - `core/` = app-wide singletons (api, auth, seo). A feature-only service lives in its feature.
 - API types: one file per domain in `core/models/<domain>.ts` (`catalog`, `chapter`, `scanlation`, `identity`, …),
   imported by that path (no barrel, no catch-all model file). Domain rules on those types (`canClaim(task)`,
-  `canCancelSubscription(sub)`) are pure functions exported beside them and unit-tested in
+  `hasActivePremium(sub)`) are pure functions exported beside them and unit-tested in
   `tests/unit/core/models/`. Components and stores call them rather than comparing statuses inline. Types stay
   interfaces, not classes: API data is plain JSON, and resource updates spread objects, which would drop class
   methods (decided 2026-09-19).
@@ -349,7 +349,6 @@ lessons.
 Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = reported with path:line, re-check before acting):
 - R15 `file-utils.ts` zip-bomb guard uses JSZip private `_data` / `internalStream` and has no spec; `jszip` is a static import.
 - R16 No spec for `shared/ui/dialog`, `core/a11y/focus-trap.directive`, `core/api/api-client`, `register-page`, `publish-flow`.
-- R17 `PlansPage` hand-rolls busy/error (`asyncAction()` exists) and confirms the cancellation with `window.confirm` (`app-dialog` exists).
 - R18 The kanban shows the raw `assigneeId` UUID: the task DTO has no assignee name (backend + frontend).
 - R26 (survey) Axe and responsive e2e only scan public pages: no signed-in page, no open dialog.
 - R27 (2026-09-20) Playwright's WebKit for Windows (`webkit`, `Mobile Safari`) reported "Page crashed" on `/works/:id`

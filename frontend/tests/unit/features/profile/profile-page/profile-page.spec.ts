@@ -108,7 +108,7 @@ describe('ProfilePage (Angular Aria Tabs + Signal Forms)', () => {
     fixture.detectChanges();
   }
 
-  /** Same user, new object: e.g. the AuthStore refreshing the user after a Stripe checkout. */
+  /** Same user, new object: e.g. the AuthStore refreshing the user after a token refresh. */
   async function whenMyProfileIsRefreshed(profile: Profile): Promise<void> {
     store.setUser(mockUser({ ...profile, username: 'jane' }));
     await render();

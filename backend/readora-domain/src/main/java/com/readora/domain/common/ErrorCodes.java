@@ -19,8 +19,6 @@ public final class ErrorCodes {
     public static final String UNSUPPORTED_MEDIA_TYPE = "UNSUPPORTED_MEDIA_TYPE";
     public static final String FILE_TOO_LARGE = "FILE_TOO_LARGE";
     public static final String STORAGE_UNAVAILABLE = "STORAGE_UNAVAILABLE";
-    public static final String PAYMENT_FAILED = "PAYMENT_FAILED";
-    public static final String WEBHOOK_REJECTED = "WEBHOOK_REJECTED";
     public static final String INTERNAL_ERROR = "INTERNAL_ERROR";
 
     // Specific rule violations a reader can hit through the interface.
@@ -32,8 +30,6 @@ public final class ErrorCodes {
     public static final String OWN_CONTENT = "OWN_CONTENT";
     public static final String LIST_DUPLICATE_SERIES = "LIST_DUPLICATE_SERIES";
     public static final String ALREADY_HANDLED = "ALREADY_HANDLED";
-    public static final String NO_ACTIVE_SUBSCRIPTION = "NO_ACTIVE_SUBSCRIPTION";
-    public static final String CANCELLATION_ALREADY_SCHEDULED = "CANCELLATION_ALREADY_SCHEDULED";
     public static final String UNSUPPORTED_FILE_FORMAT = "UNSUPPORTED_FILE_FORMAT";
     public static final String EMPTY_FILE = "EMPTY_FILE";
     public static final String CHAPTER_NOT_PUBLISHED = "CHAPTER_NOT_PUBLISHED";

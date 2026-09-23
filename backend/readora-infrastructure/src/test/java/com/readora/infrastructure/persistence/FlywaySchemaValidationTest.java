@@ -38,10 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         "aws.cloudfront.domain=https://cdn-test.readora.com",
         "readora.security.jwt.secret=test-secret-at-least-32-bytes-long-1234567890",
         "readora.security.jwt.access-ttl=PT15M",
-        "readora.security.jwt.refresh-ttl=P30D",
-        "readora.stripe.secret-key=sk_test_123",
-        "readora.stripe.webhook-secret=whsec_123",
-        "readora.stripe.premium-price-id=price_123"
+        "readora.security.jwt.refresh-ttl=P30D"
 })
 class FlywaySchemaValidationTest {
 

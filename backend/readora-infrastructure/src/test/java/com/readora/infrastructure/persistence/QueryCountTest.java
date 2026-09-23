@@ -46,10 +46,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.jpa.properties.hibernate.generate_statistics=true",
         "aws.s3.bucket-name=test-bucket",
         "aws.cloudfront.domain=https://cdn-test.readora.com",
-        "readora.security.jwt.secret=test-secret-at-least-32-bytes-long-1234567890",
-        "readora.stripe.secret-key=sk_test_123",
-        "readora.stripe.webhook-secret=whsec_123",
-        "readora.stripe.premium-price-id=price_123"
+        "readora.security.jwt.secret=test-secret-at-least-32-bytes-long-1234567890"
 })
 class QueryCountTest {
 

@@ -50,7 +50,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/lists/mine").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/lists", "/api/v1/lists/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/storage/assets/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/subscriptions/stripe/webhook").permitAll()
                         .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/actuator/health/**").permitAll()
                         .requestMatchers("/error").permitAll()

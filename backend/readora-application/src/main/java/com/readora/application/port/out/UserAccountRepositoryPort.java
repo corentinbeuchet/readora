@@ -11,8 +11,6 @@ public interface UserAccountRepositoryPort {
     Optional<UserAccount> findByEmail(Email email);
     /// Case-insensitive.
     Optional<UserAccount> findByUsername(String username);
-    Optional<UserAccount> findByExternalCustomerId(String externalCustomerId);
-    Optional<UserAccount> findByExternalSubscriptionId(String externalSubscriptionId);
     boolean existsByEmail(Email email);
     boolean existsByUsername(String username);
     UserAccount save(UserAccount account);

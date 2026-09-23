@@ -49,16 +49,6 @@ public class UserAccountRepositoryAdapter implements UserAccountRepositoryPort {
     }
 
     @Override
-    public Optional<UserAccount> findByExternalCustomerId(String externalCustomerId) {
-        return springDataRepository.findBySubscriptionStripeCustomerId(externalCustomerId).map(this::toDomain);
-    }
-
-    @Override
-    public Optional<UserAccount> findByExternalSubscriptionId(String externalSubscriptionId) {
-        return springDataRepository.findBySubscriptionStripeSubscriptionId(externalSubscriptionId).map(this::toDomain);
-    }
-
-    @Override
     public boolean existsByEmail(Email email) {
         return springDataRepository.existsByEmail(email.value());
     }

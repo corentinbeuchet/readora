@@ -18,12 +18,6 @@ public interface SpringDataUserAccountRepository extends JpaRepository<UserAccou
     @EntityGraph(attributePaths = "subscription")
     Optional<UserAccountJpaEntity> findByEmail(String email);
 
-    @EntityGraph(attributePaths = "subscription")
-    Optional<UserAccountJpaEntity> findBySubscriptionStripeCustomerId(String stripeCustomerId);
-
-    @EntityGraph(attributePaths = "subscription")
-    Optional<UserAccountJpaEntity> findBySubscriptionStripeSubscriptionId(String stripeSubscriptionId);
-
     boolean existsByEmail(String email);
     boolean existsByUsernameIgnoreCase(String username);
 

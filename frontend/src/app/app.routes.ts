@@ -114,17 +114,6 @@ export const routes: Routes = [
     loadComponent: () => import('@app/features/subscription/plans-page/plans-page').then((m) => m.PlansPage)
   },
   {
-    path: 'subscription/success',
-    loadComponent: () => import('@app/features/subscription/checkout-result-page/checkout-result-page').then((m) => m.CheckoutResultPage),
-    canActivate: [authGuard],
-    data: { outcome: 'success' }
-  },
-  {
-    path: 'subscription/cancel',
-    loadComponent: () => import('@app/features/subscription/checkout-result-page/checkout-result-page').then((m) => m.CheckoutResultPage),
-    data: { outcome: 'cancel' }
-  },
-  {
     path: 'forbidden',
     loadComponent: () => import('@app/features/layout/forbidden-page').then((m) => m.ForbiddenPage)
   },

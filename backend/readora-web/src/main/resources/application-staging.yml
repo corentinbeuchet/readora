@@ -27,18 +27,12 @@ aws:
     domain: ${CLOUDFRONT_DOMAIN:/api/v1/storage/assets}
 
 readora:
-  frontend:
-    base-url: ${FRONTEND_BASE_URL:https://staging.readora.com}
   cors:
     allowed-origins: ${READORA_CORS_ALLOWED_ORIGINS:https://staging.readora.com}
   security:
     cookie-secure: ${READORA_COOKIE_SECURE:true}
     jwt:
       secret: ${READORA_JWT_SECRET}
-  stripe:
-    secret-key: ${STRIPE_SECRET_KEY:}
-    webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
-    premium-price-id: ${STRIPE_PREMIUM_PRICE_ID:}
 
 server:
   forward-headers-strategy: native
