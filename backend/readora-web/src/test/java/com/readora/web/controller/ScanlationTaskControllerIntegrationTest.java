@@ -56,6 +56,7 @@ class ScanlationTaskControllerIntegrationTest extends AuthTestSupport {
         work = workRepository.save(Work.create("Solo Leveling", "Hunter sung jin-woo", WorkType.MANHWA, "solo.webp", Set.of("Action")));
         team = teamRepository.save(Team.create("Asura Team " + java.util.UUID.randomUUID(), null, UserId.of("leader-init")));
         project = ScanlationProject.create("Asura Team", work.getId(), team.getId());
+        project.turnBoardOn();
         project = projectRepository.save(project);
     }
 

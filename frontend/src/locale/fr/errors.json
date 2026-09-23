@@ -33,6 +33,7 @@
     "error.alreadyOnTeam": "Ce lecteur fait déjà partie de l'équipe.",
     "error.notOnTeam": "Ce lecteur ne fait pas partie de l'équipe. Invitez-le d'abord.",
     "error.invitationPending": "Ce lecteur a déjà une invitation à rejoindre l'équipe. Attendez sa réponse.",
-    "error.teamRequired": "Une nouvelle série appartient à une équipe que vous dirigez. Créez d'abord une équipe."
+    "error.teamRequired": "Une nouvelle série appartient à une équipe que vous dirigez. Créez d'abord une équipe.",
+    "error.boardOff": "L'équipe n'utilise pas de tableau de tâches pour cette série. Un responsable l'active dans le Studio."
   }
 }

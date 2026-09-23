@@ -20,7 +20,7 @@ function waitingTask(overrides: Partial<WaitingTask> = {}): WaitingTask {
 }
 
 function team(overrides: Partial<MyTeam> = {}): MyTeam {
-  return { id: 't-1', name: 'Moon Scans', description: 'We translate action series.', myRoles: ['LEADER'], boards: [{ projectId: 'p-1', work: SOLO }], ...overrides };
+  return { id: 't-1', name: 'Moon Scans', description: 'We translate action series.', myRoles: ['LEADER'], boards: [{ projectId: 'p-1', work: SOLO, boardEnabled: true }], ...overrides };
 }
 
 describe('MyTeamsPage (US-12)', () => {
@@ -137,10 +137,21 @@ describe('MyTeamsPage (US-12)', () => {
 
     thenTheSeriesICanAddAre(['Omniscient Reader']);
 
-    await whenIAddTheSeries('Omniscient Reader', { thenMyTeamsAre: [team({ boards: [{ projectId: 'p-1', work: SOLO }, { projectId: 'p-2', work: ORV }] })] });
+    await whenIAddTheSeries('Omniscient Reader', { thenMyTeamsAre: [team({ boards: [{ projectId: 'p-1', work: SOLO, boardEnabled: true }, { projectId: 'p-2', work: ORV, boardEnabled: true }] })] });
 
     thenTheRequestWas('POST', `${API}/teams/t-1/series`, { workId: 'w-2' });
     thenThereIsALinkTo('/scanlation/p-2');
+  });
+
+  it('a series without a task board has no board link, and a leader can turn one on', async () => {
+    await givenIAmOnMyTeams({ teams: [team({ boards: [{ projectId: 'p-1', work: SOLO, boardEnabled: false }] })] });
+
+    thenThereIsNoLinkTo('/scanlation/p-1');
+
+    await whenISwitchTheBoard('Use a task board for Solo Leveling', { thenMyTeamsAre: [team()] });
+
+    thenTheRequestWas('PUT', `${API}/scanlation/projects/p-1/board`, { enabled: true });
+    thenThereIsALinkTo('/scanlation/p-1');
   });
 
   it('a leader invites a reader, who waits for an answer until they accept', async () => {
@@ -346,6 +357,17 @@ describe('MyTeamsPage (US-12)', () => {
     await settle(fixture);
     http.expectOne(`${API}/teams/mine`).flush(ok(after.thenMyTeamsAre));
     await settle(fixture);
+  }
+
+  async function whenISwitchTheBoard(label: string, after: { thenMyTeamsAre: MyTeam[] }): Promise<void> {
+    button(label).click();
+    await settle(fixture);
+    lastRequest = http.expectOne(`${API}/scanlation/projects/p-1/board`);
+    lastRequest.flush(ok({ id: 'p-1', name: 'Moon Scans - Solo Leveling', workId: 'w-1', teamId: 't-1', teamName: 'Moon Scans', boardEnabled: true, members: [], tasks: [] }));
+    await settle(fixture);
+    http.expectOne(`${API}/teams/mine`).flush(ok(after.thenMyTeamsAre));
+    await settle(fixture);
+    await whenWhatWaitsIsAnswered([]);
   }
 
   async function whenICancelTheInvitationOf(invitee: string): Promise<void> {

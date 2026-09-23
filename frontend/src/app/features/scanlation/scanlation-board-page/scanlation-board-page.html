@@ -30,6 +30,12 @@
       </div>
     </header>
 
+    @if (currentProject(); as p) {
+      @if (!p.boardEnabled) {
+        <p class="card board-off" role="note" i18n="@@scanlation.board.off">The team does not use a task board for this series: no new chapter goes on it. A leader turns it on from the Studio.</p>
+      }
+    }
+
     @if (action.error(); as error) {
       <p class="form-error" role="alert">{{ error }}</p>
     }

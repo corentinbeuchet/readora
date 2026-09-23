@@ -204,6 +204,15 @@ Feature: Community and scanlation teams
     When "Mina" tries to give "Aoi" the roles "PROOFREADER" in "Moon Scans"
     Then the change is refused because "Aoi" is not on the team
 
+  # Most teams run their pipeline elsewhere (Discord, Drive) and only publish finished chapters: the board is optional.
+  @must
+  Scenario: A team turns the task board on when it wants one
+    Given reader "Mina" leads the team "Moon Scans"
+    When "Mina" creates the series "Moonlight Saga" for "Moon Scans"
+    Then the task board of "Moon Scans" for "Moonlight Saga" is off, and no raw chapter can be put on it
+    When "Mina" turns on the task board of "Moon Scans" for "Moonlight Saga"
+    Then a raw chapter can be put on the task board of "Moon Scans" for "Moonlight Saga"
+
   # A task board per series is one more place to check: the Studio gathers what each member can do next.
   @must
   Scenario: Each member sees the chapters waiting for them

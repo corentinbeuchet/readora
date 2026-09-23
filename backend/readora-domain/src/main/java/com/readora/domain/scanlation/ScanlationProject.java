@@ -4,8 +4,8 @@ import com.readora.domain.common.AggregateRoot;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.NotFoundException;
-import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.common.UserId;
+import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.WorkId;
 import org.jspecify.annotations.Nullable;
 
@@ -19,11 +19,12 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
     private final WorkId workId;
     private final TeamId teamId;
     private final List<WorkflowTask> tasks = new ArrayList<>();
+    private boolean boardEnabled;
     private final Instant createdAt;
     private Instant updatedAt;
 
-    public ScanlationProject(ProjectId id, String name, WorkId workId, TeamId teamId,
-                             @Nullable List<WorkflowTask> tasks, @Nullable Instant createdAt, @Nullable Instant updatedAt) {
+    public ScanlationProject(ProjectId id, String name, WorkId workId, TeamId teamId, @Nullable List<WorkflowTask> tasks,
+                             boolean boardEnabled, @Nullable Instant createdAt, @Nullable Instant updatedAt) {
         super(id);
         this.name = validateName(name);
         this.workId = Objects.requireNonNull(workId, "WorkId cannot be null");
@@ -31,13 +32,37 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
         if (tasks != null) {
             this.tasks.addAll(tasks);
         }
+        this.boardEnabled = boardEnabled;
         this.createdAt = createdAt != null ? createdAt : Instant.now();
         this.updatedAt = updatedAt != null ? updatedAt : this.createdAt;
     }
 
+    /// A team's new series, without a task board: most teams only publish finished chapters (see [#turnBoardOn()]).
     public static ScanlationProject create(String name, WorkId workId, TeamId teamId) {
         Instant now = Instant.now();
-        return new ScanlationProject(ProjectId.generate(), name, workId, teamId, List.of(), now, now);
+        return new ScanlationProject(ProjectId.generate(), name, workId, teamId, List.of(), false, now, now);
+    }
+
+    public void turnBoardOn() {
+        this.boardEnabled = true;
+        this.updatedAt = Instant.now();
+    }
+
+    /// Tasks already on the board stay and can still be finished; no new chapter goes on it.
+    public void turnBoardOff() {
+        this.boardEnabled = false;
+        this.updatedAt = Instant.now();
+    }
+
+    /// @throws DomainValidationException `BOARD_OFF` if the team does not use a task board for this series
+    public void requireBoard() {
+        if (!boardEnabled) {
+            throw DomainValidationException.withCode(ErrorCodes.BOARD_OFF, "The task board of " + name + " is off: a leader turns it on first");
+        }
+    }
+
+    public boolean isBoardEnabled() {
+        return boardEnabled;
     }
 
     private static String validateName(String name) {

@@ -43,6 +43,8 @@ export function errorMessageForCode(code: string | null, retryAfterSeconds: numb
       return $localize`:@@error.alreadyOnTeam:This reader is already on the team.`;
     case 'NOT_ON_TEAM':
       return $localize`:@@error.notOnTeam:This reader is not on the team. Invite them first.`;
+    case 'BOARD_OFF':
+      return $localize`:@@error.boardOff:The team does not use a task board for this series. A leader turns it on in the Studio.`;
     case 'TEAM_REQUIRED':
       return $localize`:@@error.teamRequired:A new series belongs to a team you lead. Start a team first.`;
     case 'INVITATION_PENDING':

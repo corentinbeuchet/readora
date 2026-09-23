@@ -170,9 +170,16 @@ export class PublishFlow {
     this.createdChapterId.set(chapter.id);
   }
 
+  /**
+   * Putting the chapter on the task board is choosing to use one: a series without a board (new series start without)
+   * gets it turned on first. Only leaders may; for anyone else the server's refusal is shown.
+   */
   private async createScanlationTask(project: ScanlationProject, pages: PageUploadItem[], chapterNumber: string): Promise<void> {
-    this.statusText.set($localize`:@@upload.publish.attachingRaw:Attaching RAW package to scanlation workspace…`);
+    this.statusText.set($localize`:@@upload.publish.attachingRaw:Attaching RAW package to the task board…`);
     this.createdProjectId.set(project.id);
+    if (!project.boardEnabled) {
+      await firstValueFrom(this.scanlationApi.setBoard(project.id, true));
+    }
     await firstValueFrom(
       this.scanlationApi.createTask(project.id, { chapterNumber: Number(chapterNumber), assetUrl: pages[0]?.cdnUrl ?? '', pageCount: pages.length })
     );

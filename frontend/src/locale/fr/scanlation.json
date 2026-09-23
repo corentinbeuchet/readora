@@ -56,7 +56,7 @@
     "scanlation.teams.new.nameRequired": "Donnez un nom à votre équipe",
     "scanlation.teams.seoTitle": "Studio",
     "scanlation.teams.myRoles": "Mes rôles",
-    "scanlation.teams.boards": "Tableaux des tâches",
+    "scanlation.teams.boards": "Séries",
     "scanlation.teams.boardsNone": "Aucune série pour le moment. Un responsable ajoute la première.",
     "scanlation.teams.series.summary": "Ajouter une série",
     "scanlation.teams.series.label": "Titre de la série",
@@ -120,6 +120,10 @@
     "scanlation.waiting.loadError": "Impossible de charger ce qui vous attend.",
     "scanlation.waiting.empty": "Rien ne vous attend pour le moment : les chapitres apparaissent ici quand ils arrivent à une étape sur laquelle vous travaillez.",
     "scanlation.waiting.chapter": "Chapitre {$INTERPOLATION} de {$INTERPOLATION_1}",
-    "scanlation.waiting.mine": "Pris par vous"
+    "scanlation.waiting.mine": "Pris par vous",
+    "scanlation.teams.openBoard": "Tableau de tâches{$START_TAG_SPAN} de {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "scanlation.teams.boardOff": "Désactiver le tableau de tâches{$START_TAG_SPAN} de {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "scanlation.teams.boardOn": "Utiliser un tableau de tâches{$START_TAG_SPAN} pour {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "scanlation.board.off": "L'équipe n'utilise pas de tableau de tâches pour cette série : aucun nouveau chapitre n'y est ajouté. Un responsable l'active depuis le Studio."
   }
 }

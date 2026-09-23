@@ -12,11 +12,11 @@ import java.util.UUID;
 /// `GET /teams/mine` lists every board of every team of mine.
 public record MyTeamDto(UUID id, String name, @Nullable String description, List<String> myRoles, List<Board> boards) {
 
-    public record Board(UUID projectId, SeriesRefDto work) {
+    public record Board(UUID projectId, SeriesRefDto work, boolean boardEnabled) {
     }
 
     public static MyTeamDto fromDomain(MyTeam mine, UserId me) {
-        return of(mine.team(), me, mine.boards().stream().map(b -> new Board(b.projectId().value(), SeriesRefDto.fromDomain(b.work()))).toList());
+        return of(mine.team(), me, mine.boards().stream().map(b -> new Board(b.projectId().value(), SeriesRefDto.fromDomain(b.work()), b.boardEnabled())).toList());
     }
 
     public static MyTeamDto fromDomain(Team team, UserId me) {

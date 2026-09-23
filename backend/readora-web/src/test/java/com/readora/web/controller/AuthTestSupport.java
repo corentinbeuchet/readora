@@ -111,6 +111,14 @@ abstract class AuthTestSupport {
                 .andExpect(status().isOk());
     }
 
+    /// The leader turns on the task board of one of the team's series (a new series starts without one).
+    protected void givenTheBoardIsOn(Session leader, String projectId) throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/v1/scanlation/projects/" + projectId + "/board")
+                        .header("Authorization", leader.bearer()).contentType(MediaType.APPLICATION_JSON).content("{\"enabled\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.data.boardEnabled").value(true));
+    }
+
     /// Every chapter is some team's version: a throwaway team for tests that are not about teams.
     protected TeamId anyTeam() {
         return teamRepositoryForTests.save(Team.create("Team " + java.util.UUID.randomUUID(), null, UserId.of("any-leader"))).getId();

@@ -50,6 +50,8 @@ export interface ScanlationProject {
   workId: string;
   teamId: string;
   teamName: string;
+  /** The team uses the task board for this series (off by default: most teams publish finished chapters). */
+  boardEnabled: boolean;
   /** The roster of the project's team: roles apply to every series the team works on. */
   members: { userId: string; roles: ScanlationRole[] }[];
   tasks: WorkflowTask[];
@@ -61,10 +63,11 @@ export interface SeriesRef {
   title: string;
 }
 
-/** One of a team's task boards, with the series it is for. */
+/** One of a team's series, with its task board (`boardEnabled`: the team uses it). */
 export interface TeamBoard {
   projectId: string;
   work: SeriesRef;
+  boardEnabled: boolean;
 }
 
 /** A team I belong to (`GET /teams/mine`), with my roles in it. */

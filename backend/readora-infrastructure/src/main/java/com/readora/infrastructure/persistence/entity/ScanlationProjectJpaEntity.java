@@ -27,6 +27,9 @@ public class ScanlationProjectJpaEntity {
     @BatchSize(size = 64)
     private List<WorkflowTaskJpaEntity> tasks = new ArrayList<>();
 
+    @Column(name = "board_enabled", nullable = false)
+    private boolean boardEnabled;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -43,11 +46,12 @@ public class ScanlationProjectJpaEntity {
 
     public ScanlationProjectJpaEntity() {}
 
-    public ScanlationProjectJpaEntity(UUID id, String name, UUID workId, UUID teamId, Instant createdAt, Instant updatedAt) {
+    public ScanlationProjectJpaEntity(UUID id, String name, UUID workId, UUID teamId, boolean boardEnabled, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.name = name;
         this.workId = workId;
         this.teamId = teamId;
+        this.boardEnabled = boardEnabled;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -59,6 +63,8 @@ public class ScanlationProjectJpaEntity {
     public UUID getWorkId() { return workId; }
     public void setWorkId(UUID workId) { this.workId = workId; }
     public UUID getTeamId() { return teamId; }
+    public boolean isBoardEnabled() { return boardEnabled; }
+    public void setBoardEnabled(boolean boardEnabled) { this.boardEnabled = boardEnabled; }
     public List<WorkflowTaskJpaEntity> getTasks() { return tasks; }
     public void setTasks(List<WorkflowTaskJpaEntity> tasks) { this.tasks = tasks; }
     public Instant getCreatedAt() { return createdAt; }

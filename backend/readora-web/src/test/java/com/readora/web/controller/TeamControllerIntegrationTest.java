@@ -136,6 +136,7 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
         String workId = json(created).path("data").path("id").asString();
         String project = json(mockMvc.perform(get("/api/v1/works/" + workId + "/projects").header("Authorization", mina.bearer())).andReturn())
                 .path("data").path(0).path("id").asString();
+        givenTheBoardIsOn(mina, project);
         for (String chapter : new String[] {"1", "2"}) {
             mockMvc.perform(post("/api/v1/scanlation/projects/" + project + "/tasks").header("Authorization", mina.bearer())
                             .contentType(MediaType.APPLICATION_JSON).content("{\"chapterNumber\":" + chapter + ",\"assetUrl\":\"https://cdn.test/raw.zip\",\"pageCount\":5}"))
@@ -157,6 +158,25 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
                 .andExpect(jsonPath("$.data[1].mine").value(false))
                 .andExpect(jsonPath("$.data[1].stage").value("RAW_UPLOADED"));
         mockMvc.perform(get("/api/v1/teams/mine/tasks")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Only a leader switches the task board of a series: a member or an outsider is refused, an unknown board is 404")
+    void onlyALeaderSwitchesTheBoard() throws Exception {
+        Session mina = register();
+        Session bob = register();
+        Session aoi = register();
+        String team = givenATeamLedBy(mina);
+        var created = whenICreateASeriesFor(mina, team).andExpect(status().isCreated()).andReturn();
+        String workId = json(created).path("data").path("id").asString();
+        String project = json(mockMvc.perform(get("/api/v1/works/" + workId + "/projects").header("Authorization", mina.bearer())).andReturn())
+                .path("data").path(0).path("id").asString();
+        givenTheyJoinTheTeam(mina, team, bob, "QUALITY_CHECKER");
+
+        whenISwitchTheBoard(bob, project).andExpect(status().isForbidden());
+        whenISwitchTheBoard(aoi, project).andExpect(status().isForbidden());
+        whenISwitchTheBoard(mina, UUID.randomUUID().toString()).andExpect(status().isNotFound());
+        whenISwitchTheBoard(mina, project).andExpect(status().isOk()).andExpect(jsonPath("$.data.boardEnabled").value(true));
     }
 
     @Test
@@ -328,6 +348,11 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
     private ResultActions whenIInvite(Session actor, String teamId, String username, String role) throws Exception {
         return mockMvc.perform(post("/api/v1/teams/" + teamId + "/invitations").header("Authorization", actor.bearer())
                 .contentType(MediaType.APPLICATION_JSON).content("{\"username\":\"" + username + "\",\"roles\":[\"" + role + "\"]}"));
+    }
+
+    private ResultActions whenISwitchTheBoard(Session actor, String projectId) throws Exception {
+        return mockMvc.perform(put("/api/v1/scanlation/projects/" + projectId + "/board").header("Authorization", actor.bearer())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"enabled\":true}"));
     }
 
     private String invitationId(ResultActions invited) throws Exception {

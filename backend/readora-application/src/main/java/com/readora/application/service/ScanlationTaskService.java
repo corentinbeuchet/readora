@@ -38,6 +38,7 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
         ScanlationProject project = requireProject(projectId);
 
         project.requireMember(requireTeam(project), userId);
+        project.requireBoard();
 
         WorkflowTask task = project.addChapterTask(chapterNumber, assetUrl, pageCount);
         projectRepository.save(project);

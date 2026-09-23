@@ -343,6 +343,26 @@ public class CommunityStepDefinitions {
                 account(creator)));
     }
 
+    @Then("the task board of {string} for {string} is off, and no raw chapter can be put on it")
+    public void theBoardIsOff(String teamName, String title) {
+        ScanlationProject board = projects.findById(boardOf(teamName, title)).orElseThrow();
+        assertThat(board.isBoardEnabled()).isFalse();
+        assertThatThrownBy(board::requireBoard)
+                .isInstanceOfSatisfying(DomainValidationException.class, e -> assertThat(e.code()).isEqualTo(ErrorCodes.BOARD_OFF));
+    }
+
+    @When("{string} turns on the task board of {string} for {string}")
+    public void turnsOnTheBoard(String leader, String teamName, String title) {
+        teamManagement.setBoard(account(leader), boardOf(teamName, title), true);
+    }
+
+    @Then("a raw chapter can be put on the task board of {string} for {string}")
+    public void aRawChapterCanBePutOnTheBoard(String teamName, String title) {
+        ScanlationProject board = projects.findById(boardOf(teamName, title)).orElseThrow();
+        board.requireBoard();
+        assertThat(board.isBoardEnabled()).isTrue();
+    }
+
     @Then("{string} works on {string}")
     public void worksOn(String teamName, String title) {
         assertThat(refusal).isNull();
@@ -360,6 +380,7 @@ public class CommunityStepDefinitions {
     @Given("on the board of {string} for {string}, chapter {int} waits for {string} and chapter {int} for {string}")
     public void chaptersWaitOnTheBoard(String teamName, String title, int first, String firstStage, int second, String secondStage) {
         ScanlationProject board = projects.findById(boardOf(teamName, title)).orElseThrow();
+        board.turnBoardOn();
         board.addChapterTask(ChapterNumber.of(String.valueOf(first))).advanceStage(WorkflowStage.valueOf(firstStage));
         board.addChapterTask(ChapterNumber.of(String.valueOf(second))).advanceStage(WorkflowStage.valueOf(secondStage));
         projects.save(board);

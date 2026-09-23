@@ -54,7 +54,7 @@
     "upload.publish.uploadingCover": "Envoi de la couverture…",
     "upload.publish.creatingSeries": "Création de la série dans le catalogue…",
     "upload.publish.publishingDirect": "Publication directe du chapitre dans le catalogue…",
-    "upload.publish.attachingRaw": "Ajout du paquet RAW à l'espace de scantrad…",
+    "upload.publish.attachingRaw": "Ajout du paquet RAW au tableau de tâches…",
     "upload.review.title": "4. Vérification et confirmation",
     "upload.review.intro": "Vérifiez les informations de la série et du chapitre avant de continuer.",
     "upload.review.seriesTitle": "Titre de la série :",

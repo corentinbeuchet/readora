@@ -231,8 +231,15 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
         assertThat(projects).isNotEmpty();
         String projectId = projects.get(0).getId().value().toString();
 
-        // 2. Upload chapter task into created project
+        // 2. A new series has no task board until the leader turns it on; then the chapter task goes on it
         var taskReq = new com.readora.web.dto.CreateTaskRequest(java.math.BigDecimal.valueOf(1), "scans/orv/c1.zip", 20);
+        mockMvc.perform(post("/api/v1/scanlation/projects/" + projectId + "/tasks")
+                        .header("Authorization", scanlator.bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(taskReq)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("BOARD_OFF"));
+        givenTheBoardIsOn(scanlator, projectId);
         mockMvc.perform(post("/api/v1/scanlation/projects/" + projectId + "/tasks")
                         .header("Authorization", scanlator.bearer())
                         .contentType(MediaType.APPLICATION_JSON)

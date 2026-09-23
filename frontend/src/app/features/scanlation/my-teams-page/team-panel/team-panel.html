@@ -11,29 +11,43 @@
     <p class="muted team-description">{{ description }}</p>
   }
 
-  <h3 i18n="@@scanlation.teams.boards">Task boards</h3>
+  <h3 i18n="@@scanlation.teams.boards">Series</h3>
   @if (team().boards.length === 0) {
     <p class="muted" i18n="@@scanlation.teams.boardsNone">No series yet. A leader adds the first one.</p>
   } @else {
     <ul class="board-list">
       @for (board of team().boards; track board.projectId) {
         <li class="board">
-          <a [routerLink]="['/scanlation', board.projectId]">{{ board.work.title }}</a>
-          @if (canPublish() || leads()) {
-            <div class="board-actions">
-              @if (canPublish()) {
-                <a class="btn btn-sm" routerLink="/upload" [queryParams]="{ workId: board.work.id, teamId: team().id }"
-                   i18n="@@scanlation.teams.publishChapter">Publish a chapter<span class="sr-only"> of {{ board.work.title }}</span></a>
-              }
-              @if (leads()) {
-                <a class="btn btn-sm" [routerLink]="['/scanlation/series', board.work.id]"
-                   i18n="@@scanlation.teams.editSeries">Edit series<span class="sr-only">: {{ board.work.title }}</span></a>
-              }
-            </div>
-          }
+          <a [routerLink]="['/works', board.work.id]">{{ board.work.title }}</a>
+          <div class="board-actions">
+            @if (board.boardEnabled) {
+              <a class="btn btn-sm" [routerLink]="['/scanlation', board.projectId]"
+                 i18n="@@scanlation.teams.openBoard">Task board<span class="sr-only"> of {{ board.work.title }}</span></a>
+            }
+            @if (leads()) {
+              <button type="button" class="btn btn-sm" [disabled]="switching.busyKey() === board.projectId" (click)="switchBoard(board.projectId, !board.boardEnabled)">
+                @if (board.boardEnabled) {
+                  <ng-container i18n="@@scanlation.teams.boardOff">Turn off the task board<span class="sr-only"> of {{ board.work.title }}</span></ng-container>
+                } @else {
+                  <ng-container i18n="@@scanlation.teams.boardOn">Use a task board<span class="sr-only"> for {{ board.work.title }}</span></ng-container>
+                }
+              </button>
+            }
+            @if (canPublish()) {
+              <a class="btn btn-sm" routerLink="/upload" [queryParams]="{ workId: board.work.id, teamId: team().id }"
+                 i18n="@@scanlation.teams.publishChapter">Publish a chapter<span class="sr-only"> of {{ board.work.title }}</span></a>
+            }
+            @if (leads()) {
+              <a class="btn btn-sm" [routerLink]="['/scanlation/series', board.work.id]"
+                 i18n="@@scanlation.teams.editSeries">Edit series<span class="sr-only">: {{ board.work.title }}</span></a>
+            }
+          </div>
         </li>
       }
     </ul>
+    @if (switching.error(); as message) {
+      <p class="form-error" role="alert">{{ message }}</p>
+    }
   }
 
   <app-team-roster [team]="team()" (left)="changed.emit()" />

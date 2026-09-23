@@ -20,8 +20,8 @@ import java.util.Set;
 /// series it works on. Every change to a team is made by a leader of that team (or an admin).
 public interface ManageTeamUseCase {
 
-    /// One of the team's task boards with the series it is for.
-    record Board(ProjectId projectId, Work work) {
+    /// One of the team's series with its task board (`boardEnabled`: the team uses the board for it).
+    record Board(ProjectId projectId, Work work, boolean boardEnabled) {
     }
 
     /// A team the caller belongs to, with its boards (series title order).
@@ -88,6 +88,12 @@ public interface ManageTeamUseCase {
     /// @throws com.readora.domain.common.DomainValidationException `SERIES_ALREADY_IN_TEAM` if the team already has it
     ScanlationProject addSeries(UserId actorId, TeamId teamId, WorkId workId);
 
+    /// Turns the task board of one of the team's series on or off; tasks already on it stay and can be finished.
+    ///
+    /// @throws com.readora.domain.common.AccessDeniedDomainException unless the actor leads the team (or is an admin)
+    /// @throws com.readora.domain.common.NotFoundException if there is no such board
+    ScanlationProject setBoard(UserId actorId, ProjectId projectId, boolean enabled);
+
     /// The teams the user is a member of, by name.
     List<MyTeam> myTeams(UserId userId);
 
@@ -95,7 +101,7 @@ public interface ManageTeamUseCase {
     record WaitingTask(ProjectId projectId, Work work, Team team, WorkflowTask task, boolean mine) {
     }
 
-    /// What waits for the user across their teams' task boards: the tasks they hold first, then the open ones in
-    /// stages their roles cover (a leader covers every stage), by series title and chapter number.
+    /// What waits for the user across their teams' task boards that are on: the tasks they hold first, then the open
+    /// ones in stages their roles cover (a leader covers every stage), by series title and chapter number.
     List<WaitingTask> waitingFor(UserId userId);
 }

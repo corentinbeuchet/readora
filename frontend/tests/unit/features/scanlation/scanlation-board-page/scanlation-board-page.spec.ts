@@ -19,6 +19,7 @@ const PROJECT: ScanlationProject = {
   workId: 'work-1',
   teamId: 'team-1',
   teamName: 'Shadow Scans',
+  boardEnabled: true,
   members: [{ userId: 'user-1', roles: ['CLEANER_REDRAWER', 'QUALITY_CHECKER'] }],
   tasks: [RAW_TASK, MY_TASK, QC_TASK]
 };
@@ -49,6 +50,13 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
     thenColumnHasTasks('RAW_UPLOADED', 1);
     thenColumnHasTasks('QC_REVIEW', 1);
     thenTheBoardHasTasks(3);
+  });
+
+  it('says when the team does not use a task board for this series', async () => {
+    await givenIAmSignedInWith(['LIBRARY_USE']);
+    await givenIOpenTheBoard({ ...PROJECT, boardEnabled: false });
+
+    thenICanSee('The team does not use a task board for this series');
   });
 
   it('says a missing project does not exist, with nothing to retry', async () => {

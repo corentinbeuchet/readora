@@ -9,6 +9,11 @@ import { ApiClient, parseEnvelope } from './api-client';
 export class ScanlationApi {
   private readonly api = inject(ApiClient);
 
+  /** Turns the task board of one of my team's series on or off (leaders). */
+  setBoard(projectId: string, enabled: boolean): Observable<ScanlationProject> {
+    return this.api.put<ScanlationProject>(`/scanlation/projects/${projectId}/board`, { enabled });
+  }
+
   createTask(projectId: string, request: CreateTaskRequest): Observable<WorkflowTask> {
     return this.api.post<WorkflowTask>(`/scanlation/projects/${projectId}/tasks`, request);
   }

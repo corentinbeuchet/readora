@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { FormField, form, required, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import { CatalogApi } from '@app/core/api/catalog-api';
+import { ScanlationApi } from '@app/core/api/scanlation-api';
 import { TeamsApi } from '@app/core/api/teams-api';
 import { WorkSummary } from '@app/core/models/catalog';
 import { MyTeam, SCANLATION_ROLE_LABELS, leadsTeam, publishesForTeam } from '@app/core/models/scanlation';
@@ -24,9 +25,10 @@ const SEARCH_RESULTS = 5;
 export class TeamPanel {
   private readonly teamsApi = inject(TeamsApi);
   private readonly catalogApi = inject(CatalogApi);
+  private readonly scanlationApi = inject(ScanlationApi);
 
   readonly team = input.required<MyTeam>();
-  /** The team gained a series, or I left it: the list should be loaded again. */
+  /** The team gained a series, a board was switched, or I left it: the list should be loaded again. */
   readonly changed = output();
 
   protected readonly leads = computed(() => leadsTeam(this.team()));
@@ -42,6 +44,7 @@ export class TeamPanel {
   /** `null` until a search ran. Series the team already has are left out. */
   protected readonly found = signal<WorkSummary[] | null>(null);
   protected readonly adding = asyncAction();
+  protected readonly switching = asyncAction();
 
   protected async search(event: Event): Promise<void> {
     event.preventDefault();
@@ -51,6 +54,14 @@ export class TeamPanel {
         this.found.set(works.filter((work) => !this.boardWorkIds().has(work.id)));
       });
     });
+  }
+
+  /** A leader turns the series' task board on or off; the list is loaded again to show it. */
+  protected async switchBoard(projectId: string, enabled: boolean): Promise<void> {
+    await this.switching.run(async () => {
+      await firstValueFrom(this.scanlationApi.setBoard(projectId, enabled));
+      this.changed.emit();
+    }, { key: projectId });
   }
 
   protected async addSeries(work: WorkSummary): Promise<void> {

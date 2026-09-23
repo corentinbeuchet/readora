@@ -14,6 +14,7 @@ import com.readora.domain.common.NotFoundException;
 import com.readora.domain.common.UserId;
 import com.readora.domain.identity.Permission;
 import com.readora.domain.identity.UserAccount;
+import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.ScanlationRole;
 import com.readora.domain.scanlation.TaskStatus;
@@ -172,6 +173,18 @@ public class TeamManagementService implements ManageTeamUseCase {
     }
 
     @Override
+    public ScanlationProject setBoard(UserId actorId, ProjectId projectId, boolean enabled) {
+        ScanlationProject project = projects.findById(projectId).orElseThrow(() -> new NotFoundException("Project", projectId));
+        requireLeaderOrAdmin(requireTeam(project.getTeamId()), actorId);
+        if (enabled) {
+            project.turnBoardOn();
+        } else {
+            project.turnBoardOff();
+        }
+        return projects.save(project);
+    }
+
+    @Override
     public List<MyTeam> myTeams(UserId userId) {
         List<Team> mine = teams.findByMember(userId).stream()
                 .sorted(Comparator.comparing(Team::getName, String.CASE_INSENSITIVE_ORDER))
@@ -182,7 +195,7 @@ public class TeamManagementService implements ManageTeamUseCase {
         Map<WorkId, Work> series = works.findAllById(workIds).stream().collect(Collectors.toMap(Work::getId, work -> work));
         return mine.stream()
                 .map(team -> new MyTeam(team, projectsByTeam.getOrDefault(team.getId(), List.of()).stream()
-                        .flatMap(project -> Optional.ofNullable(series.get(project.getWorkId())).map(work -> new Board(project.getId(), work)).stream())
+                        .flatMap(project -> Optional.ofNullable(series.get(project.getWorkId())).map(work -> new Board(project.getId(), work, project.isBoardEnabled())).stream())
                         .sorted(Comparator.comparing((Board board) -> board.work().getTitle(), String.CASE_INSENSITIVE_ORDER))
                         .toList()))
                 .toList();
@@ -197,6 +210,9 @@ public class TeamManagementService implements ManageTeamUseCase {
                 .collect(Collectors.toMap(Work::getId, work -> work));
         List<WaitingTask> waiting = new ArrayList<>();
         for (ScanlationProject board : boards) {
+            if (!board.isBoardEnabled()) {
+                continue;
+            }
             Team team = teamsById.get(board.getTeamId());
             Work work = series.get(board.getWorkId());
             if (team == null || work == null) {

@@ -5,6 +5,7 @@ import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
 import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.Team;
@@ -59,6 +60,7 @@ class ScanlationTaskServiceTest {
         WorkId workId = WorkId.generate();
         Team team = Team.create("Asura Scans", null, leaderId);
         ScanlationProject project = ScanlationProject.create("Asura Scans", workId, team.getId());
+        project.turnBoardOn();
         ProjectId projectId = project.getId();
 
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
@@ -173,7 +175,21 @@ class ScanlationTaskServiceTest {
     /// Mimics the JPA adapter: `save` returns a new instance rebuilt from state, without pending events.
     private static ScanlationProject rebuilt(ScanlationProject source) {
         return new ScanlationProject(source.getId(), source.getName(), source.getWorkId(), source.getTeamId(),
-                source.getTasks(), source.getCreatedAt(), source.getUpdatedAt());
+                source.getTasks(), source.isBoardEnabled(), source.getCreatedAt(), source.getUpdatedAt());
+    }
+
+    @Test
+    @DisplayName("A raw chapter cannot go on a board the team has not turned on, and nothing is saved")
+    void uploadOnABoardThatIsOffIsRefused() {
+        UserId leaderId = UserId.of("leader-1");
+        Team team = Team.create("Asura Scans", null, leaderId);
+        ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), team.getId());
+        when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
+
+        assertThatThrownBy(() -> taskService.uploadChapterTask(project.getId(), ChapterNumber.of("1"), "scans/1/raw.zip", 20, leaderId))
+                .isInstanceOfSatisfying(DomainValidationException.class, e -> assertThat(e.code()).isEqualTo(ErrorCodes.BOARD_OFF));
+        verify(projectRepository, never()).save(any());
     }
 
     @Test
@@ -182,6 +198,7 @@ class ScanlationTaskServiceTest {
         UserId leaderId = UserId.of("leader-1");
         Team team = Team.create("Asura Scans", null, leaderId);
         ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), team.getId());
+        project.turnBoardOn();
         project.addChapterTask(ChapterNumber.of("1"));
         ProjectId projectId = project.getId();
 

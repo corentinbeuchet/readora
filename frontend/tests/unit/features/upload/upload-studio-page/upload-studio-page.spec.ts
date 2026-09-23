@@ -50,6 +50,7 @@ const MY_TEAM: MyTeam = { id: 'team-1', name: 'My Team', description: null, myRo
 interface Board {
   id: string;
   teamId: string;
+  boardEnabled: boolean;
 }
 
 describe('UploadStudioPage', () => {
@@ -63,6 +64,7 @@ describe('UploadStudioPage', () => {
   let chapterRequest: TestRequest;
   let taskRequest: TestRequest;
   let pageUploads: TestRequest[];
+  let boardRequest: TestRequest;
   /** My teams were loaded (once per test): by `givenILeadMyTeam` or by a block's own "given". */
   let myTeamsLoaded: boolean;
 
@@ -258,7 +260,7 @@ describe('UploadStudioPage', () => {
 
       await whenIPublishTheChapter();
       await whenEveryPageUploads();
-      await whenTheChapterIsPublished({ ...CHAPTER, id: 'chap-5', workId: 'work-77' }, [{ id: 'proj-shadow', teamId: 'team-shadow' }, { id: 'proj-moon', teamId: 'team-moon' }]);
+      await whenTheChapterIsPublished({ ...CHAPTER, id: 'chap-5', workId: 'work-77' }, [{ id: 'proj-shadow', teamId: 'team-shadow', boardEnabled: true }, { id: 'proj-moon', teamId: 'team-moon', boardEnabled: true }]);
 
       thenThePublishedChapterIncludes({ teamId: 'team-moon', chapterNumber: '5' });
       thenTheStepIs('Chapter published');
@@ -296,7 +298,7 @@ describe('UploadStudioPage', () => {
     });
 
     it('a team already on the series publishes into it without being added again', async () => {
-      await givenIOpenTheStudioWithoutASeries({ myTeams: [{ ...MOON_SCANS, boards: [{ projectId: 'proj-moon', work: SOLO_LEVELING }] }] });
+      await givenIOpenTheStudioWithoutASeries({ myTeams: [{ ...MOON_SCANS, boards: [{ projectId: 'proj-moon', work: SOLO_LEVELING, boardEnabled: true }] }] });
       await whenISearchTheCatalogFor('solo', [SOLO_LEVELING]);
 
       await whenIChoose('Publish for Moon Scans');
@@ -350,7 +352,7 @@ describe('UploadStudioPage', () => {
       thenTheSeriesWasCreatedForTheTeam('team-moon');
 
       await whenEveryPageUploads();
-      await whenTheChapterIsPublished(CHAPTER, [{ id: 'proj-moon', teamId: 'team-moon' }]);
+      await whenTheChapterIsPublished(CHAPTER, [{ id: 'proj-moon', teamId: 'team-moon', boardEnabled: true }]);
 
       thenThePublishedChapterIncludes({ teamId: 'team-moon' });
     });
@@ -581,6 +583,34 @@ describe('UploadStudioPage', () => {
       thenTheAlertSays('Access denied');
     });
 
+    it("a series whose task board is off gets it turned on before the chapter goes on it", async () => {
+      await givenIAmOnTheReview({ series: { title: 'Blue Lock' }, chapter: { number: '3' }, pages: ['p1.png', 'p2.png'], mode: 'SCANLATION' });
+
+      await whenIPublish();
+      await whenTheSeriesIsCreated(WORK);
+      await whenEveryPageUploads();
+      await whenTheSeriesHasProjects([{ id: 'proj-1', teamId: 'team-1', boardEnabled: false }]);
+      await whenTheBoardIsTurnedOn('proj-1');
+      await whenTheTaskIsCreated();
+
+      thenTheBoardWasTurnedOn();
+      thenTheTaskWasCreatedWith({ chapterNumber: 3, assetUrl: 'https://cdn/k0', pageCount: 2 });
+      thenTheStepIs(SUCCESS);
+    });
+
+    it('a member who may not turn the task board on is told so, and nothing goes on the board', async () => {
+      await givenIAmOnTheReview({ series: { title: 'Blue Lock' }, chapter: { number: '3' }, pages: ['p1.png', 'p2.png'], mode: 'SCANLATION' });
+
+      await whenIPublish();
+      await whenTheSeriesIsCreated(WORK);
+      await whenEveryPageUploads();
+      await whenTheSeriesHasProjects([{ id: 'proj-1', teamId: 'team-1', boardEnabled: false }]);
+      await whenTurningTheBoardOnIsRefused('proj-1', 'Only a leader of My Team can do this');
+
+      thenTheStepIs('4. Review & Confirmation');
+      thenTheAlertSays("You don't have permission to do this.");
+    });
+
     it('explains when the series has no project, then creates the task on retry', async () => {
       await givenIAmOnTheReview({ series: { title: 'Blue Lock' }, chapter: { number: '3' }, pages: ['p1.png', 'p2.png'], mode: 'SCANLATION' });
 
@@ -592,7 +622,7 @@ describe('UploadStudioPage', () => {
       thenTheAlertSays('Your team does not work on this series yet');
 
       await whenIPublish();
-      await whenTheSeriesHasProjects([{ id: 'proj-1', teamId: 'team-1' }]);
+      await whenTheSeriesHasProjects([{ id: 'proj-1', teamId: 'team-1', boardEnabled: true }]);
       await whenTheTaskIsCreated();
 
       thenTheTaskWasCreatedWith({ chapterNumber: 3, assetUrl: 'https://cdn/k0', pageCount: 2 });
@@ -837,7 +867,7 @@ describe('UploadStudioPage', () => {
   }
 
   /** The publishing team's board is looked up first: the chapter is published for that team. */
-  async function whenTheChapterIsPublished(chapter: typeof CHAPTER, boards: Board[] = [{ id: 'proj-1', teamId: 'team-1' }]): Promise<void> {
+  async function whenTheChapterIsPublished(chapter: typeof CHAPTER, boards: Board[] = [{ id: 'proj-1', teamId: 'team-1', boardEnabled: true }]): Promise<void> {
     await whenTheSeriesHasProjects(boards);
     chapterRequest = http.expectOne(`${API}/works/${workId}/chapters/direct`);
     chapterRequest.flush(ok(chapter));
@@ -852,6 +882,22 @@ describe('UploadStudioPage', () => {
   async function whenTheSeriesHasProjects(projects: Board[]): Promise<void> {
     http.expectOne(`${API}/works/${workId}/projects`).flush(ok(projects));
     await settleStudio();
+  }
+
+  async function whenTheBoardIsTurnedOn(projectId: string): Promise<void> {
+    boardRequest = http.expectOne(`${API}/scanlation/projects/${projectId}/board`);
+    boardRequest.flush(ok({ id: projectId, name: 'Board', workId, teamId: 'team-1', teamName: 'My Team', boardEnabled: true, members: [], tasks: [] }));
+    await settleStudio();
+  }
+
+  async function whenTurningTheBoardOnIsRefused(projectId: string, error: string): Promise<void> {
+    http.expectOne(`${API}/scanlation/projects/${projectId}/board`).flush(fail(error, 'FORBIDDEN'), { status: 403, statusText: 'Forbidden' });
+    await settleStudio();
+  }
+
+  function thenTheBoardWasTurnedOn(): void {
+    expect(boardRequest.request.method).toBe('PUT');
+    expect(boardRequest.request.body).toEqual({ enabled: true });
   }
 
   async function whenTheTaskIsCreated(): Promise<void> {

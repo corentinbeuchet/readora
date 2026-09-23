@@ -57,7 +57,7 @@
     "upload.publish.uploadingCover": "Uploading cover image…",
     "upload.publish.creatingSeries": "Creating series in catalog…",
     "upload.publish.publishingDirect": "Publishing chapter directly to catalog…",
-    "upload.publish.attachingRaw": "Attaching RAW package to scanlation workspace…",
+    "upload.publish.attachingRaw": "Attaching RAW package to the task board…",
     "upload.review.title": "4. Review & Confirmation",
     "upload.review.intro": "Please double check your series metadata and chapter details before proceeding.",
     "upload.review.seriesTitle": "Series Title:",

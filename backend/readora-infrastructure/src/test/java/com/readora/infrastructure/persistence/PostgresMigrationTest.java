@@ -232,6 +232,20 @@ class PostgresMigrationTest {
         assertThat(pageReports.findOpenByTeamAndWork(pgTeam.getId(), work.getId())).isEmpty();
     }
 
+    @Test
+    @DisplayName("A new series starts without a task board on PostgreSQL, and the switch is saved")
+    void boardSwitchRunsOnPostgres() {
+        Work work = workRepository.save(Work.create("PG Board", "", WorkType.MANGA, "c.png", Set.of("Action")));
+        Team team = teamRepository.save(Team.create("PG Board Team " + java.util.UUID.randomUUID(), null, UserId.of("pg-leader")));
+        ScanlationProject project = projectRepository.save(ScanlationProject.create("PG Board", work.getId(), team.getId()));
+        assertThat(projectRepository.findById(project.getId()).orElseThrow().isBoardEnabled()).isFalse();
+
+        project.turnBoardOn();
+        projectRepository.save(project);
+
+        assertThat(projectRepository.findById(project.getId()).orElseThrow().isBoardEnabled()).isTrue();
+    }
+
     @Autowired
     private TeamInvitationRepositoryAdapter invitations;
 

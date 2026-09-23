@@ -47,6 +47,8 @@
   `TeamManagementService.requireLeaderOrAdmin`). Several teams may have a project on the same work.
   A reader joins a team only by accepting a leader's `TeamInvitation` (nobody lands in a team without agreeing);
   `PUT /teams/{id}/members/{username}` changes the roles of an existing member (`NOT_ON_TEAM` otherwise).
+  The task board of a team's series is optional (`ScanlationProject.boardEnabled`): off for a series added from now
+  on, switched by a leader; a new task needs it on (`BOARD_OFF`), tasks already on it can still be finished.
   A chapter belongs to a team (`Chapter.teamId`, never null): whoever publishes names the team in the request, and
   the service checks both that the actor may publish for that team and that the team works on the series
   (`TEAM_NOT_ON_SERIES`). A payload that shows a chapter carries its `TeamCredit` (id + name).

@@ -64,6 +64,7 @@ public class ScanlationProjectRepositoryAdapter implements ScanlationProjectRepo
             OptimisticLocking.verify(project, existing.getVersion(), "ScanlationProject");
             existing.setName(project.getName());
             existing.setWorkId(project.getWorkId().value());
+            existing.setBoardEnabled(project.isBoardEnabled());
             existing.setUpdatedAt(project.getUpdatedAt());
 
             // Update tasks in place
@@ -132,6 +133,7 @@ public class ScanlationProjectRepositoryAdapter implements ScanlationProjectRepo
                 WorkId.of(entity.getWorkId()),
                 TeamId.of(entity.getTeamId()),
                 tasks,
+                entity.isBoardEnabled(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );
@@ -143,6 +145,7 @@ public class ScanlationProjectRepositoryAdapter implements ScanlationProjectRepo
                 project.getName(),
                 project.getWorkId().value(),
                 project.getTeamId().value(),
+                project.isBoardEnabled(),
                 project.getCreatedAt(),
                 project.getUpdatedAt()
         );

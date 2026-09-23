@@ -15,6 +15,7 @@ public record ScanlationProjectDto(
         UUID workId,
         UUID teamId,
         String teamName,
+        boolean boardEnabled,
         List<TeamMemberDto> members,
         List<WorkflowTaskDto> tasks,
         Instant createdAt,
@@ -37,6 +38,7 @@ public record ScanlationProjectDto(
                 project.getWorkId().value(),
                 board.team().getId().value(),
                 board.team().getName(),
+                project.isBoardEnabled(),
                 board.team().getMembers().stream()
                         .sorted(Comparator.comparing(m -> m.userId().value()))
                         .map(TeamMemberDto::fromDomain)

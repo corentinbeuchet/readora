@@ -62,7 +62,7 @@ public class ScanlationWorkflowStepDefinitions {
                 projectStore.put(project.getId(), project);
                 // Like the JPA adapter: the returned object is rebuilt from state and carries no pending events.
                 return new ScanlationProject(project.getId(), project.getName(), project.getWorkId(), project.getTeamId(),
-                        project.getTasks(), project.getCreatedAt(), project.getUpdatedAt());
+                        project.getTasks(), project.isBoardEnabled(), project.getCreatedAt(), project.getUpdatedAt());
             }
         };
 
