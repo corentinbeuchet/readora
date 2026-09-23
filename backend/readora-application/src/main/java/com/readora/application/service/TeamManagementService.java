@@ -1,7 +1,9 @@
 package com.readora.application.service;
 
 import com.readora.application.port.in.ManageTeamUseCase;
+import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
+import com.readora.application.port.out.TeamInvitationRepositoryPort;
 import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
@@ -16,6 +18,8 @@ import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.ScanlationRole;
 import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamId;
+import com.readora.domain.scanlation.TeamInvitation;
+import com.readora.domain.scanlation.TeamInvitationId;
 import com.readora.domain.scanlation.TeamMember;
 import com.readora.domain.work.Work;
 import com.readora.domain.work.WorkId;
@@ -23,6 +27,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.time.Clock;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -36,14 +41,19 @@ public class TeamManagementService implements ManageTeamUseCase {
     private final ScanlationProjectRepositoryPort projects;
     private final WorkRepositoryPort works;
     private final UserAccountRepositoryPort users;
+    private final TeamInvitationRepositoryPort invitations;
+    private final EventPublisherPort eventPublisher;
     private final Clock clock;
 
     public TeamManagementService(TeamRepositoryPort teams, ScanlationProjectRepositoryPort projects, WorkRepositoryPort works,
-                                 UserAccountRepositoryPort users, Clock clock) {
+                                 UserAccountRepositoryPort users, TeamInvitationRepositoryPort invitations,
+                                 EventPublisherPort eventPublisher, Clock clock) {
         this.teams = Objects.requireNonNull(teams, "TeamRepositoryPort cannot be null");
         this.projects = Objects.requireNonNull(projects, "ScanlationProjectRepositoryPort cannot be null");
         this.works = Objects.requireNonNull(works, "WorkRepositoryPort cannot be null");
         this.users = Objects.requireNonNull(users, "UserAccountRepositoryPort cannot be null");
+        this.invitations = Objects.requireNonNull(invitations, "TeamInvitationRepositoryPort cannot be null");
+        this.eventPublisher = Objects.requireNonNull(eventPublisher, "EventPublisherPort cannot be null");
         this.clock = Objects.requireNonNull(clock, "Clock cannot be null");
     }
 
@@ -61,9 +71,78 @@ public class TeamManagementService implements ManageTeamUseCase {
         Team team = requireTeam(teamId);
         requireLeaderOrAdmin(team, actorId);
         UserAccount member = requireUser(username);
-        team.addMember(new TeamMember(member.getId(), roles,
-                team.findMember(member.getId()).map(TeamMember::joinedAt).orElseGet(clock::instant)));
+        TeamMember current = team.findMember(member.getId()).orElseThrow(() ->
+                DomainValidationException.withCode(ErrorCodes.NOT_ON_TEAM, username + " is not on " + team.getName() + ": invite them first"));
+        team.addMember(new TeamMember(member.getId(), roles, current.joinedAt()));
         return teams.save(team);
+    }
+
+    @Override
+    public InvitationView invite(UserId actorId, TeamId teamId, String username, Set<ScanlationRole> roles) {
+        Team team = requireTeam(teamId);
+        requireLeaderOrAdmin(team, actorId);
+        UserAccount invitee = requireUser(username);
+        if (invitations.findPending(teamId, invitee.getId()).isPresent()) {
+            throw DomainValidationException.withCode(ErrorCodes.INVITATION_PENDING, username + " already has an invitation to " + team.getName());
+        }
+        TeamInvitation invitation = TeamInvitation.create(team, invitee.getId(), roles, actorId, clock.instant());
+        TeamInvitation saved = invitations.save(invitation);
+        invitation.pollDomainEvents().forEach(eventPublisher::publish);
+        return view(saved, team, new HashMap<>());
+    }
+
+    @Override
+    public List<InvitationView> pendingInvitations(UserId actorId, TeamId teamId) {
+        Team team = requireTeam(teamId);
+        requireLeaderOrAdmin(team, actorId);
+        Map<UserId, String> names = new HashMap<>();
+        return invitations.findPendingByTeam(teamId).stream().map(invitation -> view(invitation, team, names)).toList();
+    }
+
+    @Override
+    public void cancelInvitation(UserId actorId, TeamInvitationId invitationId) {
+        TeamInvitation invitation = requireInvitation(invitationId);
+        requireLeaderOrAdmin(requireTeam(invitation.getTeamId()), actorId);
+        invitation.cancel(clock.instant());
+        invitations.save(invitation);
+    }
+
+    @Override
+    public List<InvitationView> myInvitations(UserId userId) {
+        Map<UserId, String> names = new HashMap<>();
+        return invitations.findPendingByInvitee(userId).stream()
+                .flatMap(invitation -> teams.findById(invitation.getTeamId()).map(team -> view(invitation, team, names)).stream())
+                .toList();
+    }
+
+    @Override
+    public Team acceptInvitation(UserId userId, TeamInvitationId invitationId) {
+        TeamInvitation invitation = requireInvitation(invitationId);
+        Team team = requireTeam(invitation.getTeamId());
+        invitation.accept(team, userId, clock.instant());
+        Team saved = teams.save(team);
+        invitations.save(invitation);
+        return saved;
+    }
+
+    @Override
+    public void declineInvitation(UserId userId, TeamInvitationId invitationId) {
+        TeamInvitation invitation = requireInvitation(invitationId);
+        invitation.decline(userId, clock.instant());
+        invitations.save(invitation);
+    }
+
+    private InvitationView view(TeamInvitation invitation, Team team, Map<UserId, String> names) {
+        return new InvitationView(invitation, team.getName(), usernameOf(invitation.getInviteeId(), names),
+                usernameOf(invitation.getInvitedBy(), names));
+    }
+
+    private String usernameOf(UserId userId, Map<UserId, String> names) {
+        return names.computeIfAbsent(userId, id -> users.findById(id).map(UserAccount::getUsername).orElse(id.value()));
+    }
+
+    private TeamInvitation requireInvitation(TeamInvitationId invitationId) {
+        return invitations.findById(invitationId).orElseThrow(() -> new NotFoundException("Invitation", invitationId));
     }
 
     @Override

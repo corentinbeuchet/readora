@@ -134,7 +134,11 @@ describe('EditSeriesPage (US-04)', () => {
     const opening = harness.navigateByUrl('/scanlation');
     await settle(harness);
     http.expectOne(`${API}/teams/mine`).flush(ok([team]));
+    http.expectOne(`${API}/invitations/mine`).flush(ok([]));
     await opening;
+    await settle(harness);
+    // The leader's panel lists the team's invitations waiting for an answer (none here).
+    http.match((request) => request.url.endsWith('/invitations')).forEach((request) => request.flush(ok([])));
     await settle(harness);
   }
 

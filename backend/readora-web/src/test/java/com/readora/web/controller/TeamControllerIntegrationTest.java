@@ -98,13 +98,17 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
         Session aoi = register();
         String team = givenATeamLedBy(mina);
 
-        whenISetTheMember(mina, team, bob.username(), "TRANSLATOR")
-                .andExpect(status().isOk());
+        givenTheyJoinTheTeam(mina, team, bob, "TRANSLATOR");
         mockMvc.perform(get("/api/v1/teams/" + team)).andExpect(jsonPath("$.data.members.length()").value(2));
-        whenISetTheMember(bob, team, aoi.username(), "PROOFREADER")
+        whenIInvite(bob, team, aoi.username(), "PROOFREADER")
                 .andExpect(status().isForbidden());
-        whenISetTheMember(mina, team, "nobody-" + UUID.randomUUID(), "PROOFREADER")
+        whenIInvite(mina, team, "nobody-" + UUID.randomUUID(), "PROOFREADER")
                 .andExpect(status().isNotFound());
+        whenISetTheMember(mina, team, aoi.username(), "PROOFREADER")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("NOT_ON_TEAM"));
+        whenISetTheMember(mina, team, bob.username(), "PROOFREADER")
+                .andExpect(status().isOk());
         mockMvc.perform(put("/api/v1/teams/" + team + "/members/" + bob.username()).header("Authorization", mina.bearer())
                         .contentType(MediaType.APPLICATION_JSON).content("{\"roles\":[]}"))
                 .andExpect(status().isBadRequest());
@@ -120,10 +124,53 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
         mockMvc.perform(delete("/api/v1/teams/" + team + "/members/" + bob.username()).header("Authorization", bob.bearer()))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/api/v1/teams/" + team)).andExpect(jsonPath("$.data.members.length()").value(1));
+    }
 
-        whenISetTheMember(mina, team, aoi.username(), "PROOFREADER").andExpect(status().isOk());
-        mockMvc.perform(delete("/api/v1/teams/" + team + "/members/" + aoi.username()).header("Authorization", aoi.bearer()))
-                .andExpect(status().isOk());
+    @Test
+    @DisplayName("An invitation waits for the reader's answer: only they accept or decline it, the leader may cancel it")
+    void invitationFlow() throws Exception {
+        Session mina = register();
+        Session bob = register();
+        Session aoi = register();
+        String team = givenATeamLedBy(mina);
+
+        String invitation = invitationId(whenIInvite(mina, team, bob.username(), "TRANSLATOR")
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.invitee").value(bob.username()))
+                .andExpect(jsonPath("$.data.status").value("PENDING")));
+        whenIInvite(mina, team, bob.username(), "PROOFREADER")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVITATION_PENDING"));
+        mockMvc.perform(get("/api/v1/teams/" + team + "/invitations").header("Authorization", mina.bearer()))
+                .andExpect(jsonPath("$.data.length()").value(1));
+        mockMvc.perform(get("/api/v1/teams/" + team + "/invitations").header("Authorization", bob.bearer()))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/invitations/mine").header("Authorization", bob.bearer()))
+                .andExpect(jsonPath("$.data[0].id").value(invitation))
+                .andExpect(jsonPath("$.data[0].teamName").isString())
+                .andExpect(jsonPath("$.data[0].invitedBy").value(mina.username()));
+        mockMvc.perform(get("/api/v1/notifications").header("Authorization", bob.bearer()))
+                .andExpect(jsonPath("$.data[0].type").value("TEAM_INVITATION"));
+
+        mockMvc.perform(post("/api/v1/invitations/" + invitation + "/accept").header("Authorization", aoi.bearer()))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/v1/invitations/" + invitation + "/accept").header("Authorization", bob.bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.myRoles[0]").value("TRANSLATOR"));
+        mockMvc.perform(post("/api/v1/invitations/" + invitation + "/decline").header("Authorization", bob.bearer()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("ALREADY_HANDLED"));
+        whenIInvite(mina, team, bob.username(), "PROOFREADER")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("ALREADY_ON_TEAM"));
+
+        String toAoi = invitationId(whenIInvite(mina, team, aoi.username(), "PROOFREADER").andExpect(status().isCreated()));
+        mockMvc.perform(delete("/api/v1/teams/" + team + "/invitations/" + toAoi).header("Authorization", bob.bearer()))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(delete("/api/v1/teams/" + team + "/invitations/" + toAoi).header("Authorization", mina.bearer()))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(get("/api/v1/invitations/mine").header("Authorization", aoi.bearer()))
+                .andExpect(jsonPath("$.data.length()").value(0));
     }
 
     @Test
@@ -224,6 +271,15 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
     private ResultActions whenIAddTheSeries(Session actor, String teamId, String workId) throws Exception {
         return mockMvc.perform(post("/api/v1/teams/" + teamId + "/series").header("Authorization", actor.bearer())
                 .contentType(MediaType.APPLICATION_JSON).content("{\"workId\":\"" + workId + "\"}"));
+    }
+
+    private ResultActions whenIInvite(Session actor, String teamId, String username, String role) throws Exception {
+        return mockMvc.perform(post("/api/v1/teams/" + teamId + "/invitations").header("Authorization", actor.bearer())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"username\":\"" + username + "\",\"roles\":[\"" + role + "\"]}"));
+    }
+
+    private String invitationId(ResultActions invited) throws Exception {
+        return json(invited.andReturn()).path("data").path("id").asString();
     }
 
     private ResultActions whenISetTheMember(Session actor, String teamId, String username, String role) throws Exception {

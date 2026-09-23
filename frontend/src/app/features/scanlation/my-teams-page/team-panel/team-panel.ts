@@ -5,17 +5,18 @@ import { firstValueFrom } from 'rxjs';
 import { CatalogApi } from '@app/core/api/catalog-api';
 import { TeamsApi } from '@app/core/api/teams-api';
 import { WorkSummary } from '@app/core/models/catalog';
-import { MyTeam, SCANLATION_ROLES, SCANLATION_ROLE_LABELS, ScanlationRole, leadsTeam, publishesForTeam } from '@app/core/models/scanlation';
+import { MyTeam, SCANLATION_ROLES, SCANLATION_ROLE_LABELS, ScanlationRole, TeamInvitation, leadsTeam, publishesForTeam } from '@app/core/models/scanlation';
 import { asyncAction } from '@app/core/utils/async-action';
 import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
 import { FieldErrors } from '@app/shared/forms/field-errors';
+import { LoadError } from '@app/shared/ui/load-error';
 
 const SEARCH_RESULTS = 5;
 
-/** One of my teams: its task boards, and for its leaders the tools to add a series or a member. */
+/** One of my teams: its task boards, and for its leaders the tools to add a series or invite a member. */
 @Component({
   selector: 'app-team-panel',
-  imports: [RouterLink, FormField, FieldErrors, AriaInvalidDirective],
+  imports: [RouterLink, FormField, FieldErrors, AriaInvalidDirective, LoadError],
   templateUrl: './team-panel.html',
   styleUrl: './team-panel.scss'
 })
@@ -42,8 +43,14 @@ export class TeamPanel {
   protected readonly found = signal<WorkSummary[] | null>(null);
   protected readonly adding = asyncAction();
 
+  protected readonly roleLabels = SCANLATION_ROLE_LABELS;
+  private readonly teamId = computed(() => this.team().id);
+  /** Invitations waiting for an answer: only leaders see (and load) them. */
+  protected readonly invitations = this.teamsApi.invitationsResource(this.teamId, this.leads);
+  protected readonly cancelling = asyncAction();
+
   protected readonly memberSaving = asyncAction();
-  protected readonly memberAdded = signal<string | null>(null);
+  protected readonly memberInvited = signal<string | null>(null);
   protected readonly memberModel = signal<{ username: string; role: ScanlationRole }>({ username: '', role: 'TRANSLATOR' });
   protected readonly memberForm = form(this.memberModel, (path) => {
     required(path.username, { message: $localize`:@@scanlation.teams.member.usernameRequired:Type their username` });
@@ -67,18 +74,26 @@ export class TeamPanel {
     }, { key: work.id });
   }
 
-  protected async addMember(event: Event): Promise<void> {
+  /** Sends the invitation; the reader joins once they accept it. */
+  protected async inviteMember(event: Event): Promise<void> {
     event.preventDefault();
-    this.memberAdded.set(null);
+    this.memberInvited.set(null);
     await submit(this.memberForm, async (f) => {
       const { username, role } = f().value();
       await this.memberSaving.run(async () => {
-        await firstValueFrom(this.teamsApi.setMember(this.team().id, username.trim(), [role]));
-        this.memberAdded.set(username.trim());
+        const invitation = await firstValueFrom(this.teamsApi.invite(this.team().id, username.trim(), [role]));
+        this.invitations.update((pending) => [...pending, invitation]);
+        this.memberInvited.set(invitation.invitee);
         this.memberModel.set({ username: '', role });
         f().reset();
-        this.changed.emit();
       });
     });
+  }
+
+  protected async cancelInvitation(invitation: TeamInvitation): Promise<void> {
+    await this.cancelling.run(async () => {
+      await firstValueFrom(this.teamsApi.cancelInvitation(this.team().id, invitation.id));
+      this.invitations.update((pending) => pending.filter((i) => i.id !== invitation.id));
+    }, { key: invitation.id });
   }
 }

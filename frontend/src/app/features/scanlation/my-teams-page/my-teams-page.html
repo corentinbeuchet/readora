@@ -1,6 +1,37 @@
 <section class="page">
   <h1 i18n="@@scanlation.teams.heading">My teams</h1>
 
+  @if (invitations.status() === 'loading') {
+    <p class="muted" role="status" i18n="@@scanlation.invitations.loading">Loading your invitations…</p>
+  } @else if (invitations.error()) {
+    <app-load-error (retry)="invitations.reload()" i18n="@@scanlation.invitations.loadError">Could not load your invitations.</app-load-error>
+  } @else if (invitations.value().length > 0) {
+    <section class="invitations" aria-labelledby="invitations-heading">
+      <h2 id="invitations-heading" i18n="@@scanlation.invitations.heading">Invitations</h2>
+      <ul class="invitation-list">
+        @for (invitation of invitations.value(); track invitation.id) {
+          <li class="card invitation">
+            <p i18n="@@scanlation.invitations.from">{{ invitation.invitedBy }} invited you to join <strong>{{ invitation.teamName }}</strong></p>
+            <p class="role-list">
+              @for (role of invitation.roles; track role) {
+                <span class="badge">{{ roleLabels[role] }}</span>
+              }
+            </p>
+            <div class="invitation-actions">
+              <button type="button" class="btn btn-primary" [disabled]="answering.busyKey() === invitation.id" (click)="accept(invitation)"
+                      i18n="@@scanlation.invitations.accept">Join<span class="sr-only"> {{ invitation.teamName }}</span></button>
+              <button type="button" class="btn" [disabled]="answering.busyKey() === invitation.id" (click)="decline(invitation)"
+                      i18n="@@scanlation.invitations.decline">Decline<span class="sr-only"> the invitation of {{ invitation.teamName }}</span></button>
+            </div>
+          </li>
+        }
+      </ul>
+      @if (answering.error(); as message) {
+        <p class="form-error" role="alert">{{ message }}</p>
+      }
+    </section>
+  }
+
   @if (teams.status() === 'loading') {
     <p class="muted" role="status" i18n="@@scanlation.teams.loading">Loading your teams…</p>
   } @else if (teams.error()) {
@@ -9,7 +40,7 @@
     </app-load-error>
   } @else if (teams.value().length === 0) {
     <app-empty-state>
-      <ng-container i18n="@@scanlation.teams.empty">You are not on a team yet. Create one below, or ask a team leader to add you.</ng-container>
+      <ng-container i18n="@@scanlation.teams.empty">You are not on a team yet. Create one below, or ask a team leader to invite you.</ng-container>
     </app-empty-state>
   } @else {
     <ul class="team-list">

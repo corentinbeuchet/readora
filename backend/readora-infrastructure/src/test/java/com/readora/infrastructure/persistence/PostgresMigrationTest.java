@@ -2,29 +2,33 @@ package com.readora.infrastructure.persistence;
 
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.UserId;
-import com.readora.domain.scanlation.ScanlationProject;
-import com.readora.domain.scanlation.Team;
-import com.readora.domain.scanlation.TeamId;
-import com.readora.domain.work.*;
 import com.readora.domain.library.ChapterRead;
+import com.readora.domain.library.LibraryEntry;
 import com.readora.domain.rating.Review;
 import com.readora.domain.rating.WorkRating;
 import com.readora.domain.report.PageReport;
 import com.readora.domain.report.PageReportReason;
-import com.readora.domain.library.LibraryEntry;
+import com.readora.domain.scanlation.InvitationStatus;
+import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.ScanlationRole;
+import com.readora.domain.scanlation.Team;
+import com.readora.domain.scanlation.TeamId;
+import com.readora.domain.scanlation.TeamInvitation;
 import com.readora.domain.social.ReadingStatus;
+import com.readora.domain.work.*;
 import com.readora.infrastructure.persistence.adapter.ChapterReadRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.ChapterRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.CommentReportRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.CommentRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.CommunityQueryAdapter;
 import com.readora.infrastructure.persistence.adapter.DiscoveryQueryAdapter;
-import com.readora.infrastructure.persistence.adapter.ChapterRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.LibraryRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.NotificationRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.PageReportRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.RatingRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.ReadingListRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.ScanlationProjectRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.TeamInvitationRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.TeamRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.WorkRepositoryAdapter;
 import org.junit.jupiter.api.DisplayName;
@@ -221,6 +225,29 @@ class PostgresMigrationTest {
         report.resolve(UserId.of("pg-leader"), java.time.Instant.now());
         pageReports.save(report);
         assertThat(pageReports.findOpenByTeamAndWork(pgTeam.getId(), work.getId())).isEmpty();
+    }
+
+    @Autowired
+    private TeamInvitationRepositoryAdapter invitations;
+
+    @Test
+    @DisplayName("Team invitations round-trip on PostgreSQL: roles, pending queries and optimistic locking on answer")
+    void teamInvitationsRunOnPostgres() {
+        Team team = teamRepository.save(Team.create("PG Invites " + java.util.UUID.randomUUID(), null, UserId.of("pg-leader")));
+        TeamInvitation invitation = invitations.save(TeamInvitation.create(team, UserId.of("pg-invitee"),
+                Set.of(ScanlationRole.TRANSLATOR, ScanlationRole.PROOFREADER), UserId.of("pg-leader"), java.time.Instant.now()));
+
+        assertThat(invitations.findById(invitation.getId())).hasValueSatisfying(found ->
+                assertThat(found.getRoles()).containsExactlyInAnyOrder(ScanlationRole.TRANSLATOR, ScanlationRole.PROOFREADER));
+        assertThat(invitations.findPendingByTeam(team.getId())).hasSize(1);
+        assertThat(invitations.findPendingByInvitee(UserId.of("pg-invitee"))).hasSize(1);
+        assertThat(invitations.findPending(team.getId(), UserId.of("pg-invitee"))).isPresent();
+
+        invitation.decline(UserId.of("pg-invitee"), java.time.Instant.now());
+        invitations.save(invitation);
+        assertThat(invitations.findPendingByInvitee(UserId.of("pg-invitee"))).isEmpty();
+        assertThat(invitations.findById(invitation.getId())).hasValueSatisfying(found ->
+                assertThat(found.getStatus()).isEqualTo(InvitationStatus.DECLINED));
     }
 
     @Autowired

@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormField, form, maxLength, required, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import { TeamsApi } from '@app/core/api/teams-api';
+import { SCANLATION_ROLE_LABELS, TeamInvitation } from '@app/core/models/scanlation';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { SeoService } from '@app/core/seo/seo.service';
@@ -25,6 +26,10 @@ export class MyTeamsPage {
 
   private readonly canView = computed(() => this.auth.can('LIBRARY_USE'));
   protected readonly teams = this.api.mineResource(this.canView);
+  /** Invitations waiting for my answer; I join a team by accepting one. */
+  protected readonly invitations = this.api.myInvitationsResource(this.canView);
+  protected readonly answering = asyncAction();
+  protected readonly roleLabels = SCANLATION_ROLE_LABELS;
   protected readonly creating = asyncAction();
   protected readonly model = signal({ name: '', description: '' });
   protected readonly newTeamForm = form(this.model, (path) => {
@@ -35,6 +40,22 @@ export class MyTeamsPage {
 
   constructor() {
     inject(SeoService).private_($localize`:@@scanlation.teams.seoTitle:My teams`);
+  }
+
+  /** I join the team: it appears in my list, and the invitation goes away. */
+  protected async accept(invitation: TeamInvitation): Promise<void> {
+    await this.answering.run(async () => {
+      await firstValueFrom(this.api.acceptInvitation(invitation.id));
+      this.invitations.update((pending) => pending.filter((i) => i.id !== invitation.id));
+      this.teams.reload();
+    }, { key: invitation.id });
+  }
+
+  protected async decline(invitation: TeamInvitation): Promise<void> {
+    await this.answering.run(async () => {
+      await firstValueFrom(this.api.declineInvitation(invitation.id));
+      this.invitations.update((pending) => pending.filter((i) => i.id !== invitation.id));
+    }, { key: invitation.id });
   }
 
   /** Creates the team (I become its leader) and shows it first in the list. */

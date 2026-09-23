@@ -38,6 +38,9 @@ public final class ErrorCodes {
     public static final String LAST_LEADER = "LAST_LEADER";
     public static final String TEAM_NOT_ON_SERIES = "TEAM_NOT_ON_SERIES";
     public static final String CHAPTER_ALREADY_EXISTS = "CHAPTER_ALREADY_EXISTS";
+    public static final String ALREADY_ON_TEAM = "ALREADY_ON_TEAM";
+    public static final String NOT_ON_TEAM = "NOT_ON_TEAM";
+    public static final String INVITATION_PENDING = "INVITATION_PENDING";
 
     private ErrorCodes() {
     }

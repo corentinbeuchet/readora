@@ -156,13 +156,44 @@ Feature: Community and scanlation teams
     And that "Shadow Scans" already published chapter 5
 
   @should
-  Scenario: Only a leader can add a series or a member
+  Scenario: Only a leader can add a series or invite a member
     Given scanlator "Mina" leads the team "Moon Scans"
     And "Mina" added "Bob" to "Moon Scans" as "TRANSLATOR"
     When "Bob" tries to add the series "Solo Leveling" to "Moon Scans"
     Then the team refuses what "Bob" asked
-    When "Bob" tries to add "Aoi" to "Moon Scans" as "PROOFREADER"
+    When "Bob" tries to invite "Aoi" to "Moon Scans" as "PROOFREADER"
     Then the team refuses what "Bob" asked
+
+  # Inspired by: Discord servers and GitHub organisations: nobody lands in a team without agreeing to it.
+  @must
+  Scenario: A leader invites a reader, who accepts
+    Given reader "Mina" leads the team "Moon Scans"
+    When "Mina" invites "Bob" to "Moon Scans" as "TRANSLATOR"
+    Then "Bob" is notified of the invitation to "Moon Scans"
+    And "Bob" is not on "Moon Scans"
+    When "Bob" accepts the invitation to "Moon Scans"
+    Then "Bob" is on "Moon Scans" as "TRANSLATOR"
+
+  @should
+  Scenario: An invitation can be declined, or cancelled before it is answered
+    Given reader "Mina" leads the team "Moon Scans"
+    And "Mina" invites "Bob" to "Moon Scans" as "TRANSLATOR"
+    When "Bob" declines the invitation to "Moon Scans"
+    Then "Bob" is not on "Moon Scans"
+    When "Mina" invites "Aoi" to "Moon Scans" as "PROOFREADER"
+    And "Mina" cancels the invitation of "Aoi" to "Moon Scans"
+    Then "Aoi" has no invitation to answer
+
+  @should
+  Scenario: A member is not invited twice, and only members get new roles
+    Given reader "Mina" leads the team "Moon Scans"
+    And "Mina" added "Bob" to "Moon Scans" as "TRANSLATOR"
+    When "Mina" tries to invite "Bob" to "Moon Scans" as "PROOFREADER"
+    Then the invitation is refused because "Bob" is already on the team
+    When "Mina" gives "Bob" the roles "TRANSLATOR, PROOFREADER" in "Moon Scans"
+    Then "Bob" is on "Moon Scans" as "TRANSLATOR, PROOFREADER"
+    When "Mina" tries to give "Aoi" the roles "PROOFREADER" in "Moon Scans"
+    Then the change is refused because "Aoi" is not on the team
 
   @should
   Scenario: A team always keeps a leader

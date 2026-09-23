@@ -139,9 +139,7 @@ class WorkFactsIntegrationTest extends AuthTestSupport {
     }
 
     private void givenAMemberOfTheTeamOf(Session leader, String workId, Session member, String role) throws Exception {
-        mockMvc.perform(put("/api/v1/teams/" + teamOf(leader, workId) + "/members/" + member.username()).header("Authorization", leader.bearer())
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"roles\":[\"" + role + "\"]}"))
-                .andExpect(status().isOk());
+        givenTheyJoinTheTeam(leader, teamOf(leader, workId), member, role);
     }
 
     private Session registerAdmin() throws Exception {

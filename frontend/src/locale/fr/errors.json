@@ -29,6 +29,9 @@
     "error.seriesAlreadyInTeam": "Votre équipe travaille déjà sur cette série.",
     "error.lastLeader": "Une équipe a besoin d'au moins un responsable. Nommez-en un autre d'abord.",
     "error.teamNotOnSeries": "Votre équipe ne travaille pas encore sur cette série. Ajoutez d'abord la série à votre équipe.",
-    "error.chapterAlreadyExists": "Votre équipe a déjà publié ce chapitre de la série."
+    "error.chapterAlreadyExists": "Votre équipe a déjà publié ce chapitre de la série.",
+    "error.alreadyOnTeam": "Ce lecteur fait déjà partie de l'équipe.",
+    "error.notOnTeam": "Ce lecteur ne fait pas partie de l'équipe. Invitez-le d'abord.",
+    "error.invitationPending": "Ce lecteur a déjà une invitation à rejoindre l'équipe. Attendez sa réponse."
   }
 }

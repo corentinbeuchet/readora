@@ -3,31 +3,35 @@ package com.readora.acceptance.steps;
 import com.readora.acceptance.fakes.FakeStorage;
 import com.readora.acceptance.fakes.InMemoryChapterReadRepository;
 import com.readora.acceptance.fakes.InMemoryChapterRepository;
+import com.readora.acceptance.fakes.InMemoryCommentRepository;
 import com.readora.acceptance.fakes.InMemoryCommunity;
 import com.readora.acceptance.fakes.InMemoryDiscovery;
 import com.readora.acceptance.fakes.InMemoryLibraryRepository;
+import com.readora.acceptance.fakes.InMemoryNotificationRepository;
 import com.readora.acceptance.fakes.InMemoryProjectRepository;
-import com.readora.acceptance.fakes.InMemoryTeamRepository;
 import com.readora.acceptance.fakes.InMemoryRatingRepository;
+import com.readora.acceptance.fakes.InMemoryTeamInvitationRepository;
+import com.readora.acceptance.fakes.InMemoryTeamRepository;
 import com.readora.acceptance.fakes.InMemoryUserAccounts;
 import com.readora.acceptance.fakes.InMemoryWorkRepository;
-import com.readora.application.port.in.ReadChapterUseCase.ChapterReading;
 import com.readora.application.port.in.CommunityUseCase.PublicProfile;
 import com.readora.application.port.in.CommunityUseCase.TeamPage;
 import com.readora.application.port.in.CommunityUseCase.TeamSeries;
 import com.readora.application.port.in.DiscoverUseCase.Release;
 import com.readora.application.port.in.ManageLibraryUseCase.ExportRow;
+import com.readora.application.port.in.ReadChapterUseCase.ChapterReading;
 import com.readora.application.service.CatalogService;
 import com.readora.application.service.ChapterReadingService;
-import com.readora.application.service.WorkManagementService;
 import com.readora.application.service.CommunityService;
+import com.readora.application.service.DiscoveryService;
+import com.readora.application.service.LibraryService;
+import com.readora.application.service.NotificationService;
+import com.readora.application.service.ReadingTrackerService;
 import com.readora.application.service.TeamManagementService;
+import com.readora.application.service.WorkManagementService;
 import com.readora.domain.common.AccessDeniedDomainException;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.ErrorCodes;
-import com.readora.application.service.DiscoveryService;
-import com.readora.application.service.LibraryService;
-import com.readora.application.service.ReadingTrackerService;
 import com.readora.domain.common.UserId;
 import com.readora.domain.identity.Email;
 import com.readora.domain.identity.PasswordHash;
@@ -36,6 +40,9 @@ import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.ScanlationRole;
 import com.readora.domain.scanlation.Team;
+import com.readora.domain.scanlation.TeamId;
+import com.readora.domain.scanlation.TeamInvitationId;
+import com.readora.domain.scanlation.TeamInvitedEvent;
 import com.readora.domain.scanlation.TeamMember;
 import com.readora.domain.social.ReadingStatus;
 import com.readora.domain.work.Chapter;
@@ -49,11 +56,10 @@ import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Clock;
 import java.time.Instant;
-import org.jspecify.annotations.Nullable;
-
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -71,6 +77,7 @@ public class CommunityStepDefinitions {
     private InMemoryUserAccounts users;
     private CommunityService community;
     private TeamManagementService teamManagement;
+    private InMemoryNotificationRepository notificationRepository;
     private CatalogService catalog;
     private WorkManagementService publishing;
     private ChapterReadingService chapterReader;
@@ -98,7 +105,15 @@ public class CommunityStepDefinitions {
         discoveryQueries.followedTeams(communityQueries::followedBy);
         Clock clock = Clock.systemUTC();
         community = new CommunityService(users, communityQueries, teams, projects, works, clock);
-        teamManagement = new TeamManagementService(teams, projects, works, users, clock);
+        InMemoryTeamInvitationRepository invitationRepository = new InMemoryTeamInvitationRepository();
+        notificationRepository = new InMemoryNotificationRepository();
+        NotificationService notifier = new NotificationService(notificationRepository, libraryRepository, chapters, works,
+                new InMemoryCommentRepository(), invitationRepository, teams, users, clock);
+        teamManagement = new TeamManagementService(teams, projects, works, users, invitationRepository, event -> {
+            if (event instanceof TeamInvitedEvent invited) {
+                notifier.notifyInvitation(invited.invitationId());
+            }
+        }, clock);
         catalog = new CatalogService(works, chapters, projects, teams, users);
         publishing = new WorkManagementService(works, chapters, projects, teams, users, event -> { }, clock);
         chapterReader = new ChapterReadingService(chapters, works, teams, new FakeStorage());
@@ -204,8 +219,91 @@ public class CommunityStepDefinitions {
 
     @Given("{string} added {string} to {string} as {string}")
     public void addedAMember(String leader, String member, String teamName, String role) {
-        teamManagement.setMember(account(leader), teamNamed(teamName).getId(), account(member).value().toLowerCase(Locale.ROOT),
-                Set.of(ScanlationRole.valueOf(role)));
+        invites(leader, member, teamName, role);
+        acceptsTheInvitation(member, teamName);
+    }
+
+    @When("{string} invites {string} to {string} as {string}")
+    public void invites(String leader, String member, String teamName, String role) {
+        teamManagement.invite(account(leader), teamNamed(teamName).getId(), usernameOf(member), roles(role));
+    }
+
+    @When("{string} tries to invite {string} to {string} as {string}")
+    public void triesToInvite(String actor, String member, String teamName, String role) {
+        TeamId team = teamNamed(teamName).getId();
+        String username = usernameOf(member);
+        attempt(() -> teamManagement.invite(account(actor), team, username, roles(role)));
+    }
+
+    @Then("{string} is notified of the invitation to {string}")
+    public void isNotifiedOfTheInvitation(String member, String teamName) {
+        assertThat(notificationRepository.findRecent(account(member), 10)).singleElement()
+                .satisfies(n -> assertThat(n.message()).contains(teamName));
+    }
+
+    @When("{string} accepts the invitation to {string}")
+    public void acceptsTheInvitation(String member, String teamName) {
+        teamManagement.acceptInvitation(account(member), invitationTo(member, teamName));
+    }
+
+    @When("{string} declines the invitation to {string}")
+    public void declinesTheInvitation(String member, String teamName) {
+        teamManagement.declineInvitation(account(member), invitationTo(member, teamName));
+    }
+
+    @When("{string} cancels the invitation of {string} to {string}")
+    public void cancelsTheInvitation(String leader, String member, String teamName) {
+        teamManagement.cancelInvitation(account(leader), invitationTo(member, teamName));
+    }
+
+    @Then("{string} has no invitation to answer")
+    public void hasNoInvitationToAnswer(String member) {
+        assertThat(teamManagement.myInvitations(account(member))).isEmpty();
+    }
+
+    @Then("{string} is not on {string}")
+    public void isNotOn(String member, String teamName) {
+        assertThat(teamNamed(teamName).findMember(account(member))).isEmpty();
+    }
+
+    @Then("{string} is on {string} as {string}")
+    public void isOnAs(String member, String teamName, String role) {
+        assertThat(teamNamed(teamName).findMember(account(member))).hasValueSatisfying(m -> assertThat(m.roles()).isEqualTo(roles(role)));
+    }
+
+    @When("{string} gives {string} the roles {string} in {string}")
+    @When("{string} tries to give {string} the roles {string} in {string}")
+    public void givesTheRoles(String leader, String member, String role, String teamName) {
+        TeamId team = teamNamed(teamName).getId();
+        String username = usernameOf(member);
+        attempt(() -> teamManagement.setMember(account(leader), team, username, roles(role)));
+    }
+
+    @Then("the invitation is refused because {string} is already on the team")
+    public void theInvitationIsRefusedBecauseAlreadyOnTheTeam(String member) {
+        assertThat(refusal).isInstanceOfSatisfying(DomainValidationException.class, e -> assertThat(e.code()).isEqualTo(ErrorCodes.ALREADY_ON_TEAM));
+        refusal = null;
+    }
+
+    @Then("the change is refused because {string} is not on the team")
+    public void theChangeIsRefusedBecauseNotOnTheTeam(String member) {
+        assertThat(refusal).isInstanceOfSatisfying(DomainValidationException.class, e -> assertThat(e.code()).isEqualTo(ErrorCodes.NOT_ON_TEAM));
+        refusal = null;
+    }
+
+    private TeamInvitationId invitationTo(String member, String teamName) {
+        String team = teamName;
+        return teamManagement.myInvitations(account(member)).stream()
+                .filter(view -> view.teamName().equals(team))
+                .findFirst().orElseThrow().invitation().getId();
+    }
+
+    private static Set<ScanlationRole> roles(String commaSeparated) {
+        return java.util.Arrays.stream(commaSeparated.split(",")).map(String::trim).map(ScanlationRole::valueOf).collect(java.util.stream.Collectors.toSet());
+    }
+
+    private String usernameOf(String member) {
+        return users.findById(account(member)).orElseThrow().getUsername();
     }
 
     @When("{string} adds the series {string} to {string}")
@@ -214,12 +312,6 @@ public class CommunityStepDefinitions {
         Work work = works.all().stream().filter(w -> w.getTitle().equals(title)).findFirst()
                 .orElseGet(() -> works.save(Work.create(title, "", WorkType.MANHWA, "", Set.of())));
         attempt(() -> teamManagement.addSeries(account(actor), teamNamed(teamName).getId(), work.getId()));
-    }
-
-    @When("{string} tries to add {string} to {string} as {string}")
-    public void triesToAddAMember(String actor, String member, String teamName, String role) {
-        String username = account(member).value().toLowerCase(Locale.ROOT);
-        attempt(() -> teamManagement.setMember(account(actor), teamNamed(teamName).getId(), username, Set.of(ScanlationRole.valueOf(role))));
     }
 
     @When("{string} tries to leave {string}")

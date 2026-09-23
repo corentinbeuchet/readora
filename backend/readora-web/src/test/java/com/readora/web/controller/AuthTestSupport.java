@@ -88,6 +88,17 @@ abstract class AuthTestSupport {
         return json(projects).path("data").path(0).path("teamId").asString();
     }
 
+    /// `member` joins the team: the leader invites them with `role`, and they accept.
+    protected void givenTheyJoinTheTeam(Session leader, String teamId, Session member, String role) throws Exception {
+        var invited = mockMvc.perform(post("/api/v1/teams/" + teamId + "/invitations").header("Authorization", leader.bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"" + member.username() + "\",\"roles\":[\"" + role + "\"]}"))
+                .andExpect(status().isCreated()).andReturn();
+        String invitationId = json(invited).path("data").path("id").asString();
+        mockMvc.perform(post("/api/v1/invitations/" + invitationId + "/accept").header("Authorization", member.bearer()))
+                .andExpect(status().isOk());
+    }
+
     /// Every chapter is some team's version: a throwaway team for tests that are not about teams.
     protected TeamId anyTeam() {
         return teamRepositoryForTests.save(Team.create("Team " + java.util.UUID.randomUUID(), null, UserId.of("any-leader"))).getId();

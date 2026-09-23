@@ -45,6 +45,8 @@
   Membership lives on the `Team` (one roster, roles valid for all its series), never on the `ScanlationProject` (a
   team's task board for one series): load the project's team and check there (model: `ScanlationProject.requireMember`,
   `TeamManagementService.requireLeaderOrAdmin`). Several teams may have a project on the same work.
+  A reader joins a team only by accepting a leader's `TeamInvitation` (nobody lands in a team without agreeing);
+  `PUT /teams/{id}/members/{username}` changes the roles of an existing member (`NOT_ON_TEAM` otherwise).
   A chapter belongs to a team (`Chapter.teamId`, never null): whoever publishes names the team in the request, and
   the service checks both that the actor may publish for that team and that the team works on the series
   (`TEAM_NOT_ON_SERIES`). A payload that shows a chapter carries its `TeamCredit` (id + name).

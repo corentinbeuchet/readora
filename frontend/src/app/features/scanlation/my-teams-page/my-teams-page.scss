@@ -10,3 +10,36 @@
 .new-team {
   max-inline-size: 32rem;
 }
+
+.invitations {
+  margin: 0 0 var(--space-6);
+
+  h2 {
+    font-size: var(--fs-lg);
+  }
+}
+
+.invitation-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+}
+
+.invitation p {
+  margin: 0 0 var(--space-2);
+}
+
+.role-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.invitation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}

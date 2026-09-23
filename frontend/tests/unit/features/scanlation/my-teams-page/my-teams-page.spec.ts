@@ -3,13 +3,17 @@ import { HttpTestingController, TestRequest } from '@angular/common/http/testing
 import { provideRouter } from '@angular/router';
 import { MyTeamsPage } from '@app/features/scanlation/my-teams-page/my-teams-page';
 import { WorkSummary } from '@app/core/models/catalog';
-import { MyTeam, ScanlationRole } from '@app/core/models/scanlation';
+import { MyTeam, ScanlationRole, TeamInvitation } from '@app/core/models/scanlation';
 import { Permission } from '@app/core/models/identity';
 import { givenIAmSignedInWith } from '../../../core/auth/auth-fixtures';
 import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 
 const SOLO: WorkSummary = { id: 'w-1', title: 'Solo Leveling', type: 'MANHWA', status: 'ONGOING', author: null, demographic: null, coverImageUrl: '', genres: [] };
 const ORV: WorkSummary = { ...SOLO, id: 'w-2', title: 'Omniscient Reader' };
+
+function invitation(overrides: Partial<TeamInvitation> = {}): TeamInvitation {
+  return { id: 'i-1', teamId: 't-2', teamName: 'Sun Scans', invitee: 'jane', roles: ['TRANSLATOR'], invitedBy: 'mina', status: 'PENDING', createdAt: '2026-09-23T10:00:00Z', ...overrides };
+}
 
 function team(overrides: Partial<MyTeam> = {}): MyTeam {
   return { id: 't-1', name: 'Moon Scans', description: 'We translate action series.', myRoles: ['LEADER'], boards: [{ projectId: 'p-1', work: SOLO }], ...overrides };
@@ -28,7 +32,11 @@ describe('MyTeamsPage (US-12)', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    // A leader's panel loads the team's invitations waiting for an answer (answered explicitly where a test is about them).
+    http.match((request) => /\/teams\/[^/]+\/invitations$/.test(request.url)).forEach((request) => request.flush(ok([])));
+    http.verify();
+  });
 
   it('lists my teams with my roles and a link to each task board', async () => {
     await givenIAmOnMyTeams({ teams: [team({ myRoles: ['TRANSLATOR', 'PROOFREADER'] })] });
@@ -127,21 +135,69 @@ describe('MyTeamsPage (US-12)', () => {
     thenThereIsALinkTo('/scanlation/p-2');
   });
 
-  it('a leader adds a member with a role', async () => {
-    await givenIAmOnMyTeams({ teams: [team()] });
+  it('a leader invites a reader, who waits for an answer until they accept', async () => {
+    await givenIAmOnMyTeams({ teams: [team()], waitingForAnAnswer: [] });
 
-    await whenIAddTheMember({ username: 'bob', role: 'PROOFREADER' }, { thenMyTeamsAre: [team()] });
+    await whenIInvite({ username: 'bob', role: 'PROOFREADER' });
 
-    thenTheRequestWas('PUT', `${API}/teams/t-1/members/bob`, { roles: ['PROOFREADER'] });
-    thenICanSee('bob is on the team.');
+    thenTheRequestWas('POST', `${API}/teams/t-1/invitations`, { username: 'bob', roles: ['PROOFREADER'] });
+    thenICanSee('bob is invited and joins the team once they accept.');
+    thenTheInvitationsWaitingForAnAnswerAre(['bob']);
   });
 
-  async function givenIAmOnMyTeams(given: { teams: MyTeam[]; permissions?: Permission[] }): Promise<void> {
+  it('a leader cancels an invitation that waits for an answer', async () => {
+    await givenIAmOnMyTeams({ teams: [team()], waitingForAnAnswer: [invitation({ id: 'i-9', teamId: 't-1', invitee: 'aoi' })] });
+
+    await whenICancelTheInvitationOf('aoi');
+
+    thenTheRequestWas('DELETE', `${API}/teams/t-1/invitations/i-9`, null);
+    thenTheInvitationsWaitingForAnAnswerAre([]);
+  });
+
+  it('I join a team by accepting its invitation', async () => {
+    await givenIAmOnMyTeams({ teams: [], invitations: [invitation()] });
+
+    thenICanSee('mina invited you to join Sun Scans');
+
+    await whenIAnswerTheInvitation('Join Sun Scans', { thenMyTeamsAre: [team({ id: 't-2', name: 'Sun Scans', myRoles: ['TRANSLATOR'] })] });
+
+    thenTheRequestWas('POST', `${API}/invitations/i-1/accept`, {});
+    thenMyTeamsAre(['Sun Scans']);
+    thenICannotSee('mina invited you to join');
+  });
+
+  it('invitations that could not be loaded can be retried', async () => {
+    await givenMyInvitationsFailToLoad();
+
+    thenICanSee('Could not load your invitations.');
+
+    await whenIRetry({ teams: [], invitations: [invitation()] });
+
+    thenICanSee('mina invited you to join Sun Scans');
+  });
+
+  it('declining an invitation leaves my teams as they are', async () => {
+    await givenIAmOnMyTeams({ teams: [], invitations: [invitation()] });
+
+    await whenIAnswerTheInvitation('Decline the invitation of Sun Scans');
+
+    thenTheRequestWas('POST', `${API}/invitations/i-1/decline`, {});
+    thenICannotSee('mina invited you to join');
+    thenICanSee('You are not on a team yet.');
+  });
+
+  /** `invitations`: the ones waiting for my answer; `waitingForAnAnswer`: the ones my team t-1 sent (I lead it). */
+  async function givenIAmOnMyTeams(given: { teams: MyTeam[]; permissions?: Permission[]; invitations?: TeamInvitation[]; waitingForAnAnswer?: TeamInvitation[] }): Promise<void> {
     await givenIAmSignedInWith(given.permissions ?? ['LIBRARY_USE']);
     fixture = TestBed.createComponent(MyTeamsPage);
     await settle(fixture);
     http.expectOne(`${API}/teams/mine`).flush(ok(given.teams));
+    http.expectOne(`${API}/invitations/mine`).flush(ok(given.invitations ?? []));
     await settle(fixture);
+    if (given.waitingForAnAnswer) {
+      http.expectOne(`${API}/teams/t-1/invitations`).flush(ok(given.waitingForAnAnswer));
+      await settle(fixture);
+    }
   }
 
   async function givenMyTeamsFailToLoad(): Promise<void> {
@@ -149,13 +205,28 @@ describe('MyTeamsPage (US-12)', () => {
     fixture = TestBed.createComponent(MyTeamsPage);
     await settle(fixture);
     http.expectOne(`${API}/teams/mine`).flush(fail('boom'), { status: 500, statusText: 'Server Error' });
+    http.expectOne(`${API}/invitations/mine`).flush(ok([]));
     await settle(fixture);
   }
 
-  async function whenIRetry(answer: { teams: MyTeam[] }): Promise<void> {
+  async function givenMyInvitationsFailToLoad(): Promise<void> {
+    await givenIAmSignedInWith(['LIBRARY_USE']);
+    fixture = TestBed.createComponent(MyTeamsPage);
+    await settle(fixture);
+    http.expectOne(`${API}/teams/mine`).flush(ok([]));
+    http.expectOne(`${API}/invitations/mine`).flush(fail('boom'), { status: 500, statusText: 'Server Error' });
+    await settle(fixture);
+  }
+
+  /** Retry reloads whichever list failed: my teams, or my invitations when `invitations` is given. */
+  async function whenIRetry(answer: { teams: MyTeam[]; invitations?: TeamInvitation[] }): Promise<void> {
     button('Retry').click();
     await settle(fixture);
-    http.expectOne(`${API}/teams/mine`).flush(ok(answer.teams));
+    if (answer.invitations) {
+      http.expectOne(`${API}/invitations/mine`).flush(ok(answer.invitations));
+    } else {
+      http.expectOne(`${API}/teams/mine`).flush(ok(answer.teams));
+    }
     await settle(fixture);
   }
 
@@ -192,22 +263,50 @@ describe('MyTeamsPage (US-12)', () => {
     await settle(fixture);
   }
 
-  async function whenIAddTheMember(member: { username: string; role: ScanlationRole }, after: { thenMyTeamsAre: MyTeam[] }): Promise<void> {
+  async function whenIInvite(member: { username: string; role: ScanlationRole }): Promise<void> {
     type(field('#member-username-t-1'), member.username);
     const select = fixture.nativeElement.querySelector('#member-role-t-1') as HTMLSelectElement;
     select.value = member.role;
     select.dispatchEvent(new Event('input'));
     form('details:nth-of-type(2) form').dispatchEvent(new Event('submit', { cancelable: true }));
     await settle(fixture);
-    lastRequest = http.expectOne(`${API}/teams/t-1/members/${member.username}`);
-    lastRequest.flush(ok(after.thenMyTeamsAre[0]));
+    lastRequest = http.expectOne(`${API}/teams/t-1/invitations`);
+    lastRequest.flush(ok(invitation({ id: 'i-2', teamId: 't-1', teamName: 'Moon Scans', invitee: member.username, roles: [member.role] })));
     await settle(fixture);
-    http.expectOne(`${API}/teams/mine`).flush(ok(after.thenMyTeamsAre));
+  }
+
+  async function whenICancelTheInvitationOf(invitee: string): Promise<void> {
+    button(`Cancel the invitation of ${invitee}`).click();
     await settle(fixture);
+    lastRequest = http.expectOne((request) => request.method === 'DELETE');
+    lastRequest.flush(null, { status: 204, statusText: 'No Content' });
+    await settle(fixture);
+  }
+
+  /** Accept ("Join …") answers with the team and reloads my teams; Decline answers with a message. */
+  async function whenIAnswerTheInvitation(label: string, after: { thenMyTeamsAre?: MyTeam[] } = {}): Promise<void> {
+    button(label).click();
+    await settle(fixture);
+    lastRequest = http.expectOne((request) => request.url.startsWith(`${API}/invitations/i-1/`));
+    lastRequest.flush(ok(after.thenMyTeamsAre ? after.thenMyTeamsAre[0] : 'Declined'));
+    await settle(fixture);
+    if (after.thenMyTeamsAre) {
+      http.expectOne(`${API}/teams/mine`).flush(ok(after.thenMyTeamsAre));
+      await settle(fixture);
+    }
   }
 
   function thenICanSee(text: string): void {
     expect(fixture.nativeElement.textContent).toContain(text);
+  }
+
+  function thenICannotSee(text: string): void {
+    expect(fixture.nativeElement.textContent).not.toContain(text);
+  }
+
+  function thenTheInvitationsWaitingForAnAnswerAre(invitees: string[]): void {
+    const rows = Array.from(fixture.nativeElement.querySelectorAll('app-team-panel .invitee') as NodeListOf<HTMLElement>);
+    expect(rows.map((row) => row.textContent!.trim())).toEqual(invitees);
   }
 
   function thenISeeTheAlert(text: string): void {
@@ -248,11 +347,12 @@ describe('MyTeamsPage (US-12)', () => {
     expect(fixture.nativeElement.querySelector('.new-team')).not.toBeNull();
   }
 
+  /** Identity never travels in a body; a DELETE has none (`body` null). */
   function thenTheRequestWas(method: string, url: string, body: unknown): void {
     expect(lastRequest.request.method).toBe(method);
     expect(lastRequest.request.url).toBe(url);
     expect(lastRequest.request.body).toEqual(body);
-    expect(lastRequest.request.body).not.toHaveProperty('userId');
+    expect(lastRequest.request.body ?? {}).not.toHaveProperty('userId');
   }
 
   function type(input: HTMLInputElement | HTMLTextAreaElement, value: string): void {
@@ -269,7 +369,9 @@ describe('MyTeamsPage (US-12)', () => {
     return fixture.nativeElement.querySelector(selector);
   }
 
+  /** By accessible text: visible label plus any `.sr-only` part ("Join Sun Scans"). */
   function button(label: string): HTMLButtonElement {
-    return Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find((b) => b.textContent!.trim() === label)!;
+    return Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)
+      .find((b) => b.textContent!.replace(/\s+/g, ' ').trim() === label)!;
   }
 });

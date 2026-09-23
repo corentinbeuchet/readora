@@ -65,6 +65,20 @@ export interface MyTeam {
   boards: TeamBoard[];
 }
 
+/** An invitation to join a team (US-12): the reader joins only by accepting it. */
+export interface TeamInvitation {
+  id: string;
+  teamId: string;
+  teamName: string;
+  /** Username of the invited reader. */
+  invitee: string;
+  roles: ScanlationRole[];
+  /** Username of the leader who sent it. */
+  invitedBy: string;
+  status: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'CANCELLED';
+  createdAt: string;
+}
+
 /** Leaders add series and members; the server enforces it too. */
 export function leadsTeam(team: MyTeam): boolean {
   return team.myRoles.includes('LEADER');

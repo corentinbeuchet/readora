@@ -1,6 +1,7 @@
 package com.readora.infrastructure.event;
 
 import com.readora.application.port.in.NotifyUseCase;
+import com.readora.domain.scanlation.TeamInvitedEvent;
 import com.readora.domain.social.CommentId;
 import com.readora.domain.social.CommentPostedEvent;
 import com.readora.domain.work.ChapterPublishedEvent;
@@ -41,6 +42,11 @@ public class NotificationEventListener {
         if (parent != null) {
             run("reply " + event.commentId(), () -> notifyUseCase.notifyReply(event.commentId()));
         }
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void onTeamInvited(TeamInvitedEvent event) {
+        run("invitation " + event.invitationId(), () -> notifyUseCase.notifyInvitation(event.invitationId()));
     }
 
     private void run(String what, Runnable action) {

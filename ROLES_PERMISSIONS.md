@@ -38,6 +38,8 @@ stored assets (the `permitAll` GET matchers in `SecurityConfig`). Everything els
 ## 3. Team roles
 
 A team has one roster, and its roles apply to every series the team works on. A member can hold several roles.
+Any reader can start a team and becomes its leader. Others join only by accepting a leader's invitation
+(`TeamInvitation`: pending, then accepted, declined or cancelled); a member may leave at any time.
 `LEADER` counts as every role (`TeamMember.hasRole`), and a team always keeps at least one leader (`LAST_LEADER`).
 
 | Team role | Claims and submits tasks in stage |

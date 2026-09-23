@@ -5,12 +5,19 @@ import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.CommentRepositoryPort;
 import com.readora.application.port.out.LibraryRepositoryPort;
 import com.readora.application.port.out.NotificationRepositoryPort;
+import com.readora.application.port.out.TeamInvitationRepositoryPort;
+import com.readora.application.port.out.TeamRepositoryPort;
+import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.NotFoundException;
 import com.readora.domain.common.UserId;
+import com.readora.domain.identity.UserAccount;
 import com.readora.domain.library.LibraryEntry;
 import com.readora.domain.notification.Notification;
 import com.readora.domain.notification.NotificationType;
+import com.readora.domain.scanlation.Team;
+import com.readora.domain.scanlation.TeamInvitation;
+import com.readora.domain.scanlation.TeamInvitationId;
 import com.readora.domain.social.ChapterComment;
 import com.readora.domain.social.CommentId;
 import com.readora.domain.work.Chapter;
@@ -30,15 +37,22 @@ public class NotificationService implements NotifyUseCase {
     private final ChapterRepositoryPort chapters;
     private final WorkRepositoryPort works;
     private final CommentRepositoryPort comments;
+    private final TeamInvitationRepositoryPort invitations;
+    private final TeamRepositoryPort teams;
+    private final UserAccountRepositoryPort users;
     private final Clock clock;
 
     public NotificationService(NotificationRepositoryPort notifications, LibraryRepositoryPort library, ChapterRepositoryPort chapters,
-                               WorkRepositoryPort works, CommentRepositoryPort comments, Clock clock) {
+                               WorkRepositoryPort works, CommentRepositoryPort comments, TeamInvitationRepositoryPort invitations,
+                               TeamRepositoryPort teams, UserAccountRepositoryPort users, Clock clock) {
         this.notifications = Objects.requireNonNull(notifications, "NotificationRepositoryPort cannot be null");
         this.library = Objects.requireNonNull(library, "LibraryRepositoryPort cannot be null");
         this.chapters = Objects.requireNonNull(chapters, "ChapterRepositoryPort cannot be null");
         this.works = Objects.requireNonNull(works, "WorkRepositoryPort cannot be null");
         this.comments = Objects.requireNonNull(comments, "CommentRepositoryPort cannot be null");
+        this.invitations = Objects.requireNonNull(invitations, "TeamInvitationRepositoryPort cannot be null");
+        this.teams = Objects.requireNonNull(teams, "TeamRepositoryPort cannot be null");
+        this.users = Objects.requireNonNull(users, "UserAccountRepositoryPort cannot be null");
         this.clock = Objects.requireNonNull(clock, "Clock cannot be null");
     }
 
@@ -73,6 +87,16 @@ public class NotificationService implements NotifyUseCase {
             comments.findById(parentId)
                     .filter(parent -> !parent.getAuthorId().equals(reply.getAuthorId()))
                     .ifPresent(parent -> notifications.saveAll(List.of(replyNotification(parent, reply))));
+        });
+    }
+
+    @Override
+    public void notifyInvitation(TeamInvitationId invitationId) {
+        invitations.findById(invitationId).filter(TeamInvitation::isPending).ifPresent(invitation -> {
+            String team = teams.findById(invitation.getTeamId()).map(Team::getName).orElse("A team");
+            String inviter = users.findById(invitation.getInvitedBy()).map(UserAccount::getUsername).orElse("A leader");
+            notifications.saveAll(List.of(Notification.create(invitation.getInviteeId(), NotificationType.TEAM_INVITATION,
+                    inviter + " invited you to join " + team, "/scanlation", clock.instant())));
         });
     }
 

@@ -74,8 +74,8 @@
     </details>
 
     <details class="team-tool">
-      <summary i18n="@@scanlation.teams.member.summary">Add a member</summary>
-      <form class="form tool-form" (submit)="addMember($event)" novalidate>
+      <summary i18n="@@scanlation.teams.member.summary">Invite a member</summary>
+      <form class="form tool-form" (submit)="inviteMember($event)" novalidate>
         <div class="field">
           <label [for]="`member-username-${team().id}`" i18n="@@scanlation.teams.member.username">Username</label>
           <input [id]="`member-username-${team().id}`" type="text" autocomplete="off" [formField]="memberForm.username"
@@ -90,16 +90,41 @@
             }
           </select>
         </div>
-        <button type="submit" class="btn" [disabled]="memberSaving.busy()" i18n="@@scanlation.teams.member.submit">Add to the team</button>
+        <button type="submit" class="btn" [disabled]="memberSaving.busy()" i18n="@@scanlation.teams.member.submit">Send the invitation</button>
       </form>
       @if (memberSaving.error(); as message) {
         <p class="form-error" role="alert">{{ message }}</p>
       }
       <p class="muted" role="status">
-        @if (memberAdded(); as username) {
-          <ng-container i18n="@@scanlation.teams.member.added">{{ username }} is on the team.</ng-container>
+        @if (memberInvited(); as username) {
+          <ng-container i18n="@@scanlation.teams.member.invited">{{ username }} is invited and joins the team once they accept.</ng-container>
         }
       </p>
     </details>
+
+    @if (invitations.status() === 'loading') {
+      <p class="muted" role="status" i18n="@@scanlation.teams.invitations.loading">Loading the invitations…</p>
+    } @else if (invitations.error()) {
+      <app-load-error (retry)="invitations.reload()" i18n="@@scanlation.teams.invitations.loadError">Could not load the invitations waiting for an answer.</app-load-error>
+    } @else if (invitations.value().length > 0) {
+      <h3 i18n="@@scanlation.teams.invitations.heading">Waiting for an answer</h3>
+      <ul class="invitation-list">
+        @for (invitation of invitations.value(); track invitation.id) {
+          <li class="invitation">
+            <span class="invitee">{{ invitation.invitee }}</span>
+            <span class="role-list">
+              @for (role of invitation.roles; track role) {
+                <span class="badge">{{ roleLabels[role] }}</span>
+              }
+            </span>
+            <button type="button" class="btn btn-sm" [disabled]="cancelling.busyKey() === invitation.id" (click)="cancelInvitation(invitation)"
+                    i18n="@@scanlation.teams.invitations.cancel">Cancel<span class="sr-only"> the invitation of {{ invitation.invitee }}</span></button>
+          </li>
+        }
+      </ul>
+      @if (cancelling.error(); as message) {
+        <p class="form-error" role="alert">{{ message }}</p>
+      }
+    }
   }
 </article>

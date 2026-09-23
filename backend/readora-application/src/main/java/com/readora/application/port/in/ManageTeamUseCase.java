@@ -6,6 +6,8 @@ import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.ScanlationRole;
 import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamId;
+import com.readora.domain.scanlation.TeamInvitation;
+import com.readora.domain.scanlation.TeamInvitationId;
 import com.readora.domain.work.Work;
 import com.readora.domain.work.WorkId;
 import org.jspecify.annotations.Nullable;
@@ -13,8 +15,8 @@ import org.jspecify.annotations.Nullable;
 import java.util.List;
 import java.util.Set;
 
-/// Running a scanlation team (US-12): creating it, its roster, and the series it works on. Every change is made by a
-/// leader of that team (or an admin); the global permission alone is not enough.
+/// Running a scanlation team (US-12): creating it (any reader), its roster (invitations the reader accepts), and the
+/// series it works on. Every change to a team is made by a leader of that team (or an admin).
 public interface ManageTeamUseCase {
 
     /// One of the team's task boards with the series it is for.
@@ -29,12 +31,49 @@ public interface ManageTeamUseCase {
     ///         (case-insensitive)
     Team createTeam(UserId creatorId, String name, @Nullable String description);
 
-    /// Adds `username` to the team, or replaces their roles.
+    /// An invitation with the names a screen shows (team, invited reader, who invited them).
+    record InvitationView(TeamInvitation invitation, String teamName, String inviteeUsername, String invitedByUsername) {
+    }
+
+    /// Replaces the roles of a member; newcomers are invited instead ([#invite]).
     ///
     /// @throws com.readora.domain.common.AccessDeniedDomainException unless the actor leads the team (or is an admin)
     /// @throws com.readora.domain.common.NotFoundException if the team or the user does not exist
-    /// @throws com.readora.domain.common.DomainValidationException `LAST_LEADER` if the team would lose its only leader
+    /// @throws com.readora.domain.common.DomainValidationException `NOT_ON_TEAM` if the user is not a member, or
+    ///         `LAST_LEADER` if the team would lose its only leader
     Team setMember(UserId actorId, TeamId teamId, String username, Set<ScanlationRole> roles);
+
+    /// Invites `username` to join the team with `roles`; they are notified and join once they accept.
+    ///
+    /// @throws com.readora.domain.common.AccessDeniedDomainException unless the actor leads the team (or is an admin)
+    /// @throws com.readora.domain.common.NotFoundException if the team or the user does not exist
+    /// @throws com.readora.domain.common.DomainValidationException `ALREADY_ON_TEAM` if they are a member already, or
+    ///         `INVITATION_PENDING` if an invitation to this team waits for their answer
+    InvitationView invite(UserId actorId, TeamId teamId, String username, Set<ScanlationRole> roles);
+
+    /// The team's invitations still waiting for an answer, oldest first (leaders and admins).
+    ///
+    /// @throws com.readora.domain.common.AccessDeniedDomainException unless the actor leads the team (or is an admin)
+    List<InvitationView> pendingInvitations(UserId actorId, TeamId teamId);
+
+    /// Withdraws a pending invitation of the team.
+    ///
+    /// @throws com.readora.domain.common.AccessDeniedDomainException unless the actor leads the team (or is an admin)
+    /// @throws com.readora.domain.common.DomainValidationException `ALREADY_HANDLED` if it was already answered
+    void cancelInvitation(UserId actorId, TeamInvitationId invitationId);
+
+    /// The invitations waiting for the user's answer, newest first.
+    List<InvitationView> myInvitations(UserId userId);
+
+    /// The invited reader joins the team with the invited roles.
+    ///
+    /// @throws com.readora.domain.common.AccessDeniedDomainException if the user is not the invited reader
+    /// @throws com.readora.domain.common.DomainValidationException `ALREADY_HANDLED` if it was already answered
+    Team acceptInvitation(UserId userId, TeamInvitationId invitationId);
+
+    /// @throws com.readora.domain.common.AccessDeniedDomainException if the user is not the invited reader
+    /// @throws com.readora.domain.common.DomainValidationException `ALREADY_HANDLED` if it was already answered
+    void declineInvitation(UserId userId, TeamInvitationId invitationId);
 
     /// Removes `username` from the team: a leader removes anyone, a member may leave.
     ///

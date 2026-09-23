@@ -5,11 +5,14 @@ import com.readora.application.port.in.ManageTeamUseCase;
 import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.TeamId;
+import com.readora.domain.scanlation.TeamInvitationId;
 import com.readora.domain.work.WorkId;
 import com.readora.web.dto.ApiResponse;
 import com.readora.web.dto.CreateTeamRequest;
+import com.readora.web.dto.InviteMemberRequest;
 import com.readora.web.dto.MyTeamDto;
 import com.readora.web.dto.ScanlationProjectDto;
+import com.readora.web.dto.TeamInvitationDto;
 import com.readora.web.dto.TeamMemberRequest;
 import com.readora.web.dto.TeamSeriesRequest;
 import com.readora.web.security.CurrentUserProvider;
@@ -60,14 +63,38 @@ public class TeamController {
 
     @PutMapping("/{teamId}/members/{username}")
     @PreAuthorize("hasAuthority('LIBRARY_USE')")
-    @Operation(summary = "Add a member to my team, or change their roles (team leaders)")
+    @Operation(summary = "Change the roles of a member of my team (team leaders); newcomers are invited")
     public ResponseEntity<ApiResponse<MyTeamDto>> setMember(@PathVariable UUID teamId, @PathVariable String username,
                                                             @Valid @RequestBody TeamMemberRequest request) {
         UserId me = currentUserProvider.requireUserId();
         return ResponseEntity.ok(ApiResponse.ok(MyTeamDto.fromDomain(teams.setMember(me, TeamId.of(teamId), username, request.roles()), me)));
     }
 
-    /// `LIBRARY_USE` is what every signed-in account has: a leader may have added a reader, who must be able to leave.
+    @PostMapping("/{teamId}/invitations")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
+    @Operation(summary = "Invite a reader to my team with some roles (team leaders); they join once they accept")
+    public ResponseEntity<ApiResponse<TeamInvitationDto>> invite(@PathVariable UUID teamId, @Valid @RequestBody InviteMemberRequest request) {
+        var invitation = teams.invite(currentUserProvider.requireUserId(), TeamId.of(teamId), request.username().trim(), request.roles());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(TeamInvitationDto.fromDomain(invitation)));
+    }
+
+    @GetMapping("/{teamId}/invitations")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
+    @Operation(summary = "My team's invitations waiting for an answer (team leaders)")
+    public ResponseEntity<ApiResponse<List<TeamInvitationDto>>> pendingInvitations(@PathVariable UUID teamId) {
+        return ResponseEntity.ok(ApiResponse.ok(teams.pendingInvitations(currentUserProvider.requireUserId(), TeamId.of(teamId)).stream()
+                .map(TeamInvitationDto::fromDomain).toList()));
+    }
+
+    @DeleteMapping("/{teamId}/invitations/{invitationId}")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
+    @Operation(summary = "Withdraw an invitation of my team (team leaders)")
+    public ResponseEntity<Void> cancelInvitation(@PathVariable UUID teamId, @PathVariable UUID invitationId) {
+        teams.cancelInvitation(currentUserProvider.requireUserId(), TeamInvitationId.of(invitationId));
+        return ResponseEntity.noContent().build();
+    }
+
+    /// `LIBRARY_USE` is what every signed-in account has: any member must be able to leave.
     @DeleteMapping("/{teamId}/members/{username}")
     @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "Remove a member from my team (team leaders), or leave it")
