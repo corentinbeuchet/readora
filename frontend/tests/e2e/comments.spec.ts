@@ -149,7 +149,7 @@ async function thenIAmThankedForTheReport(page: Page): Promise<void> {
 }
 
 async function thenIAmAskedToWaitBeforeCommentingAgain(page: Page): Promise<void> {
-  await expect(page.getByRole('alert')).toContainText('Please wait');
+  await expect(page.getByRole('alert')).toHaveText(/^Please wait \d+ s and try again\.$/);
 }
 
 function commentItem(page: Page, content: string) {

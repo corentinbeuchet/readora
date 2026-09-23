@@ -163,9 +163,9 @@ describe('ChapterComments', () => {
     await givenIAmSignedIn({ permissions: ['COMMENT_WRITE'] });
     await givenIOpenTheDiscussion(COMMENTS);
 
-    await whenIPostTheCommentTooFast('Again!', 'Please wait 7 seconds before commenting again');
+    await whenIPostTheCommentTooFast('Again!', { waitSeconds: 7 });
 
-    thenISeeTheError('Please wait 7 seconds before commenting again');
+    thenISeeTheError('Please wait 7 s and try again.');
   });
 
   async function givenIAmSignedIn(user: Partial<UserProfile> = {}): Promise<void> {
@@ -212,10 +212,17 @@ describe('ChapterComments', () => {
     await settle(fixture);
   }
 
-  async function whenIPostTheCommentTooFast(content: string, error: string): Promise<void> {
+  /** Answered like the API: 429, code RATE_LIMITED, the wait in Retry-After. */
+  async function whenIPostTheCommentTooFast(content: string, answer: { waitSeconds: number }): Promise<void> {
     typeComment(content);
     await submitCompose();
-    http.expectOne(COMMENTS_URL).flush(fail(error), { status: 429, statusText: 'Too Many Requests' });
+    http
+      .expectOne(COMMENTS_URL)
+      .flush(fail(`Please wait ${answer.waitSeconds} seconds before commenting again`, 'RATE_LIMITED'), {
+        status: 429,
+        statusText: 'Too Many Requests',
+        headers: { 'Retry-After': String(answer.waitSeconds) }
+      });
     await settle(fixture);
   }
 

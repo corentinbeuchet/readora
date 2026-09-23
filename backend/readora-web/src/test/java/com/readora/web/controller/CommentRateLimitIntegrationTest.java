@@ -18,7 +18,9 @@ import java.util.List;
 import java.util.Set;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -49,8 +51,13 @@ class CommentRateLimitIntegrationTest extends AuthTestSupport {
 
         mockMvc.perform(post(url).header("Authorization", kenji.bearer()).contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isOk());
-        mockMvc.perform(post(url).header("Authorization", kenji.bearer()).contentType(MediaType.APPLICATION_JSON).content(body))
+        // Sent from the frontend's origin: the browser only lets the page read Retry-After when CORS exposes it.
+        mockMvc.perform(post(url).header("Authorization", kenji.bearer()).header("Origin", "http://localhost:4200")
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isTooManyRequests())
+                .andExpect(header().string("Retry-After", matchesPattern("\\d+")))
+                .andExpect(header().string("Access-Control-Expose-Headers", containsString("Retry-After")))
+                .andExpect(jsonPath("$.code").value("RATE_LIMITED"))
                 .andExpect(jsonPath("$.error", containsString("seconds before commenting again")));
         mockMvc.perform(post(url).header("Authorization", aoi.bearer()).contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isOk());

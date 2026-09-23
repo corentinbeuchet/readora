@@ -4,8 +4,10 @@
  * (English) message, which is more precise than a generic sentence.
  *
  * A function, not a constant map, so each call reads the current translations.
+ *
+ * @param retryAfterSeconds for `RATE_LIMITED`: how long to wait, when the server said (`Retry-After`)
  */
-export function errorMessageForCode(code: string | null): string | undefined {
+export function errorMessageForCode(code: string | null, retryAfterSeconds: number | null = null): string | undefined {
   switch (code) {
     case 'INVALID_CREDENTIALS':
       return $localize`:@@error.invalidCredentials:Invalid email or password.`;
@@ -20,6 +22,10 @@ export function errorMessageForCode(code: string | null): string | undefined {
     case 'CONFLICT':
       return $localize`:@@error.conflict:Someone else changed this at the same time. Reload and try again.`;
     case 'RATE_LIMITED':
+      // "7 s" needs no plural form: ICU plurals only work in templates, not in `$localize` strings.
+      if (retryAfterSeconds !== null && retryAfterSeconds > 0) {
+        return $localize`:@@error.rateLimitedSeconds:Please wait ${retryAfterSeconds}:seconds: s and try again.`;
+      }
       return $localize`:@@error.rateLimited:Too many attempts. Please wait a moment and try again.`;
     case 'MALFORMED_REQUEST':
       return $localize`:@@error.malformedRequest:The request was not valid. Check the form and try again.`;

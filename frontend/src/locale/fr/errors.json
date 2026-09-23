@@ -10,6 +10,7 @@
     "error.notFound": "Nous n'avons pas trouvé ce que vous cherchez.",
     "error.conflict": "Quelqu'un d'autre a modifié cet élément en même temps. Rechargez la page et réessayez.",
     "error.rateLimited": "Trop de tentatives. Patientez un instant avant de réessayer.",
+    "error.rateLimitedSeconds": "Patientez {$seconds} s avant de réessayer.",
     "error.malformedRequest": "La demande n'est pas valide. Vérifiez le formulaire et réessayez.",
     "error.fileTooLarge": "Ce fichier est trop volumineux.",
     "error.unsupportedFileFormat": "Ce format de fichier n'est pas pris en charge.",

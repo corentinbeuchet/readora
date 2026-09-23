@@ -16,6 +16,7 @@ import com.readora.web.dto.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -49,7 +50,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CommentRateLimitedException.class)
     public ResponseEntity<ApiResponse<Void>> handleCommentRateLimited(CommentRateLimitedException ex) {
-        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(coded(ex));
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.waitSeconds()))
+                .body(coded(ex));
     }
 
     @ExceptionHandler(NotFoundException.class)

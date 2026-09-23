@@ -74,7 +74,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(corsProperties.allowedOrigins());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-Requested-With"));
-        configuration.setExposedHeaders(List.of("WWW-Authenticate"));
+        configuration.setExposedHeaders(List.of("WWW-Authenticate", "Retry-After"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

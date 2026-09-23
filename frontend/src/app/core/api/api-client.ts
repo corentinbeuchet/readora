@@ -12,7 +12,9 @@ export class ApiError extends Error {
     message: string,
     public readonly source?: unknown,
     /** The API's error code (`ApiResponse.code`), `null` for network and non-API failures. */
-    public readonly code: string | null = null
+    public readonly code: string | null = null,
+    /** Seconds to wait before trying again (`Retry-After` of a 429), `null` when the server did not say. */
+    public readonly retryAfterSeconds: number | null = null
   ) {
     super(message);
     this.name = 'ApiError';
@@ -101,7 +103,7 @@ export function apiErrorMessage(error: unknown, fallback = $localize`:@@error.ge
     if (error.status === 0) {
       return $localize`:@@error.network:Cannot reach the server. Check your connection and try again.`;
     }
-    return errorMessageForCode(error.code) ?? (error.message || fallback);
+    return errorMessageForCode(error.code, error.retryAfterSeconds) ?? (error.message || fallback);
   }
   return fallback;
 }
@@ -136,6 +138,12 @@ export function unwrap<T>(response: ApiResponse<T>): T {
   return response.data as T;
 }
 
+/** `Retry-After` in seconds (the API never sends the HTTP-date form); `null` when absent or not a number. */
+function retryAfterSeconds(error: HttpErrorResponse): number | null {
+  const value = error.headers?.get('Retry-After')?.trim();
+  return value && /^\d+$/.test(value) ? Number(value) : null;
+}
+
 export function toApiError(error: unknown): Observable<never> {
   if (error instanceof ApiError) {
     return throwError(() => error);
@@ -149,7 +157,7 @@ export function toApiError(error: unknown): Observable<never> {
           ? 'Network error: the API is unreachable'
           : error.message;
     const code = typeof body === 'object' && body !== null && typeof body.code === 'string' ? body.code : null;
-    return throwError(() => new ApiError(error.status, message, error, code));
+    return throwError(() => new ApiError(error.status, message, error, code, retryAfterSeconds(error)));
   }
   return throwError(() => new ApiError(0, error instanceof Error ? error.message : 'Unknown error', error));
 }
