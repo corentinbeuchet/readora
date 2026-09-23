@@ -65,7 +65,7 @@ describe('Shell navigation', () => {
 
     whenIOpenTheAccountMenu();
 
-    thenTheAccountMenuOffers(['Profile', 'History', 'Subscription', 'Scanlation workspace', 'Upload Studio', 'Log out']);
+    thenTheAccountMenuOffers(['Profile', 'History', 'Scanlation workspace', 'Upload Studio', 'Log out']);
     thenTheTeamToolsAreAGroupNamed('Team tools');
     thenTheNavigationLinksAre(['Home', 'Browse', 'Updates', 'Rankings', 'Lists']);
   });
@@ -76,7 +76,7 @@ describe('Shell navigation', () => {
 
     whenIOpenTheAccountMenu();
 
-    thenTheAccountMenuOffers(['Profile', 'History', 'Subscription', 'Log out']);
+    thenTheAccountMenuOffers(['Profile', 'History', 'Log out']);
   });
 
   it('navigates exactly once per click and marks the current page', async () => {

@@ -1,6 +1,6 @@
 # Rewritten 2026-09 from the first draft ("curated public collections"): readers first need a personal library
 # (it also feeds the "new chapters" badge of US-07). Public lists are a @could.
-# The library is free for every signed-in reader; exact-page progress sync stays Premium (US-01).
+# The library and exact-page progress sync (US-01) are free for every signed-in reader.
 
 Feature: My library
   As a reader

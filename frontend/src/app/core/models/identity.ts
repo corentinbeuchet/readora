@@ -1,8 +1,6 @@
 export const PERMISSIONS = [
   'COMMENT_WRITE',
   'COMMENT_UPVOTE',
-  'BOOKMARK_READ',
-  'BOOKMARK_WRITE',
   'TASK_CLAIM',
   'TASK_SUBMIT',
   'CHAPTER_PUBLISH',
@@ -21,10 +19,6 @@ export type Permission = (typeof PERMISSIONS)[number];
 
 export type Role = 'READER' | 'SCANLATOR' | 'MODERATOR' | 'ADMIN';
 
-export type SubscriptionPlan = 'FREE' | 'PREMIUM';
-
-export type SubscriptionStatus = 'ACTIVE' | 'CANCELED';
-
 /** Display names for the codes above (the API sends the codes). */
 export const ROLE_LABELS: Record<Role, string> = {
   READER: $localize`:@@role.reader:Reader`,
@@ -32,25 +26,6 @@ export const ROLE_LABELS: Record<Role, string> = {
   MODERATOR: $localize`:@@role.moderator:Moderator`,
   ADMIN: $localize`:@@role.admin:Admin`
 };
-
-export const SUBSCRIPTION_PLAN_LABELS: Record<SubscriptionPlan, string> = {
-  FREE: $localize`:@@subscriptionPlan.free:Free`,
-  PREMIUM: $localize`:@@subscriptionPlan.premium:Premium`
-};
-
-export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, string> = {
-  ACTIVE: $localize`:@@subscriptionStatus.active:Active`,
-  CANCELED: $localize`:@@subscriptionStatus.canceled:Cancelled`
-};
-
-export interface Subscription {
-  plan: SubscriptionPlan;
-  status: SubscriptionStatus;
-  active: boolean;
-  currentPeriodEnd: string | null;
-  /** Renewal stopped: access continues until `currentPeriodEnd`, then the plan ends. */
-  planPermissions: Permission[];
-}
 
 export interface UserProfile {
   id: string;
@@ -61,7 +36,6 @@ export interface UserProfile {
   avatarUrl: string | null;
   roles: Role[];
   permissions: Permission[];
-  subscription: Subscription;
   createdAt: string;
 }
 
@@ -89,8 +63,4 @@ export interface UpdateProfileRequest {
   bio?: string;
   /** `null` (or empty) removes the avatar. */
   avatarUrl: string | null;
-}
-
-export function hasActivePremium(sub: Subscription | null): boolean {
-  return sub?.active === true && sub.plan === 'PREMIUM';
 }

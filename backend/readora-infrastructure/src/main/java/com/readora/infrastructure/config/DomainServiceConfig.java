@@ -12,7 +12,6 @@ import com.readora.application.port.in.ManageListsUseCase;
 import com.readora.application.port.in.ManageProfileUseCase;
 import com.readora.application.port.in.ManageScanlationTaskUseCase;
 import com.readora.application.port.in.ManageTeamUseCase;
-import com.readora.application.port.in.ManageSubscriptionUseCase;
 import com.readora.application.port.in.ManageWorkUseCase;
 import com.readora.application.port.in.ModerateCommentsUseCase;
 import com.readora.application.port.in.NotifyUseCase;
@@ -39,7 +38,6 @@ import com.readora.application.service.ProfileService;
 import com.readora.application.service.ReaderSocialService;
 import com.readora.application.service.ReadingTrackerService;
 import com.readora.application.service.ScanlationTaskService;
-import com.readora.application.service.SubscriptionService;
 import com.readora.application.service.TeamManagementService;
 import com.readora.application.service.WorkManagementService;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -142,12 +140,6 @@ public class DomainServiceConfig {
             EventPublisherPort eventPublisher) {
         return transactional(new BookmarkService(bookmarkRepository, userRepository, chapterRepository, eventPublisher),
                 ManageBookmarkUseCase.class, transactionManager);
-    }
-
-    @Bean
-    public ManageSubscriptionUseCase manageSubscriptionUseCase(UserAccountRepositoryPort userRepository) {
-        return transactional(new SubscriptionService(userRepository),
-                ManageSubscriptionUseCase.class, transactionManager);
     }
 
     /// No persistence involved, so no transaction (it would hold a DB connection during large uploads).

@@ -37,7 +37,7 @@
       <app-page-progress (jumped)="jumpToPage($event)" />
 
       <p class="sync-hint muted">
-        <ng-container *appHasPermission="'BOOKMARK_WRITE'; else upsell">
+        <ng-container *appHasPermission="'LIBRARY_USE'; else logInToSave">
           @switch (tracker.syncStatus()) {
             @case ('saving') { <ng-container i18n="@@reader.page.sync.saving">Saving progress…</ng-container> }
             @case ('saved') { <ng-container i18n="@@reader.page.sync.saved">Progress saved</ng-container> }
@@ -45,8 +45,8 @@
             @default { <ng-container i18n="@@reader.page.sync.auto">Progress is saved automatically</ng-container> }
           }
         </ng-container>
-        <ng-template #upsell>
-          <ng-container i18n="@@reader.page.upsell"><a routerLink="/subscription">Go Premium</a> to save your reading progress.</ng-container>
+        <ng-template #logInToSave>
+          <ng-container i18n="@@reader.page.logInToSave"><a routerLink="/login">Log in</a> to save your reading progress.</ng-container>
         </ng-template>
       </p>
       <p class="report-confirmation" role="status">{{ reportConfirmation() }}</p>

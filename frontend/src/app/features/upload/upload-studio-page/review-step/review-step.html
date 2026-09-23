@@ -44,7 +44,7 @@
       <div class="review-item">
         <dt class="label" i18n="@@upload.review.pipeline">Pipeline:</dt>
         <dd class="value">
-          <span class="badge" [class.badge-premium]="draft.publishingMode === 'DIRECT'">
+          <span class="badge" [class.badge-accent]="draft.publishingMode === 'DIRECT'">
             @if (draft.publishingMode === 'DIRECT') {
               <ng-container i18n="@@upload.review.pipeline.direct">Direct Catalog Release</ng-container>
             } @else {

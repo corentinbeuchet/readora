@@ -45,9 +45,8 @@ export class WorkDetailPage {
   protected readonly work = this.catalogApi.workResource(this.workId);
   protected readonly chapters = this.catalogApi.chaptersResource(this.workId);
 
-  /** Bookmark of the current user for this work (only fetched with BOOKMARK_READ). */
-  private readonly canReadBookmark = computed(() => this.auth.can('BOOKMARK_READ'));
-  private readonly bookmarkEntry = this.bookmarksApi.forWorkResource(this.workId, this.canReadBookmark);
+  /** Bookmark of the current user for this work (signed-in readers, `LIBRARY_USE`). */
+  private readonly bookmarkEntry = this.bookmarksApi.forWorkResource(this.workId, computed(() => this.auth.can('LIBRARY_USE')));
   /**
    * The saved page to resume from, only while its chapter is published and not finished yet: a bookmark in a chapter
    * I finished (or one that is gone or unpublished) would hide "Continue with chapter N" or "Read again".

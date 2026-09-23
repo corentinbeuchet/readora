@@ -9,7 +9,6 @@ Disallow: /register
 Disallow: /profile
 Disallow: /library
 Disallow: /history
-Disallow: /subscription
 Disallow: /upload
 Disallow: /scanlation
 Disallow: /moderation
@@ -19,7 +18,6 @@ Disallow: /fr/register
 Disallow: /fr/profile
 Disallow: /fr/library
 Disallow: /fr/history
-Disallow: /fr/subscription
 Disallow: /fr/upload
 Disallow: /fr/scanlation
 Disallow: /fr/moderation

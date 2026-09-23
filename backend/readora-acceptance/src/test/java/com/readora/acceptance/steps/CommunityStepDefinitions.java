@@ -383,7 +383,7 @@ public class CommunityStepDefinitions {
         String username = name.toLowerCase(Locale.ROOT);
         return users.findByUsername(username).map(UserAccount::getId).orElseGet(() -> {
             UserAccount account = new UserAccount(UserId.of(name), Email.of(username + "@readora.test"), username, PasswordHash.of("$2a$hash"),
-                    null, null, null, Set.of(com.readora.domain.identity.Role.READER), null, Instant.now(), Instant.now());
+                    null, null, null, Set.of(com.readora.domain.identity.Role.READER), Instant.now(), Instant.now());
             return users.save(account).getId();
         });
     }

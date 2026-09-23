@@ -1,9 +1,6 @@
 {
   "locale": "en",
   "translations": {
-    "profile.bookmarks.premiumTitle": "Bookmarks are a Premium feature",
-    "profile.bookmarks.premiumHint": "Upgrade to save your reading progress on every work and pick up where you left off.",
-    "profile.bookmarks.seePlans": "See plans",
     "profile.bookmarks.loading": "Loading your bookmarks…",
     "profile.bookmarks.loadError": "Could not load bookmarks.",
     "profile.bookmarks.empty": "You have no bookmarks yet. Start reading a chapter and your progress will be saved here.",
@@ -25,14 +22,8 @@
     "profile.page.sections": "Profile sections",
     "profile.page.tabOverview": "Overview",
     "profile.page.tabBookmarks": "Bookmarks",
-    "profile.page.tabSubscription": "Subscription",
     "profile.page.editTitle": "Edit profile",
     "profile.page.bookmarksTitle": "Bookmarks",
-    "profile.page.subscriptionTitle": "Subscription",
-    "profile.page.plan": "Plan: {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}",
-    "profile.page.periodEnds": "Current period ends",
-    "profile.page.permissions": "Effective permissions: {$INTERPOLATION}",
-    "profile.page.manageSubscription": "Manage subscription",
     "profile.page.loading": "Loading your profile…",
     "profile.page.avatarAlt": "{$name} avatar",
     "profile.page.seoTitle": "My profile"

@@ -19,7 +19,7 @@ export interface PageMeta {
 }
 
 export const SITE_NAME = 'Readora';
-export const DEFAULT_DESCRIPTION = $localize`:@@seo.defaultDescription:Read manga, manhwa, manhua and comics published by scanlation teams. Free reading, comments, and Premium bookmarks.`;
+export const DEFAULT_DESCRIPTION = $localize`:@@seo.defaultDescription:Read manga, manhwa, manhua and comics published by scanlation teams. Free reading, comments and bookmarks.`;
 const DEFAULT_IMAGE = '/og-default.png';
 const TITLE_SUFFIX = ` · ${SITE_NAME}`;
 

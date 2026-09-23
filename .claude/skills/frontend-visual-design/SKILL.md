@@ -68,7 +68,7 @@ apply while designing, `references/evidence.md` holds the research each rule com
 **Words**
 - [ ] Sentence case. A button says what happens ("Create a free account", not "Submit").
 - [ ] An error says what went wrong and what to do; an empty screen says what belongs there.
-- [ ] Accounts and Premium are offered where they help, after the content. No popup, no wall, no countdown.
+- [ ] Accounts are offered where they help, after the content. No popup, no wall, no countdown.
 
 ## What this design avoids (the tells of a templated interface)
 All-caps tracked labels above headings; "A · B · C" meta strings; 01 / 02 / 03 numbering on things that are not a

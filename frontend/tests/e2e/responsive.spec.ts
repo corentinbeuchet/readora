@@ -9,7 +9,7 @@ const VIEWPORTS = [
   { name: 'tablet landscape', width: 1024, height: 768 }
 ];
 
-const PUBLIC_PAGES = ['/', '/works', '/updates', '/rankings', '/lists', '/login', '/register', '/subscription'];
+const PUBLIC_PAGES = ['/', '/works', '/updates', '/rankings', '/lists', '/login', '/register'];
 
 /** WCAG 1.4.10 reflow (no horizontal scrolling) and 2.5.8 target size, plus the two shapes of the navigation (US-14). */
 test.describe('Responsive layout', () => {

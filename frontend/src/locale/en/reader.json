@@ -32,7 +32,7 @@
     "reader.page.sync.saved": "Progress saved",
     "reader.page.sync.error": "Could not save progress",
     "reader.page.sync.auto": "Progress is saved automatically",
-    "reader.page.upsell": "{$START_LINK}Go Premium{$CLOSE_LINK} to save your reading progress.",
+    "reader.page.logInToSave": "{$START_LINK}Log in{$CLOSE_LINK} to save your reading progress.",
     "reader.page.commentsPlaceholder": "Comments load when you scroll here.",
     "reader.page.seoUnavailable": "Chapter unavailable",
     "reader.page.seoTitle": "{$title} — Chapter {$number}",

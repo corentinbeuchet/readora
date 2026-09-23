@@ -63,8 +63,8 @@ class PostgresLocalSeedTest {
     @Test
     @DisplayName("The local seed applies on PostgreSQL and its accounts and demo team load through the adapters")
     void seedAppliesOnPostgres() {
-        UserAccount premium = users.findByEmail(Email.of("premium@readora.local")).orElseThrow();
-        assertThat(premium.can(Permission.BOOKMARK_WRITE)).isTrue();
+        UserAccount kenji = users.findByEmail(Email.of("kenji@readora.local")).orElseThrow();
+        assertThat(kenji.can(Permission.LIBRARY_USE)).isTrue();
         assertThat(users.findByEmail(Email.of("admin@readora.local")).orElseThrow().can(Permission.USER_MANAGE)).isTrue();
         assertThat(users.findByEmail(Email.of("quality@readora.local")).orElseThrow().can(Permission.CHAPTER_PUBLISH)).isTrue();
         assertThat(users.findByEmail(Email.of("moderator@readora.local")).orElseThrow().can(Permission.COMMENT_MODERATE)).isTrue();

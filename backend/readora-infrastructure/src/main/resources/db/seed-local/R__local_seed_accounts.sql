@@ -21,8 +21,8 @@ SELECT v.id, v.email, v.username, '$2a$10$h4Sf.74pdhE2fAwSA88J9uFUWM2M4gbKdr8And
 FROM (
     SELECT '00000000-0000-4000-8000-000000000001' AS id, 'reader@readora.local' AS email, 'reader' AS username,
            'Local Reader' AS display_name, 'Free reader (seed)' AS bio, 'READER' AS roles
-    UNION ALL SELECT '00000000-0000-4000-8000-000000000002', 'premium@readora.local', 'premium',
-           'Local Premium', 'Premium reader: bookmarks enabled (seed)', 'READER'
+    UNION ALL SELECT '00000000-0000-4000-8000-000000000002', 'kenji@readora.local', 'kenji',
+           'Kenji', 'Reads manhwa on the train (seed)', 'READER'
     UNION ALL SELECT '00000000-0000-4000-8000-000000000003', 'admin@readora.local', 'admin',
            'Local Admin', 'Administrator (seed)', 'ADMIN,READER'
     UNION ALL SELECT '00000000-0000-4000-8000-000000000004', 'moderator@readora.local', 'moderator',
@@ -42,11 +42,6 @@ FROM (
 ) v
 WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = v.id OR u.email = v.email OR u.username = v.username);
 
--- Premium subscription that never expires locally.
-INSERT INTO subscriptions (user_id, plan, status, current_period_end, updated_at)
-SELECT '00000000-0000-4000-8000-000000000002', 'PREMIUM', 'ACTIVE', TIMESTAMP '2099-12-31 23:59:59', CURRENT_TIMESTAMP
-WHERE EXISTS (SELECT 1 FROM users WHERE id = '00000000-0000-4000-8000-000000000002')
-  AND NOT EXISTS (SELECT 1 FROM subscriptions WHERE user_id = '00000000-0000-4000-8000-000000000002');
 
 -- ------------------------------------------------------------------------------
 -- Demo work + scanlation project with one member per team role

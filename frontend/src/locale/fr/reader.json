@@ -31,7 +31,6 @@
     "reader.page.sync.saved": "Progression enregistrée",
     "reader.page.sync.error": "Impossible d'enregistrer la progression",
     "reader.page.sync.auto": "La progression est enregistrée automatiquement",
-    "reader.page.upsell": "{$START_LINK}Passez à Premium{$CLOSE_LINK} pour enregistrer votre progression de lecture.",
     "reader.page.commentsPlaceholder": "Les commentaires se chargent quand vous faites défiler jusqu'ici.",
     "reader.page.seoUnavailable": "Chapitre indisponible",
     "reader.page.seoTitle": "{$title} — Chapitre {$number}",
@@ -79,6 +78,7 @@
     "reader.report.error": "Impossible d'envoyer le signalement. Veuillez réessayer.",
     "reader.chapterList.by": "par {$INTERPOLATION}",
     "reader.toolbar.versions": "Aussi par",
-    "reader.toolbar.readVersion": "Lire ce chapitre par"
+    "reader.toolbar.readVersion": "Lire ce chapitre par",
+    "reader.page.logInToSave": "{$START_LINK}Connectez-vous{$CLOSE_LINK} pour enregistrer votre progression de lecture."
   }
 }

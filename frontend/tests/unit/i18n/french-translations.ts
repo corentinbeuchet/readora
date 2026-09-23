@@ -15,7 +15,6 @@ import profile from '../../../src/locale/fr/profile.json';
 import reader from '../../../src/locale/fr/reader.json';
 import scanlation from '../../../src/locale/fr/scanlation.json';
 import social from '../../../src/locale/fr/social.json';
-import subscription from '../../../src/locale/fr/subscription.json';
 import upload from '../../../src/locale/fr/upload.json';
 
 export const FRENCH: Record<string, string> = Object.assign(
@@ -36,6 +35,5 @@ export const FRENCH: Record<string, string> = Object.assign(
   reader.translations,
   scanlation.translations,
   social.translations,
-  subscription.translations,
   upload.translations
 );

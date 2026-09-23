@@ -4,12 +4,8 @@ import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.domain.identity.Email;
 import com.readora.domain.identity.PasswordHash;
 import com.readora.domain.identity.Role;
-import com.readora.domain.identity.Subscription;
-import com.readora.domain.identity.SubscriptionPlan;
-import com.readora.domain.identity.SubscriptionStatus;
 import com.readora.domain.identity.UserAccount;
 import com.readora.domain.common.UserId;
-import com.readora.infrastructure.persistence.entity.SubscriptionJpaEntity;
 import com.readora.infrastructure.persistence.entity.UserAccountJpaEntity;
 import com.readora.infrastructure.persistence.repository.SpringDataUserAccountRepository;
 import org.springframework.stereotype.Component;
@@ -86,20 +82,7 @@ public class UserAccountRepositoryAdapter implements UserAccountRepositoryPort {
                 entity.getBio(),
                 entity.getAvatarUrl(),
                 parseRoles(entity.getRoles()),
-                toDomainSubscription(entity.getSubscription()),
                 entity.getCreatedAt(),
-                entity.getUpdatedAt()
-        );
-    }
-
-    private Subscription toDomainSubscription(SubscriptionJpaEntity entity) {
-        if (entity == null) {
-            return Subscription.free();
-        }
-        return new Subscription(
-                SubscriptionPlan.valueOf(entity.getPlan()),
-                SubscriptionStatus.valueOf(entity.getStatus()),
-                entity.getCurrentPeriodEnd(),
                 entity.getUpdatedAt()
         );
     }
@@ -117,7 +100,6 @@ public class UserAccountRepositoryAdapter implements UserAccountRepositoryPort {
                 account.getCreatedAt(),
                 account.getUpdatedAt()
         );
-        entity.setSubscription(toSubscriptionEntity(account.getSubscription()));
         return entity;
     }
 
@@ -131,26 +113,7 @@ public class UserAccountRepositoryAdapter implements UserAccountRepositoryPort {
         entity.setRoles(joinRoles(account.getRoles()));
         entity.setUpdatedAt(account.getUpdatedAt());
 
-        Subscription subscription = account.getSubscription();
-        SubscriptionJpaEntity subEntity = entity.getSubscription();
-        if (subEntity == null) {
-            entity.setSubscription(toSubscriptionEntity(subscription));
-        } else {
-            subEntity.setPlan(subscription.getPlan().name());
-            subEntity.setStatus(subscription.getStatus().name());
-            subEntity.setCurrentPeriodEnd(subscription.getCurrentPeriodEnd());
-            subEntity.setUpdatedAt(subscription.getUpdatedAt());
-        }
         return entity;
-    }
-
-    private SubscriptionJpaEntity toSubscriptionEntity(Subscription subscription) {
-        return new SubscriptionJpaEntity(
-                subscription.getPlan().name(),
-                subscription.getStatus().name(),
-                subscription.getCurrentPeriodEnd(),
-                subscription.getUpdatedAt()
-        );
     }
 
     private static String joinRoles(Set<Role> roles) {

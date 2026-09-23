@@ -20,7 +20,7 @@ interface Position {
 /**
  * What the reader has read, provided by the reader page next to [ReaderState]:
  * - reading history and read markers (free, `LIBRARY_USE`): the visit of a chapter, then its finish;
- * - the Premium exact-page bookmark (`BOOKMARK_WRITE`): page moves, debounced.
+ * - the exact-page bookmark (`LIBRARY_USE`): page moves, debounced.
  */
 @Service({ autoProvided: false })
 export class ReadingTracker {
@@ -54,13 +54,13 @@ export class ReadingTracker {
       }
     });
 
-    // Premium bookmark. The first position of each chapter is where it opened (restored page or page 1): it is never
+    // Bookmark. The first position of each chapter is where it opened (restored page or page 1): it is never
     // saved by itself, so opening a chapter doesn't overwrite the saved bookmark. Only moves away from it are saved.
     toObservable(this.position)
       .pipe(
         scan((acc, current) => ({ previous: acc.current, current }), { previous: null as Position | null, current: null as Position | null }),
         map(({ previous, current }) => (current && previous?.chapterId === current.chapterId ? current : null)),
-        filter((position): position is Position => position !== null && this.auth.can('BOOKMARK_WRITE')),
+        filter((position): position is Position => position !== null && this.auth.can('LIBRARY_USE')),
         debounceTime(PROGRESS_SYNC_DEBOUNCE_MS),
         distinctUntilChanged((a, b) => a.workId === b.workId && a.chapterId === b.chapterId && a.pageNumber === b.pageNumber),
         switchMap((position) => {

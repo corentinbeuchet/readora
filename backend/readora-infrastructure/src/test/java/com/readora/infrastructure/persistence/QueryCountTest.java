@@ -154,14 +154,14 @@ class QueryCountTest {
     }
 
     @Test
-    @DisplayName("Logging in loads the account and its subscription in one statement")
-    void accountLoadsWithItsSubscriptionInOneStatement() {
+    @DisplayName("Logging in loads the account in one statement")
+    void accountLoadsInOneStatement() {
         accountRepository.save(UserAccount.register(Email.of("count@readora.test"), "count-reader", PasswordHash.of("hash")));
 
         statistics.clear();
         UserAccount account = accountRepository.findByEmail(Email.of("count@readora.test")).orElseThrow();
 
-        assertThat(account.getSubscription()).isNotNull();
+        assertThat(account.getUsername()).isEqualTo("count-reader");
         assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
     }
 }

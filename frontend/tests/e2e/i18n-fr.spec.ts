@@ -24,7 +24,7 @@ test.describe('French interface (US-13)', () => {
   });
 
   test('French pages have no axe violations', async ({ page, axe }) => {
-    for (const url of ['', 'works', 'login', 'subscription']) {
+    for (const url of ['', 'works', 'login', 'register']) {
       await whenIVisit(page, url);
 
       await thenAxeFindsNoViolations(axe());
@@ -73,7 +73,7 @@ test.describe('French interface (US-13)', () => {
     const chapter = await publishChapter(request);
     await givenMyScreenIsNarrow(page);
 
-    for (const url of ['', 'works', 'login', 'register', 'subscription', `works/${chapter.workId}`]) {
+    for (const url of ['', 'works', 'login', 'register', `works/${chapter.workId}`]) {
       await whenIVisit(page, url);
 
       await thenThePageDoesNotScrollSideways(page, url);

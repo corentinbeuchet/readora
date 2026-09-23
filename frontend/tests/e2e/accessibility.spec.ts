@@ -14,7 +14,7 @@ for (const theme of ['light', 'dark'] as const) {
       await givenMyThemeIs(page, theme);
     });
 
-    for (const url of ['/', '/works', '/updates', '/rankings', '/lists', '/login', '/register', '/subscription']) {
+    for (const url of ['/', '/works', '/updates', '/rankings', '/lists', '/login', '/register']) {
       test(`${url} has no axe violations`, async ({ page, axe }) => {
         await whenIVisit(page, url);
 

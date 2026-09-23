@@ -1,10 +1,4 @@
-@if (!canRead()) {
-  <div class="card">
-    <h3 i18n="@@profile.bookmarks.premiumTitle">Bookmarks are a Premium feature</h3>
-    <p class="muted" i18n="@@profile.bookmarks.premiumHint">Upgrade to save your reading progress on every work and pick up where you left off.</p>
-    <a routerLink="/subscription" class="btn btn-primary" i18n="@@profile.bookmarks.seePlans">See plans</a>
-  </div>
-} @else if (bookmarks.isLoading()) {
+@if (bookmarks.isLoading()) {
   <p class="muted" role="status" i18n="@@profile.bookmarks.loading">Loading your bookmarks…</p>
 } @else if (bookmarks.error()) {
   <app-load-error (retry)="reload()" i18n="@@profile.bookmarks.loadError">Could not load bookmarks.</app-load-error>

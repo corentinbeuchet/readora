@@ -55,8 +55,9 @@ class PaymentColumnsMigrationTest {
                 + ", 'evt_1', now(), false)");
     }
 
+    /// Up to V22 only: V23 drops the whole table.
     private void whenAllMigrationsRun() {
-        flyway().load().migrate();
+        flyway().target("22").load().migrate();
     }
 
     private void thenTheQueryReturns(String sql, String... rows) throws SQLException {

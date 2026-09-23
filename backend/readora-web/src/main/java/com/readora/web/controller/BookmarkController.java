@@ -25,7 +25,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/bookmarks")
-@Tag(name = "Bookmarks", description = "Premium reading progress and bookmarks")
+@Tag(name = "Bookmarks", description = "Reading progress and bookmarks")
 public class BookmarkController {
 
     private final ManageBookmarkUseCase manageBookmarkUseCase;
@@ -37,7 +37,7 @@ public class BookmarkController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('BOOKMARK_READ')")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "List my bookmarks")
     public ResponseEntity<ApiResponse<List<BookmarkDto>>> listBookmarks() {
         List<Bookmark> bookmarks = manageBookmarkUseCase.listBookmarks(currentUserProvider.requireUserId());
@@ -45,7 +45,7 @@ public class BookmarkController {
     }
 
     @GetMapping("/{workId}")
-    @PreAuthorize("hasAuthority('BOOKMARK_READ')")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "Get my bookmark for a work")
     public ResponseEntity<ApiResponse<BookmarkDto>> getBookmark(@PathVariable UUID workId) {
         return manageBookmarkUseCase.getBookmark(currentUserProvider.requireUserId(), WorkId.of(workId))
@@ -54,7 +54,7 @@ public class BookmarkController {
     }
 
     @PutMapping("/{workId}/progress")
-    @PreAuthorize("hasAuthority('BOOKMARK_WRITE')")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
     @Operation(summary = "Save my reading progress for a work")
     public ResponseEntity<ApiResponse<BookmarkDto>> updateProgress(
             @PathVariable UUID workId,

@@ -25,13 +25,12 @@ public class UserAccount extends AggregateRoot<UserId> {
     private String bio;
     private @Nullable String avatarUrl;
     private final Set<Role> roles = EnumSet.noneOf(Role.class);
-    private Subscription subscription;
     private final Instant createdAt;
     private Instant updatedAt;
 
     public UserAccount(UserId id, Email email, String username, PasswordHash passwordHash, @Nullable String displayName,
                        @Nullable String bio, @Nullable String avatarUrl, @Nullable Set<Role> roles,
-                       @Nullable Subscription subscription, @Nullable Instant createdAt, @Nullable Instant updatedAt) {
+                       @Nullable Instant createdAt, @Nullable Instant updatedAt) {
         super(id);
         this.email = Objects.requireNonNull(email, "Email cannot be null");
         this.username = validateUsername(username);
@@ -45,7 +44,6 @@ public class UserAccount extends AggregateRoot<UserId> {
         if (this.roles.isEmpty()) {
             this.roles.add(Role.READER);
         }
-        this.subscription = subscription != null ? subscription : Subscription.free();
         this.createdAt = createdAt != null ? createdAt : Instant.now();
         this.updatedAt = updatedAt != null ? updatedAt : this.createdAt;
     }
@@ -55,7 +53,7 @@ public class UserAccount extends AggregateRoot<UserId> {
         UserAccount account = new UserAccount(
                 UserId.of(UUID.randomUUID().toString()),
                 email, username, passwordHash, username, "", null,
-                EnumSet.of(Role.READER), Subscription.free(), now, now
+                EnumSet.of(Role.READER), now, now
         );
         account.registerEvent(UserRegisteredEvent.now(account.getId(), email));
         return account;
@@ -65,9 +63,6 @@ public class UserAccount extends AggregateRoot<UserId> {
         EnumSet<Permission> permissions = EnumSet.noneOf(Permission.class);
         for (Role role : roles) {
             permissions.addAll(role.permissions());
-        }
-        if (subscription.isActive(Instant.now())) {
-            permissions.addAll(subscription.getPlan().permissions());
         }
         return Collections.unmodifiableSet(permissions);
     }
@@ -95,16 +90,6 @@ public class UserAccount extends AggregateRoot<UserId> {
         }
         this.avatarUrl = newAvatarUrl != null && !newAvatarUrl.isBlank() ? newAvatarUrl.trim() : null;
         this.updatedAt = Instant.now();
-    }
-
-    public void activateSubscription(Subscription newSubscription) {
-        Objects.requireNonNull(newSubscription, "Subscription cannot be null");
-        if (newSubscription.getPlan() == SubscriptionPlan.FREE) {
-            throw new DomainValidationException("Cannot activate the FREE plan as a paid subscription");
-        }
-        this.subscription = newSubscription;
-        this.updatedAt = Instant.now();
-        registerEvent(SubscriptionActivatedEvent.now(this.id, newSubscription.getPlan(), newSubscription.getCurrentPeriodEnd()));
     }
 
     public void grantRole(Role role) {
@@ -152,10 +137,6 @@ public class UserAccount extends AggregateRoot<UserId> {
 
     public Set<Role> getRoles() {
         return Collections.unmodifiableSet(roles);
-    }
-
-    public Subscription getSubscription() {
-        return subscription;
     }
 
     public Instant getCreatedAt() {

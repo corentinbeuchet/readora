@@ -24,7 +24,7 @@ series; teams take chapters from RAW to published). Monorepo:
   also rebuilds and restarts the backend whenever a backend source or pom changes.
 - Dev seed accounts (Spring profile `local`: on in docker-compose; elsewhere add `local` to the active profiles,
   e.g. `--spring.profiles.active=local`). Password for all: `readora-dev`. Emails `<username>@readora.local`:
-  `reader` (free), `premium` (PREMIUM until 2099), `admin`, `moderator` (comment moderation queue at `/moderation`),
+  `reader`, `kenji` (readers), `admin`, `moderator` (comment moderation queue at `/moderation`),
   and the "Readora Demo Team" scanlators `leader`, `cleaner`,
   `translator`, `typesetter`, `proofreader`, `quality` (QC) with one open task per stage (chapters 1–5; QC can publish ch. 5).
   The roster belongs to the team (its roles apply to every series the team works on); the tasks belong to the team's
@@ -36,7 +36,7 @@ series; teams take chapters from RAW to published). Monorepo:
   published chapters (5 placeholder pages each) for Solo Leveling (two teams' versions), Omniscient Reader, Horimiya
   and two seed series; Readora Demo Saga (drafts only, from the board) and Berserk have none. Readers `yuki` and `sam`
   wrote comments (a reply thread, a spoiler); `moderator` has two open reports. `reader` finished Horimiya, is on
-  chapter 4 of Solo Leveling, has a public list, a team follow and notifications; `premium` has a bookmark in
+  chapter 4 of Solo Leveling, has a public list, a team follow and notifications; `kenji` has a bookmark in
   Omniscient Reader. Page images and covers are drawn at startup by `LocalSeedImages` (keys under `seed/`).
   Seed files: `backend/readora-infrastructure/src/main/resources/db/seed-local/`.
   Never enabled with `production` (startup guard).
@@ -48,11 +48,11 @@ series; teams take chapters from RAW to published). Monorepo:
 - Identity comes **only** from the JWT. Never accept `userId` / `authorId` / `publisherId` in a request body;
   tests on both sides assert this, keep it that way.
 - One API envelope: backend `ApiResponse.ok/error` ↔ frontend `ApiClient` unwraps it into typed values / `ApiError`.
-- Permission names are shared vocabulary: backend `Role` / `SubscriptionPlan` enum permission sets and `@PreAuthorize`,
+- Permission names are shared vocabulary: backend `Role` enum permission sets and `@PreAuthorize`,
   frontend route `data: { permission }` + `permissionGuard` and `*appHasPermission`. Rename in both places or neither.
-  Roles today: `READER`, `MODERATOR` (reader + `COMMENT_MODERATE`), `SCANLATOR`, `ADMIN` (everything); the `PREMIUM`
-  plan adds `BOOKMARK_*`. Free signed-in features (library, history, lists, follows, notifications, export) share
-  `LIBRARY_USE`; add a new permission only when a role or plan must be able to lack it.
+  Roles today: `READER`, `MODERATOR` (reader + `COMMENT_MODERATE`), `SCANLATOR`, `ADMIN` (everything). Free signed-in
+  features (library, bookmarks, history, lists, follows, notifications, export) share `LIBRARY_USE`; add a new
+  permission only when a role must be able to lack it. There are no paid plans (Premium was removed on 2026-09-23).
 - Authorization is enforced on the server for every write, including resource ownership/membership. UI gating is cosmetic.
 - No default secrets anywhere (yml fallbacks, `@DefaultValue`, env files). Missing secret = startup failure.
 - Decisions are recorded where they're read: the commit's `Why:` for the change, and the matching `AGENTS.md` when

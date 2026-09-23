@@ -40,7 +40,7 @@ test.describe('Authentication flow', () => {
 
     await whenIOpenTheTab(page, 'Bookmarks');
 
-    await thenISeeTheText(page, 'Bookmarks are a Premium feature');
+    await thenISeeTheText(page, 'You have no bookmarks yet.');
 
     await whenIReload(page);
 
@@ -68,11 +68,6 @@ test.describe('Authentication flow', () => {
     await whenIVisit(page, '/scanlation/00000000-0000-0000-0000-000000000000');
 
     await thenIAmOn(page, /\/login\?returnUrl=/);
-
-    await whenIVisit(page, '/subscription');
-
-    await thenICanSeeTheHeading(page, 'Choose your plan');
-    await thenICanSeeTheText(page, "Premium can't be bought yet");
   });
 });
 
@@ -127,10 +122,6 @@ async function whenIRetryWithThePassword(page: Page, password: string): Promise<
 
 async function thenIAmOn(page: Page, url: string | RegExp): Promise<void> {
   await expect(page).toHaveURL(url);
-}
-
-async function thenICanSeeTheText(page: Page, text: string): Promise<void> {
-  await expect(page.getByText(text)).toBeVisible();
 }
 
 async function thenICanSeeTheHeading(page: Page, name: string): Promise<void> {

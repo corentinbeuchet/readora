@@ -20,7 +20,7 @@
   `ChapterComment.createReply`) that `registerEvent(...)`. Events are records with a `now(...)` factory.
 - Every state transition guards its preconditions (current stage/status, assignee, already-published). No silent re-transitions.
 - Child entities expose no public mutators; all changes go through the aggregate root. Return unmodifiable/copy collections.
-- Permissions are derived in the domain (`Role`/`SubscriptionPlan` permission sets → `UserAccount.effectivePermissions()`).
+- Permissions are derived in the domain (`Role` permission sets → `UserAccount.effectivePermissions()`).
 - Secrets never print: override `toString` (model: `PasswordHash` → `"PasswordHash[****]"`).
 - Inject time (`Clock`) for time-based rules instead of `Instant.now()` in new code.
 
@@ -105,8 +105,9 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
   fields the client must always send; optional flags are `@Nullable Boolean` with a default in the controller.
 
 ## Integrations
-- Payments were removed on 2026-09-23 (Stripe checkout, cancel, webhooks): Premium is granted outside the app until a
-  payments feature comes back. V22 dropped the payment-only columns (a payments feature adds its own); bring the flow back from git
+- Payments and Premium were removed on 2026-09-23 (Stripe checkout, cancel, webhooks, then the plans themselves:
+  bookmarks became `LIBRARY_USE`). V22 dropped the payment-only columns and V23 the `subscriptions` table; a payments
+  feature adds its own schema back. Bring the flow back from git
   (`git log --oneline -- backend/readora-infrastructure/src/main/java/com/readora/infrastructure/payment`) and follow the
   webhook rules below.
 - Vendor SDK types never leave infrastructure — translate to the port's types (model: `S3StorageAdapter`: S3 SDK types stay

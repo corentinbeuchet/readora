@@ -35,8 +35,8 @@ class LocalSeedIntegrationTest extends AuthTestSupport {
 
     @ParameterizedTest(name = "{0} can log in and has {1}")
     @CsvSource({
-            "reader,      COMMENT_WRITE,   BOOKMARK_WRITE",
-            "premium,     BOOKMARK_WRITE,  TASK_CLAIM",
+            "reader,      LIBRARY_USE,     TASK_CLAIM",
+            "kenji,       LIBRARY_USE,     TASK_CLAIM",
             "admin,       USER_MANAGE,     NONE",
             "moderator,   COMMENT_MODERATE, USER_MANAGE",
             "leader,      TASK_CLAIM,      USER_MANAGE",

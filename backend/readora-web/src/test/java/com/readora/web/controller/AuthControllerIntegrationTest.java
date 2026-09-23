@@ -41,7 +41,7 @@ class AuthControllerIntegrationTest extends AuthTestSupport {
                 .andExpect(jsonPath("$.data.user.email").value(email))
                 .andExpect(jsonPath("$.data.user.roles[0]").value("READER"))
                 .andExpect(jsonPath("$.data.user.permissions", containsInAnyOrder("COMMENT_WRITE", "COMMENT_UPVOTE", "LIBRARY_USE", "PAGE_REPORT", "RATE_WORK", "COMMENT_REPORT")))
-                .andExpect(jsonPath("$.data.user.subscription.plan").value("FREE"))
+                .andExpect(jsonPath("$.data.user.subscription").doesNotExist())
                 .andExpect(cookie().exists(REFRESH_COOKIE))
                 .andExpect(cookie().httpOnly(REFRESH_COOKIE, true))
                 .andExpect(cookie().path(REFRESH_COOKIE, "/api/v1/auth"))

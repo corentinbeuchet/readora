@@ -13,8 +13,8 @@ import { provideHttpTesting } from '../../test-utils';
   template: `
     <button *appHasPermission="'CHAPTER_PUBLISH'" type="button" class="publish">Publish</button>
     <span *appHasPermission="['TASK_CLAIM', 'TASK_SUBMIT']; mode: 'any'" class="any">Any</span>
-    <ng-container *appHasPermission="'BOOKMARK_WRITE'; else upsell"><p class="save">Save progress</p></ng-container>
-    <ng-template #upsell><p class="upsell">Go premium</p></ng-template>
+    <ng-container *appHasPermission="'LIBRARY_USE'; else logIn"><p class="save">Save progress</p></ng-container>
+    <ng-template #logIn><p class="upsell">Log in to save</p></ng-template>
   `
 })
 class HostComponent {}
@@ -65,8 +65,8 @@ describe('HasPermissionDirective', () => {
     thenIDoNotSee('publish');
   });
 
-  it('swaps else template for the real content once BOOKMARK_WRITE is granted', async () => {
-    await givenIAmSignedInWith(['BOOKMARK_WRITE']);
+  it('swaps else template for the real content once LIBRARY_USE is granted', async () => {
+    await givenIAmSignedInWith(['LIBRARY_USE']);
 
     whenTheHostRenders();
 

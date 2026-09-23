@@ -48,65 +48,63 @@ class BookmarkControllerIntegrationTest extends AuthTestSupport {
     }
 
     @Test
-    @DisplayName("PREMIUM user can save progress twice (upsert), read it back and list bookmarks")
-    void premiumUserSavesAndListsBookmarks() throws Exception {
-        Session premium = registerPremium();
+    @DisplayName("A signed-in reader can save progress twice (upsert), read it back and list bookmarks")
+    void readerSavesAndListsBookmarks() throws Exception {
+        Session reader = register();
 
-        mockMvc.perform(get("/api/v1/auth/me").header("Authorization", premium.bearer()))
+        mockMvc.perform(get("/api/v1/auth/me").header("Authorization", reader.bearer()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.subscription.plan").value("PREMIUM"))
-                .andExpect(jsonPath("$.data.subscription.active").value(true))
-                .andExpect(jsonPath("$.data.permissions", hasItem("BOOKMARK_WRITE")));
+                .andExpect(jsonPath("$.data.permissions", hasItem("LIBRARY_USE")));
 
         String progressUrl = "/api/v1/bookmarks/" + work.getId().value() + "/progress";
         mockMvc.perform(put(progressUrl)
-                        .header("Authorization", premium.bearer())
+                        .header("Authorization", reader.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new UpdateProgressRequest(chapter.getId().value(), 3))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.lastReadPageIndex").value(3));
 
         mockMvc.perform(put(progressUrl)
-                        .header("Authorization", premium.bearer())
+                        .header("Authorization", reader.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new UpdateProgressRequest(chapter.getId().value(), 7))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.lastReadPageIndex").value(7));
 
-        mockMvc.perform(get("/api/v1/bookmarks/" + work.getId().value()).header("Authorization", premium.bearer()))
+        mockMvc.perform(get("/api/v1/bookmarks/" + work.getId().value()).header("Authorization", reader.bearer()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.workId").value(work.getId().value().toString()))
                 .andExpect(jsonPath("$.data.lastReadChapterId").value(chapter.getId().value().toString()))
                 .andExpect(jsonPath("$.data.lastReadPageIndex").value(7));
 
-        mockMvc.perform(get("/api/v1/bookmarks").header("Authorization", premium.bearer()))
+        mockMvc.perform(get("/api/v1/bookmarks").header("Authorization", reader.bearer()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].status").value("READING"));
     }
 
     @Test
-    @DisplayName("Bookmark for a work never read returns 404 for a PREMIUM user")
+    @DisplayName("Bookmark for a work never read returns 404")
     void unknownBookmarkIsNotFound() throws Exception {
-        Session premium = registerPremium();
-        mockMvc.perform(get("/api/v1/bookmarks/" + WorkId.generate().value()).header("Authorization", premium.bearer()))
+        Session reader = register();
+        mockMvc.perform(get("/api/v1/bookmarks/" + WorkId.generate().value()).header("Authorization", reader.bearer()))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     @DisplayName("Progress pointing at a chapter of another work is rejected with 400; an unknown chapter with 404")
     void progressMustReferenceAChapterOfThatWork() throws Exception {
-        Session premium = registerPremium();
+        Session reader = register();
         Work otherWork = workRepository.save(Work.create("Other", "Synopsis", WorkType.MANGA, "c.webp", Set.of("Action")));
 
         mockMvc.perform(put("/api/v1/bookmarks/" + otherWork.getId().value() + "/progress")
-                        .header("Authorization", premium.bearer())
+                        .header("Authorization", reader.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new UpdateProgressRequest(chapter.getId().value(), 2))))
                 .andExpect(status().isBadRequest());
 
         mockMvc.perform(put("/api/v1/bookmarks/" + work.getId().value() + "/progress")
-                        .header("Authorization", premium.bearer())
+                        .header("Authorization", reader.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new UpdateProgressRequest(java.util.UUID.randomUUID(), 2))))
                 .andExpect(status().isNotFound());
@@ -115,9 +113,9 @@ class BookmarkControllerIntegrationTest extends AuthTestSupport {
     @Test
     @DisplayName("Invalid progress payload returns 400")
     void invalidPayloadIsBadRequest() throws Exception {
-        Session premium = registerPremium();
+        Session reader = register();
         mockMvc.perform(put("/api/v1/bookmarks/" + work.getId().value() + "/progress")
-                        .header("Authorization", premium.bearer())
+                        .header("Authorization", reader.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"chapterId\":null,\"pageIndex\":0}"))
                 .andExpect(status().isBadRequest())

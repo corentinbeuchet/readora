@@ -47,7 +47,7 @@ test.describe('Reader Experience & Viewer Suite', () => {
     await thenIAmOn(page, `/read/${publishedChapter.chapterId}`);
     await thenTheReadingModeIs(page, 'Paged');
     await thenICanSeePage(page, 1);
-    await thenIAmOfferedPremiumToSaveMyProgress(page);
+    await thenIAmAskedToLogInToSaveMyProgress(page);
   });
 });
 
@@ -113,7 +113,7 @@ async function thenICanSeePage(page: Page, pageNumber: number): Promise<void> {
   await expect(page.getByRole('img', { name: new RegExp(`^Page ${pageNumber}\\b`) })).toBeVisible();
 }
 
-/** Anonymous readers get the Premium upsell instead of progress sync. */
-async function thenIAmOfferedPremiumToSaveMyProgress(page: Page): Promise<void> {
-  await expect(page.getByText(/Go Premium/)).toBeVisible();
+/** Anonymous readers are asked to log in instead of having their progress synced. */
+async function thenIAmAskedToLogInToSaveMyProgress(page: Page): Promise<void> {
+  await expect(page.getByText(/to save your reading progress/)).toBeVisible();
 }

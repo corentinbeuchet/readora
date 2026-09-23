@@ -182,7 +182,6 @@
               "src/locale/fr/reader.json",
               "src/locale/fr/scanlation.json",
               "src/locale/fr/social.json",
-              "src/locale/fr/subscription.json",
               "src/locale/fr/upload.json"
             ],
             "subPath": "fr"

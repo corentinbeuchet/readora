@@ -132,20 +132,17 @@ class SecurityRulesIntegrationTest extends AuthTestSupport {
     }
 
     @Test
-    @DisplayName("READER without PREMIUM gets 403 on bookmarks; 403 on publish; anonymous refresh path unaffected")
-    void readerLacksPremiumAndScanlationPermissions() throws Exception {
+    @DisplayName("Bookmarks need a signed-in reader (401); a READER gets 403 on publish; anonymous refresh path unaffected")
+    void bookmarksNeedAnAccountAndReadersCannotPublish() throws Exception {
         Session reader = register();
 
         mockMvc.perform(put("/api/v1/bookmarks/" + work.getId().value() + "/progress")
-                        .header("Authorization", reader.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new UpdateProgressRequest(chapter.getId().value(), 1))))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false));
 
-        mockMvc.perform(get("/api/v1/bookmarks").header("Authorization", reader.bearer()))
-                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/bookmarks")).andExpect(status().isUnauthorized());
 
         Team team = teamRepository.save(Team.create("Team Tower " + java.util.UUID.randomUUID(), null, UserId.of("leader-1")));
         ScanlationProject project = ScanlationProject.create("Team Tower", work.getId(), team.getId());

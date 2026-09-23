@@ -5,11 +5,13 @@ import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import { provideRouter, Router } from '@angular/router';
 import { clearTranslations, loadTranslations } from '@angular/localize';
-import { PlansPage } from '@app/features/subscription/plans-page/plans-page';
+import { ProfilePage } from '@app/features/profile/profile-page/profile-page';
+import { AuthStore } from '@app/core/auth/auth-store';
 import { LoginPage } from '@app/features/auth/login-page/login-page';
 import { Shell } from '@app/features/layout/shell/shell';
 import { FRENCH } from './french-translations';
 import { API, fail, provideHttpTesting } from '../test-utils';
+import { mockUser, signIn } from '../core/auth/auth-fixtures';
 
 @Component({ template: '<h1>Series</h1>' })
 class SeriesPage {}
@@ -28,13 +30,14 @@ describe('US-13 Reading Readora in my language', () => {
     clearTranslations();
   });
 
-  it('The French site shows French text, dates and prices', () => {
+  it('The French site shows French text and dates', async () => {
     givenIUseTheFrenchSite();
+    await givenIAmSignedInAs('camille', '2026-01-01T00:00:00Z');
 
-    whenIOpen(PlansPage);
+    whenIOpen(ProfilePage);
 
-    thenThePageTitleIs('Choisissez votre formule');
-    thenThePremiumPriceReads('4,99 €');
+    thenTheFirstTabReads('Aperçu');
+    thenTheJoinDateReads('inscrit le 1 janv. 2026');
   });
 
   it('Switching language keeps the current page', async () => {
@@ -103,13 +106,16 @@ describe('US-13 Reading Readora in my language', () => {
     fixture.detectChanges();
   }
 
-  function thenThePageTitleIs(title: string): void {
-    expect(text(fixture.nativeElement.querySelector('h1'))).toBe(title);
+  async function givenIAmSignedInAs(username: string, createdAt: string): Promise<void> {
+    await signIn(TestBed.inject(AuthStore), http, mockUser({ username, displayName: 'Camille', createdAt }));
   }
 
-  function thenThePremiumPriceReads(price: string): void {
-    const prices: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.price'));
-    expect(prices.map(text).some((shown) => shown.startsWith(price))).toBe(true);
+  function thenTheFirstTabReads(label: string): void {
+    expect(text(fixture.nativeElement.querySelector('[role="tab"]'))).toBe(label);
+  }
+
+  function thenTheJoinDateReads(date: string): void {
+    expect(text(fixture.nativeElement.querySelector('.profile-header p.muted'))).toContain(date);
   }
 
   function thenTheLanguageLinkPointsTo(label: string, href: string): void {

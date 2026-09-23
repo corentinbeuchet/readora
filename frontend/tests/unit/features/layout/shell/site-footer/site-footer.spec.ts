@@ -41,7 +41,7 @@ describe('SiteFooter', () => {
   it('offers the sections again, and the same page in French', () => {
     givenIAmOnThePage('/works?genre=Action');
 
-    thenTheSectionLinksGoTo(['/works', '/updates', '/rankings', '/lists', '/subscription']);
+    thenTheSectionLinksGoTo(['/works', '/updates', '/rankings', '/lists']);
     thenTheLanguageLinkPointsTo('Français', '/fr/works?genre=Action');
   });
 

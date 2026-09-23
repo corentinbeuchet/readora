@@ -32,7 +32,7 @@ Backend
 - Doc comments are `///` Markdown; new tests use `@DisplayName` sentences; negative cases tested.
 
 Shared vocabulary
-- A permission added/renamed in `Role`/`SubscriptionPlan` also exists in the frontend `PERMISSIONS` list, and vice versa.
+- A permission added/renamed in `Role` also exists in the frontend `PERMISSIONS` list, and vice versa.
 
 Frontend
 - Template-read members are `protected readonly` (not private before Angular 22.2); `inject()` in fields;

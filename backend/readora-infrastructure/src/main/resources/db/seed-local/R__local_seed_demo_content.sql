@@ -4,12 +4,12 @@
 --
 -- Content to try the app with: two more teams, published chapters (Solo Leveling in two teams' versions),
 -- comments with replies, open reports for the moderation queue, and reading history, a bookmark, a library,
--- a reading list, a team follow and notifications for `reader` / `premium`.
+-- a reading list, a team follow and notifications for `reader` / `kenji`.
 -- Page images and covers are keys under `seed/`: LocalSeedImages draws and stores them at startup.
 --
 -- What each account sees:
 --   reader    Horimiya fully read, Solo Leveling read up to chapter 3, a public list, follows Moonlight Scans
---   premium   a bookmark in Omniscient Reader chapter 3
+--   kenji     a bookmark in Omniscient Reader chapter 3
 --   moderator two open comment reports at /moderation
 --   leader2 / leader3  lead "Moonlight Scans" / "Equipe Aurore"
 -- Readora Demo Saga keeps no published chapter (its chapters come from the scanlation board), Berserk has none.
@@ -184,7 +184,7 @@ FROM (
            '00000000-0000-4000-8000-000000000041', 'yuki', 'Get 1000 followers for free at totally-legit.example', NULL,
            NULL, 1, FALSE, 0, 8
     UNION ALL SELECT '00000000-0000-4000-c000-000000000007', '00000000-0000-4000-b022-000000000001',
-           '00000000-0000-4000-8000-000000000002', 'premium', 'The translation notes on page 3 are great.', 3,
+           '00000000-0000-4000-8000-000000000002', 'kenji', 'The translation notes on page 3 are great.', 3,
            NULL, 1, FALSE, 1, 6
     UNION ALL SELECT '00000000-0000-4000-c000-000000000008', '00000000-0000-4000-b033-000000000001',
            '00000000-0000-4000-8000-000000000001', 'reader', 'Hori and Miyamura are adorable.', NULL,
@@ -229,7 +229,7 @@ WHERE EXISTS (SELECT 1 FROM chapter_comments c WHERE c.id = CAST(v.comment_id AS
 
 -- ------------------------------------------------------------------------------
 -- reader: Horimiya finished (every chapter read), Solo Leveling read up to chapter 3; library, list, follow.
--- premium: Omniscient Reader chapters 1-2 read, bookmarked on page 2 of chapter 3.
+-- kenji: Omniscient Reader chapters 1-2 read, bookmarked on page 2 of chapter 3.
 -- ------------------------------------------------------------------------------
 INSERT INTO chapter_reads (user_id, chapter_id, work_id, chapter_number, read_at, finished)
 SELECT r.user_id, c.id, c.work_id, c.chapter_number, CURRENT_TIMESTAMP - INTERVAL '1' HOUR * (10 - CAST(c.chapter_number AS INT)), TRUE

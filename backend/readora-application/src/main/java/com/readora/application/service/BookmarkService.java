@@ -37,7 +37,7 @@ public class BookmarkService implements ManageBookmarkUseCase {
 
     @Override
     public Bookmark updateProgress(UserId userId, WorkId workId, ChapterId chapterId, int pageIndex) {
-        requirePermission(userId, Permission.BOOKMARK_WRITE);
+        requirePermission(userId, Permission.LIBRARY_USE);
         Chapter chapter = chapterRepository.findById(chapterId)
                 .orElseThrow(() -> new NotFoundException("Chapter", chapterId));
         if (!chapter.getWorkId().equals(workId) || !chapter.isPublished()) {
@@ -55,13 +55,13 @@ public class BookmarkService implements ManageBookmarkUseCase {
 
     @Override
     public Optional<Bookmark> getBookmark(UserId userId, WorkId workId) {
-        requirePermission(userId, Permission.BOOKMARK_READ);
+        requirePermission(userId, Permission.LIBRARY_USE);
         return bookmarkRepository.findByUserIdAndWorkId(userId, workId);
     }
 
     @Override
     public List<Bookmark> listBookmarks(UserId userId) {
-        requirePermission(userId, Permission.BOOKMARK_READ);
+        requirePermission(userId, Permission.LIBRARY_USE);
         return bookmarkRepository.findByUserId(userId);
     }
 
@@ -69,7 +69,7 @@ public class BookmarkService implements ManageBookmarkUseCase {
         UserAccount account = userRepository.findById(userId)
                 .orElseThrow(() -> new AccessDeniedDomainException("Unknown user: " + userId));
         if (!account.can(permission)) {
-            throw new AccessDeniedDomainException("Permission " + permission + " required. Upgrade to PREMIUM to use bookmarks.");
+            throw new AccessDeniedDomainException("Permission " + permission + " required.");
         }
     }
 }

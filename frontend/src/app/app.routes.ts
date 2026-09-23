@@ -110,10 +110,6 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
-    path: 'subscription',
-    loadComponent: () => import('@app/features/subscription/plans-page/plans-page').then((m) => m.PlansPage)
-  },
-  {
     path: 'forbidden',
     loadComponent: () => import('@app/features/layout/forbidden-page').then((m) => m.ForbiddenPage)
   },

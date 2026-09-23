@@ -40,15 +40,11 @@
             <app-icon name="user" />
           }
           <span class="user-name">{{ auth.user()?.displayName }}</span>
-          @if (auth.isPremium()) {
-            <span class="badge badge-premium" i18n="@@shell.premiumBadge">Premium</span>
-          }
         </button>
         <div ngMenu #userMenu="ngMenu" (itemSelected)="onUserMenuSelected($event)" class="user-menu">
           <ng-template ngMenuContent>
             <button type="button" ngMenuItem value="/profile" i18n="@@shell.menu.profile">Profile</button>
             <button type="button" ngMenuItem value="/history" i18n="@@shell.menu.history">History</button>
-            <button type="button" ngMenuItem value="/subscription" i18n="@@shell.menu.subscription">Subscription</button>
             @if (hasTeamTools()) {
               <div role="separator" class="menu-separator"></div>
               <div role="group" class="menu-group" aria-label="Team tools" i18n-aria-label="@@shell.menu.team">

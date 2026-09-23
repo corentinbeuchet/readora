@@ -8,10 +8,10 @@ Feature: Reading Readora in my language
   So that I can find, read and discuss series in the language I'm comfortable with
 
   @ui
-  Scenario: The French site shows French text, dates and prices
-    When reader "Camille" opens the plans page of the French site
-    Then the page title is "Choisissez votre formule"
-    And the Premium price reads "4,99 €"
+  Scenario: The French site shows French text and dates
+    When reader "Camille", who joined on 1 January 2026, opens her profile on the French site
+    Then the first tab reads "Aperçu"
+    And her join date reads "inscrit le 1 janv. 2026"
 
   @ui
   Scenario: Switching language keeps the current page

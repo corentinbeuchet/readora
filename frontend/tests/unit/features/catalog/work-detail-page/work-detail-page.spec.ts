@@ -5,9 +5,8 @@ import { WorkDetailPage } from '@app/features/catalog/work-detail-page/work-deta
 import { AuthStore } from '@app/core/auth/auth-store';
 import { ApiResponse } from '@app/core/models/api';
 import { Work, WorkFacts } from '@app/core/models/catalog';
-import { givenIAmSignedInWith, mockUser, signIn } from '../../../core/auth/auth-fixtures';
+import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
 import { WorkProgress } from '@app/core/models/library';
-import { Permission } from '@app/core/models/identity';
 import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 
 const WORK: Work = {
@@ -21,18 +20,6 @@ const WORK: Work = {
   coverImageUrl: 'https://cdn.readora.com/covers/w-1.webp',
   genres: ['Action'],
   facts: { alternativeTitles: [], artist: null, releaseYear: null, originalLanguage: null, contentRating: null }
-};
-
-/** A published chapter the "Continue reading" test has a bookmark in. */
-const CHAPTER_7 = {
-  id: 'chap-7',
-  workId: WORK.id,
-  chapterNumber: '7',
-  title: 'Chapter 7',
-  status: 'PUBLISHED' as const,
-  pageCount: 10,
-  publishedAt: null,
-  team: { id: 't-shadow', name: 'Shadow Scans' }
 };
 
 describe('WorkDetailPage', () => {
@@ -54,14 +41,6 @@ describe('WorkDetailPage', () => {
       r.flush(ok(r.request.url.endsWith('ratings') ? { average: 0, count: 0 } : []))
     );
     http.verify();
-  });
-
-  it('"Continue reading" restores the saved page via ?page=N', async () => {
-    await givenIAmSignedInWith(['BOOKMARK_READ', 'BOOKMARK_WRITE']);
-
-    await whenIOpenTheWorkPage({ chapters: ok([{ ...CHAPTER_7 }]), bookmark: { chapterId: 'chap-7', page: 5 } });
-
-    thenTheFirstActionIs('Continue reading (page 5)', '/read/chap-7?page=5');
   });
 
   it('shows an error (not "no chapters") when the chapter list answers success:false', async () => {
@@ -202,7 +181,7 @@ describe('WorkDetailPage', () => {
       inLibrary: boolean;
       finished: string[];
       next: string | null;
-      /** Premium's saved page (`BOOKMARK_READ`); `chapterId: null` when its chapter was deleted. */
+      /** The saved page; `chapterId: null` when its chapter was deleted. Without it, the bookmark lookup answers 404. */
       bookmark?: { chapterId: string | null; page: number };
       otherVersions?: { id: string; number: string; team: string }[];
       facts?: WorkFacts;
@@ -210,8 +189,7 @@ describe('WorkDetailPage', () => {
       const versions = (state.otherVersions ?? []).map((v) => ({ ...CHAPTERS[0], id: v.id, chapterNumber: v.number, team: { id: `t-${v.team.toLowerCase().replaceAll(' ', '-')}`, name: v.team } }));
       // The API lists versions of a number next to each other, the first published first.
       const listed = [...CHAPTERS, ...versions].sort((a, b) => Number(a.chapterNumber) - Number(b.chapterNumber));
-      const permissions: Permission[] = state.bookmark ? ['LIBRARY_USE', 'BOOKMARK_READ'] : ['LIBRARY_USE'];
-      await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions }));
+      await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: ['LIBRARY_USE'] }));
       fixture = TestBed.createComponent(WorkDetailPage);
       fixture.componentRef.setInput('workId', WORK.id);
       await settle(fixture);
@@ -225,10 +203,11 @@ describe('WorkDetailPage', () => {
         entry.flush(fail('Not found'), { status: 404, statusText: 'Not Found' });
       }
       http.expectOne(`${API}/reading/works/${WORK.id}`).flush(ok(progressOf(state.finished, state.next)));
+      const bookmark = http.expectOne(`${API}/bookmarks/${WORK.id}`);
       if (state.bookmark) {
-        http
-          .expectOne(`${API}/bookmarks/${WORK.id}`)
-          .flush(ok({ workId: WORK.id, lastReadChapterId: state.bookmark.chapterId, lastReadPageIndex: state.bookmark.page, status: 'READING', updatedAt: '' }));
+        bookmark.flush(ok({ workId: WORK.id, lastReadChapterId: state.bookmark.chapterId, lastReadPageIndex: state.bookmark.page, status: 'READING', updatedAt: '' }));
+      } else {
+        bookmark.flush(fail('Not found'), { status: 404, statusText: 'Not Found' });
       }
       await settle(fixture);
     }
@@ -380,27 +359,15 @@ describe('WorkDetailPage', () => {
     }
   });
 
-  /** The bookmark request is only made (and answered) for a reader who has one to restore. */
-  async function whenIOpenTheWorkPage(answers: { chapters: ApiResponse<unknown>; bookmark?: { chapterId: string; page: number } }): Promise<void> {
+  async function whenIOpenTheWorkPage(answers: { chapters: ApiResponse<unknown> }): Promise<void> {
     fixture = TestBed.createComponent(WorkDetailPage);
     fixture.componentRef.setInput('workId', WORK.id);
     await settle(fixture);
     http.expectOne(`${API}/works/${WORK.id}`).flush(ok(WORK));
     http.expectOne(`${API}/works/${WORK.id}/chapters`).flush(answers.chapters);
-    if (answers.bookmark) {
-      // Only this series' bookmark is fetched, not the whole list.
-      http
-        .expectOne(`${API}/bookmarks/${WORK.id}`)
-        .flush(ok({ workId: WORK.id, lastReadChapterId: answers.bookmark.chapterId, lastReadPageIndex: answers.bookmark.page, status: 'READING', updatedAt: '' }));
-    }
     await settle(fixture);
   }
 
-  function thenTheFirstActionIs(label: string, href: string): void {
-    const link: HTMLAnchorElement = fixture.nativeElement.querySelector('.work-actions a');
-    expect(link.textContent).toContain(label);
-    expect(link.getAttribute('href')).toBe(href);
-  }
 
   function thenTheChapterListShowsTheError(message: string): void {
     expect(fixture.nativeElement.querySelector('.chapters [role="alert"]').textContent).toContain(message);

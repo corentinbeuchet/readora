@@ -4,9 +4,6 @@ import com.readora.domain.common.DomainValidationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
-import java.time.Instant;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -24,43 +21,7 @@ class UserAccountDomainTest {
         assertThat(account.getRoles()).containsExactly(Role.READER);
         assertThat(account.getEmail().value()).isEqualTo("reader@example.com");
         assertThat(account.effectivePermissions()).containsExactlyInAnyOrder(Permission.COMMENT_WRITE, Permission.COMMENT_UPVOTE, Permission.LIBRARY_USE, Permission.PAGE_REPORT, Permission.RATE_WORK, Permission.COMMENT_REPORT);
-        assertThat(account.can(Permission.BOOKMARK_WRITE)).isFalse();
         assertThat(account.getDomainEvents()).singleElement().isInstanceOf(UserRegisteredEvent.class);
-    }
-
-    @Test
-    @DisplayName("Effective permissions are the union of role and active plan permissions")
-    void activeSubscriptionAddsPlanPermissions() {
-        UserAccount account = newReader();
-        account.activateSubscription(Subscription.active(SubscriptionPlan.PREMIUM, Instant.now().plus(Duration.ofDays(30))));
-
-        assertThat(account.can(Permission.BOOKMARK_READ)).isTrue();
-        assertThat(account.can(Permission.BOOKMARK_WRITE)).isTrue();
-        assertThat(account.can(Permission.CHAPTER_PUBLISH)).isFalse();
-        assertThat(account.getDomainEvents()).anySatisfy(e -> assertThat(e).isInstanceOf(SubscriptionActivatedEvent.class));
-    }
-
-    @Test
-    @DisplayName("Expired or canceled subscriptions do not grant plan permissions")
-    void expiredOrCanceledSubscriptionGrantsNothing() {
-        UserAccount expired = newReader();
-        expired.activateSubscription(Subscription.active(SubscriptionPlan.PREMIUM, Instant.now().minus(Duration.ofDays(1))));
-        assertThat(expired.can(Permission.BOOKMARK_WRITE)).isFalse();
-
-        UserAccount canceled = newReader();
-        canceled.activateSubscription(new Subscription(SubscriptionPlan.PREMIUM, SubscriptionStatus.CANCELED,
-                Instant.now().plus(Duration.ofDays(30)), Instant.now()));
-        assertThat(canceled.can(Permission.BOOKMARK_WRITE)).isFalse();
-    }
-
-    @Test
-    @DisplayName("A paid plan with an unknown period end grants nothing (no unlimited access)")
-    void unknownPeriodEndIsNotActive() {
-        UserAccount account = newReader();
-        account.activateSubscription(Subscription.active(SubscriptionPlan.PREMIUM, null));
-
-        assertThat(account.getSubscription().isActive(Instant.now())).isFalse();
-        assertThat(account.can(Permission.BOOKMARK_WRITE)).isFalse();
     }
 
     @Test
@@ -78,15 +39,13 @@ class UserAccountDomainTest {
     }
 
     @Test
-    @DisplayName("Invalid email, username or FREE plan activation are rejected")
+    @DisplayName("An invalid email or username is rejected")
     void validationRules() {
         assertThatThrownBy(() -> Email.of("not-an-email"))
                 .isInstanceOf(DomainValidationException.class);
         assertThatThrownBy(() -> UserAccount.register(Email.of("a@b.io"), "x", PasswordHash.of("h")))
                 .isInstanceOf(DomainValidationException.class)
                 .hasMessageContaining("Username must be between");
-        assertThatThrownBy(() -> newReader().activateSubscription(Subscription.free()))
-                .isInstanceOf(DomainValidationException.class);
     }
 
     @Test

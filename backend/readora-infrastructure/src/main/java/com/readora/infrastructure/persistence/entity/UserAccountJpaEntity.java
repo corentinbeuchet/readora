@@ -32,8 +32,6 @@ public class UserAccountJpaEntity {
     @Column(nullable = false)
     private String roles;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private SubscriptionJpaEntity subscription;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -80,13 +78,6 @@ public class UserAccountJpaEntity {
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
     public String getRoles() { return roles; }
     public void setRoles(String roles) { this.roles = roles; }
-    public SubscriptionJpaEntity getSubscription() { return subscription; }
-    public void setSubscription(SubscriptionJpaEntity subscription) {
-        this.subscription = subscription;
-        if (subscription != null) {
-            subscription.setUser(this);
-        }
-    }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

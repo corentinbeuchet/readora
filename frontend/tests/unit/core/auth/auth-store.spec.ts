@@ -3,7 +3,7 @@ import { HttpTestingController, TestRequest } from '@angular/common/http/testing
 import { firstValueFrom } from 'rxjs';
 import { AuthStore, SESSION_HINT_KEY } from '@app/core/auth/auth-store';
 import { AuthResponse, Permission } from '@app/core/models/identity';
-import { mockSession, mockUser } from './auth-fixtures';
+import { mockSession } from './auth-fixtures';
 import { BrowserStorage } from '@app/core/storage/browser-storage';
 import { API, MemoryStorage, fail, ok, provideHttpTesting } from '../../test-utils';
 
@@ -39,7 +39,6 @@ describe('AuthStore', () => {
     thenICannot('CHAPTER_PUBLISH');
     thenIHaveAnyOf('CHAPTER_PUBLISH', 'COMMENT_UPVOTE');
     thenIDoNotHaveAllOf('CHAPTER_PUBLISH', 'COMMENT_UPVOTE');
-    thenIAmNotPremium();
     thenTheTokenIsNotStored('jwt-1');
   });
 
@@ -63,20 +62,6 @@ describe('AuthStore', () => {
 
     thenTheRefreshResolvedToNull(restored);
     thenTheStoreIsNotRestoring();
-  });
-
-  it('premium user exposes plan permissions and isPremium', async () => {
-    await whenILogIn(
-      mockSession({
-        user: mockUser({
-          permissions: ['COMMENT_WRITE', 'COMMENT_UPVOTE', 'BOOKMARK_READ', 'BOOKMARK_WRITE'],
-          subscription: { plan: 'PREMIUM', status: 'ACTIVE', active: true, currentPeriodEnd: '2027-01-01T00:00:00Z', planPermissions: ['BOOKMARK_READ', 'BOOKMARK_WRITE'] }
-        })
-      })
-    );
-
-    thenIAmPremium();
-    thenICan('BOOKMARK_WRITE');
   });
 
   it('logout revokes the cookie server-side and clears the session locally', async () => {
@@ -170,13 +155,7 @@ describe('AuthStore', () => {
     expect(store.hasAllPermissions(...permissions)).toBe(false);
   }
 
-  function thenIAmPremium(): void {
-    expect(store.isPremium()).toBe(true);
-  }
 
-  function thenIAmNotPremium(): void {
-    expect(store.isPremium()).toBe(false);
-  }
 
   /** The access token lives only in memory: nothing written to browser storage may contain it. */
   function thenTheTokenIsNotStored(token: string): void {

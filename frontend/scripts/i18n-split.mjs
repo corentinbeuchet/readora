@@ -40,8 +40,6 @@ const FILE_OF_PREFIX = {
   taskStatus: 'labels',
   scanlationRole: 'labels',
   role: 'labels',
-  subscriptionPlan: 'labels',
-  subscriptionStatus: 'labels',
   bookmarkStatus: 'labels',
   readingStatus: 'labels',
   pageReport: 'labels',
@@ -59,7 +57,6 @@ const FILE_OF_PREFIX = {
   reader: 'reader',
   scanlation: 'scanlation',
   social: 'social',
-  subscription: 'subscription',
   upload: 'upload'
 };
 

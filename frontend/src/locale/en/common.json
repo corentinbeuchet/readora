@@ -1,7 +1,7 @@
 {
   "locale": "en",
   "translations": {
-    "seo.defaultDescription": "Read manga, manhwa, manhua and comics published by scanlation teams. Free reading, comments, and Premium bookmarks.",
+    "seo.defaultDescription": "Read manga, manhwa, manhua and comics published by scanlation teams. Free reading, comments and bookmarks.",
     "seo.notFound.title": "Page not found",
     "seo.notFound.description": "The requested page could not be found.",
     "time.justNow": "just now",

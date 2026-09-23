@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { Bookmark, UpdateProgressRequest } from '@app/core/models/library';
 import { ApiClient, nullIfNotFound, parseEnvelope } from './api-client';
 
-/** `/api/v1/bookmarks` (requires `BOOKMARK_READ` / `BOOKMARK_WRITE`). */
+/** `/api/v1/bookmarks` (requires `LIBRARY_USE`). */
 @Service()
 export class BookmarksApi {
   private readonly api = inject(ApiClient);

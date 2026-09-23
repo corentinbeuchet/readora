@@ -194,7 +194,7 @@ interface is neutral and the cover art is the colour on the page.
   what belongs there and how to fill it. Meta information is separate elements or badges, not strings joined by
   "·". No all-caps labels above headings, no numbering that is not a real order, no sign-up wall: accounts are
   offered after the content, where they help (continue reading, follow, comment).
-- Follow-ups of this pass (not done): series page, catalog filter panel and sort, reader chrome, auth and plans
+- Follow-ups of this pass (not done): series page, catalog filter panel and sort, reader chrome, auth
   pages; backend: catalog `sort`, a chapter pointer on `LibraryItem` (a "Continue" on library rows), title and cover
   on bookmarks, assignee name on tasks; a new `og-default.png` in the new palette.
 
@@ -264,7 +264,7 @@ interface is neutral and the cover art is the colour on the page.
 - `core/` = app-wide singletons (api, auth, seo). A feature-only service lives in its feature.
 - API types: one file per domain in `core/models/<domain>.ts` (`catalog`, `chapter`, `scanlation`, `identity`, …),
   imported by that path (no barrel, no catch-all model file). Domain rules on those types (`canClaim(task)`,
-  `hasActivePremium(sub)`) are pure functions exported beside them and unit-tested in
+  `pickVersion(versions, team)`) are pure functions exported beside them and unit-tested in
   `tests/unit/core/models/`. Components and stores call them rather than comparing statuses inline. Types stay
   interfaces, not classes: API data is plain JSON, and resource updates spread objects, which would drop class
   methods (decided 2026-09-19).

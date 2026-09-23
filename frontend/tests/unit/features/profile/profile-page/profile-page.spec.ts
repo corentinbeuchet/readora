@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 import { ProfilePage } from '@app/features/profile/profile-page/profile-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { UserProfile } from '@app/core/models/identity';
+import { Bookmark } from '@app/core/models/library';
 import { mockUser } from '../../../core/auth/auth-fixtures';
 import { API, ok, provideHttpTesting } from '../../../test-utils';
 
@@ -26,25 +27,25 @@ describe('ProfilePage (Angular Aria Tabs + Signal Forms)', () => {
 
   afterEach(() => http.verify());
 
-  it('renders the header, three tabs and the pre-filled profile form on the Overview tab', async () => {
+  it('renders the header, two tabs and the pre-filled profile form on the Overview tab', async () => {
     await givenIAmOnMyProfile({ displayName: 'Jane Reader', bio: 'I read a lot' });
 
     thenTheHeaderShows('Jane Reader');
-    thenTheTabsAre(['Overview', 'Bookmarks', 'Subscription']);
+    thenTheTabsAre(['Overview', 'Bookmarks']);
     thenTheTabsFormATablist();
     thenTheSelectedTabIs('Overview');
     thenTheDisplayNameFieldHolds('Jane Reader');
     thenTheBioFieldHolds('I read a lot');
   });
 
-  it('switching to the Bookmarks tab shows the Premium upsell for a free reader', async () => {
+  it('switching to the Bookmarks tab loads my saved pages', async () => {
     await givenIAmOnMyProfile({ displayName: 'Jane Reader', bio: 'I read a lot' });
 
-    await whenIOpenTheTab('Bookmarks');
+    whenIOpenTheTab('Bookmarks');
+    await whenMyBookmarksArrive([]);
 
     thenTheSelectedTabIs('Bookmarks');
-    thenICanSee('Bookmarks are a Premium feature');
-    thenMyBookmarksWereNotRequested();
+    thenICanSee('You have no bookmarks yet.');
   });
 
   it('saving the form calls PUT /profile and updates the AuthStore', async () => {
@@ -82,13 +83,19 @@ describe('ProfilePage (Angular Aria Tabs + Signal Forms)', () => {
   });
 
   async function givenIAmOnMyProfile(profile: Profile): Promise<void> {
-    store.setUser(mockUser({ ...profile, username: 'jane' }));
+    store.setUser(mockUser({ ...profile, username: 'jane', permissions: ['LIBRARY_USE'] }));
     fixture = TestBed.createComponent(ProfilePage);
     await render();
   }
 
-  async function whenIOpenTheTab(label: string): Promise<void> {
+  /** Renders the panel without waiting for it to settle: its request is answered by the next step. */
+  function whenIOpenTheTab(label: string): void {
     tab(label).click();
+    fixture.detectChanges();
+  }
+
+  async function whenMyBookmarksArrive(bookmarks: Bookmark[]): Promise<void> {
+    http.expectOne(`${API}/bookmarks`).flush(ok(bookmarks));
     await render();
   }
 
@@ -110,7 +117,7 @@ describe('ProfilePage (Angular Aria Tabs + Signal Forms)', () => {
 
   /** Same user, new object: e.g. the AuthStore refreshing the user after a token refresh. */
   async function whenMyProfileIsRefreshed(profile: Profile): Promise<void> {
-    store.setUser(mockUser({ ...profile, username: 'jane' }));
+    store.setUser(mockUser({ ...profile, username: 'jane', permissions: ['LIBRARY_USE'] }));
     await render();
   }
 
@@ -140,10 +147,6 @@ describe('ProfilePage (Angular Aria Tabs + Signal Forms)', () => {
 
   function thenICanSee(text: string): void {
     expect(fixture.nativeElement.textContent).toContain(text);
-  }
-
-  function thenMyBookmarksWereNotRequested(): void {
-    http.expectNone(`${API}/bookmarks`);
   }
 
   function thenTheSaveRequestWas(method: string, body: Record<string, unknown>): void {

@@ -13,9 +13,6 @@
           @for (role of (user.roles || []); track role) {
             <span class="badge">{{ roleLabels[role] }}</span>
           }
-          @if (user.subscription.active) {
-            <span class="badge badge-premium">{{ planLabels[user.subscription.plan] }}</span>
-          }
         </p>
       </div>
     </header>
@@ -24,7 +21,6 @@
       <div ngTabList [(selectedTab)]="selectedTab" aria-label="Profile sections" i18n-aria-label="@@profile.page.sections">
         <button type="button" ngTab value="overview" i18n="@@profile.page.tabOverview">Overview</button>
         <button type="button" ngTab value="bookmarks" i18n="@@profile.page.tabBookmarks">Bookmarks</button>
-        <button type="button" ngTab value="subscription" i18n="@@profile.page.tabSubscription">Subscription</button>
       </div>
 
       <div ngTabPanel value="overview" class="card">
@@ -41,23 +37,6 @@
         </ng-template>
       </div>
 
-      <div ngTabPanel value="subscription" class="card">
-        <ng-template ngTabContent>
-          <h2 i18n="@@profile.page.subscriptionTitle">Subscription</h2>
-          <p>
-            <ng-container i18n="@@profile.page.plan">Plan: <strong>{{ planLabels[user.subscription.plan] }}</strong></ng-container>
-            <span class="badge" [class.badge-premium]="user.subscription.active">{{ subscriptionStatusLabels[user.subscription.status] }}</span>
-          </p>
-          @if (user.subscription.currentPeriodEnd) {
-            <p class="muted">
-              <ng-container i18n="@@profile.page.periodEnds">Current period ends</ng-container>
-              {{ user.subscription.currentPeriodEnd | date: 'medium' }}
-            </p>
-          }
-          <p class="muted" i18n="@@profile.page.permissions">Effective permissions: {{ permissions() }}</p>
-          <a routerLink="/subscription" class="btn btn-primary" i18n="@@profile.page.manageSubscription">Manage subscription</a>
-        </ng-template>
-      </div>
     </div>
   } @else {
     <p class="muted" role="status" i18n="@@profile.page.loading">Loading your profile…</p>

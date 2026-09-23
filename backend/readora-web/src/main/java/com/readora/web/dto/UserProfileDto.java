@@ -17,7 +17,6 @@ public record UserProfileDto(
         @Nullable String avatarUrl,
         List<String> roles,
         List<String> permissions,
-        SubscriptionDto subscription,
         Instant createdAt
 ) {
     public static UserProfileDto fromDomain(UserAccount account) {
@@ -30,7 +29,6 @@ public record UserProfileDto(
                 account.getAvatarUrl(),
                 account.getRoles().stream().map(Role::name).sorted().toList(),
                 account.effectivePermissions().stream().map(Permission::name).sorted().toList(),
-                SubscriptionDto.fromDomain(account.getSubscription()),
                 account.getCreatedAt()
         );
     }

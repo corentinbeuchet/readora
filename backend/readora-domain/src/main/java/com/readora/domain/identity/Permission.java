@@ -3,8 +3,6 @@ package com.readora.domain.identity;
 public enum Permission {
     COMMENT_WRITE,
     COMMENT_UPVOTE,
-    BOOKMARK_READ,
-    BOOKMARK_WRITE,
     TASK_CLAIM,
     TASK_SUBMIT,
     CHAPTER_PUBLISH,
@@ -12,7 +10,7 @@ public enum Permission {
     PROJECT_MANAGE,
     USER_MANAGE,
     WORK_CREATE,
-    /// Personal library, reading history and read markers (free for every signed-in reader).
+    /// Personal library, reading history, read markers and bookmarks (free for every signed-in reader).
     LIBRARY_USE,
     /// Report a page that doesn't display (US-06).
     PAGE_REPORT,

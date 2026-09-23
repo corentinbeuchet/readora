@@ -85,7 +85,6 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'library', renderMode: RenderMode.Client },
   { path: 'history', renderMode: RenderMode.Client },
   { path: 'moderation', renderMode: RenderMode.Client },
-  { path: 'subscription', renderMode: RenderMode.Client },
   { path: 'upload', renderMode: RenderMode.Client },
   { path: 'scanlation', renderMode: RenderMode.Client },
   { path: 'scanlation/series/:workId', renderMode: RenderMode.Client },

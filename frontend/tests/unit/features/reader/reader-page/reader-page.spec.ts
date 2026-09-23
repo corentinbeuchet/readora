@@ -34,8 +34,7 @@ const MOCK_CHAPTER: Chapter = {
 
 const PROGRESS_URL = `${API}/bookmarks/${MOCK_CHAPTER.workId}/progress`;
 const HISTORY_URL = `${API}/reading/chapters/${MOCK_CHAPTER.id}`;
-const FREE: Permission[] = ['COMMENT_WRITE', 'COMMENT_UPVOTE'];
-const PREMIUM: Permission[] = ['COMMENT_WRITE', 'BOOKMARK_READ', 'BOOKMARK_WRITE'];
+const READER: Permission[] = ['COMMENT_WRITE', 'LIBRARY_USE'];
 
 /** The 3-page test chapter with some fields replaced. */
 function chapter(overrides: Partial<Chapter>): Chapter {
@@ -164,6 +163,8 @@ describe('ReaderPage (API-driven)', () => {
     // Reaching the last page loads the chapter's top comments (own test below).
     // Opening another chapter cancels the previous chapter's request.
     http.match((r) => r.url.endsWith('/top')).filter((r) => !r.cancelled).forEach((r) => r.flush(ok([])));
+    // A signed-in reader's visits go to the reading history (own test below).
+    http.match((r) => r.method === 'PUT' && r.url.startsWith(`${API}/reading/chapters/`)).forEach((r) => r.flush(ok(null)));
     http.verify();
   });
 
@@ -259,11 +260,10 @@ describe('ReaderPage (API-driven)', () => {
     thenIAmOnPage(1);
   });
 
-  it('shows the Premium upsell and never syncs progress for a free reader', async () => {
-    await givenIAmSignedInWith(FREE);
+  it('asks a signed-out visitor to log in and never syncs progress', async () => {
     await givenIAmReading(MOCK_CHAPTER);
     givenTimeIsFrozen();
-    thenTheSyncHintSays('Go Premium');
+    thenTheSyncHintSays('Log in to save your reading progress');
 
     whenPageScrollsIntoView(2);
     await whenTimePasses(PROGRESS_SYNC_DEBOUNCE_MS + 50);
@@ -272,7 +272,7 @@ describe('ReaderPage (API-driven)', () => {
   });
 
   it('does not overwrite the saved bookmark just by opening a chapter', async () => {
-    await givenIAmSignedInWith(PREMIUM);
+    await givenIAmSignedInWith(READER);
     await givenIAmReading(MOCK_CHAPTER, { page: '2' });
     givenTimeIsFrozen();
 
@@ -282,8 +282,8 @@ describe('ReaderPage (API-driven)', () => {
     thenTheSyncHintSays('Progress is saved automatically');
   });
 
-  it('debounces and syncs reading progress (1-based page) for a PREMIUM reader', async () => {
-    await givenIAmSignedInWith(PREMIUM);
+  it('debounces and syncs reading progress (1-based page) for a signed-in reader', async () => {
+    await givenIAmSignedInWith(READER);
     await givenIAmReading(MOCK_CHAPTER);
     await givenIAmInPagedMode();
     givenTimeIsFrozen();
@@ -301,7 +301,7 @@ describe('ReaderPage (API-driven)', () => {
   });
 
   it('keeps syncing after a failed save (400 / network)', async () => {
-    await givenIAmSignedInWith(PREMIUM);
+    await givenIAmSignedInWith(READER);
     await givenIAmReading(MOCK_CHAPTER);
     await givenIAmInPagedMode();
     givenTimeIsFrozen();

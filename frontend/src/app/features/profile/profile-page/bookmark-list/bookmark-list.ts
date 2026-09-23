@@ -17,8 +17,7 @@ export class BookmarkList {
   protected readonly auth = inject(AuthStore);
   protected readonly statusLabels = BOOKMARK_STATUS_LABELS;
 
-  protected readonly canRead = computed(() => this.auth.can('BOOKMARK_READ'));
-  protected readonly bookmarks = this.bookmarksApi.listResource(this.canRead);
+  protected readonly bookmarks = this.bookmarksApi.listResource(computed(() => this.auth.can('LIBRARY_USE')));
 
   protected reload(): void {
     this.bookmarks.reload();
