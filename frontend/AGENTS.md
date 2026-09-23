@@ -329,91 +329,24 @@ Checklists per test type: skills `frontend-unit-tests` (services, stores, pure f
   name is the exact scenario title, driving the real DOM.
 - Cover failure and retry paths, not only the happy path. No placeholder e2e tests; no `test.skip` on missing data.
 
-## Known pitfalls found in review (2026-09) — don't reintroduce
-Backlog ids used in commit `Refs:` (status: `git log --grep "review-2026-09/F<n>"`).
-- F1 Upload retry recreates the Work; batch failure leaves items `uploading`; SCANLATION mode swallows errors; `parseFloat || 1`. — fixed 06e748b
-- F2 Reader: vertical mode never updates `currentPageIndex`; opening a chapter overwrites the bookmark with page 1;
-  view-mode switch refetches and resets; "continue reading" doesn't restore the page. — fixed d685632
-- F3 Progress sync stream dies after one failed save (no inner `catchError`). — fixed d685632
-- F4 `auth.interceptor.ts` clears the session when the *retried* request fails. — fixed 0c8ade9
-- F5 Object URLs never revoked in `page-grid-uploader` / cover preview; serial image decoding. — fixed d8262f2
-- F6 ZIP/CBZ loaded fully in memory with no size/entry limits; failures silent. — fixed 781a96d
-- F7 `ng lint` fails (unused imports, unlabeled controls, keyboard-less `role="radio"`). — fixed 7b3901d
-- F8 `provideAppInitializer` session restore runs during SSR/prerender with no timeout. — fixed 85c548b
-- F9 Root-scoped `ScanlationState` shows stale project data. — fixed 3dc0948
-- F10 Profile form effect overwrites in-progress edits. — fixed 25b939a
-- F11 `httpResource` parsers ignore `success:false`. — fixed 4d524da
-- F12 Comments: replies appended at bottom; spoilers present in DOM/prerender. — fixed 356615d
-- F13 A11y: kanban modal focus trap/Escape; focus-invisible buttons; duplicate ids in `@for`. — fixed 25814d7
-- F14 Build/SEO: missing favicon/og image in `public/`; sitemap only on `npm run build`; upload scss over budget. — fixed ecd9f84, bed5898, 3d5d938
-- F15 Eager routes (`ChapterViewer`, `KanbanBoard`). — fixed ae4dbbf
-- F16 Low: shell double navigation; Stripe redirect host unchecked; unused `proxy.conf.json`; POSIX env in `e2e:staging`. — fixed 73bdda6, 76b029c, ba65a83
-- F17 Tests: upload happy-path only; real timers; placeholder e2e; e2e not on SSR build; `tests/**` not linted. — partially fixed 95fe6f4 (still open: e2e runs against `ng serve`, not the prerendered build)
+## Open review items — don't reintroduce what was fixed
+Backlog ids are used in commit `Refs:`. Fixed items were removed (2026-09-23): `git log --grep "review-2026-09/F<n>"`,
+`--grep "ng-best-practices/<n>"` or `--grep "review-2026-09-19/R<n>"` finds a fixed one; the rules above hold their
+lessons.
 
-Improvements from best-practice research (2026-09), not bugs:
+- F17 E2E runs against `ng serve`, not the prerendered build (the rest of F17 is fixed).
 - F18 Upgrade to stable Angular 22.2, then switch template-only members from `protected` to `private` (~106 today).
-- F19 Remove `withFetch()` (`app.config.ts`); upload progress via `withXhr()` + `reportUploadProgress`. — fixed 176fb94 (no withXhr: progress is per settled page)
-- F20 `NgOptimizedImage` for covers and reader pages (none today; also fixes reader layout shift from F13). — fixed ef12282
-- F21 `@defer` the comments section and the kanban modal. — fixed 385f63d
-- F22 Migrate the 14 `@Injectable` root services to `@Service()` (check angular-eslint for a `prefer-service-decorator` rule). — fixed 12aa7fd
-- F23 `autoCsp` + `security.allowedHosts` for SSR. — blocked: Angular 22.1 build fails with "Cannot set both SSR and auto-CSP"; allowedHosts only applies to an SSR server (outputMode is static)
-- F24 Axe accessibility assertions in Playwright e2e (`@axe-core/playwright`). — fixed 0a8e549
-  (`tests/e2e/accessibility.spec.ts`, `axe` fixture; it found and fixed 08c7ca0, the login live region)
-
-Angular best-practice review (2026-09-19, refs `ng-best-practices/<n>`, checklist in the `angular-best-practices`
-skill) — fixed:
-- F25 App-wide `ReaderState`/`ScanlationState` leaked state between pages. — fixed f7eb303, 6b41731
-- F26 Effects copying resources into signals (list page, ratings, kanban, reader). — fixed 1c0821d, 717c289, 6b41731, 9f4f3fc
-- F27 No recovery from failed lazy chunks after a deploy; prerender fallback implicit; transfer cache unfiltered. — fixed adff67c, 7549b0b, 7b903fc
-- F28 Notifications: counts of the previous user, overlapping polls, no focus return. — fixed 6fd8127
-- F29 Oversized reader (650 lines) and upload studio (FormsModule). — fixed 9f4f3fc, 5da9fe7, a4b1e7d, 349df0b
-- F30 Copy-pasted busy/error, field errors, load-error, covers, dialogs, relative time. — fixed 1b6484b, 23f0756, 974300c, 1e648c7, 5411b3d, 88f8edc, 5a5b30f
-- F31 Method calls in `@for`, `::ng-deep`, `[class]` overwrites, hex colours, explicit OnPush, comment-tree a11y. — fixed cb5f4f4, f66f599, b868d51, 9a3c86c
-- F32 Over-fetching (both rankings, all bookmarks/library for one work), unused Observable reads, env URLs outside DI. — fixed e0d31f5, febf287, 6836eff
-- F33 Naming/layout: `TeamPageComponent`, duplicate `app-profile-page` selector, shared feature stylesheets, relative imports. — fixed daeae36, e61eedb, 3cd1cbd, f72bf39, d2dd35a
-- F34 CI without lint; weak lint rules; mocked Router and duplicated test setup; e2e skipping on missing data. — fixed 7fecf89, b4bb4a0, d0c0687, 6272d20
-- F35 Every anonymous page load called `/auth/refresh` and spent the per-IP rate limit (reload -> 429 -> logged out). — fixed 28f9de5
-- F36 Layering (core <- shared <- features, no `../`) held by convention only. — fixed by the lint rules (`git log --grep ng-best-practices/26`)
-- F37 Flaky-test risks: real clock in fixtures, a leaked `document` spy, no auto-restore, a catch-all HTTP flush,
-  colliding e2e suffixes, CI retries hiding flakes. — fixed (`git log --grep ng-best-practices/27`)
-- F38 `components/` + `services/` type folders with up to 24 flat files each (the style guide says to avoid them).
-  — fixed: folder per component, children nested under their user (`git log --grep ng-best-practices/30`)
-
-Accessibility and responsive gaps (2026-09-19 research, skills `frontend-accessibility` / `frontend-responsive`):
-- F39 Header has no small-screen layout (one non-wrapping row, 689px wide at 375px). — fixed 31a6f5a (menu button +
-  nav disclosure below 1024px, search on its own row)
-- F40 `100vh` for full-height views and `vh` caps: hidden behind mobile browser bars. — fixed 57d4841 (`dvh` after a `vh`
-  fallback)
-- F41 No shared breakpoints or fluid tokens (6 ad-hoc `max-width` queries). — fixed e30bc4f (`src/styles/_breakpoints.scss`
-  `bp.from()`, `--space-page`, `--fs-h1/h2`)
-- F42 No input-modality or notch handling. — fixed c83abab (`viewport-fit=cover` + safe-area padding, `touch-action`,
-  44px controls under `pointer: coarse`, hover-only upload actions visible under `hover: none`)
+- F23 `autoCsp` + `security.allowedHosts` for SSR. Blocked: Angular 22.1 build fails with "Cannot set both SSR and
+  auto-CSP"; allowedHosts only applies to an SSR server (outputMode is static).
 - F43 Covers have no `sizes`: blocked, not a frontend fix. NgOptimizedImage only builds a `srcset` with an image loader,
   and storage (MinIO/S3/CloudFront) serves only the original file, so `sizes` alone changes nothing. Needs the backend
   to store resized cover/page variants (as it already does for page "lite" copies), then an `IMAGE_LOADER` mapping a
   width to its variant, then `sizes` on `app-work-cover` and reader pages.
-- F44 No focus move after route navigation. — fixed da60ba9 (the page `h1`, or `<main>` while loading, gets focus when
-  the path changes; query-only changes keep focus)
-- F45 No `prefers-reduced-motion` handling. — fixed 3cc637f (global rule in `styles.scss`)
-- F46 No mobile-viewport or target-size checks. — fixed 0a8e549 (`tests/e2e/responsive.spec.ts`: overflow at
-  320/375/768/1024, phone header, 24px targets; reader swipe stays covered by the reader unit tests). It found and
-  fixed c098580 (reader toolbar overflow) and 6217137 (18px reader links).
-- F47 Dark-only UI, 19 raw font sizes and 22 raw colours in components; `<button>`s in the browser font. — fixed
-  4bfcf59, 7e5987f, 50f1fcd, 27686e2, bacca4f (`_tokens.scss` type scale + semantic colours, `light-dark()` light
-  theme, System/Light/Dark picker, axe in both themes)
-- F48 English-only interface and API errors (US-13). — fixed 43ef54f, c3e26bf, 6d0442e, 28e5827, bfb49ba, fca0fce,
-  04d871f (+ e2e in the same branch). Still open: notification messages are English text stored by the backend (send
-  a type + parameters instead); CloudFront must serve `/fr/*` fallbacks from `fr/index.csr.html` and may redirect `/`
-  by `Accept-Language`; `VALIDATION_FAILED` details stay English (backstop checks the forms already make).
+- F48 (rest of US-13) Notification messages are English text stored by the backend (send a type + parameters instead);
+  CloudFront must serve `/fr/*` fallbacks from `fr/index.csr.html` and may redirect `/` by `Accept-Language`;
+  `VALIDATION_FAILED` details stay English (backstop checks the forms already make).
 
 Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = reported with path:line, re-check before acting):
-- R5 French plurals printed "0 membres" and "1 séries". — fixed 5a51ed4
-- R6 Reader zoom buttons: visible "Zoom +" but `aria-label` "Zoom in" (WCAG 2.5.3 Label in Name). — fixed 9d97e9d
-- R7 Reader page and scanlation board hand-rolled their error block (offline read as "unpublished" / "not a member"). — fixed a4170d1
-- R8 `robots.txt` missed `/library`, `/history`, `/moderation`, `/upload` and every private `/fr/` page. — fixed a5e7427
-- R9 Bare `subscribe()` on the shell logout. — fixed 79d1f9f
-- R-e2e Two dev servers sharing the Vite deps cache broke client routes in e2e. — fixed bcec9ea
-- R-flaky French texts leaking between non-isolated spec files. — fixed e84d498
 - R15 `file-utils.ts` zip-bomb guard uses JSZip private `_data` / `internalStream` and has no spec; `jszip` is a static import.
 - R16 No spec for `shared/ui/dialog`, `core/a11y/focus-trap.directive`, `core/api/api-client`, `register-page`, `publish-flow`.
 - R17 `PlansPage` hand-rolls busy/error (`asyncAction()` exists) and confirms the cancellation with `window.confirm` (`app-dialog` exists).

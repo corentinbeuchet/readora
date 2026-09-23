@@ -78,6 +78,8 @@ Goal: every change is a checkpoint that can be found and reverted later.
   reader, upload, auth, scanlation, ci, rules …
 - Consult history before re-touching an area: `git log --oneline -- <path>`, `git log --grep "review-2026-09/B1"`,
   `git show <sha>`. Undo a change with `git revert <sha>` (not reset) unless the user asks otherwise.
-- Review backlog ids: backend `B<n>` in `backend/AGENTS.md`, frontend `F<n>` in `frontend/AGENTS.md` ("Known pitfalls");
+- Review backlog ids: backend `B<n>` in `backend/AGENTS.md`, frontend `F<n>` in `frontend/AGENTS.md` ("Open review items");
   the 2026-09-19 review uses `review-2026-09-19/<n>` (same sections, CI/deploy items in `backend/AGENTS.md`).
-  When an item is fully fixed, keep its line but append ` — fixed <sha>`.
+  The backlogs list open items only: when an item is fully fixed, delete its line in the fixing commit (its `Refs:`
+  keeps the id; `git log -p -- <file>` keeps the text). A lesson that must not be forgotten becomes a rule in the
+  matching section instead.

@@ -3,7 +3,7 @@
 ## Claude Code specifics
 - Rules live in `AGENTS.md` (imported above); `backend/CLAUDE.md` and `frontend/CLAUDE.md` import the matching
   `AGENTS.md` when working in those folders. Update the `AGENTS.md` files, not these stubs.
-- Before re-touching an area, check `git log --grep "review-2026-09/<id>"` and the "Known pitfalls" backlog.
+- Before re-touching an area, check `git log --grep "review-2026-09/<id>"` and the "Open review items" backlog.
 - Frontend work: load the `angular-best-practices` skill first (checklist; `frontend/AGENTS.md` is the source);
   tests: `frontend-unit-tests`, `frontend-component-tests`, `frontend-e2e-tests`; accessibility and screen sizes:
   `frontend-accessibility`, `frontend-responsive`; look, composition, navigation and interface copy:

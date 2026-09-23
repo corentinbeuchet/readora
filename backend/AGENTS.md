@@ -171,59 +171,34 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 - Boot 4 test APIs: `@MockitoBean` / `@MockitoSpyBean` (never `@MockBean`), `@AutoConfigureMockMvc` explicitly,
   `MockMvcTester` or `RestTestClient` for new web tests.
 
-## Known pitfalls found in review (2026-09) — don't reintroduce
-Backlog ids used in commit `Refs:` (status: `git log --grep "review-2026-09/B<n>"`).
-- B1 `application-prod.yml` guarded by `on-profile: production` → never loaded; dev JWT secret default in `application.yml`. — fixed 61ef652
-- B2 `/storage/presigned-url` lets any authenticated user choose bucket, key and duration. — fixed 9ffff17
-- B3 Direct publish without project-membership check (IDOR). — fixed 90afc6f
-- B4 Publish-from-QC without `stage == QC_REVIEW` guard; `Chapter.publish` re-publishable. — fixed ee8a113
-- B5 `saved.pollDomainEvents()` in `ScanlationTaskService` / `ReaderSocialService` drops events. — fixed 84acc60
-- B6 No transactions across multi-save use cases. — fixed e7b4580
-- B7 No `@Version`; `WorkflowTask.assignTo` steals claimed tasks; unlimited upvotes. — fixed 83a6779, c64ad65, 8b9bd25
-- B8 Stripe: null `currentPeriodEnd` = infinite access; unknown status → ACTIVE; any price → PREMIUM; out-of-order events; immediate cancel. — fixed 1fd811c
-- B9 `S3StorageAdapter` unbounded in-memory `byte[]` cache; S3 failure swallowed; no multipart size config; fake presigned URL fallback. (`..` in folder fixed with B2.) — fixed 9ffff17, c35ca1d, da891b6
-- B10 500 handler leaks `ex.getMessage()`; framework exceptions → 500; not-found → 400; DTO sizes ≠ DB sizes. — fixed 14401f9, 6f1cf72, 9b2db4f, da891b6
-- B11 EAGER collections + load-all-then-filter (N+1); no `@OrderBy` on pages/chapters. — fixed 3d96ef9, aa996ec
-- B12 Refresh-token reuse undetected; no expired-token cleanup; no issuer check; no rate limit; Swagger public in prod. — fixed 86a6e53
-- B13 Layer leaks: controllers → out-ports, web → infrastructure, `UserId` in `domain.work`; missing ArchUnit rules. — fixed ea6cb29, e893751
-- B14 Tests: web tests skip Flyway; fakes return same instance; CI runs `mvn test` not `verify`. — fixed d6f3f7b
+## Open review items — don't reintroduce what was fixed
+Backlog ids are used in commit `Refs:`. Fixed items were removed (2026-09-23): `git log --grep "review-2026-09/B<n>"`
+or `git log --grep "review-2026-09-19/R<n>"` finds a fixed one; the rules above hold their lessons.
 
-Improvements from best-practice research (2026-09), not bugs:
-- B15 Virtual threads: `spring.threads.virtual.enabled=true`, sized against the Hikari pool; `@ConcurrencyLimit` on scarce resources. — fixed 3df5fcb
-- B16 Observability: `spring-boot-starter-opentelemetry` (OTLP metrics + traces). — fixed 6119e06
-- B17 JSpecify `@NullMarked` + NullAway (Error Prone) build check, module by module starting with `readora-domain`. — fixed e3815c8, 6ced143, 030a0b0 (all modules; entities @NullUnmarked by design)
-- B18 Optional: Spring Framework 7 API versioning (`spring.mvc.apiversion.*`) if `/api/v1` needs a successor. — not done: /api/v1 is the only version so far; adopt when a v2 is actually needed.
-
-Open (needs a product decision):
-- B19 Scanlation drafts/QC publish invent page keys `scans/{work}/{n}/p{i}.webp` that match no uploaded file; tasks only
-  carry one asset-package URL. Decide how final pages are produced (unpack the QC package into page assets, or
-  require a page upload step) before publishing through the scanlation workflow in production.
+- B18 Optional: Spring Framework 7 API versioning (`spring.mvc.apiversion.*`) if `/api/v1` needs a successor. Not done:
+  /api/v1 is the only version so far; adopt when a v2 is actually needed.
+- B19 (needs a product decision) Scanlation drafts/QC publish invent page keys `scans/{work}/{n}/p{i}.webp` that match
+  no uploaded file; tasks only carry one asset-package URL. Decide how final pages are produced (unpack the QC
+  package into page assets, or require a page upload step) before publishing through the scanlation workflow in
+  production.
 
 Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = reported with path:line, re-check before acting):
-- R4 `CHAPTER_NOT_PUBLISHED` was text inside the English message, so the API answered `VALIDATION_FAILED`. A code is
-  never part of a message: `DomainValidationException.withCode(...)`, and acceptance steps assert `code()`. — fixed 88fceb7
-- R10 Dead fail-open `catch` around the S3 default credentials chain. — fixed 1922c97
-- R11 Last EAGER association (`UserAccountJpaEntity.subscription`): login took 2 statements. — fixed 52b6605
 - R13 `POST /storage/upload` is `isAuthenticated()` only (any reader, 50 MB); `AssetService` skips the content-type
   allow-list when the type is blank and allows `application/octet-stream`.
 - R14 `UseCaseTransactions` never sets `readOnly`: query-only use cases run read-write, adapters' `readOnly = true` is ignored.
 - Same sweep as R4 still to do (survey): uncoded reader-visible rules in `WorkManagementService`, `ReaderSocialService`, `SubscriptionService`.
 - R19/R20 (survey) Rankings query: three correlated counts per work; missing indexes `chapter_reads(work_id, read_at)`,
-  `refresh_tokens(expires_at)`, `chapters(scanlation_project_id)` (that one became `chapters(team_id, status,
-  published_at)` — fixed 8185f47); `%text%` search on unindexed title/author.
-- R21/R22 (survey) Unbounded lists (chapter comments, work chapters, library list/export, bookmarks); the chapter list
-  loads every page row for `pageCount`. The chapter list now has one item per team version: when it gets paginated,
-  paginate by chapter number on the server, so the versions of a number never split across pages.
+  `refresh_tokens(expires_at)`; `%text%` search on unindexed title/author.
+- R21/R22 (survey) Unbounded lists (chapter comments, work chapters, library list/export, bookmarks, `GET /teams/mine`);
+  the chapter list loads every page row for `pageCount`. The chapter list now has one item per team version: when it
+  gets paginated, paginate by chapter number on the server, so the versions of a number never split across pages.
 - R23/R24 (survey) Scanlation "not a member" answers 400 instead of 403; `ProfileController` PUT and
   `SubscriptionController` checkout/cancel lack `@PreAuthorize`; `/api/v1/auth/me` sits under a `permitAll` prefix.
 - R25/R27/R28 (survey) Stripe calls inside the DB transaction; 9 of 19 application services without unit tests
   (`SubscriptionService` first); no graceful shutdown, structured logs or correlation id.
 
-CI / deploy (same review; nothing here has ever run, the repository has no remote):
-- R1 Production health check curled `/api-docs`, disabled in production. — fixed 070ce66
-- R2 Node 24 in deploys vs 26 in CI and `engines`. — fixed a286dbb (`frontend/.nvmrc`)
-- R3 `i18n:check` was not a CI gate. — fixed c7deb38
-- Open, needs a decision: default JWT secret and DB password still in `application.yml` (only `production` is
-  guarded); deploys don't wait for App Runner before the frontend prerender build; production deploy skips tests and
-  runs from any ref; the JAR is built but never shipped while `backend/Dockerfile` is unused by the deploy path;
-  long-lived admin AWS keys instead of OIDC; no Dependabot/CodeQL; no IaC; no `.gitattributes`, Maven wrapper, README.
+CI / deploy (same review; nothing here has ever run, the repository has no remote). Open, needs a decision: default JWT
+secret and DB password still in `application.yml` (only `production` is guarded); deploys don't wait for App Runner
+before the frontend prerender build; production deploy skips tests and runs from any ref; the JAR is built but never
+shipped while `backend/Dockerfile` is unused by the deploy path; long-lived admin AWS keys instead of OIDC; no
+Dependabot/CodeQL; no IaC; no `.gitattributes`, Maven wrapper, README.
