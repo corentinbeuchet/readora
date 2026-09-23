@@ -42,6 +42,12 @@
   gap: 0.75rem;
 }
 
+.up-to-date {
+  align-self: center;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
 .library-status {
   margin: 0;
 }

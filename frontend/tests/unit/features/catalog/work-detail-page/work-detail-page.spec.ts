@@ -7,6 +7,7 @@ import { ApiResponse } from '@app/core/models/api';
 import { Work, WorkFacts } from '@app/core/models/catalog';
 import { givenIAmSignedInWith, mockUser, signIn } from '../../../core/auth/auth-fixtures';
 import { WorkProgress } from '@app/core/models/library';
+import { Permission } from '@app/core/models/identity';
 import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 
 const WORK: Work = {
@@ -80,6 +81,26 @@ describe('WorkDetailPage', () => {
       thenChapterIsUnread(3);
       thenICanContinueWith('Continue with chapter 2', '/read/c-2');
       thenMyLibraryStatusIs('READING');
+    });
+
+    it('Having read every chapter, the series page offers to read it again', async () => {
+      await givenIAmOnTheWorkPage({ inLibrary: true, finished: ['c-1', 'c-2', 'c-3'], next: null });
+
+      thenIAmToldIAmUpToDate();
+      thenICanContinueWith('Read again', '/read/c-1');
+    });
+
+    it('a reader who has read nothing yet starts from chapter 1', async () => {
+      await givenIAmOnTheWorkPage({ inLibrary: false, finished: [], next: 'c-1' });
+
+      thenICanContinueWith('Start reading', '/read/c-1');
+      thenIAmNotToldIAmUpToDate();
+    });
+
+    it('a bookmark whose chapter is gone does not hide the reading button', async () => {
+      await givenIAmOnTheWorkPage({ inLibrary: false, finished: [], next: 'c-1', bookmarkWithoutChapter: true });
+
+      thenICanContinueWith('Start reading', '/read/c-1');
     });
 
     it('Each chapter of a series names the team that translated it', async () => {
@@ -156,14 +177,16 @@ describe('WorkDetailPage', () => {
     async function givenIAmOnTheWorkPage(state: {
       inLibrary: boolean;
       finished: string[];
-      next: string;
+      next: string | null;
+      bookmarkWithoutChapter?: boolean;
       otherVersions?: { id: string; number: string; team: string }[];
       facts?: WorkFacts;
     }): Promise<void> {
       const versions = (state.otherVersions ?? []).map((v) => ({ ...CHAPTERS[0], id: v.id, chapterNumber: v.number, team: { id: `t-${v.team.toLowerCase().replaceAll(' ', '-')}`, name: v.team } }));
       // The API lists versions of a number next to each other, the first published first.
       const listed = [...CHAPTERS, ...versions].sort((a, b) => Number(a.chapterNumber) - Number(b.chapterNumber));
-      await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions: ['LIBRARY_USE'] }));
+      const permissions: Permission[] = state.bookmarkWithoutChapter ? ['LIBRARY_USE', 'BOOKMARK_READ'] : ['LIBRARY_USE'];
+      await signIn(TestBed.inject(AuthStore), http, mockUser({ permissions }));
       fixture = TestBed.createComponent(WorkDetailPage);
       fixture.componentRef.setInput('workId', WORK.id);
       await settle(fixture);
@@ -177,6 +200,11 @@ describe('WorkDetailPage', () => {
         entry.flush(fail('Not found'), { status: 404, statusText: 'Not Found' });
       }
       http.expectOne(`${API}/reading/works/${WORK.id}`).flush(ok(progressOf(state.finished, state.next)));
+      if (state.bookmarkWithoutChapter) {
+        http
+          .expectOne(`${API}/bookmarks/${WORK.id}`)
+          .flush(ok({ workId: WORK.id, lastReadChapterId: null, lastReadPageIndex: 1, status: 'READING', updatedAt: '' }));
+      }
       await settle(fixture);
     }
 
@@ -191,9 +219,15 @@ describe('WorkDetailPage', () => {
     }
 
     /** In this series chapter `c-N` is the only version of number N. */
-    function progressOf(finished: string[], next: string): WorkProgress {
+    function progressOf(finished: string[], next: string | null): WorkProgress {
       const number = (id: string): string => id.replace('c-', '');
-      return { workId: WORK.id, finishedChapterIds: finished, finishedChapterNumbers: finished.map(number), nextChapterNumber: number(next), nextChapterId: next };
+      return {
+        workId: WORK.id,
+        finishedChapterIds: finished,
+        finishedChapterNumbers: finished.map(number),
+        nextChapterNumber: next && number(next),
+        nextChapterId: next
+      };
     }
 
     async function whenIMarkTheChaptersBeforeAsRead(chapter: number, progress: { nowFinished: string[]; next: string }): Promise<void> {
@@ -265,6 +299,14 @@ describe('WorkDetailPage', () => {
       const primary: HTMLAnchorElement = fixture.nativeElement.querySelector('.work-actions a.btn-primary');
       expect(primary.textContent).toContain(label);
       expect(primary.getAttribute('href')).toBe(href);
+    }
+
+    function thenIAmToldIAmUpToDate(): void {
+      expect(fixture.nativeElement.querySelector('.work-actions').textContent).toContain("You're up to date: you read every chapter.");
+    }
+
+    function thenIAmNotToldIAmUpToDate(): void {
+      expect(fixture.nativeElement.querySelector('.work-actions').textContent).not.toContain('up to date');
     }
 
     function thenMyLibraryStatusIs(status: string): void {

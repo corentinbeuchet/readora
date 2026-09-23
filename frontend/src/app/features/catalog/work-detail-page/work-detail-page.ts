@@ -48,7 +48,11 @@ export class WorkDetailPage {
   /** Bookmark of the current user for this work (only fetched with BOOKMARK_READ). */
   private readonly canReadBookmark = computed(() => this.auth.can('BOOKMARK_READ'));
   private readonly bookmarkEntry = this.bookmarksApi.forWorkResource(this.workId, this.canReadBookmark);
-  protected readonly bookmark = computed(() => (this.bookmarkEntry.hasValue() ? this.bookmarkEntry.value() : null) ?? null);
+  /** The bookmark to resume from; one without a chapter (its chapter was deleted) has nothing to resume. */
+  protected readonly resumeBookmark = computed(() => {
+    const bookmark = this.bookmarkEntry.hasValue() ? this.bookmarkEntry.value() : null;
+    return bookmark?.lastReadChapterId ? { chapterId: bookmark.lastReadChapterId, page: bookmark.lastReadPageIndex } : null;
+  });
 
   // Library and read markers (free with LIBRARY_USE).
   protected readonly statuses = Object.keys(READING_STATUS_LABELS) as ReadingStatus[];
@@ -82,6 +86,12 @@ export class WorkDetailPage {
     const versions = this.groups().find((group) => group.chapterNumber === progress.nextChapterNumber)?.versions ?? [];
     const mine = this.myTeam();
     return (mine ? pickVersion(versions, mine) : versions.find((version) => version.id === progress.nextChapterId)) ?? versions[0] ?? null;
+  });
+
+  /** I finished chapters here and none is left to read: "Read again" instead of "Start reading". */
+  protected readonly upToDate = computed(() => {
+    const progress = this.progress();
+    return !!progress && progress.finishedChapterNumbers.length > 0 && !progress.nextChapterNumber;
   });
 
   constructor() {

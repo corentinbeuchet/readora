@@ -78,6 +78,13 @@ Feature: A reading experience as good as the best manga and webtoon apps
     Then chapters 1 to 4 are dimmed
     And chapter 5 is highlighted as the next one to read
 
+  @must @ui
+  Scenario: Having read every chapter, the series page offers to read it again
+    Given "Kenji" finished every published chapter of "Horimiya"
+    When he opens the page of "Horimiya"
+    Then he is told he is up to date
+    And the main button is "Read again", which opens chapter 1
+
   # Inspired by: WEBTOON "My" page
   @must
   Scenario: Finding what I was reading

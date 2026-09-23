@@ -22,14 +22,17 @@
         <app-work-fact-list [work]="w" />
 
         <div class="work-actions">
-          @if (bookmark(); as bm) {
-            @if (bm.lastReadChapterId) {
-              <a [routerLink]="['/read', bm.lastReadChapterId]" [queryParams]="{ page: bm.lastReadPageIndex }" class="btn btn-primary" i18n="@@catalog.work.continueBookmark">Continue reading (page {{ bm.lastReadPageIndex }})</a>
-            }
+          @if (resumeBookmark(); as bm) {
+            <a [routerLink]="['/read', bm.chapterId]" [queryParams]="{ page: bm.page }" class="btn btn-primary" i18n="@@catalog.work.continueBookmark">Continue reading (page {{ bm.page }})</a>
           } @else if (continueChapter(); as next) {
             <a [routerLink]="['/read', next.id]" class="btn btn-primary" i18n="@@catalog.work.continueChapter">Continue with chapter {{ next.chapterNumber }}</a>
           } @else if (firstChapterId(); as first) {
-            <a [routerLink]="['/read', first]" class="btn btn-primary" i18n="@@catalog.work.startReading">Start reading</a>
+            @if (upToDate()) {
+              <a [routerLink]="['/read', first]" class="btn btn-primary" i18n="@@catalog.work.readAgain">Read again</a>
+              <span class="up-to-date" i18n="@@catalog.work.upToDate">You're up to date: you read every chapter.</span>
+            } @else {
+              <a [routerLink]="['/read', first]" class="btn btn-primary" i18n="@@catalog.work.startReading">Start reading</a>
+            }
           }
 
           <ng-container *appHasPermission="'LIBRARY_USE'">

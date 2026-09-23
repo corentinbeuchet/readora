@@ -30,6 +30,8 @@
     "catalog.work.coverAlt": "Cover of {$INTERPOLATION}",
     "catalog.work.continueBookmark": "Continue reading (page {$INTERPOLATION})",
     "catalog.work.continueChapter": "Continue with chapter {$INTERPOLATION}",
+    "catalog.work.readAgain": "Read again",
+    "catalog.work.upToDate": "You're up to date: you read every chapter.",
     "catalog.work.startReading": "Start reading",
     "catalog.work.libraryStatus": "In my library",
     "catalog.work.notify": "Notify me of new chapters",
