@@ -26,49 +26,44 @@ test.describe('Chapter comments', () => {
     await thenISeeTheComment(page, spoilerComment);
   });
 
-  test.describe('signed in', () => {
-    // Playwright's WebKit for Windows crashes the page after a sign-up here (frontend AGENTS.md R27).
-    test.skip(({ browserName, isMobile }) => browserName === 'webkit' && isMobile, 'R27: Page crashed on Mobile Safari (Windows)');
+  test('a reader posts a comment and sees it in the discussion', async ({ page, publishedChapter }) => {
+    const me = await givenIAmASignedInReader(page);
+    await givenIAmReadingTheDiscussionOf(page, publishedChapter.chapterId);
 
-    test('a reader posts a comment and sees it in the discussion', async ({ page, publishedChapter }) => {
-      const me = await givenIAmASignedInReader(page);
-      await givenIAmReadingTheDiscussionOf(page, publishedChapter.chapterId);
+    const content = await whenIPostAComment(page);
 
-      const content = await whenIPostAComment(page);
+    await thenTheDiscussionHasComments(page, 1);
+    await thenISeeTheComment(page, { author: me, content });
+  });
 
-      await thenTheDiscussionHasComments(page, 1);
-      await thenISeeTheComment(page, { author: me, content });
-    });
+  test('a reply appears right under the comment it answers', async ({ page, commentedChapter }) => {
+    await givenIAmASignedInReader(page);
+    await givenIAmReadingTheDiscussionOf(page, commentedChapter.chapterId);
 
-    test('a reply appears right under the comment it answers', async ({ page, commentedChapter }) => {
-      await givenIAmASignedInReader(page);
-      await givenIAmReadingTheDiscussionOf(page, commentedChapter.chapterId);
+    const reply = await whenIReplyTo(page, commentedChapter);
 
-      const reply = await whenIReplyTo(page, commentedChapter);
+    await thenTheCommentsAreInThisOrder(page, [commentedChapter.content, reply]);
+    await thenTheCommentIsAReply(page, reply);
+  });
 
-      await thenTheCommentsAreInThisOrder(page, [commentedChapter.content, reply]);
-      await thenTheCommentIsAReply(page, reply);
-    });
+  test("a reader reports someone else's comment", async ({ page, commentedChapter }) => {
+    await givenIAmASignedInReader(page);
+    await givenIAmReadingTheDiscussionOf(page, commentedChapter.chapterId);
 
-    test("a reader reports someone else's comment", async ({ page, commentedChapter }) => {
-      await givenIAmASignedInReader(page);
-      await givenIAmReadingTheDiscussionOf(page, commentedChapter.chapterId);
+    await whenIReportTheCommentOf(page, commentedChapter.author, 'Spam or scam');
 
-      await whenIReportTheCommentOf(page, commentedChapter.author, 'Spam or scam');
+    await thenIAmThankedForTheReport(page);
+  });
 
-      await thenIAmThankedForTheReport(page);
-    });
+  test('commenting again right away asks to wait', async ({ page, publishedChapter }) => {
+    const me = await givenIAmASignedInReader(page);
+    await givenIAmReadingTheDiscussionOf(page, publishedChapter.chapterId);
+    const first = await whenIPostAComment(page);
+    await thenISeeTheComment(page, { author: me, content: first });
 
-    test('commenting again right away asks to wait', async ({ page, publishedChapter }) => {
-      const me = await givenIAmASignedInReader(page);
-      await givenIAmReadingTheDiscussionOf(page, publishedChapter.chapterId);
-      const first = await whenIPostAComment(page);
-      await thenISeeTheComment(page, { author: me, content: first });
+    await whenIPostAComment(page);
 
-      await whenIPostAComment(page);
-
-      await thenIAmAskedToWaitBeforeCommentingAgain(page);
-    });
+    await thenIAmAskedToWaitBeforeCommentingAgain(page);
   });
 });
 

@@ -7,9 +7,6 @@ import { PAGE_PNG, givenIAmLoggedInAsThePublisher, thenTheFactIs, uniqueSuffix }
  * chapter, then the pages readers get; or a chapter of a series already in the catalog, as the team's version.
  */
 test.describe('Upload studio', () => {
-  // Playwright's WebKit for Windows crashes the page in the studio, before this change too (frontend AGENTS.md R27).
-  test.skip(({ browserName, isMobile }) => browserName === 'webkit' && isMobile, 'R27: Page crashed on Mobile Safari (Windows)');
-
   test('a new series is published with its facts, and its page shows them', async ({ page }) => {
     const title = `E2E Studio ${uniqueSuffix()}`;
     await givenIAmLoggedInAsThePublisher(page);

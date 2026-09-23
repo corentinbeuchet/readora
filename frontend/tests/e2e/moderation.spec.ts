@@ -36,17 +36,12 @@ test.describe('Moderation queue', () => {
     await thenReadersStillSeeTheComment(request, reportedComment);
   });
 
-  test.describe('as a reader', () => {
-    // Playwright's WebKit for Windows crashes the page after a sign-up (frontend AGENTS.md R27).
-    test.skip(({ browserName, isMobile }) => browserName === 'webkit' && isMobile, 'R27: Page crashed on Mobile Safari (Windows)');
+  test('a reader without moderation rights is refused the queue', async ({ page }) => {
+    await signUp(page, 'reader');
 
-    test('a reader without moderation rights is refused the queue', async ({ page }) => {
-      await signUp(page, 'reader');
+    await whenIOpenTheModerationQueue(page);
 
-      await whenIOpenTheModerationQueue(page);
-
-      await thenIAmRefused(page);
-    });
+    await thenIAmRefused(page);
   });
 });
 

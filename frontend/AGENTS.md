@@ -424,10 +424,10 @@ Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = repor
   the first layout, when a client-rendered page that is short while loading grows past the screen (with
   `html, body { margin: 0 }`; `scrollbar-gutter` does not help, `html { overflow-y: scroll }` does). Safari has overlay
   scrollbars, so the site is unchanged: `tests/e2e/support/fixtures.ts` gives the WebKit projects the scrollbar from
-  the start (a context made with `browser.newContext()` does not get it). Still failing on `Mobile Safari` only, not
-  looked into: the sign-up tests of `scanlation-pipeline.spec.ts`, the signed-in header axe test and the dark `/` axe
-  test; the signed-in tests of `comments.spec.ts` and `moderation.spec.ts` (sign-up, then "Page crashed") and all of
-  `upload-studio.spec.ts` (crashes in the studio, also before its "Which series?" step) are skipped there. Check the series and team pages once on a real iPhone before a release.
+  the start (a context made with `browser.newContext()` does not get it). More pages kept crashing on Windows only
+  (after a sign-up, the upload studio, some axe scans), so since 2026-09-23 `playwright.config.ts` runs the
+  `webkit` and `Mobile Safari` projects off Windows only (CI and staging are Ubuntu; locally use WSL or macOS, or
+  `E2E_WEBKIT=1` to force them on Windows). Check the series and team pages once on a real iPhone before a release.
 - Smaller (survey): `noUncheckedIndexedAccess` off; 8 `(event.target as …)` casts; silent upvote failure
   (`chapter-comments.ts`); unused `requirePermission()`; footer year baked at prerender; identical "Show Spoiler"
   names; `app.routes.server.ts` reads `environment`; hand-rolled omnisearch combobox vs `@angular/aria`.

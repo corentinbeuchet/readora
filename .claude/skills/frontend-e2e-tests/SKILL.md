@@ -12,7 +12,9 @@ Support: `tests/e2e/support/fixtures.ts` (`test` with fixtures) and `tests/e2e/s
 ## Running
 - Stack: `docker compose up -d` (backend :8080, Postgres, MinIO; dev seed accounts) and the dev server
   (Playwright starts `npm run start` unless one is already on :4200).
-- `npm run e2e -- --project=chromium` while developing; all 5 projects before merging a UI-wide change.
+- `npm run e2e -- --project=chromium` while developing; all projects before merging a UI-wide change. The `webkit`
+  and `Mobile Safari` projects only exist off Windows (Playwright's Windows WebKit crashes pages, R27): run them in
+  WSL/CI, or force them with `E2E_WEBKIT=1`.
 - French (US-13): project `chromium-fr` runs only `tests/e2e/i18n-fr.spec.ts` against `npm run start:fr` (:4201,
   started by Playwright) or `<deployed>/fr/`; use relative paths there (`page.goto('works')`) so the `/fr/` base is kept.
 - New or changed test: `npm run e2e:stress` (chromium, `--repeat-each=5`) with the stack started as
