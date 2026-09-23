@@ -1,18 +1,10 @@
-import { ScanlationProject, TaskStatus, WorkflowStage, WorkflowTask } from '@app/core/models/scanlation';
+import { ScanlationProject, TaskStatus, WORKFLOW_STAGE_LABELS, WorkflowStage, WorkflowTask } from '@app/core/models/scanlation';
 
 /** Board columns, in workflow order. */
-export const STAGES: readonly { key: WorkflowStage; label: string }[] = [
-  { key: 'RAW_UPLOADED', label: $localize`:@@scanlation.board.stage.raw:RAW Package` },
-  { key: 'CLEANING', label: $localize`:@@scanlation.board.stage.cleaning:Cleaning & Redraw` },
-  { key: 'TRANSLATING', label: $localize`:@@scanlation.board.stage.translating:Translation` },
-  { key: 'TYPESETTING', label: $localize`:@@scanlation.board.stage.typesetting:Typesetting` },
-  { key: 'PROOFREADING', label: $localize`:@@scanlation.board.stage.proofreading:Proofreading` },
-  { key: 'QC_REVIEW', label: $localize`:@@scanlation.board.stage.qcReview:QC Review` },
-  { key: 'PUBLISHED', label: $localize`:@@scanlation.board.stage.published:Published` }
-];
-
-/** Column label of each stage (the submit dialog names the task's current stage). */
-export const STAGE_LABELS = Object.fromEntries(STAGES.map((stage) => [stage.key, stage.label])) as Record<WorkflowStage, string>;
+export const STAGES: readonly { key: WorkflowStage; label: string }[] = (Object.keys(WORKFLOW_STAGE_LABELS) as WorkflowStage[]).map((key) => ({
+  key,
+  label: WORKFLOW_STAGE_LABELS[key]
+}));
 
 /** The project's tasks grouped by workflow stage (every stage present, possibly empty). */
 export function tasksByStage(project: ScanlationProject | null): Record<WorkflowStage, WorkflowTask[]> {

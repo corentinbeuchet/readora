@@ -1,7 +1,7 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { MyTeam, ScanlationProject, ScanlationRole, TeamInvitation } from '@app/core/models/scanlation';
+import { MyTeam, ScanlationProject, ScanlationRole, TeamInvitation, WaitingTask } from '@app/core/models/scanlation';
 import { ApiClient, parseEnvelope } from './api-client';
 
 /**
@@ -16,6 +16,14 @@ export class TeamsApi {
   mineResource(enabled: Signal<boolean>): HttpResourceRef<MyTeam[]> {
     return httpResource<MyTeam[]>(() => (enabled() ? this.api.url('/teams/mine') : undefined), {
       parse: (raw) => parseEnvelope<MyTeam[]>(raw) ?? [],
+      defaultValue: []
+    });
+  }
+
+  /** What waits for me across my teams' boards: the tasks I hold first, then open ones my roles cover. */
+  waitingResource(enabled: Signal<boolean>): HttpResourceRef<WaitingTask[]> {
+    return httpResource<WaitingTask[]>(() => (enabled() ? this.api.url('/teams/mine/tasks') : undefined), {
+      parse: (raw) => parseEnvelope<WaitingTask[]>(raw) ?? [],
       defaultValue: []
     });
   }

@@ -3,7 +3,7 @@ import { HttpTestingController, TestRequest } from '@angular/common/http/testing
 import { provideRouter } from '@angular/router';
 import { MyTeamsPage } from '@app/features/scanlation/my-teams-page/my-teams-page';
 import { WorkSummary } from '@app/core/models/catalog';
-import { MyTeam, ScanlationRole, TeamInvitation } from '@app/core/models/scanlation';
+import { MyTeam, ScanlationRole, TeamInvitation, WaitingTask } from '@app/core/models/scanlation';
 import { Permission } from '@app/core/models/identity';
 import { givenIAmSignedInWith } from '../../../core/auth/auth-fixtures';
 import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
@@ -13,6 +13,10 @@ const ORV: WorkSummary = { ...SOLO, id: 'w-2', title: 'Omniscient Reader' };
 
 function invitation(overrides: Partial<TeamInvitation> = {}): TeamInvitation {
   return { id: 'i-1', teamId: 't-2', teamName: 'Sun Scans', invitee: 'jane', roles: ['TRANSLATOR'], invitedBy: 'mina', status: 'PENDING', createdAt: '2026-09-23T10:00:00Z', ...overrides };
+}
+
+function waitingTask(overrides: Partial<WaitingTask> = {}): WaitingTask {
+  return { projectId: 'p-1', work: { id: 'w-1', title: 'Solo Leveling' }, team: { id: 't-1', name: 'Moon Scans' }, taskId: 'task-1', chapterNumber: '1', stage: 'TRANSLATING', mine: false, ...overrides };
 }
 
 function team(overrides: Partial<MyTeam> = {}): MyTeam {
@@ -190,6 +194,30 @@ describe('MyTeamsPage (US-12)', () => {
     thenMyTeamsAre([]);
   });
 
+  it('The Studio lists what waits for me, first what I claimed', async () => {
+    await givenIAmOnMyTeams({
+      teams: [team({ myRoles: ['TRANSLATOR'] })],
+      waitingForMe: [waitingTask({ taskId: 'task-2', chapterNumber: '2', mine: true }), waitingTask({ taskId: 'task-3', chapterNumber: '3', mine: false })]
+    });
+
+    thenTheWaitingChaptersAre(['Chapter 2 of Solo Leveling', 'Chapter 3 of Solo Leveling']);
+    thenTheWaitingChapterIsClaimedByMe('Chapter 2 of Solo Leveling');
+    thenTheWaitingChapterIsNotClaimedByMe('Chapter 3 of Solo Leveling');
+    thenEachWaitingChapterLinksTo('/scanlation/p-1');
+  });
+
+  it('asks for nothing that waits while I am on no team', async () => {
+    await givenIAmOnMyTeams({ teams: [] });
+
+    thenWhatWaitsWasNotAskedFor();
+  });
+
+  it('says so when nothing waits for me', async () => {
+    await givenIAmOnMyTeams({ teams: [team({ myRoles: ['TRANSLATOR'] })], waitingForMe: [] });
+
+    thenICanSee('Nothing waits for you right now');
+  });
+
   it('declining an invitation leaves my teams as they are', async () => {
     await givenIAmOnMyTeams({ teams: [], invitations: [invitation()] });
 
@@ -201,13 +229,20 @@ describe('MyTeamsPage (US-12)', () => {
   });
 
   /** `invitations`: the ones waiting for my answer; `waitingForAnAnswer`: the ones my team t-1 sent (I lead it). */
-  async function givenIAmOnMyTeams(given: { teams: MyTeam[]; permissions?: Permission[]; invitations?: TeamInvitation[]; waitingForAnAnswer?: TeamInvitation[] }): Promise<void> {
+  async function givenIAmOnMyTeams(given: {
+    teams: MyTeam[];
+    permissions?: Permission[];
+    invitations?: TeamInvitation[];
+    waitingForAnAnswer?: TeamInvitation[];
+    waitingForMe?: WaitingTask[];
+  }): Promise<void> {
     await givenIAmSignedInWith(given.permissions ?? ['LIBRARY_USE']);
     fixture = TestBed.createComponent(MyTeamsPage);
     await settle(fixture);
     http.expectOne(`${API}/teams/mine`).flush(ok(given.teams));
     http.expectOne(`${API}/invitations/mine`).flush(ok(given.invitations ?? []));
     await settle(fixture);
+    await whenWhatWaitsIsAnswered(given.waitingForMe ?? []);
     if (given.waitingForAnAnswer) {
       http.expectOne(`${API}/teams/t-1/invitations`).flush(ok(given.waitingForAnAnswer));
       await settle(fixture);
@@ -242,6 +277,13 @@ describe('MyTeamsPage (US-12)', () => {
       http.expectOne(`${API}/teams/mine`).flush(ok(answer.teams));
     }
     await settle(fixture);
+    await whenWhatWaitsIsAnswered([]);
+  }
+
+  /** Being on a team (loaded, created, joined) asks what waits for me; nothing is asked while I am on none. */
+  async function whenWhatWaitsIsAnswered(waiting: WaitingTask[]): Promise<void> {
+    http.match(`${API}/teams/mine/tasks`).forEach((request) => request.flush(ok(waiting)));
+    await settle(fixture);
   }
 
   async function whenICreateTheTeam(draft: { name: string; description: string }, server: { answer: object; status?: number }): Promise<void> {
@@ -251,6 +293,7 @@ describe('MyTeamsPage (US-12)', () => {
     lastRequest = http.expectOne(`${API}/teams`);
     lastRequest.flush(server.answer, server.status ? { status: server.status, statusText: 'Bad Request' } : undefined);
     await settle(fixture);
+    await whenWhatWaitsIsAnswered([]);
   }
 
   async function whenISubmitTheNewTeamForm(): Promise<void> {
@@ -323,6 +366,7 @@ describe('MyTeamsPage (US-12)', () => {
     if (after.thenMyTeamsAre) {
       http.expectOne(`${API}/teams/mine`).flush(ok(after.thenMyTeamsAre));
       await settle(fixture);
+      await whenWhatWaitsIsAnswered([]);
     }
   }
 
@@ -332,6 +376,34 @@ describe('MyTeamsPage (US-12)', () => {
 
   function thenICannotSee(text: string): void {
     expect(fixture.nativeElement.textContent).not.toContain(text);
+  }
+
+  function thenWhatWaitsWasNotAskedFor(): void {
+    http.expectNone(`${API}/teams/mine/tasks`);
+  }
+
+  function waitingItems(): HTMLElement[] {
+    return Array.from(fixture.nativeElement.querySelectorAll('.waiting-item'));
+  }
+
+  function waitingItem(chapter: string): HTMLElement {
+    return waitingItems().find((li) => li.querySelector('a')!.textContent!.trim() === chapter)!;
+  }
+
+  function thenTheWaitingChaptersAre(chapters: string[]): void {
+    expect(waitingItems().map((li) => li.querySelector('a')!.textContent!.trim())).toEqual(chapters);
+  }
+
+  function thenTheWaitingChapterIsClaimedByMe(chapter: string): void {
+    expect(waitingItem(chapter).textContent).toContain('Claimed by you');
+  }
+
+  function thenTheWaitingChapterIsNotClaimedByMe(chapter: string): void {
+    expect(waitingItem(chapter).textContent).not.toContain('Claimed by you');
+  }
+
+  function thenEachWaitingChapterLinksTo(href: string): void {
+    expect(waitingItems().map((li) => li.querySelector('a')!.getAttribute('href'))).toEqual(waitingItems().map(() => href));
   }
 
   function thenTheInvitationsWaitingForAnAnswerAre(invitees: string[]): void {

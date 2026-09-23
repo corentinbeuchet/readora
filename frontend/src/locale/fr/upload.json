@@ -43,7 +43,7 @@
     "upload.pages.intro": " Envoyez plusieurs images de pages ou déposez une archive {$START_TAG_CODE}.zip{$CLOSE_TAG_CODE} / {$START_TAG_CODE}.cbz{$CLOSE_TAG_CODE}. Les pages seront triées dans l'ordre naturel. ",
     "upload.pages.back": "← Retour",
     "upload.pages.next": " Suivant : vérification → ",
-    "upload.publish.noProject": "Votre équipe ne travaille pas encore sur cette série. Ajoutez la série à votre équipe depuis Mes équipes, puis publiez à nouveau.",
+    "upload.publish.noProject": "Votre équipe ne travaille pas encore sur cette série. Ajoutez la série à votre équipe dans le Studio, puis publiez à nouveau.",
     "upload.publish.incomplete": "Remplissez tous les champs obligatoires avant de publier.",
     "upload.publish.uploadingPages": "Envoi de {$count} pages du chapitre…",
     "upload.publish.uploadedPages": "{$completed}/{$total} pages envoyées…",

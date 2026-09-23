@@ -25,7 +25,7 @@ Feature: Home and navigation
   Scenario: Team tools live in the account menu
     Given reader "Camille" is signed in
     When they open the account menu
-    Then it offers "Scanlation workspace" and "Upload Studio", since any reader can start or join a team
+    Then it offers "Studio", since any reader can start or join a team
     But the navigation does not
     And only a moderator's account menu also offers "Moderation"
 

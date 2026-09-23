@@ -15,6 +15,7 @@ import com.readora.web.dto.ScanlationProjectDto;
 import com.readora.web.dto.TeamInvitationDto;
 import com.readora.web.dto.TeamMemberRequest;
 import com.readora.web.dto.TeamSeriesRequest;
+import com.readora.web.dto.WaitingTaskDto;
 import com.readora.web.security.CurrentUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -50,6 +51,14 @@ public class TeamController {
     public ResponseEntity<ApiResponse<List<MyTeamDto>>> mine() {
         UserId me = currentUserProvider.requireUserId();
         return ResponseEntity.ok(ApiResponse.ok(teams.myTeams(me).stream().map(team -> MyTeamDto.fromDomain(team, me)).toList()));
+    }
+
+    @GetMapping("/mine/tasks")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
+    @Operation(summary = "What waits for me across my teams' task boards: tasks I hold, then open ones my roles cover")
+    public ResponseEntity<ApiResponse<List<WaitingTaskDto>>> waitingForMe() {
+        return ResponseEntity.ok(ApiResponse.ok(teams.waitingFor(currentUserProvider.requireUserId()).stream()
+                .map(WaitingTaskDto::fromDomain).toList()));
     }
 
     @PostMapping

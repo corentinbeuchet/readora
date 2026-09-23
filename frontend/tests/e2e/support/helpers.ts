@@ -52,8 +52,7 @@ export async function thenNoNavigationLabelIsClipped(page: Page, navigationName:
 /** Team tools (US-14) are entries of the account menu: every reader can start or join a team; Moderation is for moderators. */
 export async function thenTheAccountMenuOffersTeamToolsButNotModeration(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Account menu' }).click();
-  await expect(page.getByRole('menuitem', { name: 'Scanlation workspace' })).toBeVisible();
-  await expect(page.getByRole('menuitem', { name: 'Upload Studio' })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: 'Studio' })).toBeVisible();
   await expect(page.getByRole('menuitem', { name: 'Moderation' })).toHaveCount(0);
   await page.keyboard.press('Escape');
 }

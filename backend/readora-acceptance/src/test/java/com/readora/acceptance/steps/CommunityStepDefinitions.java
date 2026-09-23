@@ -45,6 +45,7 @@ import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.scanlation.TeamInvitationId;
 import com.readora.domain.scanlation.TeamInvitedEvent;
 import com.readora.domain.scanlation.TeamMember;
+import com.readora.domain.scanlation.WorkflowStage;
 import com.readora.domain.social.ReadingStatus;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
@@ -354,6 +355,22 @@ public class CommunityStepDefinitions {
     public void theSeriesIsRefusedBecauseItNeedsATeam() {
         assertThat(refusal).isInstanceOfSatisfying(DomainValidationException.class, e -> assertThat(e.code()).isEqualTo(ErrorCodes.TEAM_REQUIRED));
         refusal = null;
+    }
+
+    @Given("on the board of {string} for {string}, chapter {int} waits for {string} and chapter {int} for {string}")
+    public void chaptersWaitOnTheBoard(String teamName, String title, int first, String firstStage, int second, String secondStage) {
+        ScanlationProject board = projects.findById(boardOf(teamName, title)).orElseThrow();
+        board.addChapterTask(ChapterNumber.of(String.valueOf(first))).advanceStage(WorkflowStage.valueOf(firstStage));
+        board.addChapterTask(ChapterNumber.of(String.valueOf(second))).advanceStage(WorkflowStage.valueOf(secondStage));
+        projects.save(board);
+    }
+
+    @Then("{string} sees chapters {string} of {string} waiting for them")
+    public void seesChaptersWaiting(String member, String numbers, String title) {
+        assertThat(teamManagement.waitingFor(account(member)))
+                .allSatisfy(waiting -> assertThat(waiting.work().getTitle()).isEqualTo(title))
+                .extracting(waiting -> waiting.task().getChapterNumber().value())
+                .containsExactly(numbers.split(",\\s*"));
     }
 
     @Then("{string} can open the task board of {string} for {string}")

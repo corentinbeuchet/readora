@@ -46,7 +46,7 @@
     "upload.pages.intro": " Upload multiple page images or drop a {$START_TAG_CODE}.zip{$CLOSE_TAG_CODE} / {$START_TAG_CODE}.cbz{$CLOSE_TAG_CODE} archive. Pages will be sorted naturally. ",
     "upload.pages.back": "← Back",
     "upload.pages.next": " Next: Review → ",
-    "upload.publish.noProject": "Your team does not work on this series yet. Add the series to your team from My teams, then publish again.",
+    "upload.publish.noProject": "Your team does not work on this series yet. Add the series to your team in the Studio, then publish again.",
     "upload.publish.incomplete": "Please complete all required fields before publishing.",
     "upload.publish.uploadingPages": "Uploading {$count} chapter pages…",
     "upload.publish.uploadedPages": "Uploaded {$completed}/{$total} pages…",

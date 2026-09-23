@@ -10,7 +10,7 @@ import { PageUploadItem } from './file-utils';
 import { UploadService } from './upload.service';
 import { ExistingSeries, UploadWizard, parseChapterNumber } from './upload-wizard';
 
-const NO_PROJECT_ERROR = $localize`:@@upload.publish.noProject:Your team does not work on this series yet. Add the series to your team from My teams, then publish again.`;
+const NO_PROJECT_ERROR = $localize`:@@upload.publish.noProject:Your team does not work on this series yet. Add the series to your team in the Studio, then publish again.`;
 
 /** A failure whose message is written for the user (as opposed to an unexpected exception). */
 class UploadFlowError extends Error {}

@@ -127,6 +127,39 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
     }
 
     @Test
+    @DisplayName("A member sees the open tasks their roles cover across their teams, and the ones they claimed first")
+    void waitingForMe() throws Exception {
+        Session mina = register();
+        Session bob = register();
+        String team = givenATeamLedBy(mina);
+        var created = whenICreateASeriesFor(mina, team).andExpect(status().isCreated()).andReturn();
+        String workId = json(created).path("data").path("id").asString();
+        String project = json(mockMvc.perform(get("/api/v1/works/" + workId + "/projects").header("Authorization", mina.bearer())).andReturn())
+                .path("data").path(0).path("id").asString();
+        for (String chapter : new String[] {"1", "2"}) {
+            mockMvc.perform(post("/api/v1/scanlation/projects/" + project + "/tasks").header("Authorization", mina.bearer())
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"chapterNumber\":" + chapter + ",\"assetUrl\":\"https://cdn.test/raw.zip\",\"pageCount\":5}"))
+                    .andExpect(status().isCreated());
+        }
+        givenTheyJoinTheTeam(mina, team, bob, "CLEANER_REDRAWER");
+        String second = json(mockMvc.perform(get("/api/v1/teams/mine/tasks").header("Authorization", bob.bearer())).andReturn())
+                .path("data").path(1).path("taskId").asString();
+        mockMvc.perform(post("/api/v1/scanlation/projects/" + project + "/tasks/" + second + "/claim").header("Authorization", bob.bearer()))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/teams/mine/tasks").header("Authorization", bob.bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].chapterNumber").value("2"))
+                .andExpect(jsonPath("$.data[0].mine").value(true))
+                .andExpect(jsonPath("$.data[0].projectId").value(project))
+                .andExpect(jsonPath("$.data[1].chapterNumber").value("1"))
+                .andExpect(jsonPath("$.data[1].mine").value(false))
+                .andExpect(jsonPath("$.data[1].stage").value("RAW_UPLOADED"));
+        mockMvc.perform(get("/api/v1/teams/mine/tasks")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
     @DisplayName("A signed-in reader finds readers by the start of their username, to invite them; guests cannot")
     void findReadersByName() throws Exception {
         Session mina = register();

@@ -1,5 +1,8 @@
 <section class="page">
-  <h1 i18n="@@scanlation.teams.heading">My teams</h1>
+  <div class="studio-header">
+    <h1 i18n="@@scanlation.teams.heading">Studio</h1>
+    <a routerLink="/upload" class="btn" i18n="@@scanlation.studio.publish">Publish a chapter</a>
+  </div>
 
   @if (invitations.status() === 'loading') {
     <p class="muted" role="status" i18n="@@scanlation.invitations.loading">Loading your invitations…</p>
@@ -28,6 +31,32 @@
       </ul>
       @if (answering.error(); as message) {
         <p class="form-error" role="alert">{{ message }}</p>
+      }
+    </section>
+  }
+
+  @if (hasTeams()) {
+    <section class="waiting" aria-labelledby="waiting-heading">
+      <h2 id="waiting-heading" i18n="@@scanlation.waiting.heading">Waiting for you</h2>
+      @if (waiting.status() === 'loading') {
+        <p class="muted" role="status" i18n="@@scanlation.waiting.loading">Loading what waits for you…</p>
+      } @else if (waiting.error()) {
+        <app-load-error [error]="waiting.error()" (retry)="waiting.reload()" i18n="@@scanlation.waiting.loadError">Could not load what waits for you.</app-load-error>
+      } @else if (waiting.value().length === 0) {
+        <p class="muted" i18n="@@scanlation.waiting.empty">Nothing waits for you right now: chapters show up here when they reach a stage you work on.</p>
+      } @else {
+        <ul class="waiting-list">
+          @for (item of waiting.value(); track item.taskId) {
+            <li class="waiting-item">
+              <a [routerLink]="['/scanlation', item.projectId]" i18n="@@scanlation.waiting.chapter">Chapter {{ item.chapterNumber }} of {{ item.work.title }}</a>
+              <span class="badge">{{ stageLabels[item.stage] }}</span>
+              @if (item.mine) {
+                <span class="badge badge-accent" i18n="@@scanlation.waiting.mine">Claimed by you</span>
+              }
+              <span class="muted">{{ item.team.name }}</span>
+            </li>
+          }
+        </ul>
       }
     </section>
   }

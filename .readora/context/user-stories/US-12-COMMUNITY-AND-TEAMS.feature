@@ -204,6 +204,23 @@ Feature: Community and scanlation teams
     When "Mina" tries to give "Aoi" the roles "PROOFREADER" in "Moon Scans"
     Then the change is refused because "Aoi" is not on the team
 
+  # A task board per series is one more place to check: the Studio gathers what each member can do next.
+  @must
+  Scenario: Each member sees the chapters waiting for them
+    Given reader "Mina" leads the team "Moon Scans"
+    And "Mina" added "Bob" to "Moon Scans" as "TRANSLATOR"
+    And "Mina" adds the series "Solo Leveling" to "Moon Scans"
+    And on the board of "Moon Scans" for "Solo Leveling", chapter 3 waits for "TRANSLATING" and chapter 4 for "CLEANING"
+    Then "Bob" sees chapters "3" of "Solo Leveling" waiting for them
+    And "Mina" sees chapters "3, 4" of "Solo Leveling" waiting for them
+
+  @should @ui
+  Scenario: The Studio lists what waits for me, first what I claimed
+    Given "Bob" claimed chapter 2 of "Solo Leveling" and chapter 3 waits for a translator
+    When he opens the Studio
+    Then chapter 2 is listed first, as claimed by him, and chapter 3 after it
+    And each links to the task board of "Solo Leveling"
+
   @should @ui
   Scenario: Inviting finds a reader by the start of their name
     Given reader "Mina" leads the team "Moon Scans"

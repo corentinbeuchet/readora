@@ -19,7 +19,7 @@ export type { PublishingMode, UploadStep } from './upload-wizard';
 
 /**
  * Upload studio (`/upload`). It starts by finding the series in the catalog (US-12): with `?workId=&teamId=` (picked
- * there, or from "My teams") it publishes a chapter of that series for that team; with `?create=series` it is a
+ * there, or from the Studio) it publishes a chapter of that series for that team; with `?create=series` it is a
  * wizard to create a series and publish its first chapter, directly or through the scanlation team. The draft and
  * the publish flow are provided here, so each visit starts with an empty wizard; moving between those URLs keeps it.
  */

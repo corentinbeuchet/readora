@@ -7,7 +7,7 @@ import { LoadError } from '@app/shared/ui/load-error';
 import { SeriesForm } from './series-form/series-form';
 
 /**
- * Where the leaders of a team correct the page of a series they translate (US-04), reached from "My teams". The
+ * Where the leaders of a team correct the page of a series they translate (US-04), reached from the Studio. The
  * server decides who may save: the page only needs a signed-in reader to open.
  */
 @Component({

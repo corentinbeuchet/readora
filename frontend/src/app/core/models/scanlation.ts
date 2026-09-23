@@ -14,6 +14,17 @@ export const SCANLATION_ROLE_LABELS: Record<ScanlationRole, string> = {
 
 export type WorkflowStage = 'RAW_UPLOADED' | 'CLEANING' | 'TRANSLATING' | 'TYPESETTING' | 'PROOFREADING' | 'QC_REVIEW' | 'PUBLISHED';
 
+/** Display names of the workflow stages, in workflow order (the task board's columns). */
+export const WORKFLOW_STAGE_LABELS: Record<WorkflowStage, string> = {
+  RAW_UPLOADED: $localize`:@@scanlation.board.stage.raw:RAW Package`,
+  CLEANING: $localize`:@@scanlation.board.stage.cleaning:Cleaning & Redraw`,
+  TRANSLATING: $localize`:@@scanlation.board.stage.translating:Translation`,
+  TYPESETTING: $localize`:@@scanlation.board.stage.typesetting:Typesetting`,
+  PROOFREADING: $localize`:@@scanlation.board.stage.proofreading:Proofreading`,
+  QC_REVIEW: $localize`:@@scanlation.board.stage.qcReview:QC Review`,
+  PUBLISHED: $localize`:@@scanlation.board.stage.published:Published`
+};
+
 export type TaskStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
 
 export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
@@ -63,6 +74,17 @@ export interface MyTeam {
   description: string | null;
   myRoles: ScanlationRole[];
   boards: TeamBoard[];
+}
+
+/** A task of one of my teams' boards that I hold (`mine`) or can take on (`GET /teams/mine/tasks`). */
+export interface WaitingTask {
+  projectId: string;
+  work: SeriesRef;
+  team: { id: string; name: string };
+  taskId: string;
+  chapterNumber: string;
+  stage: WorkflowStage;
+  mine: boolean;
 }
 
 /** An invitation to join a team (US-12): the reader joins only by accepting it. */

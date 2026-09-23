@@ -8,6 +8,7 @@ import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.scanlation.TeamInvitation;
 import com.readora.domain.scanlation.TeamInvitationId;
+import com.readora.domain.scanlation.WorkflowTask;
 import com.readora.domain.work.Work;
 import com.readora.domain.work.WorkId;
 import org.jspecify.annotations.Nullable;
@@ -89,4 +90,12 @@ public interface ManageTeamUseCase {
 
     /// The teams the user is a member of, by name.
     List<MyTeam> myTeams(UserId userId);
+
+    /// A task of one of my teams' boards that I can take on (open, in a stage my roles cover) or that I hold.
+    record WaitingTask(ProjectId projectId, Work work, Team team, WorkflowTask task, boolean mine) {
+    }
+
+    /// What waits for the user across their teams' task boards: the tasks they hold first, then the open ones in
+    /// stages their roles cover (a leader covers every stage), by series title and chapter number.
+    List<WaitingTask> waitingFor(UserId userId);
 }

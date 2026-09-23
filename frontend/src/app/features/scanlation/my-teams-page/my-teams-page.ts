@@ -1,8 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormField, form, maxLength, required, submit } from '@angular/forms/signals';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { TeamsApi } from '@app/core/api/teams-api';
-import { SCANLATION_ROLE_LABELS, TeamInvitation } from '@app/core/models/scanlation';
+import { SCANLATION_ROLE_LABELS, TeamInvitation, WORKFLOW_STAGE_LABELS } from '@app/core/models/scanlation';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
 import { SeoService } from '@app/core/seo/seo.service';
@@ -13,10 +14,10 @@ import { EmptyState } from '@app/shared/ui/empty-state/empty-state';
 import { LoadError } from '@app/shared/ui/load-error';
 import { TeamPanel } from './team-panel/team-panel';
 
-/** The scanlation workspace (US-12): the teams I belong to with their task boards, and a new-team form. */
+/** The Studio (US-12): my invitations, what waits for me, the teams I belong to with their boards, and a new-team form. */
 @Component({
   selector: 'app-my-teams-page',
-  imports: [LoadError, EmptyState, FieldErrors, AriaInvalidDirective, FormField, HasPermissionDirective, TeamPanel],
+  imports: [RouterLink, LoadError, EmptyState, FieldErrors, AriaInvalidDirective, FormField, HasPermissionDirective, TeamPanel],
   templateUrl: './my-teams-page.html',
   styleUrl: './my-teams-page.scss'
 })
@@ -30,6 +31,10 @@ export class MyTeamsPage {
   protected readonly invitations = this.api.myInvitationsResource(this.canView);
   protected readonly answering = asyncAction();
   protected readonly roleLabels = SCANLATION_ROLE_LABELS;
+  protected readonly hasTeams = computed(() => this.teams.hasValue() && this.teams.value().length > 0);
+  /** What I can take on next across my teams' boards, and what I hold (listed first by the server); only with a team. */
+  protected readonly waiting = this.api.waitingResource(computed(() => this.canView() && this.hasTeams()));
+  protected readonly stageLabels = WORKFLOW_STAGE_LABELS;
   protected readonly creating = asyncAction();
   protected readonly model = signal({ name: '', description: '' });
   protected readonly newTeamForm = form(this.model, (path) => {
@@ -39,7 +44,7 @@ export class MyTeamsPage {
   });
 
   constructor() {
-    inject(SeoService).private_($localize`:@@scanlation.teams.seoTitle:My teams`);
+    inject(SeoService).private_($localize`:@@scanlation.teams.seoTitle:Studio`);
   }
 
   /** I join the team: it appears in my list, and the invitation goes away. */
@@ -48,6 +53,7 @@ export class MyTeamsPage {
       await firstValueFrom(this.api.acceptInvitation(invitation.id));
       this.invitations.update((pending) => pending.filter((i) => i.id !== invitation.id));
       this.teams.reload();
+      this.waiting.reload();
     }, { key: invitation.id });
   }
 

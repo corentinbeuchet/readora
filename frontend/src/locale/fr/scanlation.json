@@ -37,7 +37,7 @@
     "scanlation.submit.assetUrl.required": "L'URL du paquet de fichiers est obligatoire",
     "scanlation.submit.assetUrl.pattern": "Doit être une URL http(s)",
     "scanlation.submit.pageCount.min": "Le nombre de pages doit être d'au moins 1",
-    "scanlation.board.seoTitle": "Espace de scantrad",
+    "scanlation.board.seoTitle": "Tableau de tâches",
     "scanlation.board.stage.raw": "Paquet RAW",
     "scanlation.board.stage.cleaning": "Nettoyage et redraw",
     "scanlation.board.stage.translating": "Traduction",
@@ -45,7 +45,7 @@
     "scanlation.board.stage.proofreading": "Relecture",
     "scanlation.board.stage.qcReview": "Contrôle qualité",
     "scanlation.board.stage.published": "Publié",
-    "scanlation.teams.heading": "Mes équipes",
+    "scanlation.teams.heading": "Studio",
     "scanlation.teams.loading": "Chargement de vos équipes…",
     "scanlation.teams.loadError": "Impossible de charger vos équipes.",
     "scanlation.teams.empty": "Vous ne faites partie d'aucune équipe. Créez-en une ci-dessous, ou demandez à un responsable de vous inviter.",
@@ -54,7 +54,7 @@
     "scanlation.teams.new.description": "Ce que l'équipe traduit",
     "scanlation.teams.new.submit": "Créer l'équipe",
     "scanlation.teams.new.nameRequired": "Donnez un nom à votre équipe",
-    "scanlation.teams.seoTitle": "Mes équipes",
+    "scanlation.teams.seoTitle": "Studio",
     "scanlation.teams.myRoles": "Mes rôles",
     "scanlation.teams.boards": "Tableaux des tâches",
     "scanlation.teams.boardsNone": "Aucune série pour le moment. Un responsable ajoute la première.",
@@ -113,6 +113,13 @@
     "scanlation.roster.remove": "Retirer{$START_TAG_SPAN} {$INTERPOLATION} de l'équipe{$CLOSE_TAG_SPAN}",
     "scanlation.roster.rolesOf": "Rôles de {$INTERPOLATION}",
     "scanlation.roster.saveRoles": "Enregistrer les rôles",
-    "scanlation.roster.cancelRoles": "Annuler"
+    "scanlation.roster.cancelRoles": "Annuler",
+    "scanlation.studio.publish": "Publier un chapitre",
+    "scanlation.waiting.heading": "En attente de vous",
+    "scanlation.waiting.loading": "Chargement de ce qui vous attend…",
+    "scanlation.waiting.loadError": "Impossible de charger ce qui vous attend.",
+    "scanlation.waiting.empty": "Rien ne vous attend pour le moment : les chapitres apparaissent ici quand ils arrivent à une étape sur laquelle vous travaillez.",
+    "scanlation.waiting.chapter": "Chapitre {$INTERPOLATION} de {$INTERPOLATION_1}",
+    "scanlation.waiting.mine": "Pris par vous"
   }
 }

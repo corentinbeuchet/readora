@@ -65,7 +65,7 @@ describe('Shell navigation', () => {
 
     whenIOpenTheAccountMenu();
 
-    thenTheAccountMenuOffers(['Profile', 'History', 'Scanlation workspace', 'Upload Studio', 'Log out']);
+    thenTheAccountMenuOffers(['Profile', 'History', 'Studio', 'Log out']);
     thenTheTeamToolsAreAGroupNamed('Team tools');
     thenTheNavigationLinksAre(['Home', 'Browse', 'Updates', 'Rankings', 'Lists']);
   });
@@ -76,7 +76,7 @@ describe('Shell navigation', () => {
 
     whenIOpenTheAccountMenu();
 
-    thenTheAccountMenuOffers(['Profile', 'History', 'Scanlation workspace', 'Upload Studio', 'Moderation', 'Log out']);
+    thenTheAccountMenuOffers(['Profile', 'History', 'Studio', 'Moderation', 'Log out']);
   });
 
   it('navigates exactly once per click and marks the current page', async () => {
@@ -246,7 +246,7 @@ describe('Shell navigation', () => {
   function thenTheTeamToolsAreAGroupNamed(name: string): void {
     const group: HTMLElement = fixture.nativeElement.querySelector('[role="menu"] [role="group"]');
     expect(group.getAttribute('aria-label')).toBe(name);
-    expect(Array.from(group.querySelectorAll('[role="menuitem"]')).map((item) => item.textContent?.trim())).toEqual(['Scanlation workspace', 'Upload Studio']);
+    expect(Array.from(group.querySelectorAll('[role="menuitem"]')).map((item) => item.textContent?.trim())).toEqual(['Studio']);
   }
 
   function thenTheRouterNavigatedTimes(times: number): void {
