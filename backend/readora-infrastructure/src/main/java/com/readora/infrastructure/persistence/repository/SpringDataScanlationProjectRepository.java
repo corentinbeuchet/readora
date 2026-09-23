@@ -4,6 +4,7 @@ import com.readora.infrastructure.persistence.entity.ScanlationProjectJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,4 +13,6 @@ public interface SpringDataScanlationProjectRepository extends JpaRepository<Sca
     List<ScanlationProjectJpaEntity> findByWorkId(UUID workId);
 
     List<ScanlationProjectJpaEntity> findByTeamId(UUID teamId);
+
+    List<ScanlationProjectJpaEntity> findByTeamIdIn(Collection<UUID> teamIds);
 }

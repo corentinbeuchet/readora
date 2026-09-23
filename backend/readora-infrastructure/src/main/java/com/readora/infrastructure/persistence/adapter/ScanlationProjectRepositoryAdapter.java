@@ -46,6 +46,17 @@ public class ScanlationProjectRepositoryAdapter implements ScanlationProjectRepo
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<ScanlationProject> findByTeamIds(Collection<TeamId> teamIds) {
+        if (teamIds.isEmpty()) {
+            return List.of();
+        }
+        return springDataRepository.findByTeamIdIn(teamIds.stream().map(TeamId::value).toList()).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     @Transactional
     public ScanlationProject save(ScanlationProject project) {
         ScanlationProjectJpaEntity existing = springDataRepository.findById(project.getId().value()).orElse(null);

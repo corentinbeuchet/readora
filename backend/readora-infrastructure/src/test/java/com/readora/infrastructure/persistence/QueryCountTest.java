@@ -116,6 +116,25 @@ class QueryCountTest {
     }
 
     @Test
+    @DisplayName("The projects of all my teams load in one query with their tasks in batches, not one query per team")
+    void projectsOfManyTeamsAreOneQuery() {
+        List<TeamId> teamIds = IntStream.range(0, 6).mapToObj(i -> {
+            Work work = workRepository.save(Work.create("Many Teams Work " + i, "S", WorkType.MANGA, "c.png", Set.of("Action")));
+            Team team = teamRepository.save(Team.create("Many Teams " + i, null, UserId.of("many-leader")));
+            ScanlationProject project = ScanlationProject.create("Many Teams " + i, work.getId(), team.getId());
+            project.addChapterTask(ChapterNumber.of("1"));
+            projectRepository.save(project);
+            return team.getId();
+        }).toList();
+
+        statistics.clear();
+        List<ScanlationProject> projects = projectRepository.findByTeamIds(teamIds);
+
+        assertThat(projects).hasSize(6).allSatisfy(p -> assertThat(p.getTasks()).hasSize(1));
+        assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(2);
+    }
+
+    @Test
     @DisplayName("Projects of a work load their tasks in batches, and their teams load members and roles in batches")
     void projectsAreBatched() {
         Work work = workRepository.save(Work.create("Projects Work", "S", WorkType.MANGA, "c.png", Set.of("Action")));

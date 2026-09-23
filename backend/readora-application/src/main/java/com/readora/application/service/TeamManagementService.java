@@ -93,8 +93,8 @@ public class TeamManagementService implements ManageTeamUseCase {
         List<Team> mine = teams.findByMember(userId).stream()
                 .sorted(Comparator.comparing(Team::getName, String.CASE_INSENSITIVE_ORDER))
                 .toList();
-        Map<TeamId, List<ScanlationProject>> projectsByTeam = mine.stream()
-                .collect(Collectors.toMap(Team::getId, team -> projects.findByTeamId(team.getId())));
+        Map<TeamId, List<ScanlationProject>> projectsByTeam = projects.findByTeamIds(mine.stream().map(Team::getId).toList()).stream()
+                .collect(Collectors.groupingBy(ScanlationProject::getTeamId));
         List<WorkId> workIds = projectsByTeam.values().stream().flatMap(List::stream).map(ScanlationProject::getWorkId).distinct().toList();
         Map<WorkId, Work> series = works.findAllById(workIds).stream().collect(Collectors.toMap(Work::getId, work -> work));
         return mine.stream()
