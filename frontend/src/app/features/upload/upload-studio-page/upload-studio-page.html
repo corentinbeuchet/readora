@@ -20,6 +20,8 @@
       <ng-container i18n="@@upload.studio.notMyTeam">You are not on the team this link was made for.</ng-container>
       <a routerLink="/scanlation" class="btn btn-link" i18n="@@upload.studio.backToTeams">Back to my teams</a>
     </div>
+  } @else if (choosingSeries()) {
+    <app-which-series-step />
   } @else {
   @if (wizard.step() !== 'success') {
     <app-wizard-steps
@@ -40,7 +42,7 @@
       <app-series-step [existing]="existing()" />
     }
     @case ('chapter') {
-      <app-chapter-step />
+      <app-chapter-step [existing]="existing()" />
     }
     @case ('pages') {
       <app-pages-step />
@@ -49,7 +51,7 @@
       <app-review-step [existing]="existing()" />
     }
     @case ('success') {
-      <app-upload-success />
+      <app-upload-success [existing]="existing()" />
     }
   }
   }

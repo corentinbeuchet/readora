@@ -7,6 +7,23 @@
     <input id="chapter-number" type="text" placeholder="e.g. 1, 1.5, 10" i18n-placeholder="@@upload.chapter.number.placeholder"
            [formField]="form.chapterNumber" [appAriaInvalid]="form.chapterNumber" aria-describedby="chapter-number-error" />
     <app-field-errors id="chapter-number-error" [field]="form.chapterNumber" />
+    @if (existing(); as target) {
+      <div class="versions" role="status">
+        @if (alreadyMine()) {
+          <p class="form-error" i18n="@@upload.chapter.alreadyMine">{{ target.team.name }} already published chapter {{ wizard.draft().chapterNumber }} of {{ target.work.title }}. Choose another number.</p>
+        } @else {
+          <p i18n="@@upload.chapter.yourVersion">You are adding the version of <strong>{{ target.team.name }}</strong>.</p>
+          @if (otherTeams().length > 0) {
+            <p i18n="@@upload.chapter.otherVersions">Already published by other teams (readers can pick a version):</p>
+            <ul>
+              @for (team of otherTeams(); track team.id) {
+                <li>{{ team.name }}</li>
+              }
+            </ul>
+          }
+        }
+      </div>
+    }
   </div>
 
   <div class="field">
@@ -47,7 +64,7 @@
 
   <div class="wizard-actions">
     <button type="button" class="btn" (click)="wizard.goTo('manga')" i18n="@@upload.chapter.back">&larr; Back</button>
-    <button type="button" class="btn btn-primary" [disabled]="!wizard.chapterValid()" (click)="wizard.goTo('pages')" i18n="@@upload.chapter.next">
+    <button type="button" class="btn btn-primary" [disabled]="!wizard.chapterValid() || alreadyMine()" (click)="wizard.goTo('pages')" i18n="@@upload.chapter.next">
       Next: Upload Pages &rarr;
     </button>
   </div>

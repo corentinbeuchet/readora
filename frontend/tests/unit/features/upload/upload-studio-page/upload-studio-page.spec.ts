@@ -1,9 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { UploadStudioPage, parseChapterNumber } from '@app/features/upload/upload-studio-page/upload-studio-page';
 import { givenIAmSignedInWith } from '../../../core/auth/auth-fixtures';
-import { API, fail, ok, provideHttpTesting } from '../../../test-utils';
+import { ANY_URL, API, fail, ok, provideHttpTesting } from '../../../test-utils';
+import { MyTeam } from '@app/core/models/scanlation';
+import { WorkSummary } from '@app/core/models/catalog';
 
 const WORK = { id: 'work-1', title: 'Blue Lock', synopsis: '', type: 'MANGA', status: 'ONGOING', coverImageUrl: '', genres: ['Action'] };
 const CHAPTER = { id: 'chap-1', workId: 'work-1', chapterNumber: '3', title: '', status: 'PUBLISHED', pages: [] };
@@ -71,15 +73,20 @@ describe('UploadStudioPage', () => {
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation((url: string) => void revoked.push(url));
     await TestBed.configureTestingModule({
       imports: [UploadStudioPage],
-      providers: [...provideHttpTesting(), provideRouter([])]
+      providers: [...provideHttpTesting(), provideRouter(ANY_URL)]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
+    // Time is faked before the page exists: the series step looks for similar titles after a debounce.
+    vi.useFakeTimers();
     fixture = TestBed.createComponent(UploadStudioPage);
+    // Most tests create a series (`?create=series`); the "Which series?" step and existing series have their own blocks.
+    fixture.componentRef.setInput('create', 'series');
     fixture.detectChanges();
   });
 
   afterEach(() => {
     http.verify();
+    vi.useRealTimers();
   });
 
   it('starts on the series step with defaults, and moves on only once the title is filled', async () => {
@@ -227,7 +234,8 @@ describe('UploadStudioPage', () => {
   });
 
   describe('publishing for a team (US-12)', () => {
-    const MOON_SCANS = { id: 'team-moon', name: 'Moon Scans', description: null, myRoles: ['LEADER' as const], boards: [] };
+    let lastAdd: TestRequest;
+    const MOON_SCANS: MyTeam = { id: 'team-moon', name: 'Moon Scans', description: null, myRoles: ['LEADER'], boards: [] };
 
     it('publishes a chapter of an existing series for my team, without creating a series', async () => {
       await givenIOpenedTheStudioFor({ workId: 'work-77', teamId: 'team-moon' }, { series: { ...WORK, id: 'work-77', title: 'Solo Leveling' }, myTeams: [MOON_SCANS] });
@@ -243,7 +251,75 @@ describe('UploadStudioPage', () => {
       await whenTheChapterIsPublished({ ...CHAPTER, id: 'chap-5', workId: 'work-77' }, [{ id: 'proj-shadow', teamId: 'team-shadow' }, { id: 'proj-moon', teamId: 'team-moon' }]);
 
       thenThePublishedChapterIncludes({ teamId: 'team-moon', chapterNumber: '5' });
-      thenTheStepIs(SUCCESS);
+      thenTheStepIs('Chapter published');
+      thenTheStepSays('Chapter 5 of Solo Leveling is out, as the version of Moon Scans.');
+    });
+
+    const SOLO_LEVELING: WorkSummary = { id: 'work-11', title: 'Solo Leveling', type: 'MANHWA', status: 'COMPLETED', author: 'Chugong', demographic: null, coverImageUrl: null, genres: ['Action'] };
+
+    it('Uploading starts by finding the series', async () => {
+      await givenIOpenTheStudioWithoutASeries({ myTeams: [MOON_SCANS] });
+      thenTheStepIs('Which series is the chapter for?');
+
+      await whenISearchTheCatalogFor('solo', [SOLO_LEVELING]);
+
+      thenTheFoundSeriesAre(['Solo Leveling']);
+      thenTheSearchSummarySays('1 series matches “solo”.');
+
+      await whenIChooseToCreateANewSeries();
+
+      await thenIAmSentTo('/upload?create=series');
+    });
+
+    it('A leader publishes a chapter of a series already in the catalog', async () => {
+      await givenIOpenTheStudioWithoutASeries({ myTeams: [MOON_SCANS] });
+      await whenISearchTheCatalogFor('solo', [SOLO_LEVELING]);
+
+      await whenIAddTheSeriesToMyTeamAndPublish('Add to Moon Scans and publish');
+
+      thenTheSeriesWasAddedTo('team-moon', 'work-11');
+      await thenIAmSentTo('/upload?workId=work-11&teamId=team-moon');
+
+      await givenIOpenedTheStudioFor({ workId: 'work-11', teamId: 'team-moon' }, { series: { ...WORK, id: 'work-11', title: 'Solo Leveling' }, myTeams: [MOON_SCANS] });
+
+      thenTheStepSays('You are publishing a chapter of Solo Leveling for the team Moon Scans.');
+    });
+
+    it('a team already on the series publishes into it without being added again', async () => {
+      await givenIOpenTheStudioWithoutASeries({ myTeams: [{ ...MOON_SCANS, boards: [{ projectId: 'proj-moon', work: SOLO_LEVELING }] }] });
+      await whenISearchTheCatalogFor('solo', [SOLO_LEVELING]);
+
+      await whenIChoose('Publish for Moon Scans');
+
+      await thenIAmSentTo('/upload?workId=work-11&teamId=team-moon');
+    });
+
+    it('A similar title is flagged before creating a series', async () => {
+      await givenIOpenTheStudio();
+
+      await whenITypeTheTitleAndPause('Solo Leveling', [SOLO_LEVELING]);
+
+      thenTheSimilarSeriesAre(['Solo Leveling']);
+    });
+
+    it("The upload shows the other teams' versions of the chapter", async () => {
+      await givenIOpenedTheStudioFor({ workId: 'work-77', teamId: 'team-moon' }, { series: { ...WORK, id: 'work-77', title: 'Solo Leveling' }, myTeams: [MOON_SCANS] });
+      await whenIGoToTheChapterSetupOfTheSeries([{ number: '5', team: { id: 'team-shadow', name: 'Shadow Scans' } }]);
+
+      whenITypeTheChapterNumber('5');
+
+      thenTheChapterStepSays('You are adding the version of Moon Scans.');
+      thenTheOtherVersionsAre(['Shadow Scans']);
+    });
+
+    it('a chapter my team already published cannot be set up again', async () => {
+      await givenIOpenedTheStudioFor({ workId: 'work-77', teamId: 'team-moon' }, { series: { ...WORK, id: 'work-77', title: 'Solo Leveling' }, myTeams: [MOON_SCANS] });
+      await whenIGoToTheChapterSetupOfTheSeries([{ number: '5', team: { id: 'team-moon', name: 'Moon Scans' } }]);
+
+      whenITypeTheChapterNumber('5');
+
+      thenTheChapterStepSays('Moon Scans already published chapter 5 of Solo Leveling. Choose another number.');
+      thenICannotClick('Next: Upload Pages');
     });
 
     it('refuses a link made for a team I am not on', async () => {
@@ -285,6 +361,80 @@ describe('UploadStudioPage', () => {
       await settleStudio();
     }
 
+    /** `/upload` with no series picked and "create" not chosen: the "Which series?" step, which loads my teams. */
+    async function givenIOpenTheStudioWithoutASeries(server: { myTeams: (typeof MOON_SCANS)[] }): Promise<void> {
+      await givenIAmSignedInWith(['PROJECT_VIEW', 'WORK_CREATE']);
+      fixture.componentRef.setInput('create', undefined);
+      await settleStudio();
+      http.expectOne(`${API}/teams/mine`).flush(ok(server.myTeams));
+      await settleStudio();
+    }
+
+    async function whenISearchTheCatalogFor(text: string, found: (typeof SOLO_LEVELING)[]): Promise<void> {
+      typeInto('#which-series-text', text);
+      clickButton('Search the catalog');
+      await settleStudio();
+      http.expectOne((r) => r.url === `${API}/works` && r.params.get('q') === text).flush(ok({ items: found, page: 0, size: 8, totalElements: found.length, totalPages: 1 }));
+      await settleStudio();
+    }
+
+    async function whenIChooseToCreateANewSeries(): Promise<void> {
+      await whenIChoose('Create a new series');
+    }
+
+    async function whenIChoose(label: string): Promise<void> {
+      clickButton(label);
+      await settleStudio();
+    }
+
+    async function whenIAddTheSeriesToMyTeamAndPublish(label: string): Promise<void> {
+      clickButton(label);
+      await settleStudio();
+      lastAdd = http.expectOne((r) => r.method === 'POST' && r.url.startsWith(`${API}/teams/`));
+      lastAdd.flush(ok({ id: 'proj-new', name: 'Moon Scans - Solo Leveling', workId: 'work-11', teamId: 'team-moon', tasks: [] }));
+      await settleStudio();
+    }
+
+    /** The title field looks for similar series 400 ms after the last key. */
+    async function whenITypeTheTitleAndPause(title: string, similar: (typeof SOLO_LEVELING)[]): Promise<void> {
+      whenITypeTheTitle(title);
+      await vi.advanceTimersByTimeAsync(400);
+      http.expectOne((r) => r.url === `${API}/works` && r.params.get('q') === title).flush(ok({ items: similar, page: 0, size: 3, totalElements: similar.length, totalPages: 1 }));
+      await settleStudio();
+    }
+
+    function thenTheFoundSeriesAre(titles: string[]): void {
+      expect(Array.from(page().querySelectorAll('.results app-work-card .title')).map((a) => a.textContent!.trim())).toEqual(titles);
+    }
+
+    function thenTheSearchSummarySays(text: string): void {
+      expect(page().querySelector('.result-summary')!.textContent!.trim()).toBe(text);
+    }
+
+    async function thenIAmSentTo(url: string): Promise<void> {
+      await settleStudio();
+      expect(TestBed.inject(Router).url).toBe(url);
+    }
+
+    function thenTheSeriesWasAddedTo(teamId: string, workId: string): void {
+      expect(lastAdd.request.url).toBe(`${API}/teams/${teamId}/series`);
+      expect(lastAdd.request.body).toEqual({ workId });
+    }
+
+    function thenTheSimilarSeriesAre(titles: string[]): void {
+      const similar = page().querySelector('.similar-series')!;
+      expect(similar.textContent).toContain('Readora already has a series with a title like this:');
+      expect(Array.from(similar.querySelectorAll('li')).map((li) => li.textContent!.trim())).toEqual(titles);
+    }
+
+    function thenTheChapterStepSays(text: string): void {
+      expect(page().querySelector('.versions')!.textContent!.replace(/\s+/g, ' ')).toContain(text);
+    }
+
+    function thenTheOtherVersionsAre(teams: string[]): void {
+      expect(Array.from(page().querySelectorAll('.versions li')).map((li) => li.textContent!.trim())).toEqual(teams);
+    }
+
     async function givenILeadTheTeams(teams: (typeof MOON_SCANS)[]): Promise<void> {
       await givenIAmSignedInWith(['PROJECT_VIEW', 'WORK_CREATE']);
       await settleStudio();
@@ -293,11 +443,21 @@ describe('UploadStudioPage', () => {
     }
 
     async function whenIFillTheChapterAndPages(chapter: { number: string; pages: string[] }): Promise<void> {
-      clickButton('Next: Chapter Setup');
+      await whenIGoToTheChapterSetupOfTheSeries();
       whenITypeTheChapterNumber(chapter.number);
       whenIGoToThePages();
       await whenIAddPages(...chapter.pages);
       whenIGoToTheReview();
+    }
+
+    /** The chapter step lists the versions other teams already published (`GET /works/{id}/chapters`). */
+    async function whenIGoToTheChapterSetupOfTheSeries(published: { number: string; team: { id: string; name: string } }[] = []): Promise<void> {
+      clickButton('Next: Chapter Setup');
+      await settleStudio();
+      http
+        .expectOne(`${API}/works/${workId}/chapters`)
+        .flush(ok(published.map((c, i) => ({ ...CHAPTER, id: `published-${i}`, workId, chapterNumber: c.number, pageCount: 1, publishedAt: null, team: c.team }))));
+      await settleStudio();
     }
 
     async function whenIPublishTheChapter(): Promise<void> {

@@ -67,3 +67,12 @@
     max-width: 200px;
   }
 }
+
+.similar-series {
+  font-size: var(--fs-sm);
+
+  p,
+  ul {
+    margin: var(--space-1) 0 0;
+  }
+}

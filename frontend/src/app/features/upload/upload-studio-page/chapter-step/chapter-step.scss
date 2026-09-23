@@ -65,3 +65,12 @@
   font-size: var(--fs-sm);
   line-height: 1.4;
 }
+
+.versions {
+  font-size: var(--fs-sm);
+
+  p,
+  ul {
+    margin: var(--space-1) 0 0;
+  }
+}

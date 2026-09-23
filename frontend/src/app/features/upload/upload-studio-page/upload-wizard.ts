@@ -42,13 +42,13 @@ export const GENRE_PRESETS = [
   'Thriller'
 ];
 
-/** What the uploader types in the wizard (files are kept aside: cover and pages). */
 /** An existing series a team publishes a chapter into (`/upload?workId=&teamId=`): no series is created. */
 export interface ExistingSeries {
   work: Work;
   team: TeamRef;
 }
 
+/** What the uploader types in the wizard (files are kept aside: cover and pages). */
 export interface UploadDraft {
   /** One of the teams I lead, for a new series; `''` gives the series a new team of its own. */
   teamId: string;
@@ -100,6 +100,8 @@ export class UploadWizard {
     );
   });
 
+  /** The catalog search of the "Which series?" step, kept while the uploader goes to the new-series form and back. */
+  readonly seriesSearch = signal({ text: '' });
   readonly step = signal<UploadStep>('manga');
   readonly pages = signal<PageUploadItem[]>([]);
   private readonly _cover = signal<{ file: File; previewUrl: string } | null>(null);

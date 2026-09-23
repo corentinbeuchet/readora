@@ -3,7 +3,8 @@
     <h2 i18n="@@upload.series.existing.heading">1. Series</h2>
     <p i18n="@@upload.series.existing.summary">You are publishing a chapter of <strong>{{ target.work.title }}</strong> for the team <strong>{{ target.team.name }}</strong>.</p>
     <p class="muted" i18n="@@upload.series.existing.hint">Other teams may translate the same series: readers see which team did each chapter.</p>
-    <div class="wizard-actions wizard-actions-end">
+    <div class="wizard-actions">
+      <a routerLink="/upload" class="btn btn-link" i18n="@@upload.series.otherSeries">Choose another series</a>
       <button type="button" class="btn btn-primary" (click)="wizard.goTo('chapter')" i18n="@@upload.series.next">
         Next: Chapter Setup &rarr;
       </button>
@@ -34,6 +35,17 @@
         <input id="manga-title" type="text" placeholder="e.g. Solo Leveling, Berserk" i18n-placeholder="@@upload.series.title.placeholder"
                [formField]="form.title" [appAriaInvalid]="form.title" aria-describedby="manga-title-error" />
         <app-field-errors id="manga-title-error" [field]="form.title" />
+        <div class="similar-series" role="status">
+          @if (similar().length > 0) {
+            <p i18n="@@upload.series.similar">Readora already has a series with a title like this:</p>
+            <ul>
+              @for (work of similar(); track work.id) {
+                <li>{{ work.title }}</li>
+              }
+            </ul>
+            <p i18n="@@upload.series.similarHint">If it is the same series, <a routerLink="/upload">go back to the search</a> and publish your chapter into it.</p>
+          }
+        </div>
       </div>
 
       <div class="form-row">
@@ -106,7 +118,8 @@
     <app-cover-picker [previewUrl]="wizard.cover()?.previewUrl ?? ''" (fileSelected)="wizard.setCover($event)" (removed)="wizard.removeCover()" />
   </div>
 
-  <div class="wizard-actions wizard-actions-end">
+  <div class="wizard-actions">
+    <a routerLink="/upload" class="btn btn-link" i18n="@@upload.series.backToSearch">&larr; Back to the search</a>
     <button type="button" class="btn btn-primary" [disabled]="!wizard.seriesValid()" (click)="wizard.goTo('chapter')" i18n="@@upload.series.next">
       Next: Chapter Setup &rarr;
     </button>

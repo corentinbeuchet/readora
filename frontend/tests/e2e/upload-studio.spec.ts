@@ -2,12 +2,18 @@ import { Page } from '@playwright/test';
 import { test, expect } from './support/fixtures';
 import { PAGE_PNG, givenIAmLoggedInAsThePublisher, thenTheFactIs, uniqueSuffix } from './support/helpers';
 
-/** The upload studio end to end: a new series with its facts (US-04), one chapter, then the pages readers get. */
+/**
+ * The upload studio end to end: it starts by finding the series (US-12); a new series with its facts (US-04), one
+ * chapter, then the pages readers get; or a chapter of a series already in the catalog, as the team's version.
+ */
 test.describe('Upload studio', () => {
+  // Playwright's WebKit for Windows crashes the page in the studio, before this change too (frontend AGENTS.md R27).
+  test.skip(({ browserName, isMobile }) => browserName === 'webkit' && isMobile, 'R27: Page crashed on Mobile Safari (Windows)');
+
   test('a new series is published with its facts, and its page shows them', async ({ page }) => {
     const title = `E2E Studio ${uniqueSuffix()}`;
     await givenIAmLoggedInAsThePublisher(page);
-    await givenIAmInTheUploadStudio(page);
+    await givenIAmCreatingANewSeries(page);
 
     await whenIDescribeTheSeries(page, { title, otherTitles: 'Studio no Hon\nThe Studio Book', artist: 'Studio Artist', year: '2021', language: 'Japanese' });
     await whenIGoOnTo(page, 'Next: Chapter Setup');
@@ -27,18 +33,97 @@ test.describe('Upload studio', () => {
 
   test('a year that is not a year keeps the series step from going on', async ({ page }) => {
     await givenIAmLoggedInAsThePublisher(page);
-    await givenIAmInTheUploadStudio(page);
+    await givenIAmCreatingANewSeries(page);
 
     await whenIDescribeTheSeries(page, { title: `E2E Studio ${uniqueSuffix()}`, year: '21' });
 
     await thenICannotGoOnTo(page, 'Next: Chapter Setup');
     await thenTheFieldIsRefusedWith(page, 'First published (year)', 'Enter a year between 1900 and 2100, or leave it empty');
   });
+
+  test('a team publishes the next chapter of a series found in the catalog', async ({ page, publishedChapter }) => {
+    await givenIAmLoggedInAsThePublisher(page);
+    await givenIAmInTheUploadStudio(page);
+
+    await whenISearchTheCatalogFor(page, publishedChapter.title);
+    await whenIPublishForMyTeamInto(page, publishedChapter.title);
+    await thenIAmPublishingInto(page, publishedChapter.title);
+    await whenIGoOnTo(page, 'Next: Chapter Setup');
+    await whenITypeTheChapterNumber(page, '2');
+    await whenIGoOnTo(page, 'Next: Upload Pages');
+    await whenIAddThePage(page, '001.png');
+    await whenIGoOnTo(page, 'Next: Review');
+    await whenIPublishTheChapter(page);
+    await whenIViewTheSeriesInTheCatalog(page);
+
+    await thenTheSeriesIs(page, publishedChapter.title);
+    await thenTheChapterIsListed(page, 2);
+  });
+
+  test('a chapter the team already published cannot be set up again', async ({ page, publishedChapter }) => {
+    await givenIAmLoggedInAsThePublisher(page);
+    await givenIAmInTheUploadStudio(page);
+    await whenISearchTheCatalogFor(page, publishedChapter.title);
+    await whenIPublishForMyTeamInto(page, publishedChapter.title);
+    await whenIGoOnTo(page, 'Next: Chapter Setup');
+
+    await whenITypeTheChapterNumber(page, '1');
+
+    await thenIAmToldTheTeamAlreadyPublishedIt(page, publishedChapter.title);
+    await thenICannotGoOnTo(page, 'Next: Upload Pages');
+  });
+
+  test('a title Readora already has is flagged before the series is created', async ({ page, publishedChapter }) => {
+    await givenIAmLoggedInAsThePublisher(page);
+    await givenIAmCreatingANewSeries(page);
+
+    await whenIDescribeTheSeries(page, { title: publishedChapter.title });
+
+    await thenIAmToldReadoraAlreadyHas(page, publishedChapter.title);
+  });
 });
 
 async function givenIAmInTheUploadStudio(page: Page): Promise<void> {
   await page.goto('/upload');
+  await expect(page.getByRole('heading', { name: 'Which series is the chapter for?' })).toBeVisible();
+}
+
+async function givenIAmCreatingANewSeries(page: Page): Promise<void> {
+  await givenIAmInTheUploadStudio(page);
+  await page.getByRole('button', { name: 'Create a new series' }).click();
   await expect(page.getByRole('heading', { name: '1. Manga / Series Information' })).toBeVisible();
+}
+
+async function whenISearchTheCatalogFor(page: Page, text: string): Promise<void> {
+  await page.getByRole('searchbox', { name: 'Series title' }).fill(text);
+  await page.getByRole('button', { name: 'Search the catalog' }).click();
+}
+
+/** The series was created by the publisher account, so it is on one of its teams already. */
+async function whenIPublishForMyTeamInto(page: Page, title: string): Promise<void> {
+  await page.getByRole('button', { name: new RegExp(`^Publish for .+: ${title}$`) }).click();
+}
+
+async function whenITypeTheChapterNumber(page: Page, chapterNumber: string): Promise<void> {
+  await page.getByLabel('Chapter Number').fill(chapterNumber);
+}
+
+async function whenIPublishTheChapter(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Publish chapter' }).click();
+  await expect(page.getByRole('heading', { name: 'Chapter published' })).toBeVisible({ timeout: 20000 });
+}
+
+async function thenIAmPublishingInto(page: Page, title: string): Promise<void> {
+  await expect(page.getByText(`You are publishing a chapter of ${title} for the team`)).toBeVisible();
+}
+
+async function thenIAmToldTheTeamAlreadyPublishedIt(page: Page, title: string): Promise<void> {
+  await expect(page.getByRole('status').filter({ hasText: `already published chapter 1 of ${title}. Choose another number.` })).toBeVisible();
+}
+
+async function thenIAmToldReadoraAlreadyHas(page: Page, title: string): Promise<void> {
+  const warning = page.getByRole('status').filter({ hasText: 'Readora already has a series with a title like this:' });
+  await expect(warning.getByRole('listitem')).toHaveText([title]);
 }
 
 async function whenIDescribeTheSeries(page: Page, series: { title: string; otherTitles?: string; artist?: string; year?: string; language?: string }): Promise<void> {

@@ -1,14 +1,24 @@
 @let draft = wizard.draft();
 <div class="card wizard-card success-card">
   <div class="success-icon" aria-hidden="true">🎉</div>
-  <h2 i18n="@@upload.success.title">Series & Chapter Uploaded Successfully!</h2>
-  <p class="muted" i18n="@@upload.success.text"><strong>{{ draft.title }}</strong> (Chapter {{ draft.chapterNumber }}) has been processed and created.</p>
+  @if (existing(); as target) {
+    @if (flow.createdChapterId()) {
+      <h2 i18n="@@upload.success.chapterTitle">Chapter published</h2>
+      <p class="muted" i18n="@@upload.success.chapterText">Chapter {{ draft.chapterNumber }} of <strong>{{ target.work.title }}</strong> is out, as the version of {{ target.team.name }}.</p>
+    } @else {
+      <h2 i18n="@@upload.success.taskTitle">Chapter sent to the team</h2>
+      <p class="muted" i18n="@@upload.success.taskText">Chapter {{ draft.chapterNumber }} of <strong>{{ target.work.title }}</strong> is on the task board of {{ target.team.name }}.</p>
+    }
+  } @else {
+    <h2 i18n="@@upload.success.title">Series & Chapter Uploaded Successfully!</h2>
+    <p class="muted" i18n="@@upload.success.text"><strong>{{ draft.title }}</strong> (Chapter {{ draft.chapterNumber }}) has been processed and created.</p>
+  }
 
   <div class="success-actions">
     @if (flow.createdChapterId(); as chapterId) {
       <a [routerLink]="['/read', chapterId]" class="btn btn-primary" i18n="@@upload.success.read">Read Chapter {{ draft.chapterNumber }} Now</a>
     }
-    @if (flow.createdWork(); as work) {
+    @if (series(); as work) {
       <a [routerLink]="['/works', work.id]" class="btn" i18n="@@upload.success.viewWork">View in Catalog</a>
     }
     @if (flow.createdProjectId(); as projectId) {

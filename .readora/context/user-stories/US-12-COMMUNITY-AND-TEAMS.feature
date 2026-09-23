@@ -115,6 +115,37 @@ Feature: Community and scanlation teams
     Then "Moon Scans" has its own task board for "Solo Leveling"
     And the page of the team "Moon Scans" lists the series "Solo Leveling"
 
+  # The upload studio starts from the catalog, so a series is not created twice and a team knows it adds its own
+  # version of a series that other teams may already translate.
+  @should @ui
+  Scenario: Uploading starts by finding the series
+    Given "Solo Leveling" is in the catalog
+    When scanlator "Mina" opens the upload studio and searches for "solo"
+    Then she sees "Solo Leveling" among the results
+    And she can choose to create a new series instead
+
+  @should @ui
+  Scenario: A leader publishes a chapter of a series already in the catalog
+    Given "Solo Leveling" is already translated by the team "Shadow Scans"
+    And scanlator "Mina" leads the team "Moon Scans"
+    When "Mina" picks "Solo Leveling" in the upload studio for "Moon Scans"
+    Then "Solo Leveling" is added to "Moon Scans"
+    And she publishes the chapter into "Solo Leveling" as the version of "Moon Scans"
+
+  @should @ui
+  Scenario: A similar title is flagged before creating a series
+    Given "Solo Leveling" is in the catalog
+    When scanlator "Mina" types the title "Solo Leveling" for a new series
+    Then she is told Readora already has "Solo Leveling"
+
+  @should @ui
+  Scenario: The upload shows the other teams' versions of the chapter
+    Given "Shadow Scans" published chapter 5 of "Solo Leveling"
+    And scanlator "Mina" leads the team "Moon Scans", which works on "Solo Leveling"
+    When "Mina" sets up chapter 5 of "Solo Leveling" in the upload studio
+    Then she is told she adds the version of "Moon Scans"
+    And that "Shadow Scans" already published chapter 5
+
   @should
   Scenario: Only a leader can add a series or a member
     Given scanlator "Mina" leads the team "Moon Scans"

@@ -1,0 +1,66 @@
+<div class="card wizard-card">
+  <h2 i18n="@@upload.which.heading">Which series is the chapter for?</h2>
+  <p class="muted intro" i18n="@@upload.which.intro">Search the catalog first. If Readora already has the series, your team publishes its own version of the chapter there, next to the other teams' versions. Create a series only when Readora doesn't have it yet.</p>
+
+  <form class="form search-form" role="search" (submit)="search($event)" novalidate>
+    <div class="field">
+      <label for="which-series-text" i18n="@@upload.which.label">Series title</label>
+      <input id="which-series-text" type="search" [formField]="searchForm.text" [appAriaInvalid]="searchForm.text"
+             aria-describedby="which-series-hint which-series-error" />
+      <p id="which-series-hint" class="muted field-hint" i18n="@@upload.which.hint">Other titles and authors are searched too.</p>
+      <app-field-errors id="which-series-error" [field]="searchForm.text" />
+    </div>
+    <button type="submit" class="btn btn-primary" [disabled]="searching.busy()" i18n="@@upload.which.search">Search the catalog</button>
+  </form>
+
+  @if (searching.error(); as message) {
+    <p class="form-error" role="alert">{{ message }}</p>
+  }
+  @if (adding.error(); as message) {
+    <p class="form-error" role="alert">{{ message }}</p>
+  }
+
+  <p class="result-summary" role="status">
+    @if (results(); as rows) {
+      @if (rows.length === 0) {
+        <ng-container i18n="@@upload.which.none">No series matches “{{ searchedText() }}”.</ng-container>
+      } @else {
+        <ng-container i18n="@@upload.which.found">{rows.length, plural, =1 {1 series matches “{{ searchedText() }}”.} other {{{ rows.length }} series match “{{ searchedText() }}”.}}</ng-container>
+      }
+    }
+  </p>
+
+  @if (results(); as rows) {
+    @if (teamsLoaded() && !hasPublishingTeam() && rows.length > 0) {
+      <p class="muted" i18n="@@upload.which.noTeam">To publish into a series Readora already has, you need a team that you lead or check the quality for. <a routerLink="/scanlation">Create or join a team</a>.</p>
+    }
+    <ul class="work-rows results">
+      @for (row of rows; track row.work.id) {
+        <li>
+          <app-work-card [work]="row.work" variant="row">
+            <div cardActions class="publish-options">
+              @for (option of row.options; track option.team.id) {
+                <button type="button" class="btn btn-sm" [disabled]="adding.busy()" (click)="publishInto(row.work, option)">
+                  @if (option.onSeries) {
+                    <ng-container i18n="@@upload.which.publishFor">Publish for {{ option.team.name }}<span class="sr-only">: {{ row.work.title }}</span></ng-container>
+                  } @else {
+                    <ng-container i18n="@@upload.which.addAndPublish">Add to {{ option.team.name }} and publish<span class="sr-only">: {{ row.work.title }}</span></ng-container>
+                  }
+                </button>
+              } @empty {
+                @if (hasPublishingTeam()) {
+                  <p class="muted" i18n="@@upload.which.askLeader">A leader of your team can add this series.</p>
+                }
+              }
+            </div>
+          </app-work-card>
+        </li>
+      }
+    </ul>
+  }
+
+  <div class="wizard-actions create-row">
+    <p class="muted" i18n="@@upload.which.notThere">Not on Readora yet?</p>
+    <button type="button" class="btn" (click)="createNew()" i18n="@@upload.which.create">Create a new series</button>
+  </div>
+</div>
