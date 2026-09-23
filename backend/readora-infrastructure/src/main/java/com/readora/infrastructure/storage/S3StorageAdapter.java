@@ -15,14 +15,11 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -39,7 +36,6 @@ public class S3StorageAdapter implements StoragePort {
     private static final Logger log = LoggerFactory.getLogger(S3StorageAdapter.class);
 
     private final S3Client s3Client;
-    private final S3Presigner s3Presigner;
     private final String defaultBucketName;
     private final String cdnDomain;
     private final Path localStorageDir;
@@ -47,13 +43,11 @@ public class S3StorageAdapter implements StoragePort {
     @Autowired
     public S3StorageAdapter(
             @Autowired(required = false) S3Client s3Client,
-            @Autowired(required = false) S3Presigner s3Presigner,
             @Value("${aws.s3.bucket-name:readora-media-dev}") String defaultBucketName,
             @Value("${aws.cloudfront.domain:}") String cdnDomain,
             @Value("${aws.storage.local-dir:}") String localDir
     ) {
         this.s3Client = s3Client;
-        this.s3Presigner = s3Presigner;
         this.defaultBucketName = (defaultBucketName != null && !defaultBucketName.isBlank())
                 ? defaultBucketName.trim()
                 : "readora-media-dev";
@@ -74,27 +68,6 @@ public class S3StorageAdapter implements StoragePort {
                 log.warn("Could not create local storage directory {}: {}", this.localStorageDir, e.getMessage());
             }
             log.info("Storage: local mode ({}); S3 is disabled", this.localStorageDir);
-        }
-    }
-
-    @Override
-    public String generatePresignedUploadUrl(String objectKey, Duration validity) {
-        if (s3Presigner == null) {
-            throw new StorageUnavailableException("Presigned uploads require S3 storage, which is not enabled");
-        }
-        String cleanKey = clean(objectKey);
-        try {
-            PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
-                    .signatureDuration(validity)
-                    .putObjectRequest(PutObjectRequest.builder()
-                            .bucket(defaultBucketName)
-                            .key(cleanKey)
-                            .build())
-                    .build();
-            return s3Presigner.presignPutObject(presignRequest).url().toString();
-        } catch (RuntimeException e) {
-            log.error("Could not generate presigned S3 URL for {}", cleanKey, e);
-            throw new StorageUnavailableException("Could not generate an upload URL");
         }
     }
 

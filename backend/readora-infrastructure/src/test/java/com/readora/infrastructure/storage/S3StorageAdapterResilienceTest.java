@@ -27,7 +27,7 @@ class S3StorageAdapterResilienceTest {
         try (var context = new AnnotationConfigApplicationContext()) {
             context.register(ResilienceConfig.class);
             context.registerBean(StoragePort.class, () ->
-                    new S3StorageAdapter(s3Client, null, "readora-media-dev", "", System.getProperty("java.io.tmpdir")));
+                    new S3StorageAdapter(s3Client, "readora-media-dev", "", System.getProperty("java.io.tmpdir")));
             context.refresh();
 
             context.getBean(StoragePort.class).storeAsset("covers/retry.png", "x".getBytes(), "image/png");

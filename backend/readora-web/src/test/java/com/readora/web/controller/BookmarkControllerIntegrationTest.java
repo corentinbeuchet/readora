@@ -18,7 +18,6 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.List;
 import java.util.Set;
 
-import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -51,10 +50,6 @@ class BookmarkControllerIntegrationTest extends AuthTestSupport {
     @DisplayName("A signed-in reader can save progress twice (upsert), read it back and list bookmarks")
     void readerSavesAndListsBookmarks() throws Exception {
         Session reader = register();
-
-        mockMvc.perform(get("/api/v1/auth/me").header("Authorization", reader.bearer()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.permissions", hasItem("LIBRARY_USE")));
 
         String progressUrl = "/api/v1/bookmarks/" + work.getId().value() + "/progress";
         mockMvc.perform(put(progressUrl)

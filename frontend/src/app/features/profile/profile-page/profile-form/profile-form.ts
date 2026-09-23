@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { Component, effect, inject, input, signal, untracked } from '@angular/core';
 import { FormField, form, maxLength, pattern, required, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import { ProfileApi } from '@app/core/api/profile-api';
@@ -24,7 +24,6 @@ export class ProfileForm {
   private readonly auth = inject(AuthStore);
 
   readonly profile = input.required<UserProfile>();
-  readonly saved = output<UserProfile>();
 
   protected readonly model = signal<ProfileModel>({ displayName: '', bio: '', avatarUrl: '' });
   protected readonly profileForm = form(this.model, (path) => {
@@ -66,7 +65,6 @@ export class ProfileForm {
         // Saved: the form is pristine again, so the effect re-seeds it from the server's version.
         this.profileForm().reset();
         this.auth.setUser(updated);
-        this.saved.emit(updated);
         this.status.set('saved');
       } catch (error) {
         this.errorMessage.set(apiErrorMessage(error, $localize`:@@profile.form.saveError:Could not save your profile`));

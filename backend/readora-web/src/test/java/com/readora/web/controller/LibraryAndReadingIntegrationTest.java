@@ -17,7 +17,6 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.List;
 import java.util.Set;
 
-import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -62,9 +61,6 @@ class LibraryAndReadingIntegrationTest extends AuthTestSupport {
     void freeReaderManagesTheirLibrary() throws Exception {
         Session kenji = register();
         String entry = "/api/v1/library/" + work.getId().value();
-
-        mockMvc.perform(get("/api/v1/auth/me").header("Authorization", kenji.bearer()))
-                .andExpect(jsonPath("$.data.permissions", hasItem("LIBRARY_USE")));
 
         mockMvc.perform(put(entry).header("Authorization", kenji.bearer()))
                 .andExpect(status().isOk())

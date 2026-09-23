@@ -7,9 +7,7 @@ import java.time.Duration;
 
 @ConfigurationProperties(prefix = "readora.security")
 public record SecurityProperties(
-        @DefaultValue Jwt jwt,
-        @DefaultValue("readora_refresh") String refreshCookieName,
-        @DefaultValue("false") boolean cookieSecure
+        @DefaultValue Jwt jwt
 ) {
     public record Jwt(
             String secret,

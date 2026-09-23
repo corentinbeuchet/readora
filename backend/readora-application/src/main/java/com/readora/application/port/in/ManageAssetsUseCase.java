@@ -16,13 +16,8 @@ public interface ManageAssetsUseCase {
 
     Optional<AssetContent> load(String storageKey);
 
-    /// A time-limited direct-upload URL for a new server-generated key in `folder`.
-    PresignedUpload presignUpload(String folder, String filename);
-
     /// @param litePublicUrl the data-saver copy, or `null` when none was made
     record StoredAsset(String storageKey, String publicUrl, @Nullable String litePublicUrl) {}
 
     record AssetContent(byte[] data, String contentType) {}
-
-    record PresignedUpload(String uploadUrl, String publicUrl, String storageKey) {}
 }

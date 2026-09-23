@@ -198,8 +198,7 @@ Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = repor
 - R21/R22 (survey) Unbounded lists (chapter comments, work chapters, library list/export, bookmarks, `GET /teams/mine`);
   the chapter list loads every page row for `pageCount`. The chapter list now has one item per team version: when it
   gets paginated, paginate by chapter number on the server, so the versions of a number never split across pages.
-- R23/R24 (survey) Scanlation "not a member" answers 400 instead of 403; `ProfileController` PUT lacks `@PreAuthorize`;
-  `/api/v1/auth/me` sits under a `permitAll` prefix.
+- R23/R24 (survey) Scanlation "not a member" answers 400 instead of 403; `ProfileController` PUT lacks `@PreAuthorize`.
 - R27/R28 (survey) Several application services without unit tests; no graceful shutdown, structured logs or
   correlation id.
 

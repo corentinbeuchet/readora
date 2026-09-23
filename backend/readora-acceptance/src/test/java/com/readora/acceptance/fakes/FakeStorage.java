@@ -3,7 +3,6 @@ package com.readora.acceptance.fakes;
 import com.readora.application.port.out.StoragePort;
 import org.jspecify.annotations.Nullable;
 
-import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,11 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FakeStorage implements StoragePort {
 
     private final Map<String, byte[]> objects = new ConcurrentHashMap<>();
-
-    @Override
-    public String generatePresignedUploadUrl(String objectKey, Duration validity) {
-        return "https://s3.test/" + objectKey + "?signature=fake";
-    }
 
     @Override
     public String getPublicCdnUrl(String objectKey) {

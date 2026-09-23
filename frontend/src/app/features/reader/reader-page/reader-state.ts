@@ -153,10 +153,6 @@ export class ReaderState {
     this._viewMode.set(mode);
   }
 
-  setDirection(direction: ReadingDirection): void {
-    this._direction.set(direction);
-  }
-
   /** The reader picked a mode: used now and remembered for this series. */
   chooseViewMode(mode: ViewMode): void {
     this._viewMode.set(mode);

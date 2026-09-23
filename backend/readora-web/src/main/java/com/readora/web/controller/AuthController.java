@@ -3,13 +3,10 @@ package com.readora.web.controller;
 import com.readora.application.port.in.AuthenticateUserUseCase;
 import com.readora.application.port.in.AuthenticateUserUseCase.AuthResult;
 import com.readora.domain.identity.InvalidCredentialsException;
-import com.readora.domain.identity.UserAccount;
 import com.readora.web.dto.ApiResponse;
 import com.readora.web.dto.AuthResponse;
 import com.readora.web.dto.LoginRequest;
 import com.readora.web.dto.RegisterRequest;
-import com.readora.web.dto.UserProfileDto;
-import com.readora.web.security.CurrentUserProvider;
 import com.readora.web.security.RefreshCookieProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,7 +16,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,14 +31,11 @@ public class AuthController {
     static final String REFRESH_COOKIE_PATH = "/api/v1/auth";
 
     private final AuthenticateUserUseCase authenticateUserUseCase;
-    private final CurrentUserProvider currentUserProvider;
     private final RefreshCookieProperties securityProperties;
 
     public AuthController(AuthenticateUserUseCase authenticateUserUseCase,
-                          CurrentUserProvider currentUserProvider,
                           RefreshCookieProperties securityProperties) {
         this.authenticateUserUseCase = authenticateUserUseCase;
-        this.currentUserProvider = currentUserProvider;
         this.securityProperties = securityProperties;
     }
 
@@ -82,14 +75,6 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, clearedRefreshCookie().toString())
                 .body(ApiResponse.ok("Logged out"));
-    }
-
-    @GetMapping("/me")
-    @Operation(summary = "Get the authenticated user's profile and effective permissions")
-    public ResponseEntity<ApiResponse<UserProfileDto>> me() {
-        UserAccount account = authenticateUserUseCase.currentAccount(currentUserProvider.requireUserId())
-                .orElseThrow(() -> InvalidCredentialsException.sessionExpired("Account no longer exists"));
-        return ResponseEntity.ok(ApiResponse.ok(UserProfileDto.fromDomain(account)));
     }
 
     private ResponseEntity.BodyBuilder withRefreshCookie(ResponseEntity.BodyBuilder builder, AuthResult result) {

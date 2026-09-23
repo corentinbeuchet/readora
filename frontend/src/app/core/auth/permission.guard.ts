@@ -31,15 +31,3 @@ export const permissionGuard: CanActivateFn = (route, state) => {
   }
   return router.createUrlTree(['/forbidden'], { queryParams: { from: state.url } });
 };
-
-/** Factory variant when you prefer not to use route `data`. */
-export function requirePermission(...permissions: Permission[]): CanActivateFn {
-  return (route, state) => {
-    const store = inject(AuthStore);
-    const router = inject(Router);
-    if (!store.isAuthenticated()) {
-      return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
-    }
-    return store.hasAllPermissions(...permissions) ? true : router.createUrlTree(['/forbidden'], { queryParams: { from: state.url } });
-  };
-}

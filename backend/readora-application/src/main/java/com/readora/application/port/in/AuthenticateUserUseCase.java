@@ -5,7 +5,6 @@ import com.readora.domain.common.UserId;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Optional;
 
 public interface AuthenticateUserUseCase {
 
@@ -22,6 +21,4 @@ public interface AuthenticateUserUseCase {
     AuthResult refresh(String rawRefreshToken);
 
     void logout(String rawRefreshToken);
-
-    Optional<UserAccount> currentAccount(UserId userId);
 }

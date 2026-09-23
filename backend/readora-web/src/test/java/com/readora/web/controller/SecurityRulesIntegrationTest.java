@@ -79,7 +79,7 @@ class SecurityRulesIntegrationTest extends AuthTestSupport {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value("UNAUTHENTICATED"));
 
-        mockMvc.perform(get("/api/v1/profile"))
+        mockMvc.perform(get("/api/v1/bookmarks"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false));
     }
@@ -89,7 +89,7 @@ class SecurityRulesIntegrationTest extends AuthTestSupport {
     void tamperedTokenIsUnauthorized() throws Exception {
         Session reader = register();
         String tampered = reader.accessToken().substring(0, reader.accessToken().length() - 4) + "abcd";
-        mockMvc.perform(get("/api/v1/profile").header("Authorization", "Bearer " + tampered))
+        mockMvc.perform(get("/api/v1/bookmarks").header("Authorization", "Bearer " + tampered))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false));
     }
@@ -114,7 +114,7 @@ class SecurityRulesIntegrationTest extends AuthTestSupport {
                 org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256).build();
         String forged = encoder.encode(org.springframework.security.oauth2.jwt.JwtEncoderParameters.from(header, claims)).getTokenValue();
 
-        mockMvc.perform(get("/api/v1/profile").header("Authorization", "Bearer " + forged))
+        mockMvc.perform(get("/api/v1/bookmarks").header("Authorization", "Bearer " + forged))
                 .andExpect(status().isUnauthorized());
     }
 

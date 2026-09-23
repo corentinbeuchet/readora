@@ -272,8 +272,7 @@ html {
       outline-offset: 1px;
     }
 
-    &[aria-invalid="true"],
-    &.ng-invalid.ng-touched {
+    &[aria-invalid="true"] {
       border-color: var(--danger);
     }
   }
@@ -456,10 +455,6 @@ fieldset.field {
   margin-top: 2rem;
   padding-top: 1.25rem;
   border-top: 1px solid var(--border);
-}
-
-.wizard-actions-end {
-  justify-content: flex-end;
 }
 
 /* "*" next to a required field's label (the input itself carries `required`). */

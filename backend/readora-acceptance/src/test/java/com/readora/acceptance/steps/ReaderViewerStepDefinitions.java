@@ -64,11 +64,6 @@ public class ReaderViewerStepDefinitions {
 
         StoragePort storagePort = new StoragePort() {
             @Override
-            public String generatePresignedUploadUrl(String objectKey, java.time.Duration validity) {
-                return "https://s3.amazonaws.com/readora-media-test/" + objectKey + "?signature=mock";
-            }
-
-            @Override
             public String getPublicCdnUrl(String objectKey) {
                 return "https://cdn.readora.com/" + objectKey;
             }

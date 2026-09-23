@@ -138,11 +138,6 @@ public class AuthenticationService implements AuthenticateUserUseCase {
                 });
     }
 
-    @Override
-    public Optional<UserAccount> currentAccount(UserId userId) {
-        return userRepository.findById(userId);
-    }
-
     private AuthResult issueTokens(UserAccount account) {
         TokenProviderPort.AccessToken accessToken = tokenProvider.issueAccessToken(account);
         String rawRefresh = tokenProvider.generateRefreshToken();

@@ -26,7 +26,7 @@
       <div ngTabPanel value="overview" class="card">
         <ng-template ngTabContent>
           <h2 i18n="@@profile.page.editTitle">Edit profile</h2>
-          <app-profile-form [profile]="user" (saved)="onSaved($event)" />
+          <app-profile-form [profile]="user" />
         </ng-template>
       </div>
 

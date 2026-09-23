@@ -48,14 +48,14 @@ class LocalSeedIntegrationTest extends AuthTestSupport {
     })
     @DisplayName("Every seeded account logs in with the dev password and gets its role's permissions")
     void seededAccountsLogIn(String username, String expectedPermission, String absentPermission) throws Exception {
-        String token = loginAs(username);
-
-        var me = mockMvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + token))
+        var login = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginRequest(username + "@readora.local", PASSWORD))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.username").value(username))
-                .andExpect(jsonPath("$.data.permissions", hasItem(expectedPermission)));
+                .andExpect(jsonPath("$.data.user.username").value(username))
+                .andExpect(jsonPath("$.data.user.permissions", hasItem(expectedPermission)));
         if (!"NONE".equals(absentPermission)) {
-            me.andExpect(jsonPath("$.data.permissions", not(hasItem(absentPermission))));
+            login.andExpect(jsonPath("$.data.user.permissions", not(hasItem(absentPermission))));
         }
     }
 

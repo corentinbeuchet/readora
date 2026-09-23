@@ -361,5 +361,5 @@ Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = repor
   `webkit` and `Mobile Safari` projects off Windows only (CI and staging are Ubuntu; locally use WSL or macOS, or
   `E2E_WEBKIT=1` to force them on Windows). Check the series and team pages once on a real iPhone before a release.
 - Smaller (survey): `noUncheckedIndexedAccess` off; 8 `(event.target as …)` casts; silent upvote failure
-  (`chapter-comments.ts`); unused `requirePermission()`; footer year baked at prerender; identical "Show Spoiler"
+  (`chapter-comments.ts`); footer year baked at prerender; identical "Show Spoiler"
   names; `app.routes.server.ts` reads `environment`; hand-rolled omnisearch combobox vs `@angular/aria`.

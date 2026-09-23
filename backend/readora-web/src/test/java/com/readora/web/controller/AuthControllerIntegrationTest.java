@@ -15,7 +15,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -62,8 +61,8 @@ class AuthControllerIntegrationTest extends AuthTestSupport {
     }
 
     @Test
-    @DisplayName("Login with wrong password returns 401 JSON; correct password returns token; /me returns profile")
-    void loginAndMe() throws Exception {
+    @DisplayName("Login with wrong password returns 401 JSON; the correct password returns a token and the profile")
+    void loginReturnsTokenAndProfile() throws Exception {
         Session registered = register();
 
         mockMvc.perform(post("/api/v1/auth/login")
@@ -73,14 +72,14 @@ class AuthControllerIntegrationTest extends AuthTestSupport {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
 
-        Session logged = login(registered.email());
-        assertThat(logged.accessToken()).isNotBlank();
-
-        mockMvc.perform(get("/api/v1/auth/me").header("Authorization", logged.bearer()))
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginRequest(registered.email(), PASSWORD))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.id").value(registered.userId()))
-                .andExpect(jsonPath("$.data.username").value(registered.username()))
-                .andExpect(jsonPath("$.data.permissions", containsInAnyOrder("COMMENT_WRITE", "COMMENT_UPVOTE", "LIBRARY_USE", "PAGE_REPORT", "RATE_WORK", "COMMENT_REPORT")));
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.data.user.id").value(registered.userId()))
+                .andExpect(jsonPath("$.data.user.username").value(registered.username()))
+                .andExpect(jsonPath("$.data.user.permissions", containsInAnyOrder("COMMENT_WRITE", "COMMENT_UPVOTE", "LIBRARY_USE", "PAGE_REPORT", "RATE_WORK", "COMMENT_REPORT")));
     }
 
     @Test

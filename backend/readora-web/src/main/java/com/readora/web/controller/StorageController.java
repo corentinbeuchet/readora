@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/storage")
@@ -59,20 +58,5 @@ public class StorageController {
                         .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
                         .body(content.data()))
                 .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/presigned-url")
-    @PreAuthorize("hasAuthority('CHAPTER_PUBLISH') or hasAuthority('WORK_CREATE')")
-    @Operation(summary = "Generate presigned upload URL for a server-generated key in the media bucket")
-    public ResponseEntity<ApiResponse<Map<String, String>>> getPresignedUrl(
-            @RequestParam(defaultValue = "uploads") String folder,
-            @RequestParam String filename
-    ) {
-        var upload = assets.presignUpload(folder, filename);
-        return ResponseEntity.ok(ApiResponse.ok(Map.of(
-                "uploadUrl", upload.uploadUrl(),
-                "cdnUrl", upload.publicUrl(),
-                "storageKey", upload.storageKey()
-        )));
     }
 }

@@ -7,7 +7,6 @@ import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.ErrorCodes;
 import org.jspecify.annotations.Nullable;
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Objects;
@@ -28,7 +27,6 @@ public class AssetService implements ManageAssetsUseCase {
             "application/x-zip-compressed",
             "application/octet-stream"
     );
-    private static final Duration PRESIGNED_UPLOAD_VALIDITY = Duration.ofMinutes(15);
 
     /// Suffix of the data-saver copy stored next to an uploaded image (US-07).
     static final String LITE_SUFFIX = ".lite.jpg";
@@ -70,13 +68,6 @@ public class AssetService implements ManageAssetsUseCase {
     @Override
     public Optional<AssetContent> load(String storageKey) {
         return storagePort.loadAsset(storageKey).map(data -> new AssetContent(data, storagePort.getContentType(storageKey)));
-    }
-
-    @Override
-    public PresignedUpload presignUpload(String folder, String filename) {
-        String storageKey = newStorageKey(folder, filename);
-        String uploadUrl = storagePort.generatePresignedUploadUrl(storageKey, PRESIGNED_UPLOAD_VALIDITY);
-        return new PresignedUpload(uploadUrl, storagePort.getPublicCdnUrl(storageKey), storageKey);
     }
 
     /// Server-built key `<folder>/<uuid>-<filename>`: the client picks a folder and a filename but never the

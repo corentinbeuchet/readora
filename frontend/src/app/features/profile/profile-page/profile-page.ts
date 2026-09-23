@@ -2,7 +2,7 @@ import { afterNextRender, Component, computed, inject, model, viewChild } from '
 import { DatePipe, NgOptimizedImage } from '@angular/common';
 import { Tab, TabContent, TabList, TabPanel, Tabs } from '@angular/aria/tabs';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { ROLE_LABELS, UserProfile } from '@app/core/models/identity';
+import { ROLE_LABELS } from '@app/core/models/identity';
 import { SeoService } from '@app/core/seo/seo.service';
 import { BookmarkList } from './bookmark-list/bookmark-list';
 import { ProfileForm } from './profile-form/profile-form';
@@ -31,9 +31,5 @@ export class ProfilePage {
     afterNextRender(() => {
       this.tabList()?.open(this.selectedTab() ?? 'overview');
     });
-  }
-
-  protected onSaved(_profile: UserProfile): void {
-    // AuthStore is already updated by the form; nothing else to do for now.
   }
 }

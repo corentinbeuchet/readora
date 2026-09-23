@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { ActivatedRouteSnapshot, CanActivateFn, Router, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
 import { authGuard, guestGuard } from '@app/core/auth/auth.guard';
-import { permissionGuard, requirePermission } from '@app/core/auth/permission.guard';
+import { permissionGuard } from '@app/core/auth/permission.guard';
 import { givenIAmSignedInWith } from './auth-fixtures';
 import { provideHttpTesting } from '../../test-utils';
 
@@ -63,14 +63,6 @@ describe('authGuard / permissionGuard', () => {
     thenIAmLetThrough();
 
     whenTheGuardChecks(permissionGuard, '/scanlation/p-1', { permissions: ['PROJECT_VIEW', 'CHAPTER_PUBLISH'] });
-
-    thenIAmRedirected();
-
-    whenTheGuardChecks(requirePermission('TASK_CLAIM'), '/scanlation/p-1');
-
-    thenIAmLetThrough();
-
-    whenTheGuardChecks(requirePermission('USER_MANAGE'), '/scanlation/p-1');
 
     thenIAmRedirected();
   });

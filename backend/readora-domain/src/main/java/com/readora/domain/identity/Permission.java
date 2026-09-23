@@ -7,7 +7,6 @@ public enum Permission {
     TASK_SUBMIT,
     CHAPTER_PUBLISH,
     PROJECT_VIEW,
-    PROJECT_MANAGE,
     USER_MANAGE,
     WORK_CREATE,
     /// Personal library, reading history, read markers and bookmarks (free for every signed-in reader).

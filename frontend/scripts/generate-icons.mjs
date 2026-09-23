@@ -14,31 +14,22 @@ const TARGET = resolve(ROOT, 'src/app/shared/ui/icon/icon-paths.ts');
 const ICONS = [
   'arrow-big-up',
   'bell',
-  'book-open',
-  'bookmark',
-  'check',
   'chevron-left',
   'chevron-right',
   'clock',
   'compass',
   'dices',
-  'flag',
   'house',
-  'layout-grid',
   'library',
   'list',
-  'log-out',
   'moon',
-  'plus',
   'search',
   'settings',
   'star',
   'sun',
   'trophy',
   'upload',
-  'user',
-  'users',
-  'x'
+  'user'
 ];
 
 const entries = ICONS.map((name) => `  '${name}': [${shapes(readFileSync(resolve(SOURCE, `${name}.svg`), 'utf8')).map((d) => `'${d}'`).join(', ')}]`);

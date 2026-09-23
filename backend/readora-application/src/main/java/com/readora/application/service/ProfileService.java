@@ -16,14 +16,9 @@ public class ProfileService implements ManageProfileUseCase {
     }
 
     @Override
-    public UserAccount getProfile(UserId userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User", userId));
-    }
-
-    @Override
     public UserAccount updateProfile(UserId userId, String displayName, String bio, String avatarUrl) {
-        UserAccount account = getProfile(userId);
+        UserAccount account = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User", userId));
         account.updateProfile(displayName, bio, avatarUrl);
         return userRepository.save(account);
     }

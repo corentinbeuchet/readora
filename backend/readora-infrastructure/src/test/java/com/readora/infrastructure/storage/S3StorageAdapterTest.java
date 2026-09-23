@@ -14,14 +14,9 @@ import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
-import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -34,20 +29,18 @@ class S3StorageAdapterTest {
     Path tempDir;
 
     private S3Client s3Client;
-    private S3Presigner s3Presigner;
 
     @BeforeEach
     void setUp() {
         s3Client = mock(S3Client.class);
-        s3Presigner = mock(S3Presigner.class);
     }
 
     private S3StorageAdapter s3Mode(String cdn) {
-        return new S3StorageAdapter(s3Client, s3Presigner, "readora-media-dev", cdn, tempDir.toString());
+        return new S3StorageAdapter(s3Client, "readora-media-dev", cdn, tempDir.toString());
     }
 
     private S3StorageAdapter localMode(String cdn) {
-        return new S3StorageAdapter(null, null, "readora-media-dev", cdn, tempDir.toString());
+        return new S3StorageAdapter(null, "readora-media-dev", cdn, tempDir.toString());
     }
 
     @Test
@@ -107,29 +100,6 @@ class S3StorageAdapterTest {
     @DisplayName("Local mode: keys that escape the storage directory are never read")
     void localModeRejectsTraversal() {
         assertThat(localMode("").loadAsset("../../etc/passwd")).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Presigned URL uses the configured bucket and the requested validity")
-    void presignedUrlWithPresigner() throws Exception {
-        PresignedPutObjectRequest presigned = mock(PresignedPutObjectRequest.class);
-        when(presigned.url()).thenReturn(URI.create("http://localhost:9000/readora-media-dev/upload-key?sig=123").toURL());
-        when(s3Presigner.presignPutObject(any(PutObjectPresignRequest.class))).thenReturn(presigned);
-
-        String url = s3Mode("").generatePresignedUploadUrl("scans/p1.png", Duration.ofMinutes(15));
-
-        assertThat(url).contains("http://localhost:9000/readora-media-dev/upload-key");
-        ArgumentCaptor<PutObjectPresignRequest> captor = ArgumentCaptor.forClass(PutObjectPresignRequest.class);
-        verify(s3Presigner).presignPutObject(captor.capture());
-        assertThat(captor.getValue().putObjectRequest().bucket()).isEqualTo("readora-media-dev");
-        assertThat(captor.getValue().signatureDuration()).isEqualTo(Duration.ofMinutes(15));
-    }
-
-    @Test
-    @DisplayName("Without S3 there is no presigned upload: no fake URL is returned")
-    void presignWithoutS3IsUnavailable() {
-        assertThatThrownBy(() -> localMode("").generatePresignedUploadUrl("scans/p1.png", Duration.ofMinutes(15)))
-                .isInstanceOf(StorageUnavailableException.class);
     }
 
     @Test
