@@ -32,7 +32,13 @@ series; teams take chapters from RAW to published). Monorepo:
   The catalog also has four US-04 series (Solo Leveling, Omniscient Reader, Horimiya, Berserk; no chapters) to try
   search and filters; Solo Leveling and Berserk have series facts (other titles, artist, year, language, rating).
   `leader` can edit the page of "Readora Demo Saga" from `/scanlation` ("Edit series").
-  Seed file: `backend/readora-infrastructure/src/main/resources/db/seed-local/R__local_seed_accounts.sql`.
+  Demo content (`R__local_seed_demo_content.sql`): teams "Moonlight Scans" (`leader2`) and "Equipe Aurore" (`leader3`);
+  published chapters (5 placeholder pages each) for Solo Leveling (two teams' versions), Omniscient Reader, Horimiya
+  and two seed series; Readora Demo Saga (drafts only, from the board) and Berserk have none. Readers `yuki` and `sam`
+  wrote comments (a reply thread, a spoiler); `moderator` has two open reports. `reader` finished Horimiya, is on
+  chapter 4 of Solo Leveling, has a public list, a team follow and notifications; `premium` has a bookmark in
+  Omniscient Reader. Page images and covers are drawn at startup by `LocalSeedImages` (keys under `seed/`).
+  Seed files: `backend/readora-infrastructure/src/main/resources/db/seed-local/`.
   Never enabled with `production` (startup guard).
 
 ## Cross-cutting rules
