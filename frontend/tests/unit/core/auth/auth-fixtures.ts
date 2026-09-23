@@ -28,7 +28,7 @@ export function mockUser(overrides: Partial<UserProfile> = {}): UserProfile {
     avatarUrl: null,
     roles: ['READER'],
     permissions: ['COMMENT_WRITE', 'COMMENT_UPVOTE'],
-    subscription: { plan: 'FREE', status: 'CANCELED', active: false, currentPeriodEnd: null, cancelAtPeriodEnd: false, planPermissions: [] },
+    subscription: { plan: 'FREE', status: 'CANCELED', active: false, currentPeriodEnd: null, planPermissions: [] },
     createdAt: '2026-01-01T00:00:00Z',
     ...overrides
   };

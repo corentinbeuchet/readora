@@ -100,11 +100,6 @@ public class UserAccountRepositoryAdapter implements UserAccountRepositoryPort {
                 SubscriptionPlan.valueOf(entity.getPlan()),
                 SubscriptionStatus.valueOf(entity.getStatus()),
                 entity.getCurrentPeriodEnd(),
-                entity.getStripeCustomerId(),
-                entity.getStripeSubscriptionId(),
-                entity.getLastEventId(),
-                entity.getLastEventAt(),
-                entity.isCancelAtPeriodEnd(),
                 entity.getUpdatedAt()
         );
     }
@@ -144,29 +139,18 @@ public class UserAccountRepositoryAdapter implements UserAccountRepositoryPort {
             subEntity.setPlan(subscription.getPlan().name());
             subEntity.setStatus(subscription.getStatus().name());
             subEntity.setCurrentPeriodEnd(subscription.getCurrentPeriodEnd());
-            subEntity.setStripeCustomerId(subscription.getExternalCustomerId());
-            subEntity.setStripeSubscriptionId(subscription.getExternalSubscriptionId());
-            subEntity.setLastEventId(subscription.getLastEventId());
-            subEntity.setLastEventAt(subscription.getLastEventAt());
-            subEntity.setCancelAtPeriodEnd(subscription.isCancelAtPeriodEnd());
             subEntity.setUpdatedAt(subscription.getUpdatedAt());
         }
         return entity;
     }
 
     private SubscriptionJpaEntity toSubscriptionEntity(Subscription subscription) {
-        SubscriptionJpaEntity entity = new SubscriptionJpaEntity(
+        return new SubscriptionJpaEntity(
                 subscription.getPlan().name(),
                 subscription.getStatus().name(),
                 subscription.getCurrentPeriodEnd(),
-                subscription.getExternalCustomerId(),
-                subscription.getExternalSubscriptionId(),
-                subscription.getLastEventId(),
                 subscription.getUpdatedAt()
         );
-        entity.setLastEventAt(subscription.getLastEventAt());
-        entity.setCancelAtPeriodEnd(subscription.isCancelAtPeriodEnd());
-        return entity;
     }
 
     private static String joinRoles(Set<Role> roles) {

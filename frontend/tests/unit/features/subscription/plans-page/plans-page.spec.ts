@@ -60,7 +60,6 @@ describe('PlansPage', () => {
       status: 'ACTIVE',
       active: true,
       currentPeriodEnd: periodEnd,
-      cancelAtPeriodEnd: false,
       planPermissions: ['BOOKMARK_READ', 'BOOKMARK_WRITE']
     };
     await signIn(store, http, mockUser({ permissions: ['COMMENT_WRITE', 'BOOKMARK_READ', 'BOOKMARK_WRITE'], subscription }));

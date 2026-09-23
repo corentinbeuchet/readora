@@ -43,8 +43,8 @@ FROM (
 WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = v.id OR u.email = v.email OR u.username = v.username);
 
 -- Premium subscription that never expires locally.
-INSERT INTO subscriptions (user_id, plan, status, current_period_end, updated_at, cancel_at_period_end)
-SELECT '00000000-0000-4000-8000-000000000002', 'PREMIUM', 'ACTIVE', TIMESTAMP '2099-12-31 23:59:59', CURRENT_TIMESTAMP, FALSE
+INSERT INTO subscriptions (user_id, plan, status, current_period_end, updated_at)
+SELECT '00000000-0000-4000-8000-000000000002', 'PREMIUM', 'ACTIVE', TIMESTAMP '2099-12-31 23:59:59', CURRENT_TIMESTAMP
 WHERE EXISTS (SELECT 1 FROM users WHERE id = '00000000-0000-4000-8000-000000000002')
   AND NOT EXISTS (SELECT 1 FROM subscriptions WHERE user_id = '00000000-0000-4000-8000-000000000002');
 

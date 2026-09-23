@@ -32,7 +32,7 @@ class UserAccountDomainTest {
     @DisplayName("Effective permissions are the union of role and active plan permissions")
     void activeSubscriptionAddsPlanPermissions() {
         UserAccount account = newReader();
-        account.activateSubscription(Subscription.active(SubscriptionPlan.PREMIUM, Instant.now().plus(Duration.ofDays(30)), "cus_1", "sub_1"));
+        account.activateSubscription(Subscription.active(SubscriptionPlan.PREMIUM, Instant.now().plus(Duration.ofDays(30))));
 
         assertThat(account.can(Permission.BOOKMARK_READ)).isTrue();
         assertThat(account.can(Permission.BOOKMARK_WRITE)).isTrue();
@@ -44,12 +44,12 @@ class UserAccountDomainTest {
     @DisplayName("Expired or canceled subscriptions do not grant plan permissions")
     void expiredOrCanceledSubscriptionGrantsNothing() {
         UserAccount expired = newReader();
-        expired.activateSubscription(Subscription.active(SubscriptionPlan.PREMIUM, Instant.now().minus(Duration.ofDays(1)), "cus_1", "sub_1"));
+        expired.activateSubscription(Subscription.active(SubscriptionPlan.PREMIUM, Instant.now().minus(Duration.ofDays(1))));
         assertThat(expired.can(Permission.BOOKMARK_WRITE)).isFalse();
 
         UserAccount canceled = newReader();
         canceled.activateSubscription(new Subscription(SubscriptionPlan.PREMIUM, SubscriptionStatus.CANCELED,
-                Instant.now().plus(Duration.ofDays(30)), null, null, null, null, false, Instant.now()));
+                Instant.now().plus(Duration.ofDays(30)), Instant.now()));
         assertThat(canceled.can(Permission.BOOKMARK_WRITE)).isFalse();
     }
 
@@ -57,7 +57,7 @@ class UserAccountDomainTest {
     @DisplayName("A paid plan with an unknown period end grants nothing (no unlimited access)")
     void unknownPeriodEndIsNotActive() {
         UserAccount account = newReader();
-        account.activateSubscription(Subscription.active(SubscriptionPlan.PREMIUM, null, "cus_1", "sub_1"));
+        account.activateSubscription(Subscription.active(SubscriptionPlan.PREMIUM, null));
 
         assertThat(account.getSubscription().isActive(Instant.now())).isFalse();
         assertThat(account.can(Permission.BOOKMARK_WRITE)).isFalse();

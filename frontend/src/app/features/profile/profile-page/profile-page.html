@@ -50,11 +50,7 @@
           </p>
           @if (user.subscription.currentPeriodEnd) {
             <p class="muted">
-              @if (user.subscription.cancelAtPeriodEnd) {
-                <ng-container i18n="@@profile.page.premiumEnds">Premium ends</ng-container>
-              } @else {
-                <ng-container i18n="@@profile.page.periodEnds">Current period ends</ng-container>
-              }
+              <ng-container i18n="@@profile.page.periodEnds">Current period ends</ng-container>
               {{ user.subscription.currentPeriodEnd | date: 'medium' }}
             </p>
           }

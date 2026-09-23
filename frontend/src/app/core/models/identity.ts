@@ -23,7 +23,7 @@ export type Role = 'READER' | 'SCANLATOR' | 'MODERATOR' | 'ADMIN';
 
 export type SubscriptionPlan = 'FREE' | 'PREMIUM';
 
-export type SubscriptionStatus = 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | 'INCOMPLETE';
+export type SubscriptionStatus = 'ACTIVE' | 'CANCELED';
 
 /** Display names for the codes above (the API sends the codes). */
 export const ROLE_LABELS: Record<Role, string> = {
@@ -40,9 +40,7 @@ export const SUBSCRIPTION_PLAN_LABELS: Record<SubscriptionPlan, string> = {
 
 export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, string> = {
   ACTIVE: $localize`:@@subscriptionStatus.active:Active`,
-  PAST_DUE: $localize`:@@subscriptionStatus.pastDue:Payment overdue`,
-  CANCELED: $localize`:@@subscriptionStatus.canceled:Cancelled`,
-  INCOMPLETE: $localize`:@@subscriptionStatus.incomplete:Incomplete`
+  CANCELED: $localize`:@@subscriptionStatus.canceled:Cancelled`
 };
 
 export interface Subscription {
@@ -51,7 +49,6 @@ export interface Subscription {
   active: boolean;
   currentPeriodEnd: string | null;
   /** Renewal stopped: access continues until `currentPeriodEnd`, then the plan ends. */
-  cancelAtPeriodEnd: boolean;
   planPermissions: Permission[];
 }
 

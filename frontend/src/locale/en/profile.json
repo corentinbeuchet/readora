@@ -30,7 +30,6 @@
     "profile.page.bookmarksTitle": "Bookmarks",
     "profile.page.subscriptionTitle": "Subscription",
     "profile.page.plan": "Plan: {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}",
-    "profile.page.premiumEnds": "Premium ends",
     "profile.page.periodEnds": "Current period ends",
     "profile.page.permissions": "Effective permissions: {$INTERPOLATION}",
     "profile.page.manageSubscription": "Manage subscription",

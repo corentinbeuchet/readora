@@ -30,7 +30,6 @@
     "profile.page.bookmarksTitle": "Marque-pages",
     "profile.page.subscriptionTitle": "Abonnement",
     "profile.page.plan": "Formule : {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}",
-    "profile.page.premiumEnds": "Premium prend fin le",
     "profile.page.periodEnds": "Fin de la période en cours",
     "profile.page.permissions": "Autorisations effectives : {$INTERPOLATION}",
     "profile.page.manageSubscription": "Gérer l'abonnement",

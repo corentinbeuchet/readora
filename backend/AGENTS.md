@@ -106,7 +106,7 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 
 ## Integrations
 - Payments were removed on 2026-09-23 (Stripe checkout, cancel, webhooks): Premium is granted outside the app until a
-  payments feature comes back. The `subscriptions` table keeps its `stripe_*` columns; bring the flow back from git
+  payments feature comes back. V22 dropped the payment-only columns (a payments feature adds its own); bring the flow back from git
   (`git log --oneline -- backend/readora-infrastructure/src/main/java/com/readora/infrastructure/payment`) and follow the
   webhook rules below.
 - Vendor SDK types never leave infrastructure — translate to the port's types (model: `S3StorageAdapter`: S3 SDK types stay

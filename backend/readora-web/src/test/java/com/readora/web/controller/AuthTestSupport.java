@@ -76,7 +76,7 @@ abstract class AuthTestSupport {
     protected Session registerPremium() throws Exception {
         Session reader = register();
         UserAccount account = userAccountRepository.findById(UserId.of(reader.userId())).orElseThrow();
-        account.activateSubscription(Subscription.active(SubscriptionPlan.PREMIUM, Instant.now().plus(Duration.ofDays(30)), "cus_test", "sub_test_" + reader.username()));
+        account.activateSubscription(Subscription.active(SubscriptionPlan.PREMIUM, Instant.now().plus(Duration.ofDays(30))));
         userAccountRepository.save(account);
         return login(reader.email());
     }
