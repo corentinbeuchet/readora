@@ -7,6 +7,7 @@ import com.readora.domain.scanlation.WorkflowTask;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.web.dto.ApiResponse;
 import com.readora.web.dto.CreateTaskRequest;
+import com.readora.web.dto.PageAssetDto;
 import com.readora.web.dto.SubmitTaskRequest;
 import com.readora.web.dto.WorkflowTaskDto;
 import com.readora.web.security.CurrentUserProvider;
@@ -35,7 +36,7 @@ public class ScanlationTaskController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('LIBRARY_USE')")
-    @Operation(summary = "Upload raw chapter package and create workflow task")
+    @Operation(summary = "Put a chapter on the task board with its raw pages")
     public ResponseEntity<ApiResponse<WorkflowTaskDto>> createTask(
             @PathVariable UUID projectId,
             @Valid @RequestBody CreateTaskRequest request
@@ -43,8 +44,7 @@ public class ScanlationTaskController {
         WorkflowTask task = scanlationTaskUseCase.uploadChapterTask(
                 ProjectId.of(projectId),
                 ChapterNumber.of(request.chapterNumber().toPlainString()),
-                request.assetUrl(),
-                request.pageCount(),
+                request.pages().stream().map(PageAssetDto::toDomain).toList(),
                 currentUserProvider.requireUserId()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(WorkflowTaskDto.fromDomain(task)));
@@ -63,7 +63,7 @@ public class ScanlationTaskController {
 
     @PostMapping("/{taskId}/submit")
     @PreAuthorize("hasAuthority('LIBRARY_USE')")
-    @Operation(summary = "Submit task work package and advance stage")
+    @Operation(summary = "Submit the stage's pages and advance the task")
     public ResponseEntity<ApiResponse<WorkflowTaskDto>> submitWork(
             @PathVariable UUID projectId,
             @PathVariable UUID taskId,
@@ -73,8 +73,7 @@ public class ScanlationTaskController {
                 ProjectId.of(projectId),
                 TaskId.of(taskId),
                 currentUserProvider.requireUserId(),
-                request.assetUrl(),
-                request.pageCount()
+                request.pages().stream().map(PageAssetDto::toDomain).toList()
         );
         return ResponseEntity.ok(ApiResponse.ok(WorkflowTaskDto.fromDomain(task)));
     }

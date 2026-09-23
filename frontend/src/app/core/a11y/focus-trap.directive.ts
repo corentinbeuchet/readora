@@ -1,13 +1,16 @@
 import { DOCUMENT, DestroyRef, Directive, ElementRef, afterNextRender, inject, output } from '@angular/core';
 
+// `tabindex="-1"` takes a control out of the Tab order (e.g. the page uploader's hidden file input, opened by its drop zone).
 const FOCUSABLE = [
   'a[href]',
   'button:not([disabled])',
   'input:not([disabled]):not([type="hidden"])',
   'select:not([disabled])',
   'textarea:not([disabled])',
-  '[tabindex]:not([tabindex="-1"])'
-].join(',');
+  '[tabindex]'
+]
+  .map((selector) => `${selector}:not([tabindex="-1"])`)
+  .join(',');
 
 /**
  * Modal dialog focus management, for an element rendered while the dialog is open:

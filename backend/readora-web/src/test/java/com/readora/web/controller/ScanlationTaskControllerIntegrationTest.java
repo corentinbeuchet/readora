@@ -4,15 +4,16 @@ import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
 import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
-import com.readora.domain.scanlation.ScanlationProject;
-import com.readora.domain.scanlation.Team;
-import com.readora.domain.scanlation.ScanlationRole;
-import com.readora.domain.scanlation.TeamMember;
 import com.readora.domain.common.UserId;
+import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.ScanlationRole;
+import com.readora.domain.scanlation.Team;
+import com.readora.domain.scanlation.TeamMember;
 import com.readora.domain.work.Work;
 import com.readora.domain.work.WorkType;
 import com.readora.web.ReadoraApplication;
 import com.readora.web.dto.CreateTaskRequest;
+import com.readora.web.dto.PageAssetDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Set;
 
 import static org.hamcrest.Matchers.containsString;
@@ -67,7 +69,7 @@ class ScanlationTaskControllerIntegrationTest extends AuthTestSupport {
         team.addMember(TeamMember.of(UserId.of(scanlator.userId()), ScanlationRole.CLEANER_REDRAWER));
         teamRepository.save(team);
 
-        CreateTaskRequest request = new CreateTaskRequest(BigDecimal.valueOf(1), "scans/solo/1/raw.zip", 22);
+        CreateTaskRequest request = new CreateTaskRequest(BigDecimal.valueOf(1), List.of(new PageAssetDto(1, "scans/solo/1/p1.webp", "https://cdn.test/p1.webp", 800, 1200)));
 
         mockMvc.perform(post("/api/v1/scanlation/projects/" + project.getId().value() + "/tasks")
                         .header("Authorization", scanlator.bearer())
@@ -78,15 +80,15 @@ class ScanlationTaskControllerIntegrationTest extends AuthTestSupport {
                 .andExpect(jsonPath("$.data.chapterNumber").value("1"))
                 .andExpect(jsonPath("$.data.stage").value("RAW_UPLOADED"))
                 .andExpect(jsonPath("$.data.status").value("PENDING"))
-                .andExpect(jsonPath("$.data.pageCount").value(22))
-                .andExpect(jsonPath("$.data.assetPackageUrl").value("scans/solo/1/raw.zip"));
+                .andExpect(jsonPath("$.data.pageCount").value(1))
+                .andExpect(jsonPath("$.data.pages[0].storageKey").value("scans/solo/1/p1.webp"));
     }
 
     @Test
     @DisplayName("A reader outside the team receives 400 Bad Request when trying to upload")
     void scanlatorNonMemberRejectedByDomain() throws Exception {
         Session scanlator = register();
-        CreateTaskRequest request = new CreateTaskRequest(BigDecimal.valueOf(1), "scans/solo/1/raw.zip", 22);
+        CreateTaskRequest request = new CreateTaskRequest(BigDecimal.valueOf(1), List.of(new PageAssetDto(1, "scans/solo/1/p1.webp", "https://cdn.test/p1.webp", 800, 1200)));
 
         mockMvc.perform(post("/api/v1/scanlation/projects/" + project.getId().value() + "/tasks")
                         .header("Authorization", scanlator.bearer())
@@ -103,7 +105,7 @@ class ScanlationTaskControllerIntegrationTest extends AuthTestSupport {
         team.addMember(TeamMember.of(UserId.of(scanlator.userId()), ScanlationRole.LEADER));
         teamRepository.save(team);
 
-        CreateTaskRequest request = new CreateTaskRequest(BigDecimal.valueOf(1), "scans/solo/1/raw.zip", 22);
+        CreateTaskRequest request = new CreateTaskRequest(BigDecimal.valueOf(1), List.of(new PageAssetDto(1, "scans/solo/1/p1.webp", "https://cdn.test/p1.webp", 800, 1200)));
 
         mockMvc.perform(post("/api/v1/scanlation/projects/" + project.getId().value() + "/tasks")
                         .header("Authorization", scanlator.bearer())
@@ -129,7 +131,7 @@ class ScanlationTaskControllerIntegrationTest extends AuthTestSupport {
         mockMvc.perform(post("/api/v1/scanlation/projects/" + project.getId().value() + "/tasks")
                         .header("Authorization", scanlator.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"chapterNumber\":-1,\"assetUrl\":\"\",\"pageCount\":0}"))
+                        .content("{\"chapterNumber\":-1,\"pages\":[]}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
     }

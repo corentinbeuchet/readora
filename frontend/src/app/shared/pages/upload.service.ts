@@ -1,8 +1,21 @@
 import { Service, inject } from '@angular/core';
 import { Observable, catchError, from, map, mergeMap, of, toArray } from 'rxjs';
 import { ApiClient, apiErrorMessage } from '@app/core/api/api-client';
-import { StorageUploadResult } from '@app/core/models/chapter';
+import { PagePayload, StorageUploadResult } from '@app/core/models/chapter';
 import { PageUploadItem } from './file-utils';
+
+/** The uploaded pages as the API takes them (after [UploadService.uploadPagesBatch] settled them `done`). */
+export function pagePayloadOf(items: readonly PageUploadItem[]): PagePayload[] {
+  return items.map((p) => ({
+    pageNumber: p.pageNumber,
+    storageKey: p.storageKey ?? '',
+    cdnUrl: p.cdnUrl ?? '',
+    width: p.width,
+    height: p.height,
+    description: p.description?.trim() || undefined,
+    liteCdnUrl: p.liteCdnUrl
+  }));
+}
 
 @Service()
 export class UploadService {

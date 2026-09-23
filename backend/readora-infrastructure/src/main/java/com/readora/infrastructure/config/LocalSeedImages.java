@@ -43,7 +43,7 @@ public class LocalSeedImages implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        int stored = storePages() + storeCovers();
+        int stored = storePages() + storeTaskPages() + storeCovers();
         if (stored > 0) {
             log.info("Local seed: stored {} placeholder images", stored);
         }
@@ -59,6 +59,33 @@ public class LocalSeedImages implements ApplicationRunner {
                         WHERE pa.storage_key LIKE 'seed/%'""")
                 .query((rs, row) -> new SeedPage(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4), rs.getInt(5)))
                 .list();
+        return storeMissing(pages);
+    }
+
+    /// The demo task board's pages (the pages each stage works on, published by QC).
+    private int storeTaskPages() {
+        List<SeedPage> pages = jdbc.sql("""
+                        SELECT tp.storage_key, w.title, t.name, wt.chapter_number, tp.page_number
+                        FROM workflow_task_pages tp
+                        JOIN workflow_tasks wt ON wt.id = tp.task_id
+                        JOIN scanlation_projects sp ON sp.id = wt.project_id
+                        JOIN works w ON w.id = sp.work_id
+                        JOIN teams t ON t.id = sp.team_id
+                        WHERE tp.storage_key LIKE 'seed/%'""")
+                .query((rs, row) -> new SeedPage(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4), rs.getInt(5)))
+                .list();
+        int stored = storeMissing(pages);
+        // An upload returns its URL; the seed rows get theirs here, where the storage's public URL is known (the
+        // board links each page, and the reader would fill it in from the key anyway).
+        for (SeedPage page : pages) {
+            jdbc.sql("UPDATE workflow_task_pages SET cdn_url = ? WHERE storage_key = ? AND cdn_url IS NULL")
+                    .params(storage.getPublicCdnUrl(page.key()), page.key())
+                    .update();
+        }
+        return stored;
+    }
+
+    private int storeMissing(List<SeedPage> pages) {
         int stored = 0;
         for (SeedPage page : pages) {
             if (storage.loadAsset(page.key()).isEmpty()) {

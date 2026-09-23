@@ -139,7 +139,7 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
         givenTheBoardIsOn(mina, project);
         for (String chapter : new String[] {"1", "2"}) {
             mockMvc.perform(post("/api/v1/scanlation/projects/" + project + "/tasks").header("Authorization", mina.bearer())
-                            .contentType(MediaType.APPLICATION_JSON).content("{\"chapterNumber\":" + chapter + ",\"assetUrl\":\"https://cdn.test/raw.zip\",\"pageCount\":5}"))
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"chapterNumber\":" + chapter + ",\"pages\":[{\"pageNumber\":1,\"storageKey\":\"scans/t/p1.webp\",\"cdnUrl\":\"https://cdn.test/p1.webp\",\"width\":800,\"height\":1200}]}"))
                     .andExpect(status().isCreated());
         }
         givenTheyJoinTheTeam(mina, team, bob, "CLEANER_REDRAWER");

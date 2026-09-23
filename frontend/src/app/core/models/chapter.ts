@@ -6,22 +6,25 @@ export interface TeamRef {
   name: string;
 }
 
+/** A page as the client sends it once its image is uploaded (publishing a chapter, the pages of a task). */
+export interface PagePayload {
+  pageNumber: number;
+  storageKey: string;
+  cdnUrl?: string;
+  width?: number;
+  height?: number;
+  /** What the page shows, for screen-reader users (US-07). */
+  description?: string;
+  /** The data-saver copy returned by the upload (US-07). */
+  liteCdnUrl?: string;
+}
+
 export interface DirectPublishChapterPayload {
   /** The team the chapter is published for; the server checks that I may publish for it. */
   teamId: string;
   chapterNumber: string;
   title?: string;
-  pages: {
-    pageNumber: number;
-    storageKey: string;
-    cdnUrl?: string;
-    width?: number;
-    height?: number;
-    /** What the page shows, for screen-reader users (US-07). */
-    description?: string;
-    /** The data-saver copy returned by the upload (US-07). */
-    liteCdnUrl?: string;
-  }[];
+  pages: PagePayload[];
 }
 
 export interface StorageUploadResult {

@@ -1,34 +1,25 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { FormField, form, min, pattern, required, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import { ScanlationApi } from '@app/core/api/scanlation-api';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { Dialog } from '@app/shared/ui/dialog/dialog';
-import { TASK_STATUS_LABELS, WORKFLOW_STAGE_LABELS, WorkflowTask, canClaim, canPublish, canSubmit, isAssignedTo } from '@app/core/models/scanlation';
+import { TASK_STATUS_LABELS, WorkflowTask, canClaim, canPublish, canSubmit, isAssignedTo } from '@app/core/models/scanlation';
 import { SeoService } from '@app/core/seo/seo.service';
 import { STAGES, tasksByStage, withTask, withTaskStage } from './scanlation-board';
 import { PageReportsPanel } from './page-reports-panel/page-reports-panel';
 import { asyncAction } from '@app/core/utils/async-action';
-import { FieldErrors } from '@app/shared/forms/field-errors';
-import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
 import { LoadError } from '@app/shared/ui/load-error';
-
-interface SubmitModel {
-  assetUrl: string;
-  pageCount: number;
-}
+import { SubmitWorkDialog } from './submit-work-dialog/submit-work-dialog';
 
 @Component({
   selector: 'app-scanlation-board-page',
-  imports: [FieldErrors, AriaInvalidDirective, RouterLink, FormField, Dialog, PageReportsPanel, LoadError],
+  imports: [RouterLink, PageReportsPanel, LoadError, SubmitWorkDialog],
   templateUrl: './scanlation-board-page.html',
   styleUrl: './scanlation-board-page.scss'
 })
 export class ScanlationBoardPage {
   protected readonly auth = inject(AuthStore);
   protected readonly taskStatusLabels = TASK_STATUS_LABELS;
-  protected readonly stageLabels = WORKFLOW_STAGE_LABELS;
   private readonly scanlationApi = inject(ScanlationApi);
   private readonly seo = inject(SeoService);
 
@@ -40,7 +31,8 @@ export class ScanlationBoardPage {
   protected readonly currentProject = computed(() => (this.project.hasValue() ? (this.project.value() ?? null) : null));
   /** Claim / submit / publish: `busyKey` is the task being changed. */
   protected readonly action = asyncAction($localize`:@@scanlation.board.actionError:The action could not be completed`);
-  protected readonly submitTarget = signal<WorkflowTask | null>(null);
+  /** The task whose work is being submitted, with where its pages go. */
+  protected readonly submitTarget = signal<{ task: WorkflowTask; projectId: string; workId: string } | null>(null);
 
   protected readonly currentUserId = computed(() => this.auth.user()?.id ?? null);
   /** My roles in the board's team: what I may claim and publish follows them. */
@@ -65,13 +57,6 @@ export class ScanlationBoardPage {
     }));
   });
 
-  protected readonly submitModel = signal<SubmitModel>({ assetUrl: '', pageCount: 1 });
-  protected readonly submitForm = form(this.submitModel, (path) => {
-    required(path.assetUrl, { message: $localize`:@@scanlation.submit.assetUrl.required:Asset package URL is required` });
-    pattern(path.assetUrl, /^https?:\/\/\S+$/, { message: $localize`:@@scanlation.submit.assetUrl.pattern:Must be an http(s) URL` });
-    min(path.pageCount, 1, { message: $localize`:@@scanlation.submit.pageCount.min:Page count must be at least 1` });
-  });
-
   constructor() {
     this.seo.private_($localize`:@@scanlation.board.seoTitle:Task board`);
   }
@@ -85,30 +70,16 @@ export class ScanlationBoardPage {
 
   protected openSubmit(task: WorkflowTask): void {
     this.action.clearError();
-    this.submitModel.set({ assetUrl: task.assetPackageUrl ?? '', pageCount: task.pageCount || 1 });
-    this.submitTarget.set(task);
+    this.submitTarget.set({ task, projectId: this.requireProjectId(), workId: this.currentProject()?.workId ?? '' });
   }
 
   protected closeSubmit(): void {
     this.submitTarget.set(null);
   }
 
-  protected async onSubmitWork(event: Event): Promise<void> {
-    event.preventDefault();
-    const task = this.submitTarget();
-    if (!task) {
-      return;
-    }
-    await submit(this.submitForm, async (f) => {
-      await this.run(task, async () => {
-        const { assetUrl, pageCount } = f().value();
-        const updated = await firstValueFrom(
-          this.scanlationApi.submitTask(this.requireProjectId(), task.id, { assetUrl, pageCount })
-        );
-        this.project.update((p) => (p ? withTask(p, updated) : p));
-        this.submitTarget.set(null);
-      });
-    });
+  protected onSubmitted(updated: WorkflowTask): void {
+    this.project.update((p) => (p ? withTask(p, updated) : p));
+    this.submitTarget.set(null);
   }
 
   protected async publish(task: WorkflowTask): Promise<void> {

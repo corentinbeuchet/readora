@@ -1,26 +1,17 @@
+import { CreateTaskRequest } from '@app/core/models/scanlation';
+import { PagePayload } from '@app/core/models/chapter';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
 import { UploadStudioPage, parseChapterNumber } from '@app/features/upload/upload-studio-page/upload-studio-page';
 import { givenIAmSignedInWith } from '../../../core/auth/auth-fixtures';
-import { ANY_URL, API, fail, ok, provideHttpTesting } from '../../../test-utils';
+import { ANY_URL, API, fail, ok, provideHttpTesting, InstantImage, choosePageFiles } from '../../../test-utils';
 import { MyTeam } from '@app/core/models/scanlation';
 import { WorkSummary } from '@app/core/models/catalog';
 
 const WORK = { id: 'work-1', title: 'Blue Lock', synopsis: '', type: 'MANGA', status: 'ONGOING', coverImageUrl: '', genres: ['Action'] };
 const CHAPTER = { id: 'chap-1', workId: 'work-1', chapterNumber: '3', title: '', status: 'PUBLISHED', pages: [] };
 const SUCCESS = 'Series & Chapter Uploaded Successfully!';
-
-/** Image double: page dimensions "decode" right away as 800 × 1200. */
-class FakeImage {
-  onload: (() => void) | null = null;
-  onerror: (() => void) | null = null;
-  naturalWidth = 800;
-  naturalHeight = 1200;
-  set src(_: string) {
-    queueMicrotask(() => this.onload?.());
-  }
-}
 
 interface SeriesDraft {
   title: string;
@@ -72,7 +63,7 @@ describe('UploadStudioPage', () => {
     created = [];
     revoked = [];
     myTeamsLoaded = false;
-    vi.stubGlobal('Image', FakeImage);
+    vi.stubGlobal('Image', InstantImage);
     vi.spyOn(URL, 'createObjectURL').mockImplementation(() => {
       const url = `blob:test/${created.length + 1}`;
       created.push(url);
@@ -594,7 +585,7 @@ describe('UploadStudioPage', () => {
       await whenTheTaskIsCreated();
 
       thenTheBoardWasTurnedOn();
-      thenTheTaskWasCreatedWith({ chapterNumber: 3, assetUrl: 'https://cdn/k0', pageCount: 2 });
+      thenTheTaskWasCreatedWith({ chapterNumber: 3, pages: [uploadedPage(1, 'k0'), uploadedPage(2, 'k1')] });
       thenTheStepIs(SUCCESS);
     });
 
@@ -625,7 +616,7 @@ describe('UploadStudioPage', () => {
       await whenTheSeriesHasProjects([{ id: 'proj-1', teamId: 'team-1', boardEnabled: true }]);
       await whenTheTaskIsCreated();
 
-      thenTheTaskWasCreatedWith({ chapterNumber: 3, assetUrl: 'https://cdn/k0', pageCount: 2 });
+      thenTheTaskWasCreatedWith({ chapterNumber: 3, pages: [uploadedPage(1, 'k0'), uploadedPage(2, 'k1')] });
       thenTheStepIs(SUCCESS);
       thenASuccessLinkIs('/scanlation/proj-1');
     });
@@ -832,9 +823,7 @@ describe('UploadStudioPage', () => {
   }
 
   async function whenIAddPages(...names: string[]): Promise<void> {
-    const input = page().querySelector<HTMLInputElement>('app-page-grid-uploader input[type="file"]')!;
-    Object.defineProperty(input, 'files', { value: names.map((n) => new File([n], n, { type: 'image/png' })), configurable: true });
-    input.dispatchEvent(new Event('change'));
+    choosePageFiles(page(), names);
     await settleStudio();
   }
 
@@ -1019,8 +1008,12 @@ describe('UploadStudioPage', () => {
     expect(pageUploads[0].request.urlWithParams).toContain(encodeURIComponent(folder));
   }
 
-  function thenTheTaskWasCreatedWith(body: { chapterNumber: number; assetUrl: string; pageCount: number }): void {
+  function thenTheTaskWasCreatedWith(body: CreateTaskRequest): void {
     expect(taskRequest.request.body).toEqual(body);
+  }
+
+  function uploadedPage(pageNumber: number, key: string): PagePayload {
+    return { pageNumber, storageKey: key, cdnUrl: `https://cdn/${key}`, width: 800, height: 1200 };
   }
 
   function thenTheSuccessLinksAre(hrefs: string[]): void {

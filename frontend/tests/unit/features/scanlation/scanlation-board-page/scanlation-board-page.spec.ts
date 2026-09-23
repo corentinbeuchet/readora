@@ -4,14 +4,19 @@ import { provideRouter } from '@angular/router';
 import { ScanlationBoardPage } from '@app/features/scanlation/scanlation-board-page/scanlation-board-page';
 import { ScanlationProject, WorkflowTask } from '@app/core/models/scanlation';
 import { givenIAmSignedInWith } from '../../../core/auth/auth-fixtures';
-import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
+import { API, InstantImage, choosePageFiles, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
+import { PageAsset, PagePayload } from '@app/core/models/chapter';
 
 const PROJECT_ID = 'proj-1';
 const TASKS_URL = `${API}/scanlation/projects/${PROJECT_ID}/tasks`;
 
-const RAW_TASK: WorkflowTask = { id: 't-raw', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, assetPackageUrl: null, pageCount: 22, updatedAt: '2026-09-13T00:00:00Z' };
-const MY_TASK: WorkflowTask = { id: 't-mine', chapterNumber: '11', stage: 'CLEANING', status: 'IN_PROGRESS', assigneeId: 'user-1', assetPackageUrl: null, pageCount: 20, updatedAt: '2026-09-13T00:00:00Z' };
-const QC_TASK: WorkflowTask = { id: 't-qc', chapterNumber: '9', stage: 'QC_REVIEW', status: 'PENDING', assigneeId: null, assetPackageUrl: null, pageCount: 18, updatedAt: '2026-09-13T00:00:00Z' };
+const RAW_TASK: WorkflowTask = { id: 't-raw', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, pageCount: 2, pages: [rawPage(1), rawPage(2)], updatedAt: '2026-09-13T00:00:00Z' };
+const MY_TASK: WorkflowTask = { id: 't-mine', chapterNumber: '11', stage: 'CLEANING', status: 'IN_PROGRESS', assigneeId: 'user-1', pageCount: 1, pages: [rawPage(1)], updatedAt: '2026-09-13T00:00:00Z' };
+const QC_TASK: WorkflowTask = { id: 't-qc', chapterNumber: '9', stage: 'QC_REVIEW', status: 'PENDING', assigneeId: null, pageCount: 1, pages: [rawPage(1)], updatedAt: '2026-09-13T00:00:00Z' };
+
+function rawPage(pageNumber: number): PageAsset {
+  return { pageNumber, storageKey: `raw/p${pageNumber}.webp`, cdnUrl: `https://cdn.test/raw/p${pageNumber}.webp`, width: 800, height: 1200, description: null, liteCdnUrl: null };
+}
 
 const PROJECT: ScanlationProject = {
   id: PROJECT_ID,
@@ -29,6 +34,7 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
   let http: HttpTestingController;
   let lastRequest: TestRequest;
   let taskInDialog: WorkflowTask;
+  let pageUploads: TestRequest[];
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -36,6 +42,10 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
       providers: [provideRouter([]), ...provideHttpTesting()]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
+    // The submit dialog reads each chosen page's size from a preview.
+    vi.stubGlobal('Image', InstantImage);
+    vi.spyOn(URL, 'createObjectURL').mockImplementation(() => 'blob:test/page');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
     fixture = TestBed.createComponent(ScanlationBoardPage);
     fixture.componentRef.setInput('projectId', PROJECT_ID);
   });
@@ -111,7 +121,15 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
     thenICanSee('Assigned: you');
   });
 
-  it('Submit opens a Signal Forms dialog, validates, then posts assetUrl/pageCount and advances the task', async () => {
+  it('a task lists the pages the last stage left, as links to open them', async () => {
+    await givenIAmSignedInWith(['LIBRARY_USE']);
+    await givenIOpenTheBoard(PROJECT);
+
+    thenTaskCardShows('RAW_UPLOADED', 1, '2 pages');
+    thenTheTaskLinksToItsPages(RAW_TASK, ['https://cdn.test/raw/p1.webp', 'https://cdn.test/raw/p2.webp']);
+  });
+
+  it('Submit uploads the pages of my stage, then the task moves on to the next stage with them', async () => {
     await givenIAmSignedInWith(['LIBRARY_USE']);
     await givenIOpenTheBoard(PROJECT);
 
@@ -119,17 +137,42 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
 
     thenTheSubmitDialogIsOpen();
 
-    await whenISubmitAnInvalidAssetUrl('not a url');
+    await whenISubmitTheDialog();
 
-    thenICanSee('Must be an http(s) URL');
+    thenISeeTheError('Add the pages of your stage first.');
     thenNothingWasSubmittedFor(MY_TASK);
 
-    await whenISubmitTheAssetUrl('https://cdn.readora.com/packages/ch11.zip', { advancedTo: 'TRANSLATING' });
+    await whenIAddPages('p1.png', 'p2.png');
+    await whenISubmitTheDialog();
+    await whenThePagesUpload(['ok', 'ok']);
+    await whenTheServerMovesTheTaskTo('TRANSLATING');
 
-    thenTheSubmissionWas({ assetUrl: 'https://cdn.readora.com/packages/ch11.zip', pageCount: 20 });
+    thenThePagesWentToTheFolder('scans/work-1/c11/cleaning');
+    thenTheSubmissionWas([uploadedPage(1, 'k1'), uploadedPage(2, 'k2')]);
     thenTheSubmitDialogIsClosed();
     thenColumnHasTasks('TRANSLATING', 1);
     thenColumnHasTasks('CLEANING', 0);
+  });
+
+  it('a page that failed to upload is sent again on the next submit, and the task waits until all are uploaded', async () => {
+    await givenIAmSignedInWith(['LIBRARY_USE']);
+    await givenIOpenTheBoard(PROJECT);
+    await whenIOpenTheSubmitDialogFor(MY_TASK);
+    await whenIAddPages('p1.png', 'p2.png');
+
+    await whenISubmitTheDialog();
+    await whenThePagesUpload(['ok', 'fails']);
+
+    thenISeeTheError('Pages not uploaded: 1. Submit again to send them.');
+    thenNothingWasSubmittedFor(MY_TASK);
+
+    await whenISubmitTheDialog();
+    await whenThePagesUpload(['ok']);
+    await whenTheServerMovesTheTaskTo('TRANSLATING');
+
+    thenThisManyPagesWereUploaded(1);
+    thenTheSubmissionWas([uploadedPage(1, 'k1'), uploadedPage(2, 'k1')]);
+    thenTheSubmitDialogIsClosed();
   });
 
   it('Publish calls the API and moves the task to PUBLISHED; API errors are shown', async () => {
@@ -179,13 +222,13 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
     it('moves focus into the dialog, traps Tab, closes on Escape and returns focus', async () => {
       await givenTheSubmitDialogIsOpenFromItsButton(MY_TASK);
 
-      thenFocusIsOnTheAssetUrlField();
+      thenFocusIsOnThePageDropZone();
 
       whenIFocusTheLastDialogButton();
       whenIPress('Tab');
 
       thenTheKeyWasTrapped();
-      thenFocusIsOnTheAssetUrlField();
+      thenFocusIsOnThePageDropZone();
 
       whenIPress('Tab', { shift: true });
 
@@ -225,8 +268,8 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
       expect(lastKey.defaultPrevented).toBe(true);
     }
 
-    function thenFocusIsOnTheAssetUrlField(): void {
-      expect(document.activeElement).toBe(page().querySelector('#submit-asset-url'));
+    function thenFocusIsOnThePageDropZone(): void {
+      expect(document.activeElement).toBe(page().querySelector('[role="dialog"] [aria-label="Upload chapter pages or archive"]'));
     }
 
     function thenFocusIsOnTheLastDialogButton(): void {
@@ -282,14 +325,30 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
     await settle(fixture);
   }
 
-  async function whenISubmitAnInvalidAssetUrl(url: string): Promise<void> {
-    await typeAndSubmitAssetUrl(url);
+  async function whenIAddPages(...names: string[]): Promise<void> {
+    choosePageFiles(page(), names);
+    await settle(fixture);
   }
 
-  async function whenISubmitTheAssetUrl(url: string, answer: { advancedTo: WorkflowTask['stage'] }): Promise<void> {
-    await typeAndSubmitAssetUrl(url);
+  async function whenISubmitTheDialog(): Promise<void> {
+    page().querySelector('form.submit-dialog')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    await settle(fixture);
+  }
+
+  /** Answers the page uploads in order: each one stored as `k<n>`, or refused by the server. */
+  async function whenThePagesUpload(answers: ('ok' | 'fails')[]): Promise<void> {
+    pageUploads = uploads();
+    pageUploads.forEach((request, i) =>
+      answers[i] === 'ok'
+        ? request.flush(ok({ storageKey: `k${i + 1}`, cdnUrl: `https://cdn/k${i + 1}`, liteCdnUrl: null }))
+        : request.flush(fail('Storage is down'), { status: 500, statusText: 'Server Error' })
+    );
+    await settle(fixture);
+  }
+
+  async function whenTheServerMovesTheTaskTo(stage: WorkflowTask['stage']): Promise<void> {
     lastRequest = http.expectOne(`${TASKS_URL}/${taskInDialog.id}/submit`);
-    lastRequest.flush(ok({ ...taskInDialog, stage: answer.advancedTo, status: 'PENDING', assigneeId: undefined, assetPackageUrl: url }));
+    lastRequest.flush(ok({ ...taskInDialog, stage, status: 'PENDING', assigneeId: null }));
     await settle(fixture);
   }
 
@@ -364,8 +423,26 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
     http.expectNone(`${TASKS_URL}/${task.id}/submit`);
   }
 
-  function thenTheSubmissionWas(body: { assetUrl: string; pageCount: number }): void {
-    expect(lastRequest.request.body).toEqual(body);
+  function thenTheSubmissionWas(pages: PagePayload[]): void {
+    expect(lastRequest.request.body).toEqual({ pages });
+  }
+
+  function thenThePagesWentToTheFolder(folder: string): void {
+    expect(pageUploads[0].request.urlWithParams).toContain(`folder=${encodeURIComponent(folder)}`);
+  }
+
+  /** In the last round of uploads: a page already uploaded is not sent again. */
+  function thenThisManyPagesWereUploaded(count: number): void {
+    expect(pageUploads.length).toBe(count);
+  }
+
+  function thenTheTaskLinksToItsPages(task: WorkflowTask, hrefs: string[]): void {
+    const card = taskCard(task);
+    expect(Array.from(card.querySelectorAll('.task-pages a')).map((a) => a.getAttribute('href'))).toEqual(hrefs);
+  }
+
+  function uploadedPage(pageNumber: number, key: string): PagePayload {
+    return { pageNumber, storageKey: key, cdnUrl: `https://cdn/${key}`, width: 800, height: 1200 };
   }
 
   function thenThereIsAnUploadStudioLink(): void {
@@ -396,15 +473,6 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
     expect(page().textContent).not.toContain(text);
   }
 
-  async function typeAndSubmitAssetUrl(url: string): Promise<void> {
-    const field = page().querySelector<HTMLInputElement>('#submit-asset-url')!;
-    field.value = url;
-    field.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-    page().querySelector('form.submit-dialog')!.dispatchEvent(new Event('submit', { cancelable: true }));
-    await settle(fixture);
-  }
-
   function page(): HTMLElement {
     return fixture.nativeElement as HTMLElement;
   }
@@ -418,9 +486,16 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
     return Array.from(page().querySelectorAll<HTMLElement>(`section[data-stage="${stage}"] .task-card`));
   }
 
+  function taskCard(task: WorkflowTask): HTMLElement {
+    return column(task.stage).find((c) => c.querySelector('strong')?.textContent === `Chapter ${task.chapterNumber}`)!;
+  }
+
   function taskButton(task: WorkflowTask, selector: string): HTMLButtonElement {
-    const card = column(task.stage).find((c) => c.querySelector('strong')?.textContent === `Chapter ${task.chapterNumber}`)!;
-    return card.querySelector<HTMLButtonElement>(selector)!;
+    return taskCard(task).querySelector<HTMLButtonElement>(selector)!;
+  }
+
+  function uploads(): TestRequest[] {
+    return http.match((r) => r.url.startsWith(`${API}/storage/upload`));
   }
 
   function uploadLink(): HTMLAnchorElement | null {

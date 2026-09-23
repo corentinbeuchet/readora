@@ -18,6 +18,7 @@ import com.readora.domain.scanlation.ScanlationRole;
 import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.scanlation.TeamInvitation;
+import com.readora.domain.scanlation.WorkflowTask;
 import com.readora.domain.social.ReadingStatus;
 import com.readora.domain.work.*;
 import com.readora.infrastructure.persistence.adapter.ChapterReadRepositoryAdapter;
@@ -244,6 +245,32 @@ class PostgresMigrationTest {
         projectRepository.save(project);
 
         assertThat(projectRepository.findById(project.getId()).orElseThrow().isBoardEnabled()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Task pages (V27) round-trip on PostgreSQL in order, and a submission replaces them")
+    void taskPagesRunOnPostgres() {
+        Work work = workRepository.save(Work.create("PG Task Pages", "", WorkType.MANGA, "c.png", Set.of("Action")));
+        UserId leader = UserId.of("pg-leader");
+        Team team = teamRepository.save(Team.create("PG Pages Team " + java.util.UUID.randomUUID(), null, leader));
+        ScanlationProject created = ScanlationProject.create("PG Task Pages", work.getId(), team.getId());
+        WorkflowTask task = created.addChapterTask(ChapterNumber.of("1"), taskPages("raw", 3));
+        projectRepository.save(created);
+
+        ScanlationProject loaded = projectRepository.findById(created.getId()).orElseThrow();
+        assertThat(loaded.getTasks().getFirst().getPages()).isEqualTo(taskPages("raw", 3));
+        loaded.claimTask(team, task.getId(), leader);
+        loaded.submitTaskWork(team, task.getId(), leader, taskPages("cleaned", 2));
+        projectRepository.save(loaded);
+
+        assertThat(projectRepository.findById(created.getId()).orElseThrow().getTasks().getFirst().getPages())
+                .isEqualTo(taskPages("cleaned", 2));
+    }
+
+    private static List<PageAsset> taskPages(String stage, int count) {
+        return java.util.stream.IntStream.rangeClosed(1, count)
+                .mapToObj(n -> new PageAsset(n, "scans/pg/" + stage + "/p" + n + ".webp", "https://cdn.test/" + stage + "/p" + n + ".webp", 800, 1200))
+                .toList();
     }
 
     @Autowired

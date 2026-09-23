@@ -1,3 +1,5 @@
+import { PageAsset, PagePayload } from '@app/core/models/chapter';
+
 
 export type ScanlationRole = 'LEADER' | 'CLEANER_REDRAWER' | 'TRANSLATOR' | 'TYPESETTER' | 'PROOFREADER' | 'QUALITY_CHECKER';
 
@@ -39,8 +41,9 @@ export interface WorkflowTask {
   stage: WorkflowStage;
   status: TaskStatus;
   assigneeId: string | null;
-  assetPackageUrl: string | null;
   pageCount: number;
+  /** The pages as the last stage left them (the raw pages at first); the next stage starts from them. */
+  pages: PageAsset[];
   updatedAt: string;
 }
 
@@ -114,15 +117,15 @@ export function publishesForTeam(team: MyTeam): boolean {
   return leadsTeam(team) || team.myRoles.includes('QUALITY_CHECKER');
 }
 
+/** The pages of the stage just done: they replace the task's pages. */
 export interface SubmitTaskRequest {
-  assetUrl: string;
-  pageCount: number;
+  pages: PagePayload[];
 }
 
+/** A chapter goes on the board with its raw pages. */
 export interface CreateTaskRequest {
   chapterNumber: number;
-  assetUrl: string;
-  pageCount: number;
+  pages: PagePayload[];
 }
 
 /** The team role that works on each stage (backend `WorkflowStage.requiredRole`). */

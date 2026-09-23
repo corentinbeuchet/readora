@@ -56,7 +56,20 @@
                   <strong i18n="@@scanlation.board.task.chapter">Chapter {{ task.chapterNumber }}</strong>
                   <span class="status-pill" [class.status-in-progress]="task.status === 'IN_PROGRESS'" [class.status-completed]="task.status === 'COMPLETED'">{{ taskStatusLabels[task.status] }}</span>
                 </div>
-                <p class="task-meta" i18n="@@scanlation.board.task.pages">Pages: {{ task.pageCount }}</p>
+                @if (task.pages.length > 0) {
+                  <details class="task-pages">
+                    <summary i18n="@@scanlation.board.task.pageCount">{task.pageCount, plural, =1 {1 page} other {{{ task.pageCount }} pages}}</summary>
+                    <ul>
+                      @for (page of task.pages; track page.pageNumber) {
+                        @if (page.cdnUrl) {
+                          <li><a [href]="page.cdnUrl" target="_blank" rel="noopener" i18n="@@scanlation.board.task.page">Page {{ page.pageNumber }}</a></li>
+                        }
+                      }
+                    </ul>
+                  </details>
+                } @else {
+                  <p class="task-meta" i18n="@@scanlation.board.task.noPages">No pages yet</p>
+                }
                 @if (task.assigneeId) {
                   <p class="task-assignee">
                     @if (row.mine) {
@@ -96,40 +109,11 @@
 
     <app-page-reports-panel [projectId]="projectId()" />
 
-    @if (submitTarget(); as task) {
-      <!-- The dialog (and its form/focus-trap code) is only loaded when first opened. -->
+    @if (submitTarget(); as target) {
+      <!-- The dialog (and the page uploader) is only loaded when first opened. -->
       @defer (on immediate) {
-        <app-dialog labelledBy="submit-title" width="480px" (closed)="closeSubmit()">
-          <form class="form submit-dialog" (submit)="onSubmitWork($event)" novalidate>
-            <h2 id="submit-title" i18n="@@scanlation.submit.title">Submit work for chapter {{ task.chapterNumber }}</h2>
-            <p class="muted" i18n="@@scanlation.submit.stage">Stage: {{ stageLabels[task.stage] }}</p>
-
-            <div class="field">
-              <label for="submit-asset-url" i18n="@@scanlation.submit.assetUrl">Asset package URL</label>
-              <input id="submit-asset-url" type="url" [formField]="submitForm.assetUrl"
-                     [appAriaInvalid]="submitForm.assetUrl" aria-describedby="submit-asset-url-error" />
-              <app-field-errors id="submit-asset-url-error" [field]="submitForm.assetUrl" />
-            </div>
-
-            <div class="field">
-              <label for="submit-page-count" i18n="@@scanlation.submit.pageCount">Page count</label>
-              <input id="submit-page-count" type="number" [formField]="submitForm.pageCount"
-                     [appAriaInvalid]="submitForm.pageCount" aria-describedby="submit-page-count-error" />
-              <app-field-errors id="submit-page-count-error" [field]="submitForm.pageCount" />
-            </div>
-
-            <div class="dialog-actions">
-              <button type="button" class="btn" (click)="closeSubmit()" i18n="@@scanlation.submit.cancel">Cancel</button>
-              <button type="submit" class="btn btn-primary" [disabled]="action.busyKey() === task.id">
-                @if (action.busyKey() === task.id) {
-                  <ng-container i18n="@@scanlation.submit.submitting">Submitting…</ng-container>
-                } @else {
-                  <ng-container i18n="@@scanlation.submit.submit">Submit & advance</ng-container>
-                }
-              </button>
-            </div>
-          </form>
-        </app-dialog>
+        <app-submit-work-dialog [projectId]="target.projectId" [workId]="target.workId" [task]="target.task"
+                                (submitted)="onSubmitted($event)" (closed)="closeSubmit()" />
       } @loading {
         <p class="muted" role="status" i18n="@@scanlation.submit.opening">Opening…</p>
       }

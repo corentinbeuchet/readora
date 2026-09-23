@@ -2,7 +2,9 @@ package com.readora.web.dto;
 
 import com.readora.domain.scanlation.WorkflowTask;
 import org.jspecify.annotations.Nullable;
+
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public record WorkflowTaskDto(
@@ -11,8 +13,8 @@ public record WorkflowTaskDto(
         String stage,
         String status,
         @Nullable String assigneeId,
-        @Nullable String assetPackageUrl,
         int pageCount,
+        List<PageAssetDto> pages,
         Instant updatedAt
 ) {
     public static WorkflowTaskDto fromDomain(WorkflowTask task) {
@@ -22,8 +24,8 @@ public record WorkflowTaskDto(
                 task.getStage().name(),
                 task.getStatus().name(),
                 task.getAssigneeId() != null ? task.getAssigneeId().value() : null,
-                task.getAssetPackageUrl(),
                 task.getPageCount(),
+                task.getPages().stream().map(PageAssetDto::fromDomain).toList(),
                 task.getUpdatedAt()
         );
     }

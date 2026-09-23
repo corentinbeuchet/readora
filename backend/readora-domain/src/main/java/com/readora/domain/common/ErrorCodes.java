@@ -43,6 +43,7 @@ public final class ErrorCodes {
     public static final String INVITATION_PENDING = "INVITATION_PENDING";
     public static final String TEAM_REQUIRED = "TEAM_REQUIRED";
     public static final String BOARD_OFF = "BOARD_OFF";
+    public static final String TASK_HAS_NO_PAGES = "TASK_HAS_NO_PAGES";
 
     private ErrorCodes() {
     }

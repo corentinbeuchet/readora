@@ -22,6 +22,24 @@ export function freezeDate(now: Date = FIXED_NOW): void {
   vi.setSystemTime(now);
 }
 
+/** `Image` double for page uploads (`vi.stubGlobal('Image', InstantImage)`): every image decodes right away as 800 × 1200. */
+export class InstantImage {
+  onload: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+  naturalWidth = 800;
+  naturalHeight = 1200;
+  set src(_: string) {
+    queueMicrotask(() => this.onload?.());
+  }
+}
+
+/** Chooses image files in the `app-page-grid-uploader` under `root`, as the file picker would. */
+export function choosePageFiles(root: HTMLElement, names: readonly string[]): void {
+  const input = root.querySelector<HTMLInputElement>('app-page-grid-uploader input[type="file"]')!;
+  Object.defineProperty(input, 'files', { value: names.map((n) => new File([n], n, { type: 'image/png' })), configurable: true });
+  input.dispatchEvent(new Event('change'));
+}
+
 /** Empty page for routes a test navigates to without caring what renders. */
 @Component({ template: '' })
 export class BlankPage {}

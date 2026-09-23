@@ -232,7 +232,7 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
         String projectId = projects.get(0).getId().value().toString();
 
         // 2. A new series has no task board until the leader turns it on; then the chapter task goes on it
-        var taskReq = new com.readora.web.dto.CreateTaskRequest(java.math.BigDecimal.valueOf(1), "scans/orv/c1.zip", 20);
+        var taskReq = new com.readora.web.dto.CreateTaskRequest(java.math.BigDecimal.valueOf(1), java.util.List.of(new com.readora.web.dto.PageAssetDto(1, "scans/orv/p1.webp", "https://cdn.test/p1.webp", 800, 1200)));
         mockMvc.perform(post("/api/v1/scanlation/projects/" + projectId + "/tasks")
                         .header("Authorization", scanlator.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -250,7 +250,7 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
                 .andExpect(jsonPath("$.data.stage").value("RAW_UPLOADED"));
 
         // 3. Upload second chapter task into same project to verify consecutive saves
-        var task2Req = new com.readora.web.dto.CreateTaskRequest(java.math.BigDecimal.valueOf(2), "scans/orv/c2.zip", 18);
+        var task2Req = new com.readora.web.dto.CreateTaskRequest(java.math.BigDecimal.valueOf(2), java.util.List.of(new com.readora.web.dto.PageAssetDto(1, "scans/orv/p1.webp", "https://cdn.test/p1.webp", 800, 1200)));
         mockMvc.perform(post("/api/v1/scanlation/projects/" + projectId + "/tasks")
                         .header("Authorization", scanlator.bearer())
                         .contentType(MediaType.APPLICATION_JSON)

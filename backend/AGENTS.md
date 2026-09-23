@@ -49,6 +49,9 @@
   `PUT /teams/{id}/members/{username}` changes the roles of an existing member (`NOT_ON_TEAM` otherwise).
   The task board of a team's series is optional (`ScanlationProject.boardEnabled`): off for a series added from now
   on, switched by a leader; a new task needs it on (`BOARD_OFF`), tasks already on it can still be finished.
+  A task carries real uploaded pages (`WorkflowTask.pages`: the raw pages, then what each stage submits, which
+  replaces them); QC publishes exactly those pages (`TASK_HAS_NO_PAGES` when there are none). Never build page keys
+  from a chapter number.
   A chapter belongs to a team (`Chapter.teamId`, never null): whoever publishes names the team in the request, and
   the service checks both that the actor may publish for that team and that the team works on the series
   (`TEAM_NOT_ON_SERIES`). A payload that shows a chapter carries its `TeamCredit` (id + name).
@@ -190,10 +193,6 @@ or `git log --grep "review-2026-09-19/R<n>"` finds a fixed one; the rules above 
 
 - B18 Optional: Spring Framework 7 API versioning (`spring.mvc.apiversion.*`) if `/api/v1` needs a successor. Not done:
   /api/v1 is the only version so far; adopt when a v2 is actually needed.
-- B19 (needs a product decision) Scanlation drafts/QC publish invent page keys `scans/{work}/{n}/p{i}.webp` that match
-  no uploaded file; tasks only carry one asset-package URL. Decide how final pages are produced (unpack the QC
-  package into page assets, or require a page upload step) before publishing through the scanlation workflow in
-  production.
 
 Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = reported with path:line, re-check before acting):
 - R13 `POST /storage/upload` is `isAuthenticated()` only (any reader, 50 MB); `AssetService` skips the content-type

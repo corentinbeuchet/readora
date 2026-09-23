@@ -88,3 +88,23 @@
     color: var(--on-success);
   }
 }
+
+// The pages the last stage left, for the next one to open.
+.task-pages {
+  margin-top: var(--space-2);
+  font-size: var(--fs-sm);
+
+  summary {
+    cursor: pointer;
+    min-height: 24px;
+  }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: var(--space-2) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+}

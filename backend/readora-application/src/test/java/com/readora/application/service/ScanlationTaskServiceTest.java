@@ -6,15 +6,16 @@ import com.readora.application.port.out.ScanlationProjectRepositoryPort;
 import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.ErrorCodes;
+import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.WorkflowStage;
 import com.readora.domain.scanlation.WorkflowTask;
 import com.readora.domain.work.Chapter;
-import com.readora.domain.work.ChapterPublishedEvent;
 import com.readora.domain.work.ChapterNumber;
-import com.readora.domain.common.UserId;
+import com.readora.domain.work.ChapterPublishedEvent;
+import com.readora.domain.work.PageAsset;
 import com.readora.domain.work.WorkId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,7 +25,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -54,7 +57,7 @@ class ScanlationTaskServiceTest {
     }
 
     @Test
-    @DisplayName("Upload chapter task by a project member creates task and draft chapter")
+    @DisplayName("Upload chapter task by a project member puts the raw pages on the board, and no chapter yet")
     void uploadChapterTaskAsMemberSucceeds() {
         UserId leaderId = UserId.of("leader-1");
         WorkId workId = WorkId.generate();
@@ -66,28 +69,16 @@ class ScanlationTaskServiceTest {
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
         when(projectRepository.save(any(ScanlationProject.class))).thenAnswer(i -> i.getArgument(0));
-        when(chapterRepository.save(any(Chapter.class))).thenAnswer(i -> i.getArgument(0));
 
-        WorkflowTask task = taskService.uploadChapterTask(
-                projectId,
-                ChapterNumber.of("1"),
-                "scans/solo-leveling/1/raw.zip",
-                20,
-                leaderId
-        );
+        WorkflowTask task = taskService.uploadChapterTask(projectId, ChapterNumber.of("1"), pages(20), leaderId);
 
         assertThat(task).isNotNull();
         assertThat(task.getChapterNumber()).isEqualTo(ChapterNumber.of("1"));
         assertThat(task.getStage()).isEqualTo(WorkflowStage.RAW_UPLOADED);
-        assertThat(task.getAssetPackageUrl()).isEqualTo("scans/solo-leveling/1/raw.zip");
-        assertThat(task.getPageCount()).isEqualTo(20);
+        assertThat(task.getPages()).isEqualTo(pages(20));
 
         verify(projectRepository).save(project);
-        ArgumentCaptor<Chapter> chapterCaptor = ArgumentCaptor.forClass(Chapter.class);
-        verify(chapterRepository).save(chapterCaptor.capture());
-        Chapter draft = chapterCaptor.getValue();
-        assertThat(draft.getChapterNumber()).isEqualTo(ChapterNumber.of("1"));
-        assertThat(draft.getPages()).hasSize(20);
+        verify(chapterRepository, never()).save(any());
     }
 
     @Test
@@ -102,13 +93,7 @@ class ScanlationTaskServiceTest {
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
 
-        assertThatThrownBy(() -> taskService.uploadChapterTask(
-                projectId,
-                ChapterNumber.of("1"),
-                "scans/solo-leveling/1/raw.zip",
-                20,
-                nonMemberId
-        )).isInstanceOf(DomainValidationException.class)
+        assertThatThrownBy(() -> taskService.uploadChapterTask(projectId, ChapterNumber.of("1"), pages(20), nonMemberId)).isInstanceOf(DomainValidationException.class)
                 .hasMessageContaining("not a member");
 
         verify(projectRepository, never()).save(any());
@@ -139,7 +124,7 @@ class ScanlationTaskServiceTest {
         UserId leaderId = UserId.of("leader-1");
         Team team = Team.create("Asura Scans", null, leaderId);
         ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), team.getId());
-        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"), "scans/1/raw.zip", 20);
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"), pages(20));
         task.advanceStage(WorkflowStage.QC_REVIEW);
 
         when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
@@ -153,12 +138,50 @@ class ScanlationTaskServiceTest {
     }
 
     @Test
+    @DisplayName("Publishing from QC puts the task's pages on the chapter, in order")
+    void publishFromQcPublishesTheTaskPages() {
+        UserId leaderId = UserId.of("leader-1");
+        Team team = Team.create("Asura Scans", null, leaderId);
+        ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), team.getId());
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"), pages(3));
+        task.advanceStage(WorkflowStage.QC_REVIEW);
+        when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
+        when(chapterRepository.findByWorkIdAndChapterNumberAndTeam(project.getWorkId(), ChapterNumber.of("1"), team.getId()))
+                .thenReturn(Optional.empty());
+
+        taskService.publishChapterFromQC(project.getId(), task.getId(), leaderId);
+
+        ArgumentCaptor<Chapter> saved = ArgumentCaptor.forClass(Chapter.class);
+        verify(chapterRepository).save(saved.capture());
+        assertThat(saved.getValue().getPages()).extracting(PageAsset::storageKey)
+                .containsExactly("scans/test/p1.webp", "scans/test/p2.webp", "scans/test/p3.webp");
+    }
+
+    @Test
+    @DisplayName("Publishing from QC a task without pages is refused and nothing is saved")
+    void publishFromQcWithoutPagesIsRefused() {
+        UserId leaderId = UserId.of("leader-1");
+        Team team = Team.create("Asura Scans", null, leaderId);
+        ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), team.getId());
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"));
+        task.advanceStage(WorkflowStage.QC_REVIEW);
+        when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
+
+        assertThatThrownBy(() -> taskService.publishChapterFromQC(project.getId(), task.getId(), leaderId))
+                .isInstanceOfSatisfying(DomainValidationException.class, e -> assertThat(e.code()).isEqualTo(ErrorCodes.TASK_HAS_NO_PAGES));
+        verify(projectRepository, never()).save(any());
+        verify(chapterRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("Publishing from QC a task still in translation is rejected and nothing is saved")
     void publishFromQcBeforeQcReviewSavesNothing() {
         UserId leaderId = UserId.of("leader-1");
         Team team = Team.create("Asura Scans", null, leaderId);
         ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), team.getId());
-        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"), "scans/1/raw.zip", 20);
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"), pages(20));
         task.advanceStage(WorkflowStage.TRANSLATING);
 
         when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
@@ -170,6 +193,12 @@ class ScanlationTaskServiceTest {
         verify(projectRepository, never()).save(any());
         verify(chapterRepository, never()).save(any());
         verify(eventPublisher, never()).publish(any());
+    }
+
+    private static List<PageAsset> pages(int count) {
+        return IntStream.rangeClosed(1, count)
+                .mapToObj(n -> new PageAsset(n, "scans/test/p" + n + ".webp", "https://cdn.test/p" + n + ".webp", 800, 1200))
+                .toList();
     }
 
     /// Mimics the JPA adapter: `save` returns a new instance rebuilt from state, without pending events.
@@ -187,7 +216,7 @@ class ScanlationTaskServiceTest {
         when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
         when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
 
-        assertThatThrownBy(() -> taskService.uploadChapterTask(project.getId(), ChapterNumber.of("1"), "scans/1/raw.zip", 20, leaderId))
+        assertThatThrownBy(() -> taskService.uploadChapterTask(project.getId(), ChapterNumber.of("1"), pages(20), leaderId))
                 .isInstanceOfSatisfying(DomainValidationException.class, e -> assertThat(e.code()).isEqualTo(ErrorCodes.BOARD_OFF));
         verify(projectRepository, never()).save(any());
     }
@@ -205,13 +234,7 @@ class ScanlationTaskServiceTest {
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
 
-        assertThatThrownBy(() -> taskService.uploadChapterTask(
-                projectId,
-                ChapterNumber.of("1"),
-                "scans/solo-leveling/1/raw.zip",
-                20,
-                leaderId
-        )).isInstanceOf(DomainValidationException.class)
+        assertThatThrownBy(() -> taskService.uploadChapterTask(projectId, ChapterNumber.of("1"), pages(20), leaderId)).isInstanceOf(DomainValidationException.class)
                 .hasMessageContaining("already exists");
     }
 }

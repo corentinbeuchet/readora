@@ -45,6 +45,8 @@ export function errorMessageForCode(code: string | null, retryAfterSeconds: numb
       return $localize`:@@error.notOnTeam:This reader is not on the team. Invite them first.`;
     case 'BOARD_OFF':
       return $localize`:@@error.boardOff:The team does not use a task board for this series. A leader turns it on in the Studio.`;
+    case 'TASK_HAS_NO_PAGES':
+      return $localize`:@@error.taskHasNoPages:This chapter has no pages yet: submit the pages of the last stage, then publish.`;
     case 'TEAM_REQUIRED':
       return $localize`:@@error.teamRequired:A new series belongs to a team you lead. Start a team first.`;
     case 'INVITATION_PENDING':

@@ -151,19 +151,27 @@ WHERE EXISTS (SELECT 1 FROM team_members t WHERE t.id = r.member_id)
   AND NOT EXISTS (SELECT 1 FROM member_roles mr WHERE mr.member_id = r.member_id AND mr.role = r.role);
 
 -- One open task per stage, so every team role has something to claim/submit and QC can publish chapter 5.
-INSERT INTO workflow_tasks (id, project_id, chapter_number, stage, status, assignee_id, asset_package_url, page_count, updated_at)
-SELECT t.id, CAST('00000000-0000-4000-9000-000000000101' AS UUID), t.chapter_number, t.stage, 'PENDING', NULL, t.asset_url, 12, CURRENT_TIMESTAMP
+INSERT INTO workflow_tasks (id, project_id, chapter_number, stage, status, assignee_id, updated_at)
+SELECT t.id, CAST('00000000-0000-4000-9000-000000000101' AS UUID), t.chapter_number, t.stage, 'PENDING', NULL, CURRENT_TIMESTAMP
 FROM (
-    SELECT CAST('00000000-0000-4000-9000-000000000301' AS UUID) AS id, '1' AS chapter_number, 'RAW_UPLOADED' AS stage,
-           'scans/demo/1/raw.zip' AS asset_url
-    UNION ALL SELECT CAST('00000000-0000-4000-9000-000000000302' AS UUID), '2', 'TRANSLATING', 'scans/demo/2/cleaned.zip'
-    UNION ALL SELECT CAST('00000000-0000-4000-9000-000000000303' AS UUID), '3', 'TYPESETTING', 'scans/demo/3/script.zip'
-    UNION ALL SELECT CAST('00000000-0000-4000-9000-000000000304' AS UUID), '4', 'PROOFREADING', 'scans/demo/4/typeset.zip'
-    UNION ALL SELECT CAST('00000000-0000-4000-9000-000000000305' AS UUID), '5', 'QC_REVIEW', 'scans/demo/5/final.zip'
+    SELECT CAST('00000000-0000-4000-9000-000000000301' AS UUID) AS id, '1' AS chapter_number, 'RAW_UPLOADED' AS stage
+    UNION ALL SELECT CAST('00000000-0000-4000-9000-000000000302' AS UUID), '2', 'TRANSLATING'
+    UNION ALL SELECT CAST('00000000-0000-4000-9000-000000000303' AS UUID), '3', 'TYPESETTING'
+    UNION ALL SELECT CAST('00000000-0000-4000-9000-000000000304' AS UUID), '4', 'PROOFREADING'
+    UNION ALL SELECT CAST('00000000-0000-4000-9000-000000000305' AS UUID), '5', 'QC_REVIEW'
 ) t
 WHERE EXISTS (SELECT 1 FROM scanlation_projects p WHERE p.id = CAST('00000000-0000-4000-9000-000000000101' AS UUID))
   AND NOT EXISTS (SELECT 1 FROM workflow_tasks w
                   WHERE w.id = t.id OR (w.project_id = CAST('00000000-0000-4000-9000-000000000101' AS UUID) AND w.chapter_number = t.chapter_number));
+
+-- Three placeholder pages on each of those tasks (the pages the stage works on; QC publishes them). The images are
+-- drawn at startup by LocalSeedImages under `seed/tasks/`.
+INSERT INTO workflow_task_pages (task_id, page_number, storage_key, cdn_url, width, height)
+SELECT w.id, p.n, 'seed/tasks/' || CAST(w.id AS VARCHAR(36)) || '/p' || CAST(p.n AS VARCHAR(2)) || '.png', NULL, 800, 1200
+FROM workflow_tasks w
+CROSS JOIN (SELECT 1 AS n UNION ALL SELECT 2 UNION ALL SELECT 3) p
+WHERE CAST(w.id AS VARCHAR(36)) LIKE '00000000-0000-4000-9000-0000000003%'
+  AND NOT EXISTS (SELECT 1 FROM workflow_task_pages tp WHERE tp.task_id = w.id AND tp.page_number = p.n);
 
 -- ------------------------------------------------------------------------------
 -- US-09 ratings on the US-04 series: 5 each, so both reach the "Top rated" ranking; one written review.

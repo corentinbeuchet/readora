@@ -10,8 +10,8 @@ const PROJECT: ScanlationProject = {
   boardEnabled: true,
   members: [{ userId: 'Alice', roles: ['CLEANER_REDRAWER'] }],
   tasks: [
-    { id: 't1', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, assetPackageUrl: null, pageCount: 22, updatedAt: '2026-09-13T00:00:00Z' },
-    { id: 't2', chapterNumber: '11', stage: 'CLEANING', status: 'IN_PROGRESS', assigneeId: null, assetPackageUrl: null, pageCount: 20, updatedAt: '2026-09-13T00:00:00Z' }
+    { id: 't1', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, pageCount: 22, pages: [], updatedAt: '2026-09-13T00:00:00Z' },
+    { id: 't2', chapterNumber: '11', stage: 'CLEANING', status: 'IN_PROGRESS', assigneeId: null, pageCount: 20, pages: [], updatedAt: '2026-09-13T00:00:00Z' }
   ]
 };
 
@@ -37,7 +37,7 @@ describe('scanlation board helpers', () => {
     thenTheTaskInColumnIsAssignedTo('CLEANING', 't1', 'user-1');
     thenTheOriginalTaskIsUnassigned('t1');
 
-    whenTheApiReturnsTheTask(PROJECT, { id: 't3', chapterNumber: '12', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, assetPackageUrl: null, pageCount: 18, updatedAt: '' });
+    whenTheApiReturnsTheTask(PROJECT, { id: 't3', chapterNumber: '12', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, pageCount: 18, pages: [], updatedAt: '' });
 
     thenTheProjectTasksAre(['t1', 't2', 't3']);
   });

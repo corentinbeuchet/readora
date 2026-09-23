@@ -5,17 +5,19 @@ import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
 import com.readora.application.port.out.TeamRepositoryPort;
+import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.NotFoundException;
+import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.TaskId;
 import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.WorkflowTask;
 import com.readora.domain.work.Chapter;
+import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.PageAsset;
-import com.readora.domain.common.UserId;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -34,27 +36,14 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
     }
 
     @Override
-    public WorkflowTask uploadChapterTask(ProjectId projectId, com.readora.domain.work.ChapterNumber chapterNumber, String assetUrl, int pageCount, UserId userId) {
+    public WorkflowTask uploadChapterTask(ProjectId projectId, ChapterNumber chapterNumber, List<PageAsset> rawPages, UserId userId) {
         ScanlationProject project = requireProject(projectId);
 
         project.requireMember(requireTeam(project), userId);
         project.requireBoard();
 
-        WorkflowTask task = project.addChapterTask(chapterNumber, assetUrl, pageCount);
+        WorkflowTask task = project.addChapterTask(chapterNumber, rawPages);
         projectRepository.save(project);
-
-        if (chapterRepository.findByWorkIdAndChapterNumberAndTeam(project.getWorkId(), chapterNumber, project.getTeamId()).isEmpty()) {
-            Chapter draft = Chapter.createDraft(project.getWorkId(), chapterNumber, "Chapter " + chapterNumber, project.getTeamId());
-            if (pageCount > 0) {
-                List<PageAsset> pages = new ArrayList<>();
-                for (int i = 1; i <= pageCount; i++) {
-                    pages.add(PageAsset.create(i, "scans/" + project.getWorkId() + "/" + chapterNumber + "/p" + i + ".webp", null));
-                }
-                draft.updatePages(pages);
-            }
-            chapterRepository.save(draft);
-        }
-
         return task;
     }
 
@@ -69,10 +58,10 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
     }
 
     @Override
-    public WorkflowTask submitWork(ProjectId projectId, TaskId taskId, UserId userId, String assetUrl, int pageCount) {
+    public WorkflowTask submitWork(ProjectId projectId, TaskId taskId, UserId userId, List<PageAsset> pages) {
         ScanlationProject project = requireProject(projectId);
 
-        project.submitTaskWork(requireTeam(project), taskId, userId, assetUrl, pageCount);
+        project.submitTaskWork(requireTeam(project), taskId, userId, pages);
         projectRepository.save(project);
 
         return project.findTask(taskId).orElseThrow();
@@ -85,25 +74,15 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
         // Validate and mutate both aggregates in memory first; persist only once both transitions succeeded.
         WorkflowTask task = project.approveQualityCheck(requireTeam(project), taskId, publisherId);
 
-        // Find or create the chapter to publish
-        Chapter chapter = chapterRepository.findByWorkIdAndChapterNumberAndTeam(project.getWorkId(), task.getChapterNumber(), project.getTeamId())
-                .orElseGet(() -> {
-                    Chapter c = Chapter.createDraft(project.getWorkId(), task.getChapterNumber(), "Chapter " + task.getChapterNumber(), project.getTeamId());
-                    List<PageAsset> pages = new ArrayList<>();
-                    for (int i = 1; i <= task.getPageCount(); i++) {
-                        pages.add(PageAsset.create(i, "scans/" + project.getWorkId() + "/" + task.getChapterNumber() + "/p" + i + ".webp", null));
-                    }
-                    c.updatePages(pages);
-                    return c;
-                });
-
-        if (chapter.getPages().isEmpty() && task.getPageCount() > 0) {
-            List<PageAsset> pages = new ArrayList<>();
-            for (int i = 1; i <= task.getPageCount(); i++) {
-                pages.add(PageAsset.create(i, "scans/" + project.getWorkId() + "/" + task.getChapterNumber() + "/p" + i + ".webp", null));
-            }
-            chapter.updatePages(pages);
+        // The chapter gets the pages the last stage uploaded (an earlier draft of the chapter keeps its identity).
+        List<PageAsset> pages = task.getPages();
+        if (pages.isEmpty()) {
+            throw DomainValidationException.withCode(ErrorCodes.TASK_HAS_NO_PAGES,
+                    "Chapter " + task.getChapterNumber().value() + " has no pages: upload them before publishing");
         }
+        Chapter chapter = chapterRepository.findByWorkIdAndChapterNumberAndTeam(project.getWorkId(), task.getChapterNumber(), project.getTeamId())
+                .orElseGet(() -> Chapter.createDraft(project.getWorkId(), task.getChapterNumber(), "Chapter " + task.getChapterNumber(), project.getTeamId()));
+        chapter.updatePages(pages);
 
         chapter.publish(publisherId);
 

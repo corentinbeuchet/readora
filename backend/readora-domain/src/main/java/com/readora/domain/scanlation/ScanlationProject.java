@@ -6,6 +6,7 @@ import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.NotFoundException;
 import com.readora.domain.common.UserId;
 import com.readora.domain.work.ChapterNumber;
+import com.readora.domain.work.PageAsset;
 import com.readora.domain.work.WorkId;
 import org.jspecify.annotations.Nullable;
 
@@ -82,14 +83,14 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
     }
 
     public WorkflowTask addChapterTask(ChapterNumber chapterNumber) {
-        return addChapterTask(chapterNumber, null, 0);
+        return addChapterTask(chapterNumber, List.of());
     }
 
-    public WorkflowTask addChapterTask(ChapterNumber chapterNumber, @Nullable String assetUrl, int pageCount) {
+    public WorkflowTask addChapterTask(ChapterNumber chapterNumber, List<PageAsset> rawPages) {
         if (findTaskByChapter(chapterNumber).isPresent()) {
             throw DomainValidationException.withCode(ErrorCodes.TASK_ALREADY_EXISTS, "Task for chapter " + chapterNumber + " already exists in project " + name);
         }
-        WorkflowTask task = WorkflowTask.create(chapterNumber, assetUrl, pageCount);
+        WorkflowTask task = WorkflowTask.create(chapterNumber, rawPages);
         this.tasks.add(task);
         this.updatedAt = Instant.now();
         return task;
@@ -122,7 +123,7 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
         this.updatedAt = Instant.now();
     }
 
-    public void submitTaskWork(Team team, TaskId taskId, UserId userId, @Nullable String assetUrl, int pageCount) {
+    public void submitTaskWork(Team team, TaskId taskId, UserId userId, List<PageAsset> pages) {
         WorkflowTask task = findTask(taskId)
                 .orElseThrow(() -> new NotFoundException("Task", taskId));
 
@@ -141,7 +142,7 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
             }
         }
 
-        task.submitAssetPackage(assetUrl, pageCount);
+        task.submitPages(pages);
         WorkflowStage current = task.getStage();
         // The cleaner works directly on the uploaded RAWs, so submitting the cleaned package
         // completes the CLEANING stage and hands the chapter over to translation.

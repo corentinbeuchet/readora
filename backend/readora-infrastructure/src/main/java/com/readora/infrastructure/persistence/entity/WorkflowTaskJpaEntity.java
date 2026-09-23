@@ -1,7 +1,11 @@
 package com.readora.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
+
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -27,26 +31,23 @@ public class WorkflowTaskJpaEntity {
     @Column(name = "assignee_id")
     private String assigneeId;
 
-    @Column(name = "asset_package_url")
-    private String assetPackageUrl;
-
-    @Column(name = "page_count", nullable = false)
-    private int pageCount;
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @BatchSize(size = 64)
+    @OrderBy("pageNumber ASC")
+    private List<WorkflowTaskPageJpaEntity> pages = new ArrayList<>();
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
     public WorkflowTaskJpaEntity() {}
 
-    public WorkflowTaskJpaEntity(UUID id, ScanlationProjectJpaEntity project, String chapterNumber, String stage, String status, String assigneeId, String assetPackageUrl, int pageCount, Instant updatedAt) {
+    public WorkflowTaskJpaEntity(UUID id, ScanlationProjectJpaEntity project, String chapterNumber, String stage, String status, String assigneeId, Instant updatedAt) {
         this.id = id;
         this.project = project;
         this.chapterNumber = chapterNumber;
         this.stage = stage;
         this.status = status;
         this.assigneeId = assigneeId;
-        this.assetPackageUrl = assetPackageUrl;
-        this.pageCount = pageCount;
         this.updatedAt = updatedAt;
     }
 
@@ -62,10 +63,7 @@ public class WorkflowTaskJpaEntity {
     public void setStatus(String status) { this.status = status; }
     public String getAssigneeId() { return assigneeId; }
     public void setAssigneeId(String assigneeId) { this.assigneeId = assigneeId; }
-    public String getAssetPackageUrl() { return assetPackageUrl; }
-    public void setAssetPackageUrl(String assetPackageUrl) { this.assetPackageUrl = assetPackageUrl; }
-    public int getPageCount() { return pageCount; }
-    public void setPageCount(int pageCount) { this.pageCount = pageCount; }
+    public List<WorkflowTaskPageJpaEntity> getPages() { return pages; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }

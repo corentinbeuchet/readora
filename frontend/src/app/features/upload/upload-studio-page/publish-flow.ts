@@ -5,9 +5,8 @@ import { CatalogApi } from '@app/core/api/catalog-api';
 import { ScanlationApi } from '@app/core/api/scanlation-api';
 import { Work, factsPayloadOf } from '@app/core/models/catalog';
 import { ScanlationProject } from '@app/core/models/scanlation';
-import { DirectPublishChapterPayload } from '@app/core/models/chapter';
 import { PageUploadItem } from '@app/shared/pages/file-utils';
-import { UploadService } from '@app/shared/pages/upload.service';
+import { UploadService, pagePayloadOf } from '@app/shared/pages/upload.service';
 import { ExistingSeries, UploadWizard, parseChapterNumber } from './upload-wizard';
 
 const NO_PROJECT_ERROR = $localize`:@@upload.publish.noProject:Your team does not work on this series yet. Add the series to your team in the Studio, then publish again.`;
@@ -150,21 +149,12 @@ export class PublishFlow {
 
   private async publishDirect(work: Work, project: ScanlationProject, pages: PageUploadItem[], chapterNumber: string): Promise<void> {
     this.statusText.set($localize`:@@upload.publish.publishingDirect:Publishing chapter directly to catalog…`);
-    const payload: DirectPublishChapterPayload['pages'] = pages.map((p) => ({
-      pageNumber: p.pageNumber,
-      storageKey: p.storageKey ?? '',
-      cdnUrl: p.cdnUrl ?? '',
-      width: p.width,
-      height: p.height,
-      description: p.description?.trim() || undefined,
-      liteCdnUrl: p.liteCdnUrl
-    }));
     const chapter = await firstValueFrom(
       this.catalogApi.directPublishChapter(work.id, {
         teamId: project.teamId,
         chapterNumber,
         title: this.wizard.draft().chapterTitle.trim() || undefined,
-        pages: payload
+        pages: pagePayloadOf(pages)
       })
     );
     this.createdChapterId.set(chapter.id);
@@ -175,13 +165,13 @@ export class PublishFlow {
    * gets it turned on first. Only leaders may; for anyone else the server's refusal is shown.
    */
   private async createScanlationTask(project: ScanlationProject, pages: PageUploadItem[], chapterNumber: string): Promise<void> {
-    this.statusText.set($localize`:@@upload.publish.attachingRaw:Attaching RAW package to the task board…`);
+    this.statusText.set($localize`:@@upload.publish.attachingRaw:Putting the raw pages on the task board…`);
     this.createdProjectId.set(project.id);
     if (!project.boardEnabled) {
       await firstValueFrom(this.scanlationApi.setBoard(project.id, true));
     }
     await firstValueFrom(
-      this.scanlationApi.createTask(project.id, { chapterNumber: Number(chapterNumber), assetUrl: pages[0]?.cdnUrl ?? '', pageCount: pages.length })
+      this.scanlationApi.createTask(project.id, { chapterNumber: Number(chapterNumber), pages: pagePayloadOf(pages) })
     );
   }
 }

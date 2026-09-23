@@ -1,18 +1,15 @@
 package com.readora.web.dto;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 
+import java.util.List;
 
+/// The pages a stage produced (images already uploaded through `POST /storage/upload`); they replace the task's pages.
 public record SubmitTaskRequest(
-        @NotBlank(message = "Asset package URL cannot be blank")
-        @Size(max = 1024, message = "Asset URL must not exceed 1024 characters")
-        String assetUrl,
-
-        @Positive(message = "Page count must be greater than 0")
-        @Max(value = 1000, message = "Page count cannot exceed 1000")
-        int pageCount
+        @NotEmpty(message = "Upload at least one page")
+        @Size(max = 500, message = "A chapter cannot have more than 500 pages")
+        List<@Valid PageAssetDto> pages
 ) {
 }

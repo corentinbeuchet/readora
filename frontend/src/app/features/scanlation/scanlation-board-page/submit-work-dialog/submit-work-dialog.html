@@ -1,0 +1,29 @@
+<app-dialog labelledBy="submit-title" width="720px" (closed)="closed.emit()">
+  <form class="form submit-dialog" (submit)="onSubmit($event)" novalidate>
+    <h2 id="submit-title" i18n="@@scanlation.submit.title">Submit work for chapter {{ task().chapterNumber }}</h2>
+    <p class="muted" i18n="@@scanlation.submit.stage">Stage: {{ stageLabels[task().stage] }}</p>
+    <p class="muted" i18n="@@scanlation.submit.hint">Add every page as your stage leaves it. They replace the chapter's current pages, and the next stage starts from them.</p>
+
+    <app-page-grid-uploader [(pages)]="pages" />
+
+    <p class="muted upload-status" role="status">
+      @if (action.busy()) {
+        <ng-container i18n="@@scanlation.submit.uploading">Uploading pages: {{ uploaded() }} of {{ pages().length }}</ng-container>
+      }
+    </p>
+    @if (action.error(); as message) {
+      <p class="form-error" role="alert">{{ message }}</p>
+    }
+
+    <div class="dialog-actions">
+      <button type="button" class="btn" (click)="closed.emit()" i18n="@@scanlation.submit.cancel">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="action.busy()">
+        @if (action.busy()) {
+          <ng-container i18n="@@scanlation.submit.submitting">Submitting…</ng-container>
+        } @else {
+          <ng-container i18n="@@scanlation.submit.submit">Submit & advance</ng-container>
+        }
+      </button>
+    </div>
+  </form>
+</app-dialog>

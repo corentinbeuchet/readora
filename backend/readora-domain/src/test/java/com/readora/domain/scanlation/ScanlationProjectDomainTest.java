@@ -3,16 +3,22 @@ package com.readora.domain.scanlation;
 import com.readora.domain.common.CodedException;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.ErrorCodes;
-import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.common.UserId;
+import com.readora.domain.work.ChapterNumber;
+import com.readora.domain.work.PageAsset;
 import com.readora.domain.work.WorkId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ScanlationProjectDomainTest {
+
+    private static final List<PageAsset> PAGES = List.of(new PageAsset(1, "scans/test/p1.webp", "https://cdn.test/p1.webp", 800, 1200));
+
 
     @Test
     @DisplayName("Claiming a task without required role must be rejected")
@@ -80,7 +86,7 @@ class ScanlationProjectDomainTest {
         project.claimTask(team, task.getId(), UserId.of("Leader1"));
         assertThat(task.getStatus()).isEqualTo(TaskStatus.IN_PROGRESS);
 
-        project.submitTaskWork(team, task.getId(), UserId.of("Leader1"), "s3://media/cleaned.zip", 20);
+        project.submitTaskWork(team, task.getId(), UserId.of("Leader1"), PAGES);
         assertThat(task.getStage()).isEqualTo(WorkflowStage.TRANSLATING);
     }
 
@@ -125,7 +131,7 @@ class ScanlationProjectDomainTest {
         WorkflowTask task = project.addChapterTask(ChapterNumber.of("5"));
         project.claimTask(team, task.getId(), UserId.of("Cleaner1"));
 
-        assertThatThrownBy(() -> project.submitTaskWork(team, task.getId(), UserId.of("Cleaner2"), "s3://x.zip", 10))
+        assertThatThrownBy(() -> project.submitTaskWork(team, task.getId(), UserId.of("Cleaner2"), PAGES))
                 .isInstanceOf(DomainValidationException.class)
                 .hasMessageContaining("claimed by");
         assertThat(task.getStage()).isEqualTo(WorkflowStage.RAW_UPLOADED);
@@ -143,9 +149,39 @@ class ScanlationProjectDomainTest {
 
         assertThatThrownBy(() -> project.claimTask(team, published.getId(), UserId.of("Leader1")))
                 .isInstanceOf(DomainValidationException.class).hasMessageContaining("already published");
-        assertThatThrownBy(() -> project.submitTaskWork(team, published.getId(), UserId.of("Leader1"), "s3://x.zip", 1))
+        assertThatThrownBy(() -> project.submitTaskWork(team, published.getId(), UserId.of("Leader1"), PAGES))
                 .isInstanceOf(DomainValidationException.class).hasMessageContaining("already published");
-        assertThatThrownBy(() -> project.submitTaskWork(team, inQc.getId(), UserId.of("Leader1"), "s3://x.zip", 1))
+        assertThatThrownBy(() -> project.submitTaskWork(team, inQc.getId(), UserId.of("Leader1"), PAGES))
                 .isInstanceOf(DomainValidationException.class).hasMessageContaining("QC approval");
+    }
+
+    @Test
+    @DisplayName("Work is submitted with at least one page, and the task keeps the pages it had otherwise")
+    void submittingNoPageIsRejected() {
+        Team team = Team.create("Asura", null, UserId.of("Leader1"));
+        ScanlationProject project = ScanlationProject.create("Asura", WorkId.generate(), team.getId());
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("5"), PAGES);
+        project.claimTask(team, task.getId(), UserId.of("Leader1"));
+
+        assertThatThrownBy(() -> project.submitTaskWork(team, task.getId(), UserId.of("Leader1"), List.of()))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessageContaining("at least one page");
+        assertThat(task.getPages()).isEqualTo(PAGES);
+        assertThat(task.getStage()).isEqualTo(WorkflowStage.RAW_UPLOADED);
+    }
+
+    @Test
+    @DisplayName("Two submitted pages cannot share a number")
+    void submittingDuplicatePageNumbersIsRejected() {
+        Team team = Team.create("Asura", null, UserId.of("Leader1"));
+        ScanlationProject project = ScanlationProject.create("Asura", WorkId.generate(), team.getId());
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("5"), PAGES);
+        project.claimTask(team, task.getId(), UserId.of("Leader1"));
+        List<PageAsset> twice = List.of(PAGES.getFirst(), new PageAsset(1, "scans/test/other.webp", "https://cdn.test/other.webp", 800, 1200));
+
+        assertThatThrownBy(() -> project.submitTaskWork(team, task.getId(), UserId.of("Leader1"), twice))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessageContaining("same number");
+        assertThat(task.getPages()).isEqualTo(PAGES);
     }
 }

@@ -1,15 +1,17 @@
 package com.readora.acceptance.steps;
 
 import com.readora.acceptance.fakes.InMemoryTeamRepository;
-import com.readora.domain.common.UserId;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
 import com.readora.application.service.ScanlationTaskService;
 import com.readora.domain.common.DomainEvent;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
+import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.*;
 import com.readora.domain.work.*;
+import com.readora.domain.work.PageAsset;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -135,10 +137,10 @@ public class ScanlationWorkflowStepDefinitions {
         }
     }
 
-    @When("{string} uploads cleaned page package with {int} pages")
-    public void memberUploadsPackage(String memberName, int pageCount) {
+    @When("{string} uploads {int} cleaned pages")
+    public void memberUploadsCleanedPages(String memberName, int pageCount) {
         try {
-            currentTask = scanlationTaskService.submitWork(currentProject.getId(), currentTask.getId(), UserId.of(memberName), "s3://media/cleaned-c10.zip", pageCount);
+            currentTask = scanlationTaskService.submitWork(currentProject.getId(), currentTask.getId(), UserId.of(memberName), pages("cleaned", pageCount));
         } catch (Exception e) {
             thrownException = e;
         }
@@ -193,10 +195,10 @@ public class ScanlationWorkflowStepDefinitions {
         currentTask.assignTo(UserId.of(memberName));
     }
 
-    @When("{string} submits the translated script mapping for {int} pages")
-    public void memberSubmitsTranslation(String memberName, int pageCount) {
+    @When("{string} uploads {int} translated pages")
+    public void memberUploadsTranslatedPages(String memberName, int pageCount) {
         try {
-            currentTask = scanlationTaskService.submitWork(currentProject.getId(), currentTask.getId(), UserId.of(memberName), "s3://media/script-c10.json", pageCount);
+            currentTask = scanlationTaskService.submitWork(currentProject.getId(), currentTask.getId(), UserId.of(memberName), pages("translated", pageCount));
         } catch (Exception e) {
             thrownException = e;
         }
@@ -207,12 +209,39 @@ public class ScanlationWorkflowStepDefinitions {
         assertThat(currentTask.getStage()).isEqualTo(WorkflowStage.valueOf(stageStr));
     }
 
-    @Given("{string} has passed proofreading and is in stage {string}")
-    public void chapterInQcReview(String chapterName, String stageStr) {
+    @Given("{string} has passed proofreading and is in stage {string} with {int} pages uploaded")
+    public void chapterInQcReview(String chapterName, String stageStr, int pageCount) {
         String num = chapterName.replaceAll("[^0-9.]", "");
-        currentTask = currentProject.addChapterTask(ChapterNumber.of(num.isEmpty() ? "10" : num));
+        currentTask = currentProject.addChapterTask(ChapterNumber.of(num.isEmpty() ? "10" : num), pages("final", pageCount));
         currentTask.advanceStage(WorkflowStage.valueOf(stageStr));
-        currentTask.submitAssetPackage("s3://media/final-assembled-c10.zip", 22);
+    }
+
+    @Given("{string} is in stage {string} with no pages uploaded")
+    public void chapterWithoutPages(String chapterName, String stageStr) {
+        String num = chapterName.replaceAll("[^0-9.]", "");
+        currentTask = currentProject.addChapterTask(ChapterNumber.of(num));
+        currentTask.advanceStage(WorkflowStage.valueOf(stageStr));
+    }
+
+    @Then("the published chapter has the {int} pages the team uploaded, in order")
+    public void thePublishedChapterHasTheUploadedPages(int pageCount) {
+        assertThat(chapterStore.values()).filteredOn(Chapter::isPublished).singleElement()
+                .satisfies(chapter -> assertThat(chapter.getPages()).extracting(PageAsset::storageKey)
+                        .containsExactlyElementsOf(pages("final", pageCount).stream().map(PageAsset::storageKey).toList()));
+    }
+
+    @Then("the publication is refused because the chapter has no pages")
+    public void thePublicationIsRefusedBecauseNoPages() {
+        assertThat(thrownException).isInstanceOfSatisfying(DomainValidationException.class,
+                e -> assertThat(e.code()).isEqualTo(ErrorCodes.TASK_HAS_NO_PAGES));
+        assertThat(chapterStore.values()).noneMatch(Chapter::isPublished);
+    }
+
+    /// Pages as the storage endpoint would have stored them: `scans/c10/<stage>/p<n>.webp`.
+    private static List<PageAsset> pages(String stage, int count) {
+        return java.util.stream.IntStream.rangeClosed(1, count)
+                .mapToObj(n -> PageAsset.create(n, "scans/c10/" + stage + "/p" + n + ".webp", "https://cdn.readora.com/scans/c10/" + stage + "/p" + n + ".webp"))
+                .toList();
     }
 
     @When("{string} approves the final assembled chapter and triggers publication")

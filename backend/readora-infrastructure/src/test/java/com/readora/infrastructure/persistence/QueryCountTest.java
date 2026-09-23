@@ -113,13 +113,13 @@ class QueryCountTest {
     }
 
     @Test
-    @DisplayName("The projects of all my teams load in one query with their tasks in batches, not one query per team")
+    @DisplayName("The projects of all my teams load in one query with their tasks and pages in batches, not one query per team")
     void projectsOfManyTeamsAreOneQuery() {
         List<TeamId> teamIds = IntStream.range(0, 6).mapToObj(i -> {
             Work work = workRepository.save(Work.create("Many Teams Work " + i, "S", WorkType.MANGA, "c.png", Set.of("Action")));
             Team team = teamRepository.save(Team.create("Many Teams " + i, null, UserId.of("many-leader")));
             ScanlationProject project = ScanlationProject.create("Many Teams " + i, work.getId(), team.getId());
-            project.addChapterTask(ChapterNumber.of("1"));
+            project.addChapterTask(ChapterNumber.of("1"), List.of(PageAsset.create(1, "raw/p1.webp", null), PageAsset.create(2, "raw/p2.webp", null)));
             projectRepository.save(project);
             return team.getId();
         }).toList();
@@ -127,12 +127,12 @@ class QueryCountTest {
         statistics.clear();
         List<ScanlationProject> projects = projectRepository.findByTeamIds(teamIds);
 
-        assertThat(projects).hasSize(6).allSatisfy(p -> assertThat(p.getTasks()).hasSize(1));
-        assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(2);
+        assertThat(projects).hasSize(6).allSatisfy(p -> assertThat(p.getTasks().getFirst().getPages()).hasSize(2));
+        assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(3);
     }
 
     @Test
-    @DisplayName("Projects of a work load their tasks in batches, and their teams load members and roles in batches")
+    @DisplayName("Projects of a work load their tasks and pages in batches, and their teams load members and roles in batches")
     void projectsAreBatched() {
         Work work = workRepository.save(Work.create("Projects Work", "S", WorkType.MANGA, "c.png", Set.of("Action")));
         IntStream.range(0, 5).forEach(i -> {
@@ -140,7 +140,7 @@ class QueryCountTest {
             team.addMember(TeamMember.of(UserId.of("tl-" + i), ScanlationRole.TRANSLATOR));
             teamRepository.save(team);
             ScanlationProject project = ScanlationProject.create("Group " + i, work.getId(), team.getId());
-            project.addChapterTask(ChapterNumber.of(String.valueOf(i + 1)));
+            project.addChapterTask(ChapterNumber.of(String.valueOf(i + 1)), List.of(PageAsset.create(1, "raw/p1.webp", null)));
             projectRepository.save(project);
         });
 
@@ -148,9 +148,9 @@ class QueryCountTest {
         List<ScanlationProject> projects = projectRepository.findByWorkId(work.getId());
         List<Team> teams = teamRepository.findAllById(projects.stream().map(ScanlationProject::getTeamId).toList());
 
-        assertThat(projects).hasSize(5).allSatisfy(p -> assertThat(p.getTasks()).hasSize(1));
+        assertThat(projects).hasSize(5).allSatisfy(p -> assertThat(p.getTasks().getFirst().getPages()).hasSize(1));
         assertThat(teams).hasSize(5).allSatisfy(t -> assertThat(t.getMembers()).hasSize(2));
-        assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(5);
+        assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(6);
     }
 
     @Test
