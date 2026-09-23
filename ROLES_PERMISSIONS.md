@@ -1,116 +1,62 @@
-# Readora Roles & Permissions Architecture
+# Readora roles and permissions
 
-This document describes Readora's authorization model, detailing account roles, subscription entitlements, project-level scanlation roles, and the access control matrix across backend APIs and frontend features.
+How access works in Readora. The code is the reference: `Role` and `Permission` (backend `domain.identity`), the
+`@PreAuthorize` annotations on the controllers, the public matchers in `SecurityConfig`, and the frontend route
+`data: { permission }` / `*appHasPermission`. If this page and the code disagree, the code wins: fix this page.
 
----
+There are two layers, and no paid plans (Premium was removed on 2026-09-23):
 
-## 1. The 3-Tier Authorization Model
+1. **Account role** (`Role`): gives a set of permissions, carried in the JWT. The server checks them on every write.
+2. **Team role** (`ScanlationRole`): decides what a member may do inside a scanlation team. Services check it
+   (membership, stage, assignee), on top of the permission.
 
-Readora uses a layered access control architecture composed of three distinct tiers:
+## 1. Account roles
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│ Tier 1: Global Account Role (READER, SCANLATOR, ADMIN)                 │
-├───────────────────────────────────┬────────────────────────────────────┤
-│ Tier 2: Subscription Plan         │ Tier 3: Scanlation Team Role       │
-│ (FREE vs. PREMIUM)                │ (LEADER, CLEANER_REDRAWER, etc.)   │
-│ Dynamically grants bookmarking/   │ Project-scoped task claim & submit │
-│ progress sync permissions         │ permissions for pipeline stages    │
-└───────────────────────────────────┴────────────────────────────────────┘
-```
-
-### Effective Permissions Calculation
-A user's runtime permissions in the platform are dynamically resolved as:
-$$\text{Effective Permissions} = \text{Role.permissions} \cup (\text{Subscription.isActive} ? \text{SubscriptionPlan.permissions} : \emptyset)$$
-
----
-
-## 2. Tier 1: Global Account Roles (`Role`)
-
-Every user account has a primary role that determines baseline capabilities.
-
-| Role | Description | Base Permissions |
+| Role | For | Permissions |
 |---|---|---|
-| **`READER`** | Default account for reading works, posting comments, and upvoting discussions. | `COMMENT_WRITE`, `COMMENT_UPVOTE` |
-| **`SCANLATOR`** | Contributor role with access to scanlation project workspaces, task pipelines, and chapter publishing. | `COMMENT_WRITE`, `COMMENT_UPVOTE`, `PROJECT_VIEW`, `TASK_CLAIM`, `TASK_SUBMIT`, `CHAPTER_PUBLISH` |
-| **`ADMIN`** | System administrator with full privileges across catalog, users, projects, and billing. | `COMMENT_WRITE`, `COMMENT_UPVOTE`, `BOOKMARK_READ`, `BOOKMARK_WRITE`, `TASK_CLAIM`, `TASK_SUBMIT`, `CHAPTER_PUBLISH`, `PROJECT_VIEW`, `PROJECT_MANAGE`, `USER_MANAGE` |
+| `READER` | every new account | `COMMENT_WRITE`, `COMMENT_UPVOTE`, `COMMENT_REPORT`, `LIBRARY_USE`, `PAGE_REPORT`, `RATE_WORK` |
+| `MODERATOR` | looks after discussions (US-11) | reader permissions + `COMMENT_MODERATE` |
+| `SCANLATOR` | team members | reader permissions + `PROJECT_VIEW`, `TASK_CLAIM`, `TASK_SUBMIT`, `CHAPTER_PUBLISH`, `WORK_CREATE` |
+| `ADMIN` | operators | every permission |
 
----
+## 2. What each permission allows
 
-## 3. Tier 2: Subscription Plans (`SubscriptionPlan`)
-
-Subscriptions unlock dynamic reading enhancements and cross-device synchronization.
-
-| Plan | Pricing | Dynamic Permissions | Features & Capabilities |
-|---|---|---|---|
-| **`FREE`** | Free ($0/mo) | *None* | Read public chapters, comment, upvote, browse catalog. |
-| **`PREMIUM`** | $7.99 / month | `BOOKMARK_READ`, `BOOKMARK_WRITE` | Cross-device reading progress tracking, personal bookmark library, unlimited bookmarks. |
-
-*Note:* When a `PREMIUM` subscription becomes `PAST_DUE`, `CANCELED`, or `INCOMPLETE`, the dynamic permissions are automatically revoked, and the user reverts to their base role permissions.
-
----
-
-## 4. Tier 3: Scanlation Project Team Roles (`ScanlationRole`)
-
-Within individual scanlation projects, team members are assigned specialized roles that govern which pipeline tasks they can claim and submit:
-
-| Project Role | Pipeline Stage | Task Claim & Submission Permissions |
+| Permission | Allows | Frontend |
 |---|---|---|
-| **`LEADER`** | All Stages | Full management access. Can upload raw chapters, claim any stage, submit work, and publish. |
-| **`CLEANER_REDRAWER`** | `RAW_UPLOADED` $\rightarrow$ `CLEANING` | Can claim raw chapter tasks, perform cleaning/redraw, and submit cleaned asset packages to translation. |
-| **`TRANSLATOR`** | `TRANSLATING` | Claims cleaned chapter assets and submits translated text/scripts to typesetting. |
-| **`TYPESETTER`** | `TYPESETTING` | Claims translated scripts and typesets text onto redraws. |
-| **`PROOFREADER`** | `PROOFREADING` | Reviews typeset chapters for grammatical/linguistic accuracy. |
-| **`QUALITY_CHECKER`** | `QC_REVIEW` | Performs final quality assurance check before triggering public release (`CHAPTER_PUBLISH`). |
+| `COMMENT_WRITE` | post comments and replies | comment form |
+| `COMMENT_UPVOTE` | upvote comments | upvote button |
+| `COMMENT_REPORT` | report a comment to the moderators | report button |
+| `COMMENT_MODERATE` | see the report queue, hide comments, dismiss reports | `/moderation` |
+| `LIBRARY_USE` | library, reading history, read markers, bookmarks and progress sync, reading lists, team follows, notifications, export | `/library`, `/history`, reader progress |
+| `PAGE_REPORT` | report a page that doesn't display (US-06) | reader "Report page" |
+| `RATE_WORK` | rate and review series, mark reviews helpful (US-09) | ratings section |
+| `PROJECT_VIEW` | see my teams, their task boards and page reports | `/scanlation` |
+| `TASK_CLAIM` | upload a raw chapter as a task, claim a task | board |
+| `TASK_SUBMIT` | submit work on a claimed task | board |
+| `CHAPTER_PUBLISH` | publish from QC, publish a chapter directly | board, upload studio |
+| `WORK_CREATE` | create series and teams, edit a series page, add members and series to a team | upload studio, team pages |
+| `USER_MANAGE` | admin override in the services (act on any team, series or report) | none |
 
-### Workflow Pipeline Progression
-```
-[Upload RAWs]
-     │
-     ▼
-(RAW_UPLOADED)  ── Claim by CLEANER_REDRAWER ──►  [Submit Cleaned Assets]
-                                                            │
-                                                            ▼
-(TRANSLATING)   ── Claim by TRANSLATOR ────────►  [Submit Translation]
-                                                            │
-                                                            ▼
-(TYPESETTING)   ── Claim by TYPESETTER ────────►  [Submit Typeset Pages]
-                                                            │
-                                                            ▼
-(PROOFREADING)  ── Claim by PROOFREADER ───────►  [Submit Proofread Work]
-                                                            │
-                                                            ▼
-(QC_REVIEW)     ── Approve by QUALITY_CHECKER ──►  (PUBLISHED)
-```
+Anonymous visitors can read: works, chapters, comments, updates, rankings, public lists, team and user profiles, and
+stored assets (the `permitAll` GET matchers in `SecurityConfig`). Everything else needs a signed-in account.
 
----
+## 3. Team roles
 
-## 5. Access Control Matrix
+A team has one roster, and its roles apply to every series the team works on. A member can hold several roles.
+`LEADER` counts as every role (`TeamMember.hasRole`), and a team always keeps at least one leader (`LAST_LEADER`).
 
-### Backend Endpoints Security Matrix
+| Team role | Claims and submits tasks in stage |
+|---|---|
+| `LEADER` | any stage; also manages the roster and the team's series |
+| `CLEANER_REDRAWER` | `RAW_UPLOADED`, `CLEANING` |
+| `TRANSLATOR` | `TRANSLATING` |
+| `TYPESETTER` | `TYPESETTING` |
+| `PROOFREADER` | `PROOFREADING` |
+| `QUALITY_CHECKER` | `QC_REVIEW`: approves, which publishes the chapter |
 
-| HTTP Method | API Path | Required Authority / Condition | Accessible Roles / Plans |
-|---|---|---|---|
-| `GET` | `/api/v1/works/**` | Public (Anonymous) | All users |
-| `GET` | `/api/v1/chapters/**` | Public (Anonymous) | All users |
-| `GET` | `/api/v1/comments/**` | Public (Anonymous) | All users |
-| `POST` | `/api/v1/comments/**` | `COMMENT_WRITE` | READER, SCANLATOR, ADMIN |
-| `POST` | `/api/v1/comments/*/upvote` | `COMMENT_UPVOTE` | READER, SCANLATOR, ADMIN |
-| `GET` | `/api/v1/bookmarks/**` | `BOOKMARK_READ` | PREMIUM, ADMIN |
-| `PUT` | `/api/v1/bookmarks/*/progress`| `BOOKMARK_WRITE` | PREMIUM, ADMIN |
-| `GET` | `/api/v1/scanlation/projects/{id}` | `PROJECT_VIEW` | SCANLATOR, ADMIN |
-| `POST` | `/api/v1/scanlation/projects/{id}/tasks` | `TASK_CLAIM` or `PROJECT_MANAGE` + Project Member | SCANLATOR member, ADMIN |
-| `POST` | `/api/v1/scanlation/projects/{id}/tasks/{id}/claim` | `TASK_CLAIM` + Valid Stage Role | SCANLATOR member, ADMIN |
-| `POST` | `/api/v1/scanlation/projects/{id}/tasks/{id}/submit`| `TASK_SUBMIT` + Task Assignee / Leader | SCANLATOR member, ADMIN |
-| `POST` | `/api/v1/scanlation/projects/{id}/tasks/{id}/publish`| `CHAPTER_PUBLISH` + QC Checker / Leader | SCANLATOR member, ADMIN |
+Stages follow `RAW_UPLOADED → CLEANING → TRANSLATING → TYPESETTING → PROOFREADING → QC_REVIEW → PUBLISHED`
+(`WorkflowStage`).
 
-### Frontend UI & Route Access Matrix
-
-| Route / Feature | Guard / Directive | Visible To |
-|---|---|---|
-| `/profile` | `authGuard` | Authenticated users |
-| `/subscription` | Public / `authGuard` for checkout | All users |
-| `/scanlation` | `permissionGuard('PROJECT_VIEW')` | SCANLATOR, ADMIN |
-| Profile menu > "Scanlation" | `*appHasPermission="'PROJECT_VIEW'"` | SCANLATOR, ADMIN |
-| Kanban "Upload Chapter" button | `*appHasPermission="'TASK_CLAIM'"` | SCANLATOR, ADMIN |
-| Reading Progress Synchronization | `isPremium` / `BOOKMARK_WRITE` | PREMIUM subscribers, ADMIN |
+A permission alone is never enough for a write on a team's resources. The service also checks that the actor belongs
+to the team, holds the stage's role, or is the assignee. An admin's `USER_MANAGE` can stand in where the service
+allows it.

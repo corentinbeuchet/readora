@@ -75,7 +75,7 @@ This actionable step-by-step blueprint allows teams with zero prior AWS expertis
 ### CloudFront Distributions
 1. Create CloudFront distribution targeting `readora-frontend-staging`.
    - Default root object: `index.html`
-   - **Error page: HTTP 403/404 -> `/index.csr.html` with response code 200.** The frontend is built with `outputMode: "static"` (prerendering): public routes (`/`, `/works`, `/works/{id}`, `/read/{id}`) are emitted as real `index.html` files for SEO, while every other route (login, profile, subscription, scanlation, unknown ids) must fall back to the client-side shell `index.csr.html`, **not** `index.html` (which is the prerendered home page).
+   - **Error page: HTTP 403/404 -> `/index.csr.html` with response code 200.** The frontend is built with `outputMode: "static"` (prerendering): public routes (`/`, `/works`, `/works/{id}`, `/read/{id}`) are emitted as real `index.html` files for SEO, while every other route (login, profile, scanlation, unknown ids) must fall back to the client-side shell `index.csr.html`, **not** `index.html` (which is the prerendered home page).
    - Upload the whole `dist/readora-frontend/browser/` folder (it also contains `robots.txt` and `sitemap.xml`).
 2. Create CloudFront distribution targeting `readora-frontend-prod`.
 
@@ -108,34 +108,10 @@ AWS App Runner manages automatic load balancing, TLS certificate provisioning, a
    - `SPRING_DATASOURCE_USERNAME`: `readora_staging`
    - `SPRING_DATASOURCE_PASSWORD`: `<password>`
    - `AWS_S3_BUCKET_NAME`: `readora-media-staging`
-   - `FRONTEND_BASE_URL`: `https://staging.readora.com` (used to build Stripe success/cancel redirect URLs)
    - `READORA_CORS_ALLOWED_ORIGINS`: `https://staging.readora.com` (comma-separated list of allowed frontend origins)
    - `READORA_JWT_SECRET`: a random secret of **at least 32 bytes** (`openssl rand -base64 48`). Access tokens are HS256-signed with it; rotating it logs every user out.
    - `READORA_COOKIE_SECURE`: `true` (refresh-token cookie is `HttpOnly; Secure; SameSite=Lax; Path=/api/v1/auth`)
-   - `STRIPE_SECRET_KEY`: `sk_live_...` / `sk_test_...` from the Stripe dashboard (**Developers -> API keys**)
-   - `STRIPE_WEBHOOK_SECRET`: `whsec_...` of the webhook endpoint created in Step 4b
-   - `STRIPE_PREMIUM_PRICE_ID`: `price_...` of the recurring PREMIUM price (**Products -> Premium -> Pricing**)
 6. Click **Deploy**. App Runner will output your live URL (e.g., `https://xxxxxx.eu-west-1.awsapprunner.com`).
-
-### Step 4b: Stripe webhook endpoint
-
-The backend activates / renews / cancels subscriptions **only** from signed Stripe webhooks.
-
-1. In the Stripe dashboard go to **Developers -> Webhooks -> Add endpoint**.
-2. Endpoint URL: `https://<app-runner-url>/api/v1/subscriptions/stripe/webhook`.
-3. Events to send: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`.
-4. Copy the **Signing secret** (`whsec_...`) into the `STRIPE_WEBHOOK_SECRET` environment variable and redeploy.
-
-Local development (no public URL) uses the Stripe CLI to forward events:
-
-```bash
-stripe login
-stripe listen --forward-to localhost:8080/api/v1/subscriptions/stripe/webhook
-# prints: Ready! Your webhook signing secret is whsec_xxx  -> export STRIPE_WEBHOOK_SECRET=whsec_xxx
-stripe trigger checkout.session.completed   # optional smoke test
-```
-
-Set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` and `STRIPE_PREMIUM_PRICE_ID` in your shell (or a `.env` file next to `docker-compose.yml`) before `docker compose up`. Requests with a missing or invalid `Stripe-Signature` are rejected with `400` and never change state; duplicate deliveries of the same event id are ignored (idempotent).
 
 ---
 
@@ -152,7 +128,6 @@ In your GitHub repository, navigate to **Settings** -> **Secrets and variables**
 | `CLOUDFRONT_STAGING_DIST_ID` | CloudFront Distribution ID for Staging |
 | `CLOUDFRONT_PROD_DIST_ID` | CloudFront Distribution ID for Prod |
 | `READORA_JWT_SECRET` | 32+ byte HS256 secret for access tokens (only if CI deploys env vars) |
-| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `STRIPE_PREMIUM_PRICE_ID` | Stripe credentials for the subscription flow (only if CI deploys env vars) |
 
 Every commit to `main` will automatically build, deploy to Staging, and execute the Playwright UI test suite against your live staging URL!
 
@@ -162,17 +137,8 @@ Every commit to `main` will automatically build, deploy to Staging, and execute 
 
 | Command | What it checks |
 |---|---|
-| `cd backend && mvn -pl readora-web -am test` | Domain rules, ArchUnit hexagonal boundaries, JWT security matrix (401/403), auth, bookmarks, catalog and Stripe webhook integration tests (H2) |
+| `cd backend && mvn -pl readora-web -am test` | Domain rules, ArchUnit hexagonal boundaries, JWT security matrix (401/403), auth, bookmarks and catalog integration tests (H2) |
 | `cd frontend && npm run lint` | angular-eslint: template accessibility, `prefer-signals`, `prefer-control-flow`, `button-has-type`, `alt-text`, `no-inline-styles`, … |
 | `cd frontend && npm run test:ci` | Vitest unit tests (auth store, interceptor, guards, `*appHasPermission`, Signal Forms pages, API-driven reader / comments / kanban) |
 | `cd frontend && npm run build` | Prerendered static output + `sitemap.xml` (needs the API reachable for full coverage, see Step 3) |
 | `cd frontend && npm run e2e:staging` | Playwright: register → login → profile, guarded routes, reader against the live staging stack |
-M User Secret Key |
-| `AWS_APPRUNNER_STAGING_ARN` | ARN of App Runner Staging Service |
-| `AWS_APPRUNNER_PROD_ARN` | ARN of App Runner Production Service |
-| `CLOUDFRONT_STAGING_DIST_ID` | CloudFront Distribution ID for Staging |
-| `CLOUDFRONT_PROD_DIST_ID` | CloudFront Distribution ID for Prod |
-| `READORA_JWT_SECRET` | 32+ byte HS256 secret for access tokens (only if CI deploys env vars) |
-| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `STRIPE_PREMIUM_PRICE_ID` | Stripe credentials for the subscription flow (only if CI deploys env vars) |
-
-Every commit to `main` will automatically build, deploy to Staging, and execute the Playwright UI test suite against your live staging URL!
