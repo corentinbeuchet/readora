@@ -116,7 +116,7 @@ public class CommunityStepDefinitions {
                 notifier.notifyInvitation(invited.invitationId());
             }
         }, clock);
-        catalog = new CatalogService(works, chapters, projects, teams, users);
+        catalog = new CatalogService(works, chapters, projects, teams, users, communityQueries);
         publishing = new WorkManagementService(works, chapters, projects, teams, users, event -> { }, clock);
         chapterReader = new ChapterReadingService(chapters, works, teams, new FakeStorage());
         refusal = null;

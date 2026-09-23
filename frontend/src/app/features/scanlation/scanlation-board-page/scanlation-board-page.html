@@ -74,8 +74,10 @@
                   <p class="task-assignee">
                     @if (row.mine) {
                       <ng-container i18n="@@scanlation.board.task.assignedYou">Assigned: you</ng-container>
+                    } @else if (task.assigneeUsername) {
+                      <ng-container i18n="@@scanlation.board.task.assignedTo">Assigned: &#64;{{ task.assigneeUsername }}</ng-container>
                     } @else {
-                      <ng-container i18n="@@scanlation.board.task.assignedTo">Assigned: {{ task.assigneeId }}</ng-container>
+                      <ng-container i18n="@@scanlation.board.task.assignedGone">Assigned: a former account</ng-container>
                     }
                   </p>
                 }

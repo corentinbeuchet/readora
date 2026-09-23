@@ -73,7 +73,7 @@ describe('scanlation task rules', () => {
   });
 
   function givenATask(overrides: Partial<WorkflowTask>): void {
-    task = { id: 't1', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, pageCount: 20, pages: [], updatedAt: '2026-09-13T00:00:00Z', ...overrides };
+    task = { id: 't1', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, assigneeUsername: null, pageCount: 20, pages: [], updatedAt: '2026-09-13T00:00:00Z', ...overrides };
   }
 
   function thenICanClaimIt(expected: boolean, myRoles: ScanlationRole[]): void {

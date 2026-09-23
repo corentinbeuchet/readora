@@ -1,14 +1,21 @@
 package com.readora.application.service;
 
 import com.readora.application.port.in.BrowseCatalogUseCase.CatalogQuery;
+import com.readora.application.port.in.BrowseCatalogUseCase.ProjectBoard;
 import com.readora.application.port.out.ChapterRepositoryPort;
+import com.readora.application.port.out.CommunityQueryPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
 import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.UserAccountRepositoryPort;
-import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort.WorkPage;
 import com.readora.application.port.out.WorkRepositoryPort.WorkSearch;
+import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.UserId;
+import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.Team;
+import com.readora.domain.work.ChapterNumber;
+import com.readora.domain.work.WorkId;
 import com.readora.domain.work.WorkType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,6 +26,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -50,11 +59,14 @@ class CatalogServiceTest {
     @Mock
     private UserAccountRepositoryPort userRepository;
 
+    @Mock
+    private CommunityQueryPort community;
+
     private CatalogService service;
 
     @BeforeEach
     void setUp() {
-        service = new CatalogService(workRepository, chapterRepository, projectRepository, teamRepository, userRepository);
+        service = new CatalogService(workRepository, chapterRepository, projectRepository, teamRepository, userRepository, community);
     }
 
     @Test
@@ -96,5 +108,24 @@ class CatalogServiceTest {
                 .isInstanceOf(DomainValidationException.class);
 
         verifyNoInteractions(workRepository);
+    }
+
+    @Test
+    @DisplayName("A task board names its members and whoever holds a task, in one lookup")
+    void aBoardNamesItsPeople() {
+        UserId leader = UserId.of("leader-1");
+        UserId formerMember = UserId.of("gone-1");
+        Team team = Team.create("Asura", null, leader);
+        ScanlationProject project = ScanlationProject.create("Asura", WorkId.generate(), team.getId());
+        project.addChapterTask(ChapterNumber.of("1")).assignTo(formerMember);
+        when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
+        when(community.usernames(Set.of(leader, formerMember))).thenReturn(Map.of(leader, "mina", formerMember, "old-hand"));
+
+        ProjectBoard board = service.getProject(project.getId(), leader).orElseThrow();
+
+        assertThat(board.usernameOf(leader)).isEqualTo("mina");
+        assertThat(board.usernameOf(formerMember)).isEqualTo("old-hand");
+        verify(community).usernames(any());
     }
 }

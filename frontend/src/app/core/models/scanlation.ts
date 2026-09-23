@@ -41,6 +41,8 @@ export interface WorkflowTask {
   stage: WorkflowStage;
   status: TaskStatus;
   assigneeId: string | null;
+  /** Who holds the task, by username; `null` when nobody does (or the account is gone). */
+  assigneeUsername: string | null;
   pageCount: number;
   /** The pages as the last stage left them (the raw pages at first); the next stage starts from them. */
   pages: PageAsset[];
@@ -56,7 +58,7 @@ export interface ScanlationProject {
   /** The team uses the task board for this series (off by default: most teams publish finished chapters). */
   boardEnabled: boolean;
   /** The roster of the project's team: roles apply to every series the team works on. */
-  members: { userId: string; roles: ScanlationRole[] }[];
+  members: { userId: string; username: string | null; roles: ScanlationRole[] }[];
   tasks: WorkflowTask[];
 }
 

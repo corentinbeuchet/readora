@@ -2,6 +2,7 @@ package com.readora.application.service;
 
 import com.readora.application.port.in.BrowseCatalogUseCase;
 import com.readora.application.port.out.ChapterRepositoryPort;
+import com.readora.application.port.out.CommunityQueryPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
 import com.readora.application.port.out.TeamRepositoryPort;
 import com.readora.application.port.out.UserAccountRepositoryPort;
@@ -21,6 +22,8 @@ import com.readora.domain.work.Chapter;
 import com.readora.domain.work.Work;
 import com.readora.domain.work.WorkId;
 
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -37,15 +40,17 @@ public class CatalogService implements BrowseCatalogUseCase {
     private final ScanlationProjectRepositoryPort projectRepository;
     private final TeamRepositoryPort teamRepository;
     private final UserAccountRepositoryPort userRepository;
+    private final CommunityQueryPort community;
 
     public CatalogService(WorkRepositoryPort workRepository, ChapterRepositoryPort chapterRepository,
                           ScanlationProjectRepositoryPort projectRepository, TeamRepositoryPort teamRepository,
-                          UserAccountRepositoryPort userRepository) {
+                          UserAccountRepositoryPort userRepository, CommunityQueryPort community) {
         this.workRepository = Objects.requireNonNull(workRepository, "WorkRepositoryPort cannot be null");
         this.chapterRepository = Objects.requireNonNull(chapterRepository, "ChapterRepositoryPort cannot be null");
         this.projectRepository = Objects.requireNonNull(projectRepository, "ScanlationProjectRepositoryPort cannot be null");
         this.teamRepository = Objects.requireNonNull(teamRepository, "TeamRepositoryPort cannot be null");
         this.userRepository = Objects.requireNonNull(userRepository, "UserAccountRepositoryPort cannot be null");
+        this.community = Objects.requireNonNull(community, "CommunityQueryPort cannot be null");
     }
 
     @Override
@@ -95,12 +100,15 @@ public class CatalogService implements BrowseCatalogUseCase {
 
     @Override
     public Optional<ProjectBoard> getProject(ProjectId projectId, UserId viewer) {
-        Optional<ProjectBoard> board = projectRepository.findById(projectId)
-                .flatMap(project -> teamRepository.findById(project.getTeamId()).map(team -> new ProjectBoard(project, team)));
-        if (board.isPresent() && board.get().team().findMember(viewer).isEmpty() && !isAdmin(viewer)) {
+        Optional<ScanlationProject> project = projectRepository.findById(projectId);
+        Optional<Team> team = project.flatMap(p -> teamRepository.findById(p.getTeamId()));
+        if (project.isEmpty() || team.isEmpty()) {
+            return Optional.empty();
+        }
+        if (team.get().findMember(viewer).isEmpty() && !isAdmin(viewer)) {
             throw new AccessDeniedDomainException("Only the team's members can open its task board");
         }
-        return board;
+        return Optional.of(new ProjectBoard(project.get(), team.get(), usernamesOn(List.of(project.get()), List.of(team.get()))));
     }
 
     @Override
@@ -109,10 +117,27 @@ public class CatalogService implements BrowseCatalogUseCase {
         List<ScanlationProject> projects = projectRepository.findByWorkId(workId);
         Map<TeamId, Team> teams = teamRepository.findAllById(projects.stream().map(ScanlationProject::getTeamId).toList()).stream()
                 .collect(Collectors.toMap(Team::getId, team -> team));
-        return projects.stream()
-                .flatMap(project -> Optional.ofNullable(teams.get(project.getTeamId())).map(team -> new ProjectBoard(project, team)).stream())
-                .filter(board -> admin || board.team().findMember(viewer).isPresent())
-                .toList();
+        Map<ScanlationProject, Team> visible = new LinkedHashMap<>();
+        for (ScanlationProject project : projects) {
+            Team team = teams.get(project.getTeamId());
+            if (team != null && (admin || team.findMember(viewer).isPresent())) {
+                visible.put(project, team);
+            }
+        }
+        Map<UserId, String> usernames = usernamesOn(List.copyOf(visible.keySet()), List.copyOf(visible.values()));
+        return visible.entrySet().stream().map(entry -> new ProjectBoard(entry.getKey(), entry.getValue(), usernames)).toList();
+    }
+
+    /// One lookup for everyone the boards show: the teams' members and the tasks' assignees.
+    private Map<UserId, String> usernamesOn(List<ScanlationProject> projects, List<Team> teams) {
+        Set<UserId> people = new HashSet<>();
+        teams.forEach(team -> team.getMembers().forEach(member -> people.add(member.userId())));
+        projects.forEach(project -> project.getTasks().forEach(task -> {
+            if (task.getAssigneeId() != null) {
+                people.add(task.getAssigneeId());
+            }
+        }));
+        return people.isEmpty() ? Map.of() : community.usernames(people);
     }
 
     private boolean isAdmin(UserId userId) {

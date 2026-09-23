@@ -1,12 +1,16 @@
 package com.readora.acceptance.steps;
 
+import com.readora.acceptance.fakes.InMemoryChapterReadRepository;
 import com.readora.acceptance.fakes.InMemoryChapterRepository;
+import com.readora.acceptance.fakes.InMemoryCommunity;
+import com.readora.acceptance.fakes.InMemoryLibraryRepository;
 import com.readora.acceptance.fakes.InMemoryProjectRepository;
 import com.readora.acceptance.fakes.InMemoryTeamRepository;
+import com.readora.acceptance.fakes.InMemoryUserAccounts;
 import com.readora.acceptance.fakes.InMemoryWorkRepository;
 import com.readora.acceptance.fakes.NoUserAccounts;
-import com.readora.application.port.in.ManageWorkUseCase.WorkDescription;
 import com.readora.application.port.in.BrowseCatalogUseCase.CatalogQuery;
+import com.readora.application.port.in.ManageWorkUseCase.WorkDescription;
 import com.readora.application.service.CatalogService;
 import com.readora.application.service.WorkManagementService;
 import com.readora.domain.common.AccessDeniedDomainException;
@@ -60,7 +64,9 @@ public class CatalogDiscoveryStepDefinitions {
         works = new InMemoryWorkRepository();
         projects = new InMemoryProjectRepository();
         teams = new InMemoryTeamRepository();
-        catalog = new CatalogService(works, new InMemoryChapterRepository(), projects, teams, new NoUserAccounts());
+        InMemoryChapterRepository chapters = new InMemoryChapterRepository();
+        catalog = new CatalogService(works, chapters, projects, teams, new NoUserAccounts(), new InMemoryCommunity(works,
+                new InMemoryChapterReadRepository(chapters), new InMemoryLibraryRepository(), new InMemoryUserAccounts(), chapters));
         seriesEditing = new WorkManagementService(works, new InMemoryChapterRepository(), projects, teams, new NoUserAccounts(), event -> { },
                 Clock.systemUTC());
         results = List.of();

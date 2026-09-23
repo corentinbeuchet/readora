@@ -10,9 +10,9 @@ import { PageAsset, PagePayload } from '@app/core/models/chapter';
 const PROJECT_ID = 'proj-1';
 const TASKS_URL = `${API}/scanlation/projects/${PROJECT_ID}/tasks`;
 
-const RAW_TASK: WorkflowTask = { id: 't-raw', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, pageCount: 2, pages: [rawPage(1), rawPage(2)], updatedAt: '2026-09-13T00:00:00Z' };
-const MY_TASK: WorkflowTask = { id: 't-mine', chapterNumber: '11', stage: 'CLEANING', status: 'IN_PROGRESS', assigneeId: 'user-1', pageCount: 1, pages: [rawPage(1)], updatedAt: '2026-09-13T00:00:00Z' };
-const QC_TASK: WorkflowTask = { id: 't-qc', chapterNumber: '9', stage: 'QC_REVIEW', status: 'PENDING', assigneeId: null, pageCount: 1, pages: [rawPage(1)], updatedAt: '2026-09-13T00:00:00Z' };
+const RAW_TASK: WorkflowTask = { id: 't-raw', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, assigneeUsername: null, pageCount: 2, pages: [rawPage(1), rawPage(2)], updatedAt: '2026-09-13T00:00:00Z' };
+const MY_TASK: WorkflowTask = { id: 't-mine', chapterNumber: '11', stage: 'CLEANING', status: 'IN_PROGRESS', assigneeId: 'user-1', assigneeUsername: 'user-1-name', pageCount: 1, pages: [rawPage(1)], updatedAt: '2026-09-13T00:00:00Z' };
+const QC_TASK: WorkflowTask = { id: 't-qc', chapterNumber: '9', stage: 'QC_REVIEW', status: 'PENDING', assigneeId: null, assigneeUsername: null, pageCount: 1, pages: [rawPage(1)], updatedAt: '2026-09-13T00:00:00Z' };
 
 function rawPage(pageNumber: number): PageAsset {
   return { pageNumber, storageKey: `raw/p${pageNumber}.webp`, cdnUrl: `https://cdn.test/raw/p${pageNumber}.webp`, width: 800, height: 1200, description: null, liteCdnUrl: null };
@@ -25,7 +25,7 @@ const PROJECT: ScanlationProject = {
   teamId: 'team-1',
   teamName: 'Shadow Scans',
   boardEnabled: true,
-  members: [{ userId: 'user-1', roles: ['CLEANER_REDRAWER', 'QUALITY_CHECKER'] }],
+  members: [{ userId: 'user-1', username: 'mina', roles: ['CLEANER_REDRAWER', 'QUALITY_CHECKER'] }],
   tasks: [RAW_TASK, MY_TASK, QC_TASK]
 };
 
@@ -93,7 +93,7 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
 
   it('a member sees no Claim or Publish on stages outside their roles', async () => {
     await givenIAmSignedInWith(['LIBRARY_USE']);
-    await givenIOpenTheBoard({ ...PROJECT, members: [{ userId: 'user-1', roles: ['TRANSLATOR'] }], tasks: [RAW_TASK, QC_TASK] });
+    await givenIOpenTheBoard({ ...PROJECT, members: [{ userId: 'user-1', username: 'mina', roles: ['TRANSLATOR'] }], tasks: [RAW_TASK, QC_TASK] });
 
     thenISeeClaimButtons(0);
     thenISeeSubmitButtons(0);
@@ -107,6 +107,22 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
     thenISeeClaimButtons(2);
     thenISeeSubmitButtons(1);
     thenISeePublishButtons(1);
+  });
+
+  it('The task board names who holds each task', async () => {
+    await givenIAmSignedInWith(['LIBRARY_USE']);
+    await givenIOpenTheBoard({ ...PROJECT, tasks: [{ ...MY_TASK, assigneeId: 'user-2', assigneeUsername: 'bob' }] });
+
+    thenTaskCardShows('CLEANING', 1, 'Assigned: @bob');
+    thenICannotSee('user-2');
+  });
+
+  it('a task held by an account that no longer exists says so, without showing its id', async () => {
+    await givenIAmSignedInWith(['LIBRARY_USE']);
+    await givenIOpenTheBoard({ ...PROJECT, tasks: [{ ...MY_TASK, assigneeId: 'user-gone', assigneeUsername: null }] });
+
+    thenTaskCardShows('CLEANING', 1, 'Assigned: a former account');
+    thenICannotSee('user-gone');
   });
 
   it('Claim calls the API and updates the board from the response', async () => {

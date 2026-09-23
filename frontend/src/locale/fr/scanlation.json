@@ -20,7 +20,7 @@
     "scanlation.board.uploadStudio": " + Studio de publication ",
     "scanlation.board.task.chapter": "Chapitre {$INTERPOLATION}",
     "scanlation.board.task.assignedYou": "Assignée : vous",
-    "scanlation.board.task.assignedTo": "Assignée : {$INTERPOLATION}",
+    "scanlation.board.task.assignedTo": "Assignée : @{$INTERPOLATION}",
     "scanlation.board.claim": " Prendre ",
     "scanlation.board.submitWork": " Rendre le travail ",
     "scanlation.board.publish": " Publier ",
@@ -126,6 +126,7 @@
     "scanlation.submit.uploading": "Envoi des pages : {$INTERPOLATION} sur {$INTERPOLATION_1}",
     "scanlation.submit.error": "Le travail n'a pas pu être envoyé. Veuillez réessayer.",
     "scanlation.submit.noPages": "Ajoutez d'abord les pages de votre étape.",
-    "scanlation.submit.uploadFailed": "Pages non envoyées : {$count}. Envoyez de nouveau pour les renvoyer."
+    "scanlation.submit.uploadFailed": "Pages non envoyées : {$count}. Envoyez de nouveau pour les renvoyer.",
+    "scanlation.board.task.assignedGone": "Assignée : un ancien compte"
   }
 }

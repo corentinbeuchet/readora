@@ -196,7 +196,7 @@ interface is neutral and the cover art is the colour on the page.
   offered after the content, where they help (continue reading, follow, comment).
 - Follow-ups of this pass (not done): series page, catalog filter panel and sort, reader chrome, auth
   pages; backend: catalog `sort`, a chapter pointer on `LibraryItem` (a "Continue" on library rows), title and cover
-  on bookmarks, assignee name on tasks; a new `og-default.png` in the new palette.
+  on bookmarks; a new `og-default.png` in the new palette.
 
 ## Routing & auth
 - Every route uses `loadComponent`. Permissions in route data: `canActivate: [permissionGuard], data: { permission: 'COMMENT_MODERATE' }`.
@@ -351,7 +351,6 @@ lessons.
 Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = reported with path:line, re-check before acting):
 - R15 `shared/pages/file-utils.ts` zip-bomb guard uses JSZip private `_data` / `internalStream` and has no spec; `jszip` is a static import.
 - R16 No spec for `shared/ui/dialog`, `core/a11y/focus-trap.directive`, `core/api/api-client`, `register-page`, `publish-flow`.
-- R18 The kanban shows the raw `assigneeId` UUID: the task DTO has no assignee name (backend + frontend).
 - R26 (survey) Axe and responsive e2e only scan public pages: no signed-in page, no open dialog.
 - R27 (2026-09-20) Playwright's WebKit for Windows (`webkit`, `Mobile Safari`) reported "Page crashed" on `/works/:id`
   and `/teams/:id`, on the dev server and on a static build. Cause (bisected): the vertical scrollbar appearing after

@@ -3,6 +3,7 @@ package com.readora.web.dto;
 import com.readora.application.port.in.BrowseCatalogUseCase.ProjectBoard;
 import com.readora.domain.scanlation.ScanlationRole;
 import com.readora.domain.scanlation.TeamMember;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.Comparator;
@@ -21,10 +22,12 @@ public record ScanlationProjectDto(
         Instant createdAt,
         Instant updatedAt
 ) {
-    public record TeamMemberDto(String userId, List<String> roles) {
-        static TeamMemberDto fromDomain(TeamMember member) {
+    /// @param username `null` when the account no longer exists
+    public record TeamMemberDto(String userId, @Nullable String username, List<String> roles) {
+        static TeamMemberDto fromDomain(TeamMember member, @Nullable String username) {
             return new TeamMemberDto(
                     member.userId().value(),
+                    username,
                     member.roles().stream().map(ScanlationRole::name).sorted().toList()
             );
         }
@@ -41,9 +44,11 @@ public record ScanlationProjectDto(
                 project.isBoardEnabled(),
                 board.team().getMembers().stream()
                         .sorted(Comparator.comparing(m -> m.userId().value()))
-                        .map(TeamMemberDto::fromDomain)
+                        .map(member -> TeamMemberDto.fromDomain(member, board.usernameOf(member.userId())))
                         .toList(),
-                project.getTasks().stream().map(WorkflowTaskDto::fromDomain).toList(),
+                project.getTasks().stream()
+                        .map(task -> WorkflowTaskDto.fromDomain(task, task.getAssigneeId() != null ? board.usernameOf(task.getAssigneeId()) : null))
+                        .toList(),
                 project.getCreatedAt(),
                 project.getUpdatedAt()
         );

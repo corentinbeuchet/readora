@@ -14,6 +14,7 @@ import com.readora.domain.work.WorkType;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -61,8 +62,17 @@ public interface BrowseCatalogUseCase {
 
     /// Published chapters of a series in reading order.
     List<CreditedChapter> listPublishedChapters(WorkId workId);
-    /// A team's task board for one series, with the team whose roster works on it.
-    record ProjectBoard(ScanlationProject project, Team team) {
+    /// A team's task board for one series, with the team whose roster works on it and the usernames of the people
+    /// on it (members and task assignees), so nobody is shown by account id.
+    record ProjectBoard(ScanlationProject project, Team team, Map<UserId, String> usernames) {
+        public ProjectBoard {
+            usernames = Map.copyOf(usernames);
+        }
+
+        /// `null` when the account no longer exists.
+        public @Nullable String usernameOf(UserId userId) {
+            return usernames.get(userId);
+        }
     }
 
     /// A task board, for the members of its team (and admins).

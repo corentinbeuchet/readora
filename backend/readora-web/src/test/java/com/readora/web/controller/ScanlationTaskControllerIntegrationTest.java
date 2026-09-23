@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -134,5 +135,29 @@ class ScanlationTaskControllerIntegrationTest extends AuthTestSupport {
                         .content("{\"chapterNumber\":-1,\"pages\":[]}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    @DisplayName("The board names its members and the holder of a task by username, never by account id alone")
+    void theBoardNamesPeople() throws Exception {
+        Session member = register();
+        team.addMember(TeamMember.of(UserId.of(member.userId()), ScanlationRole.CLEANER_REDRAWER));
+        teamRepository.save(team);
+        String taskId = json(mockMvc.perform(post("/api/v1/scanlation/projects/" + project.getId().value() + "/tasks")
+                        .header("Authorization", member.bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new CreateTaskRequest(BigDecimal.valueOf(1),
+                                List.of(new PageAssetDto(1, "scans/solo/1/p1.webp", "https://cdn.test/p1.webp", 800, 1200))))))
+                .andReturn()).path("data").path("id").asString();
+
+        mockMvc.perform(post("/api/v1/scanlation/projects/" + project.getId().value() + "/tasks/" + taskId + "/claim")
+                        .header("Authorization", member.bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.assigneeUsername").value(member.username()));
+
+        mockMvc.perform(get("/api/v1/scanlation/projects/" + project.getId().value()).header("Authorization", member.bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.tasks[0].assigneeUsername").value(member.username()))
+                .andExpect(jsonPath("$.data.members[?(@.userId == '" + member.userId() + "')].username").value(member.username()));
     }
 }

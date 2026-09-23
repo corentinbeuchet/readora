@@ -46,3 +46,9 @@ Feature: Collaborative Scanlation Chapter Workflow Pipeline
     Given "Chapter 11" is in stage "QC_REVIEW" with no pages uploaded
     When "Charlie" approves the final assembled chapter and triggers publication
     Then the publication is refused because the chapter has no pages
+
+  # Members see who holds a task by username, never by account id (review-2026-09-19/R18).
+  @ui
+  Scenario: The task board names who holds each task
+    Given "Chapter 10" workflow task is assigned to "Bob" in stage "TRANSLATING"
+    Then the task board shows the task is held by "@bob"

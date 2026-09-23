@@ -10,6 +10,7 @@ import com.readora.web.dto.CreateTaskRequest;
 import com.readora.web.dto.PageAssetDto;
 import com.readora.web.dto.SubmitTaskRequest;
 import com.readora.web.dto.WorkflowTaskDto;
+import com.readora.web.security.AuthenticatedUser;
 import com.readora.web.security.CurrentUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -41,13 +42,14 @@ public class ScanlationTaskController {
             @PathVariable UUID projectId,
             @Valid @RequestBody CreateTaskRequest request
     ) {
+        AuthenticatedUser me = currentUserProvider.require();
         WorkflowTask task = scanlationTaskUseCase.uploadChapterTask(
                 ProjectId.of(projectId),
                 ChapterNumber.of(request.chapterNumber().toPlainString()),
                 request.pages().stream().map(PageAssetDto::toDomain).toList(),
-                currentUserProvider.requireUserId()
+                me.userId()
         );
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(WorkflowTaskDto.fromDomain(task)));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(asSeenBy(task, me)));
     }
 
     @PostMapping("/{taskId}/claim")
@@ -57,8 +59,9 @@ public class ScanlationTaskController {
             @PathVariable UUID projectId,
             @PathVariable UUID taskId
     ) {
-        WorkflowTask task = scanlationTaskUseCase.claimTask(ProjectId.of(projectId), TaskId.of(taskId), currentUserProvider.requireUserId());
-        return ResponseEntity.ok(ApiResponse.ok(WorkflowTaskDto.fromDomain(task)));
+        AuthenticatedUser me = currentUserProvider.require();
+        WorkflowTask task = scanlationTaskUseCase.claimTask(ProjectId.of(projectId), TaskId.of(taskId), me.userId());
+        return ResponseEntity.ok(ApiResponse.ok(asSeenBy(task, me)));
     }
 
     @PostMapping("/{taskId}/submit")
@@ -69,13 +72,14 @@ public class ScanlationTaskController {
             @PathVariable UUID taskId,
             @Valid @RequestBody SubmitTaskRequest request
     ) {
+        AuthenticatedUser me = currentUserProvider.require();
         WorkflowTask task = scanlationTaskUseCase.submitWork(
                 ProjectId.of(projectId),
                 TaskId.of(taskId),
-                currentUserProvider.requireUserId(),
+                me.userId(),
                 request.pages().stream().map(PageAssetDto::toDomain).toList()
         );
-        return ResponseEntity.ok(ApiResponse.ok(WorkflowTaskDto.fromDomain(task)));
+        return ResponseEntity.ok(ApiResponse.ok(asSeenBy(task, me)));
     }
 
     @PostMapping("/{taskId}/publish")
@@ -87,5 +91,11 @@ public class ScanlationTaskController {
     ) {
         scanlationTaskUseCase.publishChapterFromQC(ProjectId.of(projectId), TaskId.of(taskId), currentUserProvider.requireUserId());
         return ResponseEntity.ok(ApiResponse.ok("Chapter published successfully"));
+    }
+
+    /// The task right after the caller acted on it: only the caller can hold it then (claim assigns them, upload and
+    /// submit leave it unassigned), so their username from the token names the assignee without a lookup.
+    private static WorkflowTaskDto asSeenBy(WorkflowTask task, AuthenticatedUser me) {
+        return WorkflowTaskDto.fromDomain(task, me.userId().equals(task.getAssigneeId()) ? me.username() : null);
     }
 }
