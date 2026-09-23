@@ -93,17 +93,52 @@ async function givenIAmThePublisher(request: APIRequestContext): Promise<Headers
   return { Authorization: `Bearer ${accessToken}` };
 }
 
-/** A new series; the API creates its first team with it, led by the publisher. */
+/**
+ * The two teams the e2e series are published by, led by the publisher and reused by every test and run: a series
+ * created without a team gets a new team of its own, which piled thousands of teams on the publisher account.
+ */
+export const E2E_TEAMS = { first: 'E2E Publishers', second: 'E2E Second Team' } as const;
+
+/** Found or created once per worker (module state), then reused. */
+const e2eTeams = new Map<string, Promise<{ id: string; name: string }>>();
+
+async function e2eTeam(request: APIRequestContext, headers: Headers, name: string): Promise<{ id: string; name: string }> {
+  let team = e2eTeams.get(name);
+  if (!team) {
+    team = findOrCreateTeam(request, headers, name);
+    e2eTeams.set(name, team);
+  }
+  return team;
+}
+
+async function findOrCreateTeam(request: APIRequestContext, headers: Headers, name: string): Promise<{ id: string; name: string }> {
+  const mine = async (): Promise<{ id: string; name: string } | undefined> =>
+    (await data<{ id: string; name: string }[]>(await request.get(`${API_URL}/teams/mine`, { headers }))).find((team) => team.name === name);
+  const existing = await mine();
+  if (existing) {
+    return existing;
+  }
+  const created = await request.post(`${API_URL}/teams`, { headers, data: { name } });
+  if (created.ok()) {
+    return data<{ id: string; name: string }>(created);
+  }
+  // Another worker created it in the meantime (the name is taken): it is one of mine now.
+  const raced = await mine();
+  expect(raced, `team "${name}" could not be created: ${created.status()} ${await created.text()}`).toBeDefined();
+  return raced!;
+}
+
+/** A new series, published by the first e2e team (its task board is created with it). */
 async function createSeries(request: APIRequestContext, headers: Headers, facts?: object): Promise<{ workId: string; title: string; team: PublishingTeam }> {
   const title = `E2E Series ${uniqueSuffix()}`;
+  const team = await e2eTeam(request, headers, E2E_TEAMS.first);
   const work = await data<{ id: string }>(
     await request.post(`${API_URL}/works`, {
       headers,
-      data: { title, synopsis: 'Created by the e2e suite.', type: 'MANGA', status: 'ONGOING', genres: ['Action'], facts }
+      data: { title, synopsis: 'Created by the e2e suite.', type: 'MANGA', status: 'ONGOING', genres: ['Action'], facts, teamId: team.id }
     })
   );
-  const projects = await data<{ teamId: string; teamName: string }[]>(await request.get(`${API_URL}/works/${work.id}/projects`, { headers }));
-  return { workId: work.id, title, team: { id: projects[0].teamId, name: projects[0].teamName, chapterIds: {} } };
+  return { workId: work.id, title, team: { id: team.id, name: team.name, chapterIds: {} } };
 }
 
 /** Publishes a two-page chapter of the series for one team (a chapter always belongs to a team). */
@@ -234,8 +269,8 @@ export async function visibleCommentsOf(request: APIRequestContext, chapterId: s
 export async function publishSeriesByTwoTeams(request: APIRequestContext): Promise<{ workId: string; title: string; firstTeam: PublishingTeam; secondTeam: PublishingTeam }> {
   const headers = await givenIAmThePublisher(request);
   const series = await createSeries(request, headers);
-  const created = await data<{ id: string; name: string }>(await request.post(`${API_URL}/teams`, { headers, data: { name: `E2E Team ${uniqueSuffix()}` } }));
-  const secondTeam: PublishingTeam = { id: created.id, name: created.name, chapterIds: {} };
+  const second = await e2eTeam(request, headers, E2E_TEAMS.second);
+  const secondTeam: PublishingTeam = { id: second.id, name: second.name, chapterIds: {} };
   await data(await request.post(`${API_URL}/teams/${secondTeam.id}/series`, { headers, data: { workId: series.workId } }));
 
   for (const chapterNumber of ['1', '2', '3']) {
