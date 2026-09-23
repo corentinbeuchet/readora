@@ -83,7 +83,10 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
         mockMvc.perform(get("/api/v1/works/" + workId + "/projects").header("Authorization", mina.bearer()))
                 .andExpect(jsonPath("$.data.length()").value(2));
         mockMvc.perform(get("/api/v1/teams/mine").header("Authorization", mina.bearer()))
-                .andExpect(jsonPath("$.data[0].boards[0].work.id").value(workId));
+                .andExpect(jsonPath("$.data[0].boards[0].work.id").value(workId))
+                .andExpect(jsonPath("$.data[0].boards[0].work.title").isString())
+                .andExpect(jsonPath("$.data[0].boards[0].work.coverImageUrl").doesNotExist())
+                .andExpect(jsonPath("$.data[0].boards[0].work.genres").doesNotExist());
     }
 
     @Test

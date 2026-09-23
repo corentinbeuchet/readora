@@ -1,4 +1,3 @@
-import { WorkSummary } from '@app/core/models/catalog';
 
 export type ScanlationRole = 'LEADER' | 'CLEANER_REDRAWER' | 'TRANSLATOR' | 'TYPESETTER' | 'PROOFREADER' | 'QUALITY_CHECKER';
 
@@ -45,10 +44,16 @@ export interface ScanlationProject {
   tasks: WorkflowTask[];
 }
 
+/** A series named by a list that only links to it (backend `SeriesRefDto`). */
+export interface SeriesRef {
+  id: string;
+  title: string;
+}
+
 /** One of a team's task boards, with the series it is for. */
 export interface TeamBoard {
   projectId: string;
-  work: WorkSummary;
+  work: SeriesRef;
 }
 
 /** A team I belong to (`GET /teams/mine`), with my roles in it. */
