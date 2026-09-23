@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test as base } from '@playwright/test';
-import { publishChapter, publishSeriesByTwoTeams, publishSeriesWithFacts } from './helpers';
+import { PostedComment, publishChapter, publishCommentedChapter, publishReportedComment, publishSeriesByTwoTeams, publishSeriesWithFacts } from './helpers';
 
 /**
  * Readora's `test`: Playwright fixtures are the "Given" step. A fixture only runs for the tests that ask for it, and
@@ -13,6 +13,12 @@ export const test = base.extend<{
   seriesByTwoTeams: Awaited<ReturnType<typeof publishSeriesByTwoTeams>>;
   /** A new series created with facts (US-04) and one published chapter; the publisher account leads its team. */
   seriesWithFacts: Awaited<ReturnType<typeof publishSeriesWithFacts>>;
+  /** A new published chapter with one comment by another reader. */
+  commentedChapter: PostedComment;
+  /** Same, but the comment is marked as a spoiler. */
+  spoilerComment: PostedComment;
+  /** A new published chapter whose one comment was reported and waits in the moderation queue (US-11). */
+  reportedComment: PostedComment;
   /** An axe scan of the current page against WCAG 2.0/2.1/2.2 A and AA (`await axe().analyze()`). */
   axe: () => AxeBuilder;
 }>({
@@ -52,6 +58,15 @@ export const test = base.extend<{
   },
   seriesWithFacts: async ({ request }, use) => {
     await use(await publishSeriesWithFacts(request));
+  },
+  commentedChapter: async ({ request }, use) => {
+    await use(await publishCommentedChapter(request));
+  },
+  spoilerComment: async ({ request }, use) => {
+    await use(await publishCommentedChapter(request, { spoiler: true }));
+  },
+  reportedComment: async ({ request }, use) => {
+    await use(await publishReportedComment(request));
   },
   axe: async ({ page }, use) => {
     await use(() => new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']));

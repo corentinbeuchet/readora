@@ -159,11 +159,72 @@ export async function publishSeriesWithFacts(request: APIRequestContext): Promis
 
 /** Logs in through the UI as the publisher account: the leader of the team of every series the helpers create. */
 export async function givenIAmLoggedInAsThePublisher(page: Page): Promise<void> {
+  await logIn(page, PUBLISHER);
+}
+
+/**
+ * Account with `COMMENT_MODERATE` (US-11). Defaults to the `moderator` dev seed account; against another environment
+ * set E2E_MODERATOR_EMAIL / E2E_MODERATOR_PASSWORD.
+ */
+export const MODERATOR = {
+  email: process.env['E2E_MODERATOR_EMAIL'] ?? 'moderator@readora.local',
+  password: process.env['E2E_MODERATOR_PASSWORD'] ?? 'readora-dev'
+};
+
+/** Logs in through the UI as the moderator account. */
+export async function givenIAmLoggedInAsTheModerator(page: Page): Promise<void> {
+  await logIn(page, MODERATOR);
+}
+
+async function logIn(page: Page, account: { email: string; password: string }): Promise<void> {
   await page.goto('/login');
-  await page.getByLabel('Email').fill(PUBLISHER.email);
-  await page.getByLabel('Password').fill(PUBLISHER.password);
+  await page.getByLabel('Email').fill(account.email);
+  await page.getByLabel('Password').fill(account.password);
   await page.getByRole('button', { name: 'Log in' }).click();
   await expect(page.getByRole('button', { name: 'Account menu' })).toBeVisible();
+}
+
+/** A comment of a published chapter, written by a reader created for the test. */
+export interface PostedComment {
+  workId: string;
+  chapterId: string;
+  commentId: string;
+  author: string;
+  content: string;
+}
+
+/**
+ * Publishes a chapter and has a new reader (registered through the API) comment on it. The content is unique, so a
+ * test can find this comment among others, e.g. in the moderation queue that every test shares.
+ */
+export async function publishCommentedChapter(request: APIRequestContext, options: { spoiler?: boolean } = {}): Promise<PostedComment> {
+  const chapter = await publishChapter(request);
+  const author = `commenter_${uniqueSuffix()}`;
+  const { accessToken } = await data<{ accessToken: string }>(
+    await request.post(`${API_URL}/auth/register`, { data: { email: `${author}@readora.test`, username: author, password: PASSWORD } })
+  );
+  const content = `A comment for the e2e suite ${uniqueSuffix()}`;
+  const comment = await data<{ id: string }>(
+    await request.post(`${API_URL}/comments/chapter/${chapter.chapterId}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      data: { content, isSpoiler: options.spoiler ?? false }
+    })
+  );
+  return { workId: chapter.workId, chapterId: chapter.chapterId, commentId: comment.id, author, content };
+}
+
+/** A commented chapter whose comment the publisher account reported as spam, so it waits in the moderation queue. */
+export async function publishReportedComment(request: APIRequestContext): Promise<PostedComment> {
+  const comment = await publishCommentedChapter(request);
+  const headers = await givenIAmThePublisher(request);
+  await data(await request.post(`${API_URL}/comments/${comment.commentId}/reports`, { headers, data: { reason: 'SPAM' } }));
+  return comment;
+}
+
+/** The comments anyone (signed out) is shown for a chapter. */
+export async function visibleCommentsOf(request: APIRequestContext, chapterId: string): Promise<string[]> {
+  const comments = await data<{ content: string }[]>(await request.get(`${API_URL}/comments/chapter/${chapterId}`));
+  return comments.map((comment) => comment.content);
 }
 
 /**
