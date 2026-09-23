@@ -43,6 +43,9 @@ type PageAnswer = { storageKey: string; cdnUrl: string; liteCdnUrl?: string } | 
  * The studio driven like a user: fields are typed into, buttons clicked, pages added through the file input, and the
  * API answered at the HTTP level. Nothing reads or calls the component's own members.
  */
+/** The team I lead in most tests: a new series belongs to it. */
+const MY_TEAM: MyTeam = { id: 'team-1', name: 'My Team', description: null, myRoles: ['LEADER'], boards: [] };
+
 /** A team's task board for the series, as `GET /works/{id}/projects` lists it (only what the studio reads). */
 interface Board {
   id: string;
@@ -60,10 +63,13 @@ describe('UploadStudioPage', () => {
   let chapterRequest: TestRequest;
   let taskRequest: TestRequest;
   let pageUploads: TestRequest[];
+  /** My teams were loaded (once per test): by `givenILeadMyTeam` or by a block's own "given". */
+  let myTeamsLoaded: boolean;
 
   beforeEach(async () => {
     created = [];
     revoked = [];
+    myTeamsLoaded = false;
     vi.stubGlobal('Image', FakeImage);
     vi.spyOn(URL, 'createObjectURL').mockImplementation(() => {
       const url = `blob:test/${created.length + 1}`;
@@ -123,6 +129,8 @@ describe('UploadStudioPage', () => {
   });
 
   it('toggles genres as pressed buttons and adds custom genres', async () => {
+    await givenIOpenTheStudio();
+
     thenGenreIsPressed('Action');
 
     whenIToggleTheGenres('Action', 'Fantasy');
@@ -162,7 +170,9 @@ describe('UploadStudioPage', () => {
     thenTheStepIs('3. Chapter Pages');
   });
 
-  it('step indicator marks the current step and only enables reachable steps', () => {
+  it('step indicator marks the current step and only enables reachable steps', async () => {
+    await givenIOpenTheStudio();
+
     thenTheStepButtonsDisabledAre([false, true, true, true]);
     thenStepIsCurrent(1);
 
@@ -345,10 +355,12 @@ describe('UploadStudioPage', () => {
       thenThePublishedChapterIncludes({ teamId: 'team-moon' });
     });
 
-    it('without a team I lead, the series simply gets its own team', async () => {
-      await givenIOpenTheStudio();
+    it('without a team I lead, I am asked to start one before creating a series', async () => {
+      await givenILeadTheTeams([]);
 
       thenThereIsNoTeamChoice();
+      thenICanSee('A new series belongs to a team you lead.');
+      thenThereIsALinkTo('/scanlation');
     });
 
     async function givenIOpenedTheStudioFor(link: { workId: string; teamId: string }, server: { series: typeof WORK; myTeams: (typeof MOON_SCANS)[] }): Promise<void> {
@@ -436,6 +448,7 @@ describe('UploadStudioPage', () => {
     }
 
     async function givenILeadTheTeams(teams: (typeof MOON_SCANS)[]): Promise<void> {
+      myTeamsLoaded = true;
       await givenIAmSignedInWith(['LIBRARY_USE']);
       await settleStudio();
       http.expectOne(`${API}/teams/mine`).flush(ok(teams));
@@ -482,6 +495,14 @@ describe('UploadStudioPage', () => {
 
     function thenThereIsNoTeamChoice(): void {
       expect(page().querySelector('#manga-team')).toBeNull();
+    }
+
+    function thenICanSee(text: string): void {
+      expect(page().textContent).toContain(text);
+    }
+
+    function thenThereIsALinkTo(href: string): void {
+      expect(Array.from(page().querySelectorAll('a')).map((a) => a.getAttribute('href'))).toContain(href);
     }
 
     function thenTheSeriesWasCreatedForTheTeam(teamId: string): void {
@@ -602,11 +623,12 @@ describe('UploadStudioPage', () => {
       await givenIAmOnTheReview({ series: { title: 'Blue Lock' }, chapter: { number: '3' }, pages: ['p1.png', 'p2.png'] });
       await givenIPublishedEverything();
 
-      whenIStartOver();
+      await whenIStartOver();
 
       thenEveryPreviewCreatedBeforeStartingOverWasRevoked();
       thenTheStepIs('1. Manga / Series Information');
 
+      whenIChooseMyTeam();
       whenIPickTheCover('b.png');
       whenITypeTheTitle('Again');
       await whenIGoToTheChapterSetup();
@@ -642,9 +664,13 @@ describe('UploadStudioPage', () => {
       clickButton('Change Cover');
     }
 
-    function whenIStartOver(): void {
+    /** The series step starts afresh and loads my teams again. */
+    async function whenIStartOver(): Promise<void> {
       createdBeforeStartingOver = [...created];
       clickButton('Upload Another Manga');
+      await settleStudio();
+      http.expectOne(`${API}/teams/mine`).flush(ok([MY_TEAM]));
+      await settleStudio();
     }
 
     function whenILeaveTheStudio(): void {
@@ -672,17 +698,43 @@ describe('UploadStudioPage', () => {
     }
   });
 
+  /** The series step with my team chosen (unless a test chose one already). */
   async function givenIOpenTheStudio(): Promise<void> {
+    await givenILeadMyTeam();
+    if (!page().querySelector<HTMLSelectElement>('#manga-team')?.value) {
+      whenIChooseMyTeam();
+    }
+  }
+
+  function whenIChooseMyTeam(): void {
+    const team = page().querySelector<HTMLSelectElement>('#manga-team')!;
+    team.value = MY_TEAM.id;
+    team.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+  }
+
+  /** A new series belongs to a team I lead: signed in as the leader of "My Team" (once per test). */
+  async function givenILeadMyTeam(): Promise<void> {
+    await settleStudio();
+    if (myTeamsLoaded) {
+      return;
+    }
+    myTeamsLoaded = true;
+    await givenIAmSignedInWith(['LIBRARY_USE']);
+    await settleStudio();
+    http.expectOne(`${API}/teams/mine`).flush(ok([MY_TEAM]));
     await settleStudio();
   }
 
   async function givenIAmOnTheChapterSetupOf(title: string): Promise<void> {
+    await givenIOpenTheStudio();
     whenITypeTheTitle(title);
     await whenIGoToTheChapterSetup();
   }
 
   /** Fills the three steps as the user does, up to the review step. */
   async function givenIAmOnTheReview(draft: Draft): Promise<void> {
+    await givenIOpenTheStudio();
     typeSeries(draft.series);
     clickButton('Next: Chapter Setup');
     whenITypeTheChapterNumber(draft.chapter.number);

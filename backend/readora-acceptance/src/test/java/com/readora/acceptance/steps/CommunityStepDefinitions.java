@@ -19,6 +19,7 @@ import com.readora.application.port.in.CommunityUseCase.TeamPage;
 import com.readora.application.port.in.CommunityUseCase.TeamSeries;
 import com.readora.application.port.in.DiscoverUseCase.Release;
 import com.readora.application.port.in.ManageLibraryUseCase.ExportRow;
+import com.readora.application.port.in.ManageWorkUseCase;
 import com.readora.application.port.in.ReadChapterUseCase.ChapterReading;
 import com.readora.application.service.CatalogService;
 import com.readora.application.service.ChapterReadingService;
@@ -327,6 +328,32 @@ public class CommunityStepDefinitions {
         assertThat(projects.findByTeamId(moon.getId())).singleElement()
                 .satisfies(board -> assertThat(works.findById(board.getWorkId()).orElseThrow().getTitle()).isEqualTo(title));
         assertThat(projects.findByWorkId(projects.findByTeamId(moon.getId()).getFirst().getWorkId())).hasSize(2);
+    }
+
+    @When("{string} creates the series {string} for {string}")
+    public void createsTheSeriesFor(String creator, String title, String teamName) {
+        attempt(() -> publishing.createWork(new ManageWorkUseCase.NewWork(title, null, WorkType.MANHWA, null, null, null, null, Set.of(),
+                teamNamed(teamName).getId()), account(creator)));
+    }
+
+    @When("reader {string} creates the series {string} without a team")
+    public void createsTheSeriesWithoutATeam(String creator, String title) {
+        attempt(() -> publishing.createWork(new ManageWorkUseCase.NewWork(title, null, WorkType.MANHWA, null, null, null, null, Set.of(), null),
+                account(creator)));
+    }
+
+    @Then("{string} works on {string}")
+    public void worksOn(String teamName, String title) {
+        assertThat(refusal).isNull();
+        assertThat(projects.findByTeamId(teamNamed(teamName).getId()))
+                .extracting(project -> works.findById(project.getWorkId()).orElseThrow().getTitle())
+                .containsExactly(title);
+    }
+
+    @Then("the series is refused because it needs a team")
+    public void theSeriesIsRefusedBecauseItNeedsATeam() {
+        assertThat(refusal).isInstanceOfSatisfying(DomainValidationException.class, e -> assertThat(e.code()).isEqualTo(ErrorCodes.TEAM_REQUIRED));
+        refusal = null;
     }
 
     @Then("{string} can open the task board of {string} for {string}")

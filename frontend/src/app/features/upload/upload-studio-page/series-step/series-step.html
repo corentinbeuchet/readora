@@ -17,16 +17,26 @@
 
   <div class="form-layout">
     <div class="form-fields">
-      @if (ledTeams().length > 0) {
+      @if (teamsLoading()) {
+        <p class="muted" role="status" i18n="@@upload.series.team.loading">Loading your teams…</p>
+      } @else if (teamsError()) {
+        <app-load-error [error]="teamsError()" (retry)="reloadTeams()" i18n="@@upload.series.team.loadError">Could not load your teams.</app-load-error>
+      } @else if (ledTeams().length > 0) {
         <div class="field">
-          <label for="manga-team" i18n="@@upload.series.team">Translated by</label>
-          <select id="manga-team" [formField]="form.teamId" aria-describedby="manga-team-hint">
-            <option value="" i18n="@@upload.series.team.new">A new team for this series</option>
+          <label for="manga-team" i18n="@@upload.series.team">Translated by <span class="required" aria-hidden="true">*</span></label>
+          <select id="manga-team" [formField]="form.teamId" [appAriaInvalid]="form.teamId" aria-describedby="manga-team-hint manga-team-error">
+            <option value="" disabled i18n="@@upload.series.team.choose">Choose one of your teams</option>
             @for (team of ledTeams(); track team.id) {
               <option [value]="team.id">{{ team.name }}</option>
             }
           </select>
-          <p id="manga-team-hint" class="muted field-hint" i18n="@@upload.series.team.hint">Pick one of the teams you lead to keep all its series together.</p>
+          <p id="manga-team-hint" class="muted field-hint" i18n="@@upload.series.team.hint">The team gets a task board for the series. Other teams can join it later.</p>
+          <app-field-errors id="manga-team-error" [field]="form.teamId" />
+        </div>
+      } @else {
+        <div class="card no-team" role="note">
+          <p i18n="@@upload.series.team.none">A new series belongs to a team you lead. Start a team first: it takes a name, and you can invite others later.</p>
+          <a routerLink="/scanlation" class="btn btn-primary" i18n="@@upload.series.team.start">Start a team</a>
         </div>
       }
 

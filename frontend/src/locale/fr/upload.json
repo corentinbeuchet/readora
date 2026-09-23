@@ -132,9 +132,8 @@
     "upload.series.existing.heading": "1. Série",
     "upload.series.existing.summary": "Vous publiez un chapitre de {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG} pour l'équipe {$START_TAG_STRONG}{$INTERPOLATION_1}{$CLOSE_TAG_STRONG}.",
     "upload.series.existing.hint": "D'autres équipes peuvent traduire la même série : les lecteurs voient quelle équipe a fait chaque chapitre.",
-    "upload.series.team": "Traduit par",
-    "upload.series.team.new": "Une nouvelle équipe pour cette série",
-    "upload.series.team.hint": "Choisissez l'une des équipes que vous dirigez pour garder toutes ses séries ensemble.",
+    "upload.series.team": "Traduit par {$START_TAG_SPAN}*{$CLOSE_TAG_SPAN}",
+    "upload.series.team.hint": "L'équipe reçoit un tableau de tâches pour la série. D'autres équipes peuvent la rejoindre plus tard.",
     "upload.studio.loadingSeries": "Chargement de la série…",
     "upload.studio.seriesNotFound": "Cette série est introuvable.",
     "upload.studio.seriesLoadError": "Impossible de charger la série.",
@@ -165,6 +164,12 @@
     "upload.which.askLeader": "Un chef de votre équipe peut ajouter cette série.",
     "upload.which.notThere": "Pas encore sur Readora ?",
     "upload.which.create": "Créer une nouvelle série",
-    "upload.which.textRequired": "Tapez le titre de la série"
+    "upload.which.textRequired": "Tapez le titre de la série",
+    "upload.series.team.loading": "Chargement de vos équipes…",
+    "upload.series.team.loadError": "Impossible de charger vos équipes.",
+    "upload.series.team.choose": "Choisissez l'une de vos équipes",
+    "upload.series.team.none": "Une nouvelle série appartient à une équipe que vous dirigez. Créez d'abord une équipe : il suffit d'un nom, et vous pourrez inviter d'autres personnes ensuite.",
+    "upload.series.team.start": "Créer une équipe",
+    "upload.series.team.required": "Choisissez l'équipe qui traduit la série"
   }
 }

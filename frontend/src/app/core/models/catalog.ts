@@ -154,7 +154,7 @@ export interface CreateWorkPayload {
   coverImageUrl?: string;
   genres: string[];
   facts?: WorkFactsPayload;
-  /** One of the teams I lead; left out, the series gets a new team of its own. */
+  /** The team I lead that translates the series (it gets a task board); the server refuses a new series without one (`TEAM_REQUIRED`). */
   teamId?: string;
 }
 

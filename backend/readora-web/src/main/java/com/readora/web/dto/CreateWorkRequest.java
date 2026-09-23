@@ -41,7 +41,7 @@ public record CreateWorkRequest(
 
         @Valid @Nullable WorkFactsRequest facts,
 
-        /// One of my teams that will translate the series; without it the series gets a new team of its own.
+        /// The team I lead that will translate the series (it gets a task board); required unless I am an admin (`TEAM_REQUIRED`).
         @Nullable UUID teamId
 ) {
     public CreateWorkRequest(String title, @Nullable String synopsis, WorkType type, @Nullable WorkStatus status, @Nullable String author,

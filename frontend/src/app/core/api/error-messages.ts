@@ -43,6 +43,8 @@ export function errorMessageForCode(code: string | null, retryAfterSeconds: numb
       return $localize`:@@error.alreadyOnTeam:This reader is already on the team.`;
     case 'NOT_ON_TEAM':
       return $localize`:@@error.notOnTeam:This reader is not on the team. Invite them first.`;
+    case 'TEAM_REQUIRED':
+      return $localize`:@@error.teamRequired:A new series belongs to a team you lead. Start a team first.`;
     case 'INVITATION_PENDING':
       return $localize`:@@error.invitationPending:This reader already has an invitation to the team. Wait for their answer.`;
     case 'FILE_TOO_LARGE':

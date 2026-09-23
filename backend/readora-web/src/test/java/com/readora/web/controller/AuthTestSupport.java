@@ -80,7 +80,19 @@ abstract class AuthTestSupport {
         return new Session(userId, email, username, accessToken, response.getCookie(REFRESH_COOKIE));
     }
 
-    /// The team created with a series (`POST /works` gives its creator a "<title> Workspace" team).
+    /// A team led by `leader` (a new series belongs to a team its creator leads).
+    protected UUID aTeamLedBy(Session leader) throws Exception {
+        return aTeamLedBy(leader, "Team " + UUID.randomUUID());
+    }
+
+    protected UUID aTeamLedBy(Session leader, String name) throws Exception {
+        var created = mockMvc.perform(post("/api/v1/teams").header("Authorization", leader.bearer()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"" + name + "\"}"))
+                .andExpect(status().isCreated()).andReturn();
+        return UUID.fromString(json(created).path("data").path("id").asString());
+    }
+
+    /// The team that runs the only task board of a series `member` can see (the team it was created for).
     protected String teamOf(Session member, String workId) throws Exception {
         var projects = mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
                         .get("/api/v1/works/" + workId + "/projects").header("Authorization", member.bearer()))

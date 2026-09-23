@@ -128,6 +128,11 @@ async function findOrCreateTeam(request: APIRequestContext, headers: Headers, na
   return raced!;
 }
 
+/** The publisher leads the first e2e team, so the upload studio can create a series for it; returns its name. */
+export async function givenThePublisherLeadsTheE2eTeam(request: APIRequestContext): Promise<string> {
+  return (await e2eTeam(request, await givenIAmThePublisher(request), E2E_TEAMS.first)).name;
+}
+
 /** A new series, published by the first e2e team (its task board is created with it). */
 async function createSeries(request: APIRequestContext, headers: Headers, facts?: object): Promise<{ workId: string; title: string; team: PublishingTeam }> {
   const title = `E2E Series ${uniqueSuffix()}`;

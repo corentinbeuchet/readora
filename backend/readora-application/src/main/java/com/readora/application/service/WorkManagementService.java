@@ -66,6 +66,9 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
         }
 
         Team ownTeam = details.teamId() != null ? requireLedTeam(details.teamId(), creatorId) : null;
+        if (ownTeam == null && !isAdmin(creatorId)) {
+            throw DomainValidationException.withCode(ErrorCodes.TEAM_REQUIRED, "A new series belongs to a team you lead: start a team first");
+        }
 
         WorkStatus requested = details.status();
         WorkStatus status = requested != null ? requested : WorkStatus.ONGOING;
@@ -75,12 +78,6 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
 
         if (ownTeam != null) {
             projectRepository.save(ScanlationProject.create(ownTeam.getName() + " - " + savedWork.getTitle(), savedWork.getId(), ownTeam.getId()));
-        } else if (creatorId != null) {
-            String name = savedWork.getTitle() + " Workspace";
-            String teamName = teamRepository.existsByName(name) ? name + " " + savedWork.getId().toString().substring(0, 8) : name;
-            Team team = Team.create(teamName, null, creatorId);
-            teamRepository.save(team);
-            projectRepository.save(ScanlationProject.create(name, savedWork.getId(), team.getId()));
         }
 
         return savedWork;
@@ -131,6 +128,10 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
         return savedChapter;
     }
 
+    private boolean isAdmin(UserId userId) {
+        return userRepository.findById(userId).map(account -> account.can(Permission.USER_MANAGE)).orElse(false);
+    }
+
     private Team requireLedTeam(TeamId teamId, UserId creatorId) {
         Team team = teamRepository.findById(teamId).orElseThrow(() -> new NotFoundException("Team", teamId));
         if (!team.isLeader(creatorId)) {
@@ -145,7 +146,7 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
                 .map(project -> teamRepository.findById(project.getTeamId()))
                 .flatMap(Optional::stream)
                 .anyMatch(team -> team.isLeader(editorId));
-        if (!leadsATeamOfTheSeries && !userRepository.findById(editorId).map(account -> account.can(Permission.USER_MANAGE)).orElse(false)) {
+        if (!leadsATeamOfTheSeries && !isAdmin(editorId)) {
             throw new AccessDeniedDomainException("Only a leader of a team that translates " + work.getTitle() + " can edit it");
         }
     }
@@ -157,7 +158,7 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
     private void authorizePublisher(WorkId workId, TeamId teamId, UserId publisherId) {
         Team team = teamRepository.findById(teamId).orElseThrow(() -> new NotFoundException("Team", teamId));
         boolean onTheTeam = team.findMember(publisherId).filter(m -> m.hasRole(ScanlationRole.QUALITY_CHECKER)).isPresent();
-        if (!onTheTeam && !userRepository.findById(publisherId).map(account -> account.can(Permission.USER_MANAGE)).orElse(false)) {
+        if (!onTheTeam && !isAdmin(publisherId)) {
             throw new AccessDeniedDomainException("Only a leader or quality checker of " + team.getName() + " can publish its chapters");
         }
         if (projectRepository.findByTeamId(teamId).stream().noneMatch(project -> project.getWorkId().equals(workId))) {

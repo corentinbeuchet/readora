@@ -1,18 +1,19 @@
 import { Page } from '@playwright/test';
 import { test, expect } from './support/fixtures';
-import { PAGE_PNG, givenIAmLoggedInAsThePublisher, thenTheFactIs, uniqueSuffix } from './support/helpers';
+import { PAGE_PNG, givenIAmLoggedInAsThePublisher, givenThePublisherLeadsTheE2eTeam, thenTheFactIs, uniqueSuffix } from './support/helpers';
 
 /**
  * The upload studio end to end: it starts by finding the series (US-12); a new series with its facts (US-04), one
  * chapter, then the pages readers get; or a chapter of a series already in the catalog, as the team's version.
  */
 test.describe('Upload studio', () => {
-  test('a new series is published with its facts, and its page shows them', async ({ page }) => {
+  test('a new series is published with its facts, and its page shows them', async ({ page, request }) => {
     const title = `E2E Studio ${uniqueSuffix()}`;
+    const team = await givenThePublisherLeadsTheE2eTeam(request);
     await givenIAmLoggedInAsThePublisher(page);
     await givenIAmCreatingANewSeries(page);
 
-    await whenIDescribeTheSeries(page, { title, otherTitles: 'Studio no Hon\nThe Studio Book', artist: 'Studio Artist', year: '2021', language: 'Japanese' });
+    await whenIDescribeTheSeries(page, { team, title, otherTitles: 'Studio no Hon\nThe Studio Book', artist: 'Studio Artist', year: '2021', language: 'Japanese' });
     await whenIGoOnTo(page, 'Next: Chapter Setup');
     await whenIGoOnTo(page, 'Next: Upload Pages');
     await whenIAddThePage(page, '001.png');
@@ -28,11 +29,12 @@ test.describe('Upload studio', () => {
     await thenTheChapterIsListed(page, 1);
   });
 
-  test('a year that is not a year keeps the series step from going on', async ({ page }) => {
+  test('a year that is not a year keeps the series step from going on', async ({ page, request }) => {
+    const team = await givenThePublisherLeadsTheE2eTeam(request);
     await givenIAmLoggedInAsThePublisher(page);
     await givenIAmCreatingANewSeries(page);
 
-    await whenIDescribeTheSeries(page, { title: `E2E Studio ${uniqueSuffix()}`, year: '21' });
+    await whenIDescribeTheSeries(page, { team, title: `E2E Studio ${uniqueSuffix()}`, year: '21' });
 
     await thenICannotGoOnTo(page, 'Next: Chapter Setup');
     await thenTheFieldIsRefusedWith(page, 'First published (year)', 'Enter a year between 1900 and 2100, or leave it empty');
@@ -123,7 +125,11 @@ async function thenIAmToldReadoraAlreadyHas(page: Page, title: string): Promise<
   await expect(warning.getByRole('listitem')).toHaveText([title]);
 }
 
-async function whenIDescribeTheSeries(page: Page, series: { title: string; otherTitles?: string; artist?: string; year?: string; language?: string }): Promise<void> {
+/** `team`: the team the series is for (left unchosen when the test is only about the title). */
+async function whenIDescribeTheSeries(page: Page, series: { team?: string; title: string; otherTitles?: string; artist?: string; year?: string; language?: string }): Promise<void> {
+  if (series.team) {
+    await page.getByLabel('Translated by').selectOption({ label: series.team });
+  }
   await page.getByLabel('Series Title').fill(series.title);
   await page.getByLabel('Other titles').fill(series.otherTitles ?? '');
   await page.getByLabel('Artist').fill(series.artist ?? '');

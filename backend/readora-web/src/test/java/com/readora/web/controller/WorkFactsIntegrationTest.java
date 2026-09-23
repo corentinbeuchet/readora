@@ -130,7 +130,8 @@ class WorkFactsIntegrationTest extends AuthTestSupport {
     }
 
     private String givenASeriesCreatedBy(Session scanlator, String facts) throws Exception {
-        String body = "{\"title\":\"Series " + UUID.randomUUID() + "\",\"type\":\"MANHWA\"" + (facts != null ? ",\"facts\":" + facts : "") + "}";
+        String body = "{\"title\":\"Series " + UUID.randomUUID() + "\",\"type\":\"MANHWA\",\"teamId\":\"" + aTeamLedBy(scanlator) + "\""
+                + (facts != null ? ",\"facts\":" + facts : "") + "}";
         var created = mockMvc.perform(post("/api/v1/works").header("Authorization", scanlator.bearer())
                         .contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isCreated())

@@ -12,6 +12,7 @@ export type PublishingMode = 'DIRECT' | 'SCANLATION';
 const CHAPTER_NUMBER_PATTERN = /^\d{1,6}(\.\d{1,3})?$/;
 export const CHAPTER_NUMBER_ERROR = $localize`:@@upload.chapter.number.invalid:Chapter number must be a positive number such as 1, 10 or 12.5`;
 const TITLE_REQUIRED = $localize`:@@upload.series.title.required:Give the series a title`;
+const TEAM_REQUIRED = $localize`:@@upload.series.team.required:Choose the team that translates the series`;
 export const TITLE_MAX = 255;
 
 /** Normalised chapter number (e.g. `"012.50"` -> `"12.5"`), or `null` when invalid. Never defaults to 1. */
@@ -50,7 +51,7 @@ export interface ExistingSeries {
 
 /** What the uploader types in the wizard (files are kept aside: cover and pages). */
 export interface UploadDraft {
-  /** One of the teams I lead, for a new series; `''` gives the series a new team of its own. */
+  /** The team I lead that translates a new series (it gets a task board for it); `''` until one is chosen. */
   teamId: string;
   title: string;
   type: WorkType;
@@ -88,6 +89,7 @@ const NEW_DRAFT: UploadDraft = {
 export class UploadWizard {
   readonly draft = signal<UploadDraft>(NEW_DRAFT);
   readonly form = form(this.draft, (path) => {
+    required(path.teamId, { message: TEAM_REQUIRED });
     required(path.title, { message: TITLE_REQUIRED });
     validate(path.title, ({ value }) => (value() && !value().trim() ? { kind: 'required', message: TITLE_REQUIRED } : undefined));
     maxLength(path.title, TITLE_MAX);
@@ -110,7 +112,9 @@ export class UploadWizard {
   private readonly _message = signal<string | null>(null);
   readonly message = this._message.asReadonly();
 
-  readonly seriesValid = computed(() => this.form.title().valid() && this.form.author().valid() && this.form.facts().valid());
+  readonly seriesValid = computed(
+    () => this.form.teamId().valid() && this.form.title().valid() && this.form.author().valid() && this.form.facts().valid()
+  );
   readonly chapterValid = computed(() => this.form.chapterNumber().valid() && this.form.chapterTitle().valid());
   readonly pagesValid = computed(() => this.pages().length > 0);
 

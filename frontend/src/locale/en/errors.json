@@ -19,6 +19,7 @@
     "error.lastLeader": "A team needs at least one leader. Name another leader first.",
     "error.alreadyOnTeam": "This reader is already on the team.",
     "error.notOnTeam": "This reader is not on the team. Invite them first.",
+    "error.teamRequired": "A new series belongs to a team you lead. Start a team first.",
     "error.invitationPending": "This reader already has an invitation to the team. Wait for their answer.",
     "error.fileTooLarge": "This file is too large.",
     "error.unsupportedFileFormat": "This file format is not supported.",

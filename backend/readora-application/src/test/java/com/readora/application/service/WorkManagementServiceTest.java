@@ -1,6 +1,5 @@
 package com.readora.application.service;
 
-import com.readora.domain.common.UserId;
 import com.readora.application.port.in.ManageWorkUseCase;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
@@ -11,6 +10,7 @@ import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.AccessDeniedDomainException;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.ErrorCodes;
+import com.readora.domain.common.UserId;
 import com.readora.domain.identity.UserAccount;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
@@ -59,9 +59,11 @@ class WorkManagementServiceTest {
     }
 
     @Test
-    @DisplayName("Successfully create a new work and auto-create a scanlation workspace project")
+    @DisplayName("A new work belongs to a team its creator leads, which gets a task board for it")
     void createWorkSuccess() {
         UserId creatorId = UserId.of("creator-123");
+        Team team = Team.create("Moon Scans", null, creatorId);
+        when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
         when(workRepository.save(any(Work.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(projectRepository.save(any(ScanlationProject.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -73,10 +75,10 @@ class WorkManagementServiceTest {
                 "  Chugong ",
                 Demographic.SHOUNEN,
                 "https://cdn.readora.com/covers/solo.webp",
-                Set.of("Action", "Fantasy")
+                Set.of("Action", "Fantasy"),
+                team.getId()
         ), creatorId);
 
-        assertThat(work).isNotNull();
         assertThat(work.getTitle()).isEqualTo("Solo Leveling");
         assertThat(work.getType()).isEqualTo(WorkType.MANHWA);
         assertThat(work.getGenres()).containsExactlyInAnyOrder("Action", "Fantasy");
@@ -85,16 +87,20 @@ class WorkManagementServiceTest {
 
         ArgumentCaptor<ScanlationProject> projectCaptor = ArgumentCaptor.forClass(ScanlationProject.class);
         verify(projectRepository).save(projectCaptor.capture());
-        ScanlationProject project = projectCaptor.getValue();
-        assertThat(project.getName()).isEqualTo("Solo Leveling Workspace");
-        assertThat(project.getWorkId()).isEqualTo(work.getId());
+        assertThat(projectCaptor.getValue().getWorkId()).isEqualTo(work.getId());
+        assertThat(projectCaptor.getValue().getTeamId()).isEqualTo(team.getId());
+        verify(teamRepository, never()).save(any());
+    }
 
-        ArgumentCaptor<Team> teamCaptor = ArgumentCaptor.forClass(Team.class);
-        verify(teamRepository).save(teamCaptor.capture());
-        Team team = teamCaptor.getValue();
-        assertThat(team.getName()).isEqualTo("Solo Leveling Workspace");
-        assertThat(team.findMember(creatorId)).hasValueSatisfying(member -> assertThat(member.roles()).containsExactly(ScanlationRole.LEADER));
-        assertThat(project.getTeamId()).isEqualTo(team.getId());
+    @Test
+    @DisplayName("A reader cannot create a work without a team they lead; nothing is saved")
+    void createWorkNeedsATeam() {
+        UserId creatorId = UserId.of("creator-123");
+
+        assertThatThrownBy(() -> service.createWork(new ManageWorkUseCase.NewWork("Solo Leveling", null, WorkType.MANHWA, null, null, null, null,
+                Set.of(), null), creatorId))
+                .isInstanceOfSatisfying(DomainValidationException.class, e -> assertThat(e.code()).isEqualTo(ErrorCodes.TEAM_REQUIRED));
+        verify(workRepository, never()).save(any());
     }
 
     @Test
@@ -195,7 +201,7 @@ class WorkManagementServiceTest {
     }
 
     private Team givenATeamWorkingOn(Work work, UserId leader) {
-        Team team = Team.create(work.getTitle() + " Workspace", null, leader);
+        Team team = Team.create(work.getTitle() + " Team", null, leader);
         when(workRepository.findById(work.getId())).thenReturn(Optional.of(work));
         when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
         when(projectRepository.findByTeamId(team.getId()))

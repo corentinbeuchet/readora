@@ -41,6 +41,7 @@ public final class ErrorCodes {
     public static final String ALREADY_ON_TEAM = "ALREADY_ON_TEAM";
     public static final String NOT_ON_TEAM = "NOT_ON_TEAM";
     public static final String INVITATION_PENDING = "INVITATION_PENDING";
+    public static final String TEAM_REQUIRED = "TEAM_REQUIRED";
 
     private ErrorCodes() {
     }

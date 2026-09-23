@@ -110,6 +110,15 @@ Feature: Community and scanlation teams
     Then "Bob" can open the task board of "Moon Scans" for "Solo Leveling"
     And "Aoi" cannot open the task board of "Moon Scans" for "Solo Leveling"
 
+  # A series has no owner, but someone is responsible for bringing it in: the team that will translate it.
+  @must
+  Scenario: A new series belongs to a team its creator leads
+    Given reader "Mina" leads the team "Moon Scans"
+    When "Mina" creates the series "Moonlight Saga" for "Moon Scans"
+    Then "Moon Scans" works on "Moonlight Saga"
+    When reader "Ravi" creates the series "Sunlight Saga" without a team
+    Then the series is refused because it needs a team
+
   @should
   Scenario: A team name is taken only once
     Given scanlator "Mina" leads the team "Moon Scans"

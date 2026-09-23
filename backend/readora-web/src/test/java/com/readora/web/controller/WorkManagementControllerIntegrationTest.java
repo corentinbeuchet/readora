@@ -46,7 +46,7 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
     private ScanlationProjectRepositoryPort projectRepository;
 
     @Test
-    @DisplayName("A reader creates a new Work, which auto-creates a ScanlationProject and appears in catalog")
+    @DisplayName("A leader creates a new Work for their team, which gets a task board for it; the work appears in the catalog")
     void createWorkSuccess() throws Exception {
         Session scanlator = register();
 
@@ -56,7 +56,8 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
                 WorkType.MANGA,
                 WorkStatus.ONGOING, "Tatsuki Fujimoto", Demographic.SHOUNEN,
                 "https://cdn.readora.com/covers/csm.webp",
-                Set.of("Action", "Horror")
+                Set.of("Action", "Horror"),
+                aTeamLedBy(scanlator, "Chainsaw Scans " + UUID.randomUUID())
         );
 
         var result = mockMvc.perform(post("/api/v1/works")
@@ -77,12 +78,26 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
         // Verify project created
         List<ScanlationProject> projects = projectRepository.findByWorkId(workId);
         assertThat(projects).isNotEmpty();
-        assertThat(projects.get(0).getName()).isEqualTo("Chainsaw Man Workspace");
+        assertThat(projects.get(0).getName()).startsWith("Chainsaw Scans ").endsWith(" - Chainsaw Man");
 
         // Verify work accessible via GET /api/v1/works/{id}
         mockMvc.perform(get("/api/v1/works/" + workIdStr))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.title").value("Chainsaw Man"));
+    }
+
+    @Test
+    @DisplayName("A new Work without a team the creator leads is refused (TEAM_REQUIRED, 400)")
+    void workWithoutATeamIsRefused() throws Exception {
+        Session reader = register();
+
+        mockMvc.perform(post("/api/v1/works")
+                        .header("Authorization", reader.bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new CreateWorkRequest(
+                                "No Team Manga", null, WorkType.MANGA, WorkStatus.ONGOING, null, null, null, Set.of("Action")))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("TEAM_REQUIRED"));
     }
 
     @Test
@@ -97,7 +112,8 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
                 WorkType.MANHWA,
                 WorkStatus.ONGOING, null, null,
                 "https://cdn.readora.com/covers/tog.webp",
-                Set.of("Fantasy", "Adventure")
+                Set.of("Fantasy", "Adventure"),
+                aTeamLedBy(scanlator, "Tower of God Team " + UUID.randomUUID())
         );
 
         var createWorkRes = mockMvc.perform(post("/api/v1/works")
@@ -139,7 +155,7 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.chapterNumber").value("1"))
                 .andExpect(jsonPath("$.data.team.id").value(teamId))
-                .andExpect(jsonPath("$.data.team.name", org.hamcrest.Matchers.startsWith("Tower of God Workspace")))
+                .andExpect(jsonPath("$.data.team.name", org.hamcrest.Matchers.startsWith("Tower of God Team")))
                 .andExpect(jsonPath("$.data.pages[0].pageNumber").value(1))
                 .andExpect(jsonPath("$.data.pages[0].cdnUrl", equalTo("https://cdn.readora.com/tog/c1/p1.webp")))
                 .andExpect(jsonPath("$.data.pages[0].description").doesNotExist())
@@ -155,7 +171,8 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
         Session intruder = register();
 
         CreateWorkRequest createWorkReq = new CreateWorkRequest(
-                "The Beginning After The End", "Reincarnation.", WorkType.MANHWA, WorkStatus.ONGOING, null, null, null, Set.of("Fantasy"));
+                "The Beginning After The End", "Reincarnation.", WorkType.MANHWA, WorkStatus.ONGOING, null, null, null, Set.of("Fantasy"),
+                aTeamLedBy(owner));
         var createWorkRes = mockMvc.perform(post("/api/v1/works")
                         .header("Authorization", owner.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -198,7 +215,8 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
                 WorkType.MANHWA,
                 WorkStatus.ONGOING, null, null,
                 "https://cdn.readora.com/covers/orv.webp",
-                Set.of("Action", "Fantasy")
+                Set.of("Action", "Fantasy"),
+                aTeamLedBy(scanlator)
         );
 
         var createWorkRes = mockMvc.perform(post("/api/v1/works")

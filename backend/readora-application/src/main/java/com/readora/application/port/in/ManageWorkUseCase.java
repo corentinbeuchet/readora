@@ -16,8 +16,8 @@ public interface ManageWorkUseCase {
 
     /// A work as its creator describes it; a `null` status means `ONGOING`.
     ///
-    /// @param teamId the creator's team that will translate the series; `null` gives the series a new team of its own
-    ///               ("<title> Workspace") led by the creator
+    /// @param teamId the team the creator leads that will translate the series (it gets a task board); only an admin
+    ///               may leave it `null`, to add a series no team works on yet
     record NewWork(String title, @Nullable String synopsis, WorkType type, @Nullable WorkStatus status,
                    @Nullable String author, @Nullable Demographic demographic,
                    @Nullable String coverImageUrl, Set<String> genres, WorkFacts facts, @Nullable TeamId teamId) {
@@ -43,6 +43,7 @@ public interface ManageWorkUseCase {
     ///
     /// @throws com.readora.domain.common.NotFoundException if `teamId` names no team
     /// @throws com.readora.domain.common.AccessDeniedDomainException if the creator does not lead that team
+    /// @throws com.readora.domain.common.DomainValidationException `TEAM_REQUIRED` if no team is named (admins excepted)
     Work createWork(NewWork work, UserId creatorId);
 
     /// Replaces the description of a series. Allowed to the leaders of a team that translates it (has a task board

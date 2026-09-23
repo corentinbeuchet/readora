@@ -71,7 +71,7 @@ class ValidationLimitsIntegrationTest extends AuthTestSupport {
                         .header("Authorization", scanlator.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new CreateWorkRequest(
-                                "Limits Work", "Synopsis", WorkType.MANGA, WorkStatus.ONGOING, null, null, null, Set.of("Action")))))
+                                "Limits Work", "Synopsis", WorkType.MANGA, WorkStatus.ONGOING, null, null, null, Set.of("Action"), aTeamLedBy(scanlator)))))
                 .andExpect(status().isCreated())
                 .andReturn();
         String workId = json(createWorkRes).path("data").path("id").asString();
@@ -100,7 +100,7 @@ class ValidationLimitsIntegrationTest extends AuthTestSupport {
                         .header("Authorization", scanlator.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new CreateWorkRequest(
-                                "Element Limits", "Synopsis", WorkType.MANGA, WorkStatus.ONGOING, null, null, null, Set.of("Action")))))
+                                "Element Limits", "Synopsis", WorkType.MANGA, WorkStatus.ONGOING, null, null, null, Set.of("Action"), aTeamLedBy(scanlator)))))
                 .andExpect(status().isCreated())
                 .andReturn();
         String workId = json(createWorkRes).path("data").path("id").asString();

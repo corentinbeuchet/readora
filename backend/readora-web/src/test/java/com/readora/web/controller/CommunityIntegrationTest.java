@@ -34,8 +34,10 @@ class CommunityIntegrationTest extends AuthTestSupport {
     void communityFlow() throws Exception {
         Session leader = register();
         String title = "Team Work, \"quoted\" " + UUID.randomUUID();
+        String teamName = "Shadow " + UUID.randomUUID();
+        UUID team = aTeamLedBy(leader, teamName);
         var work = mockMvc.perform(post("/api/v1/works").header("Authorization", leader.bearer()).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"" + title.replace("\"", "\\\"") + "\",\"type\":\"MANHWA\",\"genres\":[\"Action\"]}"))
+                        .content("{\"title\":\"" + title.replace("\"", "\\\"") + "\",\"type\":\"MANHWA\",\"genres\":[\"Action\"],\"teamId\":\"" + team + "\"}"))
                 .andExpect(status().isCreated()).andReturn();
         String workId = json(work).path("data").path("id").asString();
         var projects = mockMvc.perform(get("/api/v1/works/" + workId + "/projects").header("Authorization", leader.bearer())).andReturn();
@@ -51,7 +53,7 @@ class CommunityIntegrationTest extends AuthTestSupport {
         mockMvc.perform(put("/api/v1/teams/" + teamId + "/follow").header("Authorization", kenji.bearer())).andExpect(status().isOk());
         mockMvc.perform(get("/api/v1/teams/" + teamId).header("Authorization", kenji.bearer()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.name").value(title + " Workspace"))
+                .andExpect(jsonPath("$.data.name").value(teamName))
                 .andExpect(jsonPath("$.data.series.length()").value(1))
                 .andExpect(jsonPath("$.data.series[0].work.title").value(title))
                 .andExpect(jsonPath("$.data.series[0].chapterCount").value(1))
@@ -62,7 +64,7 @@ class CommunityIntegrationTest extends AuthTestSupport {
         mockMvc.perform(get("/api/v1/teams/" + teamId)).andExpect(jsonPath("$.data.following").value(false));
         mockMvc.perform(get("/api/v1/chapters/" + chapterId))
                 .andExpect(jsonPath("$.data.team.id").value(teamId))
-                .andExpect(jsonPath("$.data.team.name").value(title + " Workspace"));
+                .andExpect(jsonPath("$.data.team.name").value(teamName));
         mockMvc.perform(get("/api/v1/updates").param("mine", "true").header("Authorization", kenji.bearer()))
                 .andExpect(jsonPath("$.data[*].chapterId", hasItem(chapterId)));
 

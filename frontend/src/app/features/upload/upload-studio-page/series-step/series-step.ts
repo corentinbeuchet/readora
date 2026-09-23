@@ -13,6 +13,7 @@ import { CoverPicker } from './cover-picker/cover-picker';
 import { FieldErrors } from '@app/shared/forms/field-errors';
 import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
 import { WorkFactsFields } from '@app/shared/forms/work-facts-fields/work-facts-fields';
+import { LoadError } from '@app/shared/ui/load-error';
 
 const SIMILAR_DEBOUNCE_MS = 400;
 const SIMILAR_MIN_LENGTH = 3;
@@ -21,7 +22,7 @@ const SIMILAR_RESULTS = 3;
 /** Step 1: the series' details and cover, or what is being published into when the series already exists. */
 @Component({
   selector: 'app-series-step',
-  imports: [FieldErrors, AriaInvalidDirective, FormField, CoverPicker, WorkFactsFields, RouterLink],
+  imports: [FieldErrors, AriaInvalidDirective, FormField, CoverPicker, WorkFactsFields, RouterLink, LoadError],
   templateUrl: './series-step.html',
   styleUrl: './series-step.scss'
 })
@@ -36,8 +37,14 @@ export class SeriesStep {
   private readonly catalogApi = inject(CatalogApi);
   private readonly canSeeTeams = computed(() => !this.existing() && this.auth.can('LIBRARY_USE'));
   private readonly myTeams = inject(TeamsApi).mineResource(this.canSeeTeams);
-  /** Teams I lead: a new series can belong to one of them instead of getting a team of its own. */
+  protected readonly teamsLoading = computed(() => this.myTeams.status() === 'loading');
+  protected readonly teamsError = computed(() => this.myTeams.error());
+  /** Teams I lead: a new series belongs to one of them, which gets a task board for it. */
   protected readonly ledTeams = computed(() => (this.myTeams.hasValue() ? this.myTeams.value().filter(leadsTeam) : []));
+
+  protected reloadTeams(): void {
+    this.myTeams.reload();
+  }
 
   /**
    * Series of the catalog whose title, other title or author matches the title being typed (US-12): the uploader

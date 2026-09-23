@@ -89,7 +89,8 @@ class NotificationIntegrationTest extends AuthTestSupport {
     private String createWork(Session team) throws Exception {
         var work = mockMvc.perform(post("/api/v1/works").header("Authorization", team.bearer())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"Notified Work " + UUID.randomUUID() + "\",\"type\":\"MANHWA\",\"genres\":[\"Action\"]}"))
+                        .content("{\"title\":\"Notified Work " + UUID.randomUUID() + "\",\"type\":\"MANHWA\",\"genres\":[\"Action\"],\"teamId\":\""
+                                + aTeamLedBy(team) + "\"}"))
                 .andExpect(status().isCreated()).andReturn();
         return json(work).path("data").path("id").asString();
     }

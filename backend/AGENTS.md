@@ -50,7 +50,8 @@
   A chapter belongs to a team (`Chapter.teamId`, never null): whoever publishes names the team in the request, and
   the service checks both that the actor may publish for that team and that the team works on the series
   (`TEAM_NOT_ON_SERIES`). A payload that shows a chapter carries its `TeamCredit` (id + name).
-- A series has no owner: several teams may translate it. Its description (`Work.describe`, `PUT /works/{id}`, which
+- A series has no owner: several teams may translate it, but it comes in through one: a new series names a team its
+  creator leads, which gets its task board (`TEAM_REQUIRED` otherwise; only an admin may add a series without a team). Its description (`Work.describe`, `PUT /works/{id}`, which
   replaces the whole description, facts included) is edited by a leader of any team that has a project on it, or an
   admin (`WorkManagementService.requireSeriesLeaderOrAdmin`). The optional facts
   are the value object `WorkFacts` (other titles, artist, year, original language, content rating): `null` or no
