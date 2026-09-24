@@ -1,4 +1,5 @@
-import { APIRequestContext, Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { APIRequestContext, Download, Page } from '@playwright/test';
 import { test, expect } from './support/fixtures';
 import { PASSWORD, RegisteredAccount, registerAccount, resetLinkSentTo, thenTheAccountMenuOffersTeamToolsButNotModeration, uniqueSuffix } from './support/helpers';
 
@@ -102,6 +103,16 @@ test.describe('Authentication flow', () => {
     await thenIAmSignedIn(page);
   });
 
+  test('a reader downloads everything Readora keeps about them (US-15)', async ({ page }) => {
+    const me = await givenIHaveSignedUp(page);
+
+    await whenIOpenTheTab(page, 'Account');
+    const file = await whenIDownloadMyData(page);
+
+    await thenTheFileIsNamed(file, 'readora-account.json');
+    await thenTheFileHoldsMyAccount(file, me);
+  });
+
   test('a reader deletes the account and can no longer log in (US-15)', async ({ page }) => {
     const me = await givenIHaveSignedUp(page);
 
@@ -160,6 +171,21 @@ async function whenIChooseTheNewPassword(page: Page, password: string): Promise<
   await page.getByLabel('New password', { exact: true }).fill(password);
   await page.getByLabel('Confirm the new password').fill(password);
   await page.getByRole('button', { name: 'Save the new password' }).click();
+}
+
+async function whenIDownloadMyData(page: Page): Promise<Download> {
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download my data' }).click();
+  return download;
+}
+
+async function thenTheFileIsNamed(file: Download, name: string): Promise<void> {
+  expect(file.suggestedFilename()).toBe(name);
+}
+
+async function thenTheFileHoldsMyAccount(file: Download, me: Account): Promise<void> {
+  const content = JSON.parse(readFileSync(await file.path(), 'utf-8')) as { username: string; email: string };
+  expect(content).toMatchObject({ username: me.username, email: me.email });
 }
 
 async function whenIDeleteMyAccount(page: Page, password: string): Promise<void> {

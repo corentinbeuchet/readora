@@ -78,3 +78,12 @@ Feature: My account
     When "Camille" deletes the account with the password "first-password"
     Then the deletion is refused with the error code "LAST_LEADER"
     And "Camille" can still log in with "first-password"
+
+  # Inspired by: the GDPR right to data portability. One JSON file with everything the account holds, for people and
+  # for programs; the library-only CSV export of US-12 stays for spreadsheets.
+  @must
+  Scenario: Downloading everything Readora keeps about me
+    Given "Camille" keeps "Solo Leveling" in the library, commented "What a chapter!" and rated "Solo Leveling" 9
+    When "Camille" downloads the account data
+    Then the file holds the account of "Camille" with its email
+    And the file lists "Solo Leveling" in the library, the comment "What a chapter!" and the rating 9

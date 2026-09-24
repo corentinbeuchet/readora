@@ -34,6 +34,7 @@ import com.readora.infrastructure.persistence.adapter.PageReportRepositoryAdapte
 import com.readora.infrastructure.persistence.adapter.PasswordResetTokenRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.RatingRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.ReaderDataErasureAdapter;
+import com.readora.infrastructure.persistence.adapter.ReaderDataExportAdapter;
 import com.readora.infrastructure.persistence.adapter.ReadingListRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.ScanlationProjectRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.TeamInvitationRepositoryAdapter;
@@ -534,5 +535,27 @@ class PostgresMigrationTest {
 
         assertThat(library.find(reader.getId(), work.getId())).isEmpty();
         assertThat(userRepository.findById(reader.getId())).get().satisfies(account -> assertThat(account.isDeleted()).isTrue());
+    }
+
+    @Autowired
+    private ReaderDataExportAdapter readerExport;
+
+    @Test
+    @DisplayName("The account export's queries run on PostgreSQL and read its timestamps")
+    void readerExportRunsOnPostgres() {
+        UserAccount reader = userRepository.save(UserAccount.register(Email.of("pg-export-" + java.util.UUID.randomUUID() + "@readora.test"),
+                "pgexport" + (System.nanoTime() % 100000), PasswordHash.of("hash")));
+        Work work = workRepository.save(Work.create("PG Export", "", WorkType.MANGA, "c.png", Set.of("Action")));
+        library.save(LibraryEntry.add(reader.getId(), work.getId(), ReadingStatus.READING, java.time.Instant.parse("2026-09-24T10:00:00Z")));
+        teamRepository.save(Team.create("PG Export Team " + java.util.UUID.randomUUID(), null, reader.getId()));
+
+        var data = readerExport.dataOf(reader.getId());
+
+        assertThat(data.library()).singleElement().satisfies(item -> {
+            assertThat(item.series()).isEqualTo("PG Export");
+            assertThat(item.addedAt()).isEqualTo(java.time.Instant.parse("2026-09-24T10:00:00Z"));
+        });
+        assertThat(data.teams()).singleElement().satisfies(team -> assertThat(team.roles()).containsExactly("LEADER"));
+        assertThat(data.comments()).isEmpty();
     }
 }

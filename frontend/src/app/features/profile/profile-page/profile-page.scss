@@ -29,6 +29,10 @@
   font-weight: var(--fw-black);
 }
 
+.section-gap {
+  margin-top: var(--space-6);
+}
+
 // The irreversible part of the Account tab, set apart from the password form above it.
 .danger-zone {
   margin-top: var(--space-6);

@@ -3,14 +3,18 @@ package com.readora.acceptance.steps;
 import com.readora.acceptance.fakes.FakeTokens;
 import com.readora.acceptance.fakes.InMemoryPasswordResetTokens;
 import com.readora.acceptance.fakes.InMemoryReaderData;
+import com.readora.acceptance.fakes.InMemoryReaderExport;
 import com.readora.acceptance.fakes.InMemoryRefreshTokens;
 import com.readora.acceptance.fakes.InMemoryTeamRepository;
 import com.readora.acceptance.fakes.InMemoryUserAccounts;
 import com.readora.acceptance.fakes.MutableClock;
 import com.readora.acceptance.fakes.RecordingMail;
+import com.readora.application.export.ReaderData;
 import com.readora.application.port.in.AuthenticateUserUseCase.AuthResult;
+import com.readora.application.port.in.ExportMyDataUseCase.AccountExport;
 import com.readora.application.port.in.ResetPasswordUseCase.SiteLanguage;
 import com.readora.application.service.AccountDeletionService;
+import com.readora.application.service.AccountExportService;
 import com.readora.application.service.AuthenticationService;
 import com.readora.application.service.PasswordResetService;
 import com.readora.domain.common.CodedException;
@@ -46,6 +50,9 @@ public class MyAccountStepDefinitions {
     private InMemoryUserAccounts accountRepository;
     private InMemoryTeamRepository teams;
     private InMemoryReaderData readerData;
+    private InMemoryReaderExport readerExport;
+    private AccountExportService exports;
+    private AccountExport exported;
     /// The refresh token of each signed-in device, by "<reader> <device>".
     private final Map<String, String> devices = new HashMap<>();
     private final Map<String, UserId> accounts = new HashMap<>();
@@ -64,6 +71,8 @@ public class MyAccountStepDefinitions {
         teams = new InMemoryTeamRepository();
         readerData = new InMemoryReaderData();
         deletion = new AccountDeletionService(accountRepository, teams, readerData, refreshTokens, resetTokens, tokens, clock);
+        readerExport = new InMemoryReaderExport();
+        exports = new AccountExportService(accountRepository, readerExport, clock);
         devices.clear();
         accounts.clear();
         refusal = null;
@@ -214,5 +223,29 @@ public class MyAccountStepDefinitions {
     @Then("the deletion is refused with the error code {string}")
     public void theDeletionIsRefused(String code) {
         thePasswordChangeIsRefused(code);
+    }
+    @Given("{string} keeps {string} in the library, commented {string} and rated {string} {int}")
+    public void keepsCommentsAndRates(String reader, String series, String comment, String rated, int score) {
+        readerExport.keep(accounts.get(reader), series, clock.instant());
+        readerExport.comment(accounts.get(reader), series, comment, clock.instant());
+        readerExport.rate(accounts.get(reader), rated, score, clock.instant());
+    }
+
+    @When("{string} downloads the account data")
+    public void downloadsTheAccountData(String reader) {
+        exported = exports.export(accounts.get(reader));
+    }
+
+    @Then("the file holds the account of {string} with its email")
+    public void theFileHoldsTheAccount(String reader) {
+        assertThat(exported.username()).isEqualTo(reader.toLowerCase(Locale.ROOT));
+        assertThat(exported.email()).isEqualTo(email(reader));
+    }
+
+    @Then("the file lists {string} in the library, the comment {string} and the rating {int}")
+    public void theFileListsTheData(String series, String comment, int score) {
+        assertThat(exported.data().library()).extracting(ReaderData.LibraryItem::series).containsExactly(series);
+        assertThat(exported.data().comments()).extracting(ReaderData.Comment::content).containsExactly(comment);
+        assertThat(exported.data().ratings()).extracting(ReaderData.Rating::score).containsExactly(score);
     }
 }

@@ -6,6 +6,7 @@ import com.readora.application.port.in.CommunityUseCase;
 import com.readora.application.port.in.DeleteAccountUseCase;
 import com.readora.application.port.in.DirectPublishChapterUseCase;
 import com.readora.application.port.in.DiscoverUseCase;
+import com.readora.application.port.in.ExportMyDataUseCase;
 import com.readora.application.port.in.ManageAssetsUseCase;
 import com.readora.application.port.in.ManageBookmarkUseCase;
 import com.readora.application.port.in.ManageLibraryUseCase;
@@ -25,6 +26,7 @@ import com.readora.application.port.in.ReviewChaptersUseCase;
 import com.readora.application.port.in.TrackReadingUseCase;
 import com.readora.application.port.out.*;
 import com.readora.application.service.AccountDeletionService;
+import com.readora.application.service.AccountExportService;
 import com.readora.application.service.AssetService;
 import com.readora.application.service.AuthenticationService;
 import com.readora.application.service.BookmarkService;
@@ -147,6 +149,11 @@ public class DomainServiceConfig {
                                                      PasswordHasherPort passwordHasher) {
         return transactional(new AccountDeletionService(users, teams, erasure, refreshTokens, resetTokens, passwordHasher, Clock.systemUTC()),
                 DeleteAccountUseCase.class, transactionManager);
+    }
+
+    @Bean
+    public ExportMyDataUseCase exportMyDataUseCase(UserAccountRepositoryPort users, ReaderDataExportPort readerData) {
+        return transactional(new AccountExportService(users, readerData, Clock.systemUTC()), ExportMyDataUseCase.class, transactionManager);
     }
 
     @Bean

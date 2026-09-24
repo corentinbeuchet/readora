@@ -50,6 +50,12 @@
     "profile.delete.submit": "Supprimer mon compte définitivement",
     "profile.delete.passwordRequired": "Saisissez votre mot de passe pour confirmer",
     "profile.delete.error": "Votre compte n'a pas pu être supprimé. Veuillez réessayer.",
-    "profile.page.deleteTitle": "Supprimer mon compte"
+    "profile.page.deleteTitle": "Supprimer mon compte",
+    "profile.data.intro": "Un fichier JSON avec votre compte, votre bibliothèque, votre historique de lecture, vos marque-pages, vos listes, vos commentaires, vos notes et vos équipes.",
+    "profile.data.downloading": "Préparation…",
+    "profile.data.download": "Télécharger mes données",
+    "profile.data.error": "Vos données n'ont pas pu être téléchargées. Veuillez réessayer.",
+    "profile.data.done": "Vos données sont téléchargées (readora-account.json).",
+    "profile.page.dataTitle": "Mes données"
   }
 }

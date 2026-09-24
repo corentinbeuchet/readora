@@ -8,12 +8,13 @@ import { BookmarkList } from './bookmark-list/bookmark-list';
 import { ProfileForm } from './profile-form/profile-form';
 import { ChangePassword } from './change-password/change-password';
 import { DeleteAccount } from './delete-account/delete-account';
+import { DownloadData } from './download-data/download-data';
 
 export type ProfileTab = 'overview' | 'bookmarks' | 'account';
 
 @Component({
   selector: 'app-profile-page',
-  imports: [NgOptimizedImage, DatePipe, Tabs, TabList, Tab, TabPanel, TabContent, ProfileForm, BookmarkList, ChangePassword, DeleteAccount],
+  imports: [NgOptimizedImage, DatePipe, Tabs, TabList, Tab, TabPanel, TabContent, ProfileForm, BookmarkList, ChangePassword, DownloadData, DeleteAccount],
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.scss'
 })

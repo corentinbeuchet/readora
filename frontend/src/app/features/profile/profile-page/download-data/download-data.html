@@ -1,0 +1,12 @@
+<p class="muted" i18n="@@profile.data.intro">One JSON file with your account, library, reading history, bookmarks, lists, comments, ratings and teams.</p>
+@if (downloading.error(); as message) {
+  <p class="form-error" role="alert">{{ message }}</p>
+}
+<p class="muted" role="status">{{ done() }}</p>
+<button type="button" class="btn" [disabled]="downloading.busy()" (click)="download()">
+  @if (downloading.busy()) {
+    <ng-container i18n="@@profile.data.downloading">Preparing…</ng-container>
+  } @else {
+    <ng-container i18n="@@profile.data.download">Download my data</ng-container>
+  }
+</button>
