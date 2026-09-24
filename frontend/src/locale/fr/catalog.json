@@ -2,7 +2,10 @@
   "locale": "fr",
   "translations": {
     "catalog.addToList.noList": "Créez {$START_LINK}une liste{$CLOSE_LINK} pour rassembler les séries que vous recommandez.",
-    "catalog.addToList.list": "Ajouter à une liste",
+    "catalog.addToList.open": "Ajouter à une liste",
+    "catalog.addToList.loadError": "Vos listes n’ont pas pu être chargées.",
+    "catalog.addToList.loading": "Chargement de vos listes…",
+    "catalog.addToList.list": "Liste",
     "catalog.addToList.note": "Note (facultatif)",
     "catalog.addToList.submit": "Ajouter",
     "catalog.addToList.added": "Ajouté à « {$title} ».",

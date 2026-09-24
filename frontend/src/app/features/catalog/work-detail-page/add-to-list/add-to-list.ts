@@ -4,11 +4,15 @@ import { firstValueFrom } from 'rxjs';
 import { ListsApi } from '@app/core/api/lists-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { asyncAction } from '@app/core/utils/async-action';
+import { LoadError } from '@app/shared/ui/load-error';
 
-/** "Add to a list" on a series page (US-05): pick one of my lists, add an optional note. */
+/**
+ * "Add to a list" on a series page (US-05): a disclosure that, once opened, loads my lists and lets me pick one and
+ * add an optional note. Closed, it asks for nothing (most visits never add to a list).
+ */
 @Component({
   selector: 'app-add-to-list',
-  imports: [RouterLink],
+  imports: [RouterLink, LoadError],
   templateUrl: './add-to-list.html',
   styleUrl: './add-to-list.scss'
 })
@@ -18,12 +22,17 @@ export class AddToList {
 
   readonly workId = input.required<string>();
 
-  private readonly enabled = computed(() => this.auth.can('LIBRARY_USE'));
+  protected readonly open = signal(false);
+  private readonly enabled = computed(() => this.open() && this.auth.can('LIBRARY_USE'));
   protected readonly mine = this.api.mineResource(this.enabled);
   protected readonly selected = signal('');
   protected readonly note = signal('');
   protected readonly message = signal<string | null>(null);
   protected readonly adding = asyncAction();
+
+  protected toggle(): void {
+    this.open.update((open) => !open);
+  }
 
   protected async add(event: Event): Promise<void> {
     event.preventDefault();

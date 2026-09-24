@@ -1,10 +1,13 @@
 {
   "locale": "en",
   "translations": {
+    "catalog.addToList.open": "Add to a list",
+    "catalog.addToList.loadError": "Your lists could not be loaded.",
     "catalog.addToList.noList": "Make {$START_LINK}a list{$CLOSE_LINK} to collect series you recommend.",
-    "catalog.addToList.list": "Add to a list",
+    "catalog.addToList.list": "List",
     "catalog.addToList.note": "Note (optional)",
     "catalog.addToList.submit": "Add",
+    "catalog.addToList.loading": "Loading your lists…",
     "catalog.addToList.added": "Added to “{$title}”.",
     "catalog.work.chapters.filter.label": "Translated by",
     "catalog.work.chapters.filter.all": "All teams",

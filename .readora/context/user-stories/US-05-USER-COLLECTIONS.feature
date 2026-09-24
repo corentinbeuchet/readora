@@ -42,3 +42,10 @@ Feature: My library
   Scenario: Sharing a public list
     When "Kenji" publishes the list "Peak Webtoons" with "Solo Leveling" and "Omniscient Reader"
     Then other readers can see and upvote "Peak Webtoons"
+
+  @could @ui
+  Scenario: Adding a series to one of my lists from its page
+    Given "Kenji" has the lists "Peak Webtoons" and "Comfort reads"
+    When "Kenji" opens "Add to a list" on the page of "Solo Leveling" and adds it to "Comfort reads" with the note "Cozy"
+    Then "Comfort reads" holds "Solo Leveling" with the note "Cozy"
+    And Kenji's lists are only fetched once he opens "Add to a list"

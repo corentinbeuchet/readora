@@ -1,9 +1,16 @@
 .add-to-list {
+  margin-top: var(--space-4);
+}
+
+.add-to-list-panel {
+  margin-top: var(--space-3);
+}
+
+.add-to-list-form {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 0.75rem;
-  margin-top: 1rem;
+  gap: var(--space-3);
 
   .field {
     margin: 0;
