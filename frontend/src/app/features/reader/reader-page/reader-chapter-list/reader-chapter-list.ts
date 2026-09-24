@@ -1,3 +1,4 @@
+import { Icon } from '@app/shared/ui/icon/icon';
 import { Component, computed, inject, input, linkedSignal, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CatalogApi } from '@app/core/api/catalog-api';
@@ -13,7 +14,7 @@ import { LoadError } from '@app/shared/ui/load-error';
  */
 @Component({
   selector: 'app-reader-chapter-list',
-  imports: [LoadError, RouterLink],
+  imports: [Icon, LoadError, RouterLink],
   templateUrl: './reader-chapter-list.html',
   styleUrl: './reader-chapter-list.scss'
 })

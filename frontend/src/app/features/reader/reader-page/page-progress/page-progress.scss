@@ -16,6 +16,7 @@
 
 .progress-percent {
   font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
   color: var(--muted);
   min-width: 2.5rem;
   text-align: right;

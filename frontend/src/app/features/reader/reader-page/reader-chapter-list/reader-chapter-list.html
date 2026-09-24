@@ -15,7 +15,7 @@
               <span class="reader-chapter-team" i18n="@@reader.chapterList.by">by {{ team }}</span>
             }
             @if (row.read) {
-              <span class="reader-chapter-state" i18n="@@reader.chapterList.read">✓ Read</span>
+              <span class="reader-chapter-state"><app-icon name="check" /><span i18n="@@reader.chapterList.readState">Read</span></span>
             }
           </a>
         </li>

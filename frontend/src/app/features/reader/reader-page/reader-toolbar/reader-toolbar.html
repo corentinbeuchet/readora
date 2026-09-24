@@ -26,7 +26,7 @@
       @if (state.currentChapter()?.title; as title) {
         {{ title }}
       } @else {
-        <ng-container i18n="@@reader.toolbar.noChapter">No Chapter Loaded</ng-container>
+        <ng-container i18n="@@reader.toolbar.noChapterLoaded">No chapter loaded</ng-container>
       }
     </h1>
     <span class="page-indicator" aria-hidden="true" i18n="@@reader.toolbar.pageIndicator">Page {{ state.currentPageIndex() + 1 }} / {{ state.totalPages() }}</span>
@@ -81,8 +81,10 @@
       </button>
     </div>
     <div ngToolbarWidgetGroup>
-      <button type="button" ngToolbarWidget value="zoom-in" (click)="state.setZoom(state.zoomLevel() + 10)" i18n="@@reader.toolbar.zoomIn">Zoom in</button>
       <button type="button" ngToolbarWidget value="zoom-out" (click)="state.setZoom(state.zoomLevel() - 10)" i18n="@@reader.toolbar.zoomOut">Zoom out</button>
+      <!-- The level between the buttons; the buttons keep their visible names (WCAG 2.5.3). -->
+      <span class="zoom-level" aria-hidden="true">{{ state.zoomLevel() }}%</span>
+      <button type="button" ngToolbarWidget value="zoom-in" (click)="state.setZoom(state.zoomLevel() + 10)" i18n="@@reader.toolbar.zoomIn">Zoom in</button>
     </div>
   </div>
 </header>

@@ -24,7 +24,7 @@
         @for (top of topComments.value(); track top.id) {
           <li class="top-comment">
             <a class="top-comment-author" [routerLink]="['/u', top.authorUsername]">{{ top.authorUsername }}</a>
-            <span class="muted">▲ {{ top.upvotes }}<span class="sr-only" i18n="@@reader.chapterEnd.upvotes"> upvotes</span></span>
+            <span class="muted upvotes"><app-icon name="arrow-big-up" />{{ top.upvotes }}<span class="sr-only" i18n="@@reader.chapterEnd.upvotes"> upvotes</span></span>
             <p>{{ top.content }}</p>
           </li>
         }

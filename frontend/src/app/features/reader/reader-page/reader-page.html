@@ -12,7 +12,7 @@
     </div>
   } @else {
     <!-- Controls stay focusable while hidden in zen mode: focusing one shows them again. -->
-    <div class="reader-controls" [class.controls-hidden]="controlsHidden()" (focusin)="revealControls()">
+    <div class="reader-controls" [class.zen]="zen()" [class.controls-hidden]="controlsHidden()" (focusin)="revealControls()">
       <app-reader-toolbar
         [zen]="zen()"
         [settingsOpen]="settingsOpen()"

@@ -1,3 +1,4 @@
+import { Icon } from '@app/shared/ui/icon/icon';
 import { Component, computed, inject, linkedSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommentsApi } from '@app/core/api/comments-api';
@@ -8,7 +9,7 @@ import { ReaderState } from '@app/features/reader/reader-page/reader-state';
 /** End of the chapter: previous / next chapter and the chapter list, then the best comments (US-07). */
 @Component({
   selector: 'app-chapter-end',
-  imports: [RouterLink],
+  imports: [Icon, RouterLink],
   templateUrl: './chapter-end.html',
   styleUrl: './chapter-end.scss'
 })
