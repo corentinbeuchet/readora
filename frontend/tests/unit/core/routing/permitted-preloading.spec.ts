@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { Permission } from '@app/core/models/identity';
 import { PermittedPreloading } from '@app/core/routing/permitted-preloading';
+import { setBrowserSaveData } from '../../test-utils';
 
 describe('PermittedPreloading', () => {
   let granted: Set<Permission>;
@@ -18,7 +19,7 @@ describe('PermittedPreloading', () => {
   });
 
   afterEach(() => {
-    delete (navigator as { connection?: unknown }).connection;
+    setBrowserSaveData(false);
   });
 
   it('preloads the pages anyone can open', () => {
@@ -59,7 +60,7 @@ describe('PermittedPreloading', () => {
   }
 
   function givenTheBrowserSavesData(): void {
-    Object.defineProperty(navigator, 'connection', { value: { saveData: true }, configurable: true });
+    setBrowserSaveData(true);
   }
 
   function whenTheRouterOffers(route: Route): void {

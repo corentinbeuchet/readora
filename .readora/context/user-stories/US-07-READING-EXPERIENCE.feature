@@ -158,6 +158,15 @@ Feature: A reading experience as good as the best manga and webtoon apps
     When "Kenji" turns on "Data saver"
     Then chapters load lighter, lower-quality images
 
+  # Inspired by: the Save-Data client hint (browsers' "Lite mode" / data saver setting)
+  @should @ui
+  Scenario: The data saver follows the browser's data-saving mode until I choose
+    Given Kenji's browser asks sites to save data
+    And "Kenji" never turned "Data saver" on or off
+    Then chapters load lighter, lower-quality images
+    When "Kenji" turns off "Data saver"
+    Then chapters load the full images, even though the browser still asks to save data
+
   # Inspired by: MangaDex (from docs/use-cases UC-17)
   @should
   Scenario: Marking all previous chapters as read

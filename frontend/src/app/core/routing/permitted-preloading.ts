@@ -3,11 +3,7 @@ import { PreloadingStrategy, Route } from '@angular/router';
 import { EMPTY, Observable } from 'rxjs';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { requiredPermissions } from '@app/core/auth/permission.guard';
-
-/** `navigator.connection` (Network Information API) is not in the DOM typings of every browser. */
-interface NavigatorWithConnection {
-  connection?: { saveData?: boolean };
-}
+import { browserSavesData } from '@app/core/utils/save-data';
 
 /**
  * Preloads the lazy pages the current visitor can open, in the background after navigation, so the next click is
@@ -22,11 +18,6 @@ export class PermittedPreloading implements PreloadingStrategy {
 
   preload(route: Route, load: () => Observable<unknown>): Observable<unknown> {
     const permitted = this.auth.hasAllPermissions(...requiredPermissions(route));
-    return permitted && !this.savesData() ? load() : EMPTY;
-  }
-
-  private savesData(): boolean {
-    const navigator = this.document.defaultView?.navigator as NavigatorWithConnection | undefined;
-    return navigator?.connection?.saveData === true;
+    return permitted && !browserSavesData(this.document) ? load() : EMPTY;
   }
 }

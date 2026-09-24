@@ -112,3 +112,15 @@ export async function settleUnderFakeTimers(target: { detectChanges(): void }): 
   await vi.advanceTimersByTimeAsync(0);
   target.detectChanges();
 }
+
+/**
+ * Makes the browser ask sites to save data (`navigator.connection.saveData`, jsdom has no `connection`), or removes
+ * it again: call `setBrowserSaveData(false)` in `afterEach` of any spec that sets it.
+ */
+export function setBrowserSaveData(saveData: boolean): void {
+  if (saveData) {
+    Object.defineProperty(navigator, 'connection', { value: { saveData: true }, configurable: true });
+  } else {
+    delete (navigator as { connection?: unknown }).connection;
+  }
+}

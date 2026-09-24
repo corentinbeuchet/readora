@@ -1,6 +1,7 @@
-import { Service, computed, inject, signal } from '@angular/core';
+import { DOCUMENT, Service, computed, inject, signal } from '@angular/core';
 import { WorkType } from '@app/core/models/catalog';
 import { BrowserStorage } from '@app/core/storage/browser-storage';
+import { browserSavesData } from '@app/core/utils/save-data';
 
 export type ViewMode = 'VERTICAL' | 'PAGED';
 export type ReadingDirection = 'LTR' | 'RTL';
@@ -20,8 +21,11 @@ export interface ReaderPreferences {
   background: ReaderBackground;
   doublePage: boolean;
   autoScrollSpeed: AutoScrollSpeed;
-  /** Lighter page images to save mobile data (US-07). */
-  dataSaver: boolean;
+  /**
+   * Lighter page images to save mobile data (US-07); `null` until the reader chooses, and then the browser's
+   * data-saving mode decides (`Save-Data`).
+   */
+  dataSaver: boolean | null;
 }
 
 export const READER_PREFERENCES_KEY = 'readora.reader.preferences';
@@ -34,7 +38,7 @@ const DEFAULTS: ReaderPreferences = {
   background: 'BLACK',
   doublePage: false,
   autoScrollSpeed: 'MEDIUM',
-  dataSaver: false
+  dataSaver: null
 };
 
 /**
@@ -56,13 +60,15 @@ export function defaultLayout(type: WorkType | undefined): SeriesLayout {
 @Service()
 export class ReaderPreferencesStore {
   private readonly storage = inject(BrowserStorage);
+  private readonly document = inject(DOCUMENT);
   private readonly _prefs = signal<ReaderPreferences>(sanitize(this.storage.read<Partial<ReaderPreferences>>(READER_PREFERENCES_KEY)));
 
   readonly fit = computed(() => this._prefs().fit);
   readonly background = computed(() => this._prefs().background);
   readonly doublePage = computed(() => this._prefs().doublePage);
   readonly autoScrollSpeed = computed(() => this._prefs().autoScrollSpeed);
-  readonly dataSaver = computed(() => this._prefs().dataSaver);
+  /** The reader's choice, else the browser's data-saving mode (read when the setting is first needed). */
+  readonly dataSaver = computed(() => this._prefs().dataSaver ?? browserSavesData(this.document));
 
   /** The layout the reader chose for this series, or the default for its format. */
   layoutFor(workId: string, type: WorkType | undefined): SeriesLayout {
@@ -132,6 +138,6 @@ function sanitize(stored: Partial<ReaderPreferences> | null): ReaderPreferences 
     background: oneOf(['BLACK', 'GRAY', 'WHITE'] as const, stored.background, DEFAULTS.background),
     doublePage: stored.doublePage === true,
     autoScrollSpeed: oneOf(['SLOW', 'MEDIUM', 'FAST'] as const, stored.autoScrollSpeed, DEFAULTS.autoScrollSpeed),
-    dataSaver: stored.dataSaver === true
+    dataSaver: typeof stored.dataSaver === 'boolean' ? stored.dataSaver : null
   };
 }

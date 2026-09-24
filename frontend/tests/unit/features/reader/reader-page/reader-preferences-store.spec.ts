@@ -10,7 +10,7 @@ import {
   SeriesLayout,
   defaultLayout
 } from '@app/features/reader/reader-page/reader-preferences-store';
-import { MemoryStorage } from '../../../test-utils';
+import { MemoryStorage, setBrowserSaveData } from '../../../test-utils';
 
 interface Settings {
   fit: FitMode;
@@ -23,6 +23,10 @@ interface Settings {
 describe('ReaderPreferencesStore', () => {
   let storage: MemoryStorage;
   let store: ReaderPreferencesStore;
+
+  afterEach(() => {
+    setBrowserSaveData(false);
+  });
 
   beforeEach(() => {
     storage = new MemoryStorage();
@@ -47,6 +51,28 @@ describe('ReaderPreferencesStore', () => {
     thenTheLayoutIs('op', 'MANGA', { mode: 'VERTICAL', direction: 'RTL' });
     thenTheLayoutIs('sl', 'MANHWA', { mode: 'VERTICAL', direction: 'LTR' });
     thenMySettingsAre({ fit: 'HEIGHT', background: 'WHITE', doublePage: true, autoScrollSpeed: 'FAST', dataSaver: true });
+  });
+
+  it('the data saver follows the browser until the reader chooses, and the choice is kept', () => {
+    givenTheBrowserSavesData();
+    givenANewSession();
+
+    thenTheDataSaverIs(true);
+
+    whenITurnTheDataSaver(false);
+    whenIStartANewSession();
+
+    thenTheDataSaverIs(false);
+  });
+
+  it('choosing another setting leaves the data saver to the browser', () => {
+    givenANewSession();
+
+    whenIChooseTheFit('HEIGHT');
+    givenTheBrowserSavesData();
+    whenIStartANewSession();
+
+    thenTheDataSaverIs(true);
   });
 
   it('ignores corrupted or unknown stored values', () => {
@@ -74,6 +100,10 @@ describe('ReaderPreferencesStore', () => {
     store = TestBed.runInInjectionContext(() => new ReaderPreferencesStore());
   }
 
+  function givenTheBrowserSavesData(): void {
+    setBrowserSaveData(true);
+  }
+
   function givenTheStoredPreferencesAre(raw: unknown): void {
     storage.values.set(READER_PREFERENCES_KEY, JSON.stringify(raw));
   }
@@ -84,6 +114,14 @@ describe('ReaderPreferencesStore', () => {
 
   function whenISaveTheLayout(workId: string, layout: SeriesLayout): void {
     store.saveLayout(workId, layout);
+  }
+
+  function whenITurnTheDataSaver(on: boolean): void {
+    store.setDataSaver(on);
+  }
+
+  function whenIChooseTheFit(fit: FitMode): void {
+    store.setFit(fit);
   }
 
   function whenIChoose(settings: Settings): void {
@@ -117,6 +155,10 @@ describe('ReaderPreferencesStore', () => {
       autoScrollSpeed: store.autoScrollSpeed(),
       dataSaver: store.dataSaver()
     }).toEqual(settings);
+  }
+
+  function thenTheDataSaverIs(on: boolean): void {
+    expect(store.dataSaver()).toBe(on);
   }
 
   function thenTheFitIs(fit: FitMode): void {

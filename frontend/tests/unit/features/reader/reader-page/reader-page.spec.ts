@@ -10,7 +10,7 @@ import { PreferredTeamStore } from '@app/core/reading/preferred-team-store';
 import { ChapterComment } from '@app/core/models/comments';
 import { Permission } from '@app/core/models/identity';
 import { givenIAmSignedInWith } from '../../../core/auth/auth-fixtures';
-import { ANY_URL, API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
+import { ANY_URL, API, fail, ok, provideHttpTesting, setBrowserSaveData, settle } from '../../../test-utils';
 
 const MOCK_CHAPTER: Chapter = {
   id: 'chap-10-uuid',
@@ -158,6 +158,7 @@ describe('ReaderPage (API-driven)', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    setBrowserSaveData(false);
     // Set by the auto-scroll test: jsdom has no layout, so the page is given a height to scroll through.
     delete (document.documentElement as unknown as Record<string, unknown>)['scrollHeight'];
     // Reaching the last page loads the chapter's top comments (own test below).
@@ -573,6 +574,23 @@ describe('ReaderPage (API-driven)', () => {
     ]);
     thenDataSaverIsRemembered(true);
     thenTheChapterWasNotFetchedAgain();
+  });
+
+  it("The data saver follows the browser's data-saving mode until I choose", async () => {
+    givenTheBrowserSavesData();
+    await givenIAmReading(withLiteCopies(MOCK_CHAPTER, [1, 2, 3]));
+
+    thenTheVerticalImagesAre([
+      'https://cdn.readora.com/p1.webp.lite.jpg',
+      'https://cdn.readora.com/p2.webp.lite.jpg',
+      'https://cdn.readora.com/p3.webp.lite.jpg'
+    ]);
+
+    whenIOpenTheSettings();
+    whenITick('Data saver');
+
+    thenTheVerticalImagesAre(['https://cdn.readora.com/p1.webp', 'https://cdn.readora.com/p2.webp', 'https://cdn.readora.com/p3.webp']);
+    thenDataSaverIsRemembered(false);
   });
 
   it('Reading with a screen reader', async () => {
@@ -1084,6 +1102,10 @@ describe('ReaderPage (API-driven)', () => {
   function whenIOpenTheSettings(): void {
     toolbarButton('Settings').click();
     fixture.detectChanges();
+  }
+
+  function givenTheBrowserSavesData(): void {
+    setBrowserSaveData(true);
   }
 
   function whenITick(label: string): void {
