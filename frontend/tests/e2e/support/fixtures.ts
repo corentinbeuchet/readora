@@ -92,8 +92,28 @@ export const test = base.extend<{
     await use(waiting);
     await sendBackIfWaiting(request, waiting.chapterId);
   },
+  /**
+   * Menus, panels and dialogs fade in (a 200 ms opacity transition): scanned mid-fade, their text would fail contrast.
+   * `analyze()` first waits for every finite animation on the page to finish (the spinner loops forever, so it is left
+   * out): a wait on the UI's own state, not a timeout.
+   */
   axe: async ({ page }, use) => {
-    await use(() => new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']));
+    await use(() => {
+      const builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']);
+      const analyze = builder.analyze.bind(builder);
+      builder.analyze = async () => {
+        await page.evaluate(() =>
+          Promise.all(
+            document
+              .getAnimations()
+              .filter((animation) => animation.effect?.getComputedTiming().iterations !== Infinity)
+              .map((animation) => animation.finished.catch(() => undefined))
+          )
+        );
+        return analyze();
+      };
+      return builder;
+    });
   }
 });
 
