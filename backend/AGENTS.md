@@ -227,7 +227,6 @@ Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = repor
 - R13 `POST /storage/upload` is `isAuthenticated()` only (any reader, 50 MB); `AssetService` skips the content-type
   allow-list when the type is blank and allows `application/octet-stream`.
 - Same sweep as R4 still to do (survey): uncoded reader-visible rules in `WorkManagementService`, `ReaderSocialService`.
-- R19 (survey) Missing index `refresh_tokens(expires_at)`.
 - R21/R22 (survey) Unbounded lists (chapter comments, work chapters, library list/export, bookmarks, `GET /teams/mine`).
   (The chapter list counts pages instead of loading them: `ChapterSummary`.) The chapter list has one item per team version: when it
   gets paginated, paginate by chapter number on the server, so the versions of a number never split across pages.
