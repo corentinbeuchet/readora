@@ -26,6 +26,22 @@
     "profile.page.bookmarksTitle": "Marque-pages",
     "profile.page.loading": "Chargement de votre profil…",
     "profile.page.avatarAlt": "Avatar de {$name}",
-    "profile.page.seoTitle": "Mon profil"
+    "profile.page.seoTitle": "Mon profil",
+    "profile.password.intro": "Le changer vous déconnecte sur vos autres appareils.",
+    "profile.password.current": "Mot de passe actuel",
+    "profile.password.new": "Nouveau mot de passe",
+    "profile.password.confirm": "Confirmez le nouveau mot de passe",
+    "profile.password.submitting": "Changement…",
+    "profile.password.submit": "Changer le mot de passe",
+    "profile.password.currentRequired": "Saisissez votre mot de passe actuel",
+    "profile.password.newRequired": "Choisissez un nouveau mot de passe",
+    "profile.password.newMin": "Le nouveau mot de passe doit faire au moins {$min} caractères",
+    "profile.password.newMax": "Le nouveau mot de passe doit faire au plus {$max} caractères",
+    "profile.password.confirmRequired": "Saisissez de nouveau le nouveau mot de passe",
+    "profile.password.mismatch": "Les deux nouveaux mots de passe ne sont pas identiques",
+    "profile.password.error": "Votre mot de passe n'a pas pu être changé. Veuillez réessayer.",
+    "profile.password.done": "Mot de passe changé. Vos autres appareils sont déconnectés.",
+    "profile.page.tabAccount": "Compte",
+    "profile.page.passwordTitle": "Changer le mot de passe"
   }
 }

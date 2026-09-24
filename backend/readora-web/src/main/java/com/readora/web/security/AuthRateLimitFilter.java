@@ -24,7 +24,8 @@ import java.util.Set;
 @ConditionalOnProperty(name = "readora.security.rate-limit.enabled", havingValue = "true", matchIfMissing = true)
 public class AuthRateLimitFilter extends OncePerRequestFilter {
 
-    private static final Set<String> LIMITED_PATHS = Set.of("/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/refresh");
+    private static final Set<String> LIMITED_PATHS = Set.of("/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/refresh",
+            "/api/v1/auth/password");
 
     private final FixedWindowRateLimiter limiter;
     private final ObjectMapper objectMapper;

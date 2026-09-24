@@ -40,6 +40,12 @@ public class RefreshTokenRepositoryAdapter implements RefreshTokenRepositoryPort
 
     @Override
     @Transactional
+    public void deleteAllForUser(UserId userId) {
+        springDataRepository.deleteAllForUser(userId.value());
+    }
+
+    @Override
+    @Transactional
     public boolean revokeIfActive(String tokenHash, Instant now) {
         return springDataRepository.revokeIfActive(tokenHash, now) == 1;
     }

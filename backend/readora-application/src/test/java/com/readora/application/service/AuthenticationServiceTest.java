@@ -4,11 +4,14 @@ import com.readora.application.port.out.PasswordHasherPort;
 import com.readora.application.port.out.RefreshTokenRepositoryPort;
 import com.readora.application.port.out.TokenProviderPort;
 import com.readora.application.port.out.UserAccountRepositoryPort;
+import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
+import com.readora.domain.common.UserId;
 import com.readora.domain.identity.Email;
 import com.readora.domain.identity.InvalidCredentialsException;
 import com.readora.domain.identity.PasswordHash;
 import com.readora.domain.identity.RefreshToken;
-import com.readora.domain.common.UserId;
+import com.readora.domain.identity.UserAccount;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,11 +20,13 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
 
 class AuthenticationServiceTest {
 
@@ -74,7 +79,7 @@ class AuthenticationServiceTest {
         when(refreshTokens.findByTokenHash("h:old")).thenReturn(Optional.of(justRotated));
 
         assertThatThrownBy(() -> service.refresh("old")).isInstanceOf(InvalidCredentialsException.class);
-        verify(refreshTokens, never()).revokeAllForUser(any());
+        verify(refreshTokens, never()).deleteAllForUser(any());
     }
 
     @Test
@@ -87,5 +92,18 @@ class AuthenticationServiceTest {
         assertThatThrownBy(() -> service.refresh("tok")).isInstanceOf(InvalidCredentialsException.class);
         verify(tokens, never()).issueAccessToken(any());
         verify(refreshTokens, never()).save(any());
+    }
+    @Test
+    @DisplayName("A wrong current password refuses the change: nothing is saved and no session ends")
+    void aWrongCurrentPasswordChangesNothing() {
+        UserId owner = UserId.of("u1");
+        UserAccount account = UserAccount.register(Email.of("camille@readora.test"), "camille", DUMMY);
+        when(users.findById(owner)).thenReturn(Optional.of(account));
+        when(hasher.matches("not-the-password", DUMMY)).thenReturn(false);
+
+        assertThatThrownBy(() -> service.changePassword(owner, "not-the-password", "second-password"))
+                .isInstanceOfSatisfying(DomainValidationException.class, e -> assertThat(e.code()).isEqualTo(ErrorCodes.WRONG_PASSWORD));
+        verify(users, never()).save(any());
+        verify(refreshTokens, never()).revokeAllForUser(any());
     }
 }

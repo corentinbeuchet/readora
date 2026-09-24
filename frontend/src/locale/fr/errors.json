@@ -36,6 +36,7 @@
     "error.teamRequired": "Une nouvelle série appartient à une équipe que vous dirigez. Créez d'abord une équipe.",
     "error.boardOff": "L'équipe n'utilise pas de tableau de tâches pour cette série. Un responsable l'active dans le Studio.",
     "error.taskHasNoPages": "Ce chapitre n'a pas encore de pages : envoyez les pages de la dernière étape, puis publiez.",
-    "error.chapterNotWaiting": "Ce chapitre a déjà été examiné. La liste montre maintenant ce qui attend encore."
+    "error.chapterNotWaiting": "Ce chapitre a déjà été examiné. La liste montre maintenant ce qui attend encore.",
+    "error.wrongPassword": "Votre mot de passe actuel n'est pas le bon. Saisissez-le de nouveau."
   }
 }

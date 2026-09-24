@@ -6,6 +6,9 @@ import com.readora.application.port.out.RefreshTokenRepositoryPort;
 import com.readora.application.port.out.TokenProviderPort;
 import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
+import com.readora.domain.common.NotFoundException;
+import com.readora.domain.common.UserId;
 import com.readora.domain.identity.Email;
 import com.readora.domain.identity.EmailAlreadyUsedException;
 import com.readora.domain.identity.InvalidCredentialsException;
@@ -129,6 +132,20 @@ public class AuthenticationService implements AuthenticateUserUseCase {
                     token.revoke();
                     refreshTokenRepository.save(token);
                 });
+    }
+
+    @Override
+    public AuthResult changePassword(UserId userId, String currentPassword, String newPassword) {
+        UserAccount account = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Account", userId));
+        if (currentPassword == null || !passwordHasher.matches(currentPassword, account.getPasswordHash())) {
+            throw DomainValidationException.withCode(ErrorCodes.WRONG_PASSWORD, "The current password is wrong");
+        }
+        validatePassword(newPassword);
+        account.changePassword(passwordHasher.hash(newPassword));
+        UserAccount saved = userRepository.save(account);
+        // Deleted, not revoked: a device still holding an old token must not look like a thief (see refresh).
+        refreshTokenRepository.deleteAllForUser(userId);
+        return issueTokens(saved);
     }
 
     private AuthResult issueTokens(UserAccount account) {

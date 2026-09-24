@@ -64,6 +64,25 @@ test.describe('Authentication flow', () => {
     await thenMyProfileIsShownFor(page, me.username);
   });
 
+  test('a reader changes the password and logs in with the new one only (US-15)', async ({ page }) => {
+    const me = await givenIHaveSignedUp(page);
+
+    await whenIOpenTheTab(page, 'Account');
+    await whenIChangeMyPassword(page, { from: me.password, to: 'An0ther-Secret!' });
+
+    await thenISeeTheText(page, 'Password changed. Your other devices are signed out.');
+
+    await whenILogOut(page);
+    await whenIVisit(page, '/login');
+    await whenILogIn(page, { email: me.email, password: me.password });
+
+    await thenISeeTheAlert(page, /invalid email or password/i);
+
+    await whenIRetryWithThePassword(page, 'An0ther-Secret!');
+
+    await thenIAmSignedIn(page);
+  });
+
   test('anonymous visitors are redirected away from guarded routes', async ({ page }) => {
     await whenIVisit(page, '/scanlation/00000000-0000-0000-0000-000000000000');
 
@@ -75,6 +94,23 @@ test.describe('Authentication flow', () => {
 function givenIAmANewVisitor(): Account {
   const suffix = uniqueSuffix();
   return { email: `e2e_${suffix}@readora.test`, username: `e2e_${suffix}`, password: PASSWORD };
+}
+
+/** Signs up through the form and lands on the profile page. */
+async function givenIHaveSignedUp(page: Page): Promise<Account> {
+  const me = givenIAmANewVisitor();
+  await whenIVisit(page, '/register');
+  await whenIFillTheSignUpForm(page, me, { confirmation: me.password });
+  await whenISubmitTheSignUpForm(page);
+  await thenMyProfileIsShownFor(page, me.username);
+  return me;
+}
+
+async function whenIChangeMyPassword(page: Page, passwords: { from: string; to: string }): Promise<void> {
+  await page.getByLabel('Current password').fill(passwords.from);
+  await page.getByLabel('New password', { exact: true }).fill(passwords.to);
+  await page.getByLabel('Confirm the new password').fill(passwords.to);
+  await page.getByRole('button', { name: 'Change password' }).click();
 }
 
 async function whenIVisit(page: Page, url: string): Promise<void> {
@@ -130,6 +166,10 @@ async function thenICanSeeTheHeading(page: Page, name: string): Promise<void> {
 
 async function thenISeeTheText(page: Page, text: string): Promise<void> {
   await expect(page.getByText(text)).toBeVisible();
+}
+
+async function thenIAmSignedIn(page: Page): Promise<void> {
+  await expect(page.getByRole('button', { name: 'Account menu' })).toBeVisible();
 }
 
 async function thenISeeTheAlert(page: Page, text: string | RegExp): Promise<void> {

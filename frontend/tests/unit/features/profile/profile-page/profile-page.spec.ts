@@ -27,11 +27,11 @@ describe('ProfilePage (Angular Aria Tabs + Signal Forms)', () => {
 
   afterEach(() => http.verify());
 
-  it('renders the header, two tabs and the pre-filled profile form on the Overview tab', async () => {
+  it('renders the header, three tabs and the pre-filled profile form on the Overview tab', async () => {
     await givenIAmOnMyProfile({ displayName: 'Jane Reader', bio: 'I read a lot' });
 
     thenTheHeaderShows('Jane Reader');
-    thenTheTabsAre(['Overview', 'Bookmarks']);
+    thenTheTabsAre(['Overview', 'Bookmarks', 'Account']);
     thenTheTabsFormATablist();
     thenTheSelectedTabIs('Overview');
     thenTheDisplayNameFieldHolds('Jane Reader');

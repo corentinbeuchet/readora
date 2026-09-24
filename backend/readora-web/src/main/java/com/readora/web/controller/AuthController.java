@@ -1,12 +1,14 @@
 package com.readora.web.controller;
 
-import com.readora.application.port.in.AuthenticateUserUseCase;
 import com.readora.application.port.in.AuthenticateUserUseCase.AuthResult;
+import com.readora.application.port.in.AuthenticateUserUseCase;
 import com.readora.domain.identity.InvalidCredentialsException;
 import com.readora.web.dto.ApiResponse;
 import com.readora.web.dto.AuthResponse;
+import com.readora.web.dto.ChangePasswordRequest;
 import com.readora.web.dto.LoginRequest;
 import com.readora.web.dto.RegisterRequest;
+import com.readora.web.security.CurrentUserProvider;
 import com.readora.web.security.RefreshCookieProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +17,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,11 +35,14 @@ public class AuthController {
 
     private final AuthenticateUserUseCase authenticateUserUseCase;
     private final RefreshCookieProperties securityProperties;
+    private final CurrentUserProvider currentUserProvider;
 
     public AuthController(AuthenticateUserUseCase authenticateUserUseCase,
-                          RefreshCookieProperties securityProperties) {
+                          RefreshCookieProperties securityProperties,
+                          CurrentUserProvider currentUserProvider) {
         this.authenticateUserUseCase = authenticateUserUseCase;
         this.securityProperties = securityProperties;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @PostMapping("/register")
@@ -75,6 +81,16 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, clearedRefreshCookie().toString())
                 .body(ApiResponse.ok("Logged out"));
+    }
+
+    @PostMapping("/password")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
+    @Operation(summary = "Change my password; other sessions end and this one gets new tokens")
+    public ResponseEntity<ApiResponse<AuthResponse>> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        AuthResult result = authenticateUserUseCase.changePassword(currentUserProvider.requireUserId(), request.currentPassword(),
+                request.newPassword());
+        return withRefreshCookie(ResponseEntity.ok(), result)
+                .body(ApiResponse.ok(AuthResponse.from(result)));
     }
 
     private ResponseEntity.BodyBuilder withRefreshCookie(ResponseEntity.BodyBuilder builder, AuthResult result) {

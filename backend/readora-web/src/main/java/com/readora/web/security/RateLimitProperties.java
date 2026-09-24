@@ -5,7 +5,8 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 
 import java.time.Duration;
 
-/// Brute-force protection for the credential endpoints (`/auth/login`, `/auth/register`, `/auth/refresh`).
+/// Brute-force protection for the credential endpoints (`/auth/login`, `/auth/register`, `/auth/refresh`,
+/// `/auth/password`).
 @ConfigurationProperties(prefix = "readora.security.rate-limit")
 public record RateLimitProperties(
         @DefaultValue("true") boolean enabled,

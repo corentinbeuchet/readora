@@ -2,7 +2,7 @@ import { Service, computed, inject, signal } from '@angular/core';
 import { Observable, catchError, finalize, map, of, shareReplay, tap } from 'rxjs';
 import { ApiError } from '@app/core/api/api-client';
 import { AuthApi } from '@app/core/api/auth-api';
-import { AuthResponse, LoginRequest, Permission, RegisterRequest, UserProfile } from '@app/core/models/identity';
+import { AuthResponse, ChangePasswordRequest, LoginRequest, Permission, RegisterRequest, UserProfile } from '@app/core/models/identity';
 import { BrowserStorage } from '@app/core/storage/browser-storage';
 
 /**
@@ -51,6 +51,11 @@ export class AuthStore {
 
   register(request: RegisterRequest): Observable<AuthResponse> {
     return this.authApi.register(request).pipe(tap((res) => this.applySession(res)));
+  }
+
+  /** The other sessions end on the server; this one continues with the tokens it returns (US-15). */
+  changePassword(request: ChangePasswordRequest): Observable<AuthResponse> {
+    return this.authApi.changePassword(request).pipe(tap((res) => this.applySession(res)));
   }
 
   /**

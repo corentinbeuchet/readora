@@ -21,4 +21,12 @@ public interface AuthenticateUserUseCase {
     AuthResult refresh(String rawRefreshToken);
 
     void logout(String rawRefreshToken);
+
+    /// Changes the password of a signed-in reader. Every other session ends (as after a leak); the caller gets a
+    /// fresh one so they stay signed in.
+    ///
+    /// @throws com.readora.domain.common.DomainValidationException `WRONG_PASSWORD` if `currentPassword` is wrong,
+    ///         or if the new password is too short
+    /// @throws com.readora.domain.common.NotFoundException if the account no longer exists
+    AuthResult changePassword(UserId userId, String currentPassword, String newPassword);
 }

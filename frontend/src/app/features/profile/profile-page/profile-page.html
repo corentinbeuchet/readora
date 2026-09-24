@@ -21,6 +21,7 @@
       <div ngTabList [(selectedTab)]="selectedTab" aria-label="Profile sections" i18n-aria-label="@@profile.page.sections">
         <button type="button" ngTab value="overview" i18n="@@profile.page.tabOverview">Overview</button>
         <button type="button" ngTab value="bookmarks" i18n="@@profile.page.tabBookmarks">Bookmarks</button>
+        <button type="button" ngTab value="account" i18n="@@profile.page.tabAccount">Account</button>
       </div>
 
       <div ngTabPanel value="overview" class="card">
@@ -34,6 +35,13 @@
         <ng-template ngTabContent>
           <h2 i18n="@@profile.page.bookmarksTitle">Bookmarks</h2>
           <app-bookmark-list />
+        </ng-template>
+      </div>
+
+      <div ngTabPanel value="account" class="card">
+        <ng-template ngTabContent>
+          <h2 i18n="@@profile.page.passwordTitle">Change password</h2>
+          <app-change-password />
         </ng-template>
       </div>
 

@@ -39,6 +39,17 @@ export interface AuthResponse {
   user: UserProfile;
 }
 
+/** Password limits of every form that sets one (same as the API's). */
+export const PASSWORD_MIN_LENGTH = 8;
+/** BCrypt reads at most 72 bytes; the API rejects longer passwords. */
+export const PASSWORD_MAX_LENGTH = 72;
+
+/** `POST /auth/password` (US-15): the other sessions end, this one gets new tokens. */
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface RegisterRequest {
   email: string;
   username: string;

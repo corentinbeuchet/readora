@@ -20,7 +20,7 @@ public class UserAccount extends AggregateRoot<UserId> {
 
     private final Email email;
     private final String username;
-    private final PasswordHash passwordHash;
+    private PasswordHash passwordHash;
     private String displayName;
     private String bio;
     private @Nullable String avatarUrl;
@@ -88,6 +88,12 @@ public class UserAccount extends AggregateRoot<UserId> {
             this.bio = newBio;
         }
         this.avatarUrl = newAvatarUrl != null && !newAvatarUrl.isBlank() ? newAvatarUrl.trim() : null;
+        this.updatedAt = Instant.now();
+    }
+
+    /// The owner chose a new password (the caller checked the current one).
+    public void changePassword(PasswordHash newHash) {
+        this.passwordHash = Objects.requireNonNull(newHash, "PasswordHash cannot be null");
         this.updatedAt = Instant.now();
     }
 

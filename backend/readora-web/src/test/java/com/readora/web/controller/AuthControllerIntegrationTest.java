@@ -136,4 +136,34 @@ class AuthControllerIntegrationTest extends AuthTestSupport {
         mockMvc.perform(post("/api/v1/auth/refresh").cookie(legitimate))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    @DisplayName("Changing the password needs the current one, ends the other sessions and keeps this one signed in (US-15)")
+    void changePassword() throws Exception {
+        Session session = register();
+        Session otherDevice = login(session.email());
+        mockMvc.perform(post("/api/v1/auth/password").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"" + PASSWORD + "\",\"newPassword\":\"Brand-new-pass1\"}"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/v1/auth/password").header("Authorization", session.bearer()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"not-the-password\",\"newPassword\":\"Brand-new-pass1\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("WRONG_PASSWORD"));
+
+        MvcResult changed = mockMvc.perform(post("/api/v1/auth/password").header("Authorization", session.bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"" + PASSWORD + "\",\"newPassword\":\"Brand-new-pass1\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
+                .andReturn();
+
+        mockMvc.perform(post("/api/v1/auth/refresh").cookie(otherDevice.refreshCookie())).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/v1/auth/refresh").cookie(changed.getResponse().getCookie(REFRESH_COOKIE))).andExpect(status().isOk());
+        mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + session.email() + "\",\"password\":\"" + PASSWORD + "\"}"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + session.email() + "\",\"password\":\"Brand-new-pass1\"}"))
+                .andExpect(status().isOk());
+    }
 }

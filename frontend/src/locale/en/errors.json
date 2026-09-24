@@ -20,6 +20,7 @@
     "error.alreadyOnTeam": "This reader is already on the team.",
     "error.notOnTeam": "This reader is not on the team. Invite them first.",
     "error.boardOff": "The team does not use a task board for this series. A leader turns it on in the Studio.",
+    "error.wrongPassword": "Your current password is not right. Type it again.",
     "error.chapterNotWaiting": "This chapter was already reviewed. The list now shows what still waits.",
     "error.taskHasNoPages": "This chapter has no pages yet: submit the pages of the last stage, then publish.",
     "error.teamRequired": "A new series belongs to a team you lead. Start a team first.",
