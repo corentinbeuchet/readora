@@ -124,6 +124,10 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 - Public reads are `permitAll` GET matchers in `SecurityConfig`. When a public prefix has a private sub-path
   (`/api/v1/lists/mine` under `/api/v1/lists/*`), declare its `authenticated()` matcher **first**, or anonymous
   callers get 403 instead of 401.
+- HTTP caching: anonymous GETs under `/api/v1/` get an `ETag` + `no-cache` (`PublicApiCachingFilter`), signed-in ones
+  keep Spring Security's `no-store` (they may carry personal data); assets are `immutable` for a year, so an asset key
+  is never reused for new content. A response body must be the same bytes for the same data (no per-response
+  timestamps or random ids), or its ETag never matches.
 - Jackson 3 rejects a request missing a **primitive** component (`boolean`, `int`) with 400. Use a primitive only for
   fields the client must always send; optional flags are `@Nullable Boolean` with a default in the controller.
 

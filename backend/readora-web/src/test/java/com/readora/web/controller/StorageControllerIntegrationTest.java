@@ -14,6 +14,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -23,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class StorageControllerIntegrationTest extends AuthTestSupport {
 
     @Test
-    @DisplayName("Authenticated user can upload an image asset")
+    @DisplayName("Authenticated user can upload an image asset, which anyone can then fetch and keep for a year")
     void uploadImageAssetSuccess() throws Exception {
         Session session = register();
 
@@ -51,6 +52,7 @@ class StorageControllerIntegrationTest extends AuthTestSupport {
         // Verify publicly accessible via GET /api/v1/storage/assets/** without auth header
         mockMvc.perform(get("/api/v1/storage/assets/" + storageKey))
                 .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "public, max-age=31536000, immutable"))
                 .andExpect(resultMatcher -> {
                     byte[] content = resultMatcher.getResponse().getContentAsByteArray();
                     org.assertj.core.api.Assertions.assertThat(new String(content)).isEqualTo("dummy image content");

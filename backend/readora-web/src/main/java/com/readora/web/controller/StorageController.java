@@ -22,6 +22,10 @@ public class StorageController {
 
     private static final String ASSETS_PREFIX = "/api/v1/storage/assets/";
 
+    /// An asset never changes under its key (`AssetService` builds `<folder>/<uuid>-<name>`, a new upload gets a new
+    /// key), so browsers and CDNs keep it for a year without asking again.
+    static final String ASSET_CACHING = "public, max-age=31536000, immutable";
+
     private final ManageAssetsUseCase assets;
 
     public StorageController(ManageAssetsUseCase assets) {
@@ -55,7 +59,7 @@ public class StorageController {
         return assets.load(objectKey)
                 .map(content -> ResponseEntity.ok()
                         .header(HttpHeaders.CONTENT_TYPE, content.contentType())
-                        .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
+                        .header(HttpHeaders.CACHE_CONTROL, ASSET_CACHING)
                         .body(content.data()))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
