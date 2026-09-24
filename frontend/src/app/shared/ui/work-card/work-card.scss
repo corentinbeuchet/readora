@@ -96,6 +96,8 @@
   gap: var(--space-3) var(--space-4);
   padding: var(--space-3);
   border-radius: var(--radius-md);
+  // A hairline so rows separate from the page on paper too (#fff on #f7f7f5 is 1.07:1); barely visible in dark.
+  border: 1px solid var(--border);
   background: var(--surface);
 
   .cover {

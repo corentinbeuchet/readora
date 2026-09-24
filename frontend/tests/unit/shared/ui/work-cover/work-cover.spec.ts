@@ -1,6 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { WorkCover } from '@app/shared/ui/work-cover/work-cover';
-import { FALLBACK_COVER_IMAGE } from '@app/core/utils/image-utils';
 
 const COVER = 'https://cdn.readora.test/covers/c1-cover.png';
 const THUMBNAIL = `${COVER}.thumb.jpg`;
@@ -28,19 +27,28 @@ describe('WorkCover', () => {
     thenTheImageIs(COVER);
   });
 
-  it('shows the placeholder when the full cover fails to load too', () => {
+  it('shows the screentone placeholder when the full cover fails to load too', () => {
     givenACover({ src: COVER, thumbnail: THUMBNAIL });
 
     whenTheImageFailsToLoad();
     whenTheImageFailsToLoad();
 
-    thenTheImageIs(FALLBACK_COVER_IMAGE);
+    thenThePlaceholderIsShown();
+    thenNoImageIsLoaded();
   });
 
-  function givenACover(inputs: { src: string | null; thumbnail: string | null }): void {
+  it('shows the placeholder, named by the alt text, when the series has no cover', () => {
+    givenACover({ src: null, thumbnail: null, alt: 'Cover of Solo Leveling' });
+
+    thenThePlaceholderIsShown();
+    thenThePlaceholderIsNamed('Cover of Solo Leveling');
+  });
+
+  function givenACover(inputs: { src: string | null; thumbnail: string | null; alt?: string }): void {
     fixture = TestBed.createComponent(WorkCover);
     fixture.componentRef.setInput('src', inputs.src);
     fixture.componentRef.setInput('thumbnail', inputs.thumbnail);
+    fixture.componentRef.setInput('alt', inputs.alt ?? '');
     fixture.componentRef.setInput('width', 72);
     fixture.componentRef.setInput('height', 101);
     fixture.detectChanges();
@@ -53,6 +61,23 @@ describe('WorkCover', () => {
 
   function thenTheImageIs(url: string): void {
     expect(image().getAttribute('src')).toBe(url);
+  }
+
+  function thenThePlaceholderIsShown(): void {
+    expect(placeholder()).not.toBeNull();
+  }
+
+  function thenNoImageIsLoaded(): void {
+    expect(image()).toBeNull();
+  }
+
+  function thenThePlaceholderIsNamed(name: string): void {
+    expect(placeholder()!.getAttribute('role')).toBe('img');
+    expect(placeholder()!.getAttribute('aria-label')).toBe(name);
+  }
+
+  function placeholder(): HTMLElement | null {
+    return (fixture.nativeElement as HTMLElement).querySelector('.placeholder');
   }
 
   function image(): HTMLImageElement {

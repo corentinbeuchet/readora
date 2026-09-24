@@ -1,10 +1,9 @@
 import { Component, booleanAttribute, computed, input, linkedSignal, numberAttribute } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
-import { FALLBACK_COVER_IMAGE, onImageError } from '@app/core/utils/image-utils';
 
 /**
- * A series cover: optimized image (lazy unless `priority`), and the placeholder cover when the series has none or the
- * image fails to load. Size it with a class on the element (width plus height or aspect-ratio); the image fills it.
+ * A series cover: optimized image (lazy unless `priority`), and a screentone placeholder when the series has none or
+ * the image fails to load (drawn in CSS, so it follows the theme; no text: the card's title names the series). Size it with a class on the element (width plus height or aspect-ratio); the image fills it.
  * Pass the series' `coverThumbnailUrl` as `thumbnail`: it is shown instead of the full cover (every cover is drawn at
  * most 240 px wide, the thumbnail is 480 px), and the full cover takes over if the thumbnail fails to load.
  */
@@ -25,16 +24,20 @@ export class WorkCover {
   /** The LCP image (first cover of a page): loaded eagerly with high priority. */
   readonly priority = input(false, { transform: booleanAttribute });
 
-  protected readonly fallback = FALLBACK_COVER_IMAGE;
   /** Covers stored before thumbnails existed have none: after a failed thumbnail, show the full cover. */
   private readonly thumbnailFailed = linkedSignal({ source: this.thumbnail, computation: () => false });
-  protected readonly shown = computed(() => (this.thumbnailFailed() ? null : this.thumbnail()) || this.src());
+  /** Both failed (or the only one did): the placeholder, until another cover is given. */
+  private readonly coverFailed = linkedSignal({ source: () => [this.src(), this.thumbnail()], computation: () => false });
+  protected readonly shown = computed(() =>
+    this.coverFailed() ? null : (this.thumbnailFailed() ? null : this.thumbnail()) || this.src()
+  );
+  protected readonly ratio = computed(() => `${this.width()} / ${this.height()}`);
 
-  protected handleError(event: Event): void {
+  protected handleError(): void {
     if (this.thumbnail() && !this.thumbnailFailed() && this.src()) {
       this.thumbnailFailed.set(true);
-      return;
+    } else {
+      this.coverFailed.set(true);
     }
-    onImageError(event, this.fallback);
   }
 }

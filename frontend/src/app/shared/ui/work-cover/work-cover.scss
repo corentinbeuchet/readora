@@ -10,3 +10,11 @@ img {
   height: 100%;
   object-fit: cover;
 }
+
+// No cover: static screentone, the Readora signature for "nothing here yet" (never text on it).
+.placeholder {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  background: var(--screentone), var(--surface-2);
+}

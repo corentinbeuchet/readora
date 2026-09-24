@@ -114,6 +114,7 @@ app-omnisearch {
 .user-menu {
   right: 0;
   top: calc(100% + 0.4rem);
+  transform-origin: top right;
 }
 
 .menu-group {

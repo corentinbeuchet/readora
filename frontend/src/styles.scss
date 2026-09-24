@@ -79,6 +79,8 @@ h2 {
 
 /* Anchor jumps and focused elements stay clear of the sticky header and the phone tab bar (WCAG 2.4.11). */
 html {
+  // Native checkboxes, radios and range inputs in the one accent instead of the browser's blue.
+  accent-color: var(--accent-strong);
   scroll-padding-block: var(--space-7) calc(var(--tabbar-h) + var(--space-4));
 }
 
@@ -127,6 +129,7 @@ html {
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
   padding: 0.55rem 1rem;
   border-radius: var(--radius-md);
@@ -407,6 +410,13 @@ fieldset.field {
   border-radius: var(--radius);
   box-shadow: var(--shadow-popover);
   list-style: none;
+  // It opens from its trigger (set transform-origin where the menu is placed); closing is instant.
+  transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.97);
+  }
 
   &:not([data-visible="true"]),
   &[inert],

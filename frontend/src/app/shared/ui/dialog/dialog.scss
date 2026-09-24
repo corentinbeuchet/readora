@@ -5,10 +5,22 @@
   place-items: center;
   background: var(--scrim);
   z-index: var(--z-dialog);
+  transition: opacity var(--dur-base) var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+  }
 }
 
+// Settles in from the centre (a modal has no trigger to grow from); closing is instant.
 .dialog {
   max-height: 90vh;
   max-height: 90dvh;
   overflow-y: auto;
+  transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.96);
+  }
 }
