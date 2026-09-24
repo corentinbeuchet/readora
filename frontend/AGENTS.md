@@ -201,6 +201,8 @@ interface is neutral and the cover art is the colour on the page.
 
 ## Routing & auth
 - Every route uses `loadComponent`. Permissions in route data: `canActivate: [permissionGuard], data: { permission: 'COMMENT_MODERATE' }`.
+  The same `data.permission` keeps the page out of background preloading for visitors who lack it
+  (`PermittedPreloading`, which also preloads nothing under `Save-Data`): never gate a page only inside its component.
 - UI gating via `*appHasPermission="'COMMENT_MODERATE'"`, not ad-hoc `@if (auth.can(...))`. Team tools are gated by my
   roles in the team (`leadsTeam`, `publishesForTeam`, `canClaim(task, myRoles)` in `core/models/scanlation.ts`), not by
   account permissions.

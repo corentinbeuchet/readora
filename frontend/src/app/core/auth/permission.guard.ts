@@ -1,14 +1,14 @@
 import { inject } from '@angular/core';
-import { ActivatedRouteSnapshot, CanActivateFn, Router } from '@angular/router';
+import { CanActivateFn, Data, Router } from '@angular/router';
 import { Permission } from '@app/core/models/identity';
 import { AuthStore } from './auth-store';
 
 export const PERMISSION_ROUTE_DATA = 'permission';
 
-/** Reads the `permission` (or `permissions`) from route data. */
-export function requiredPermissions(route: ActivatedRouteSnapshot): Permission[] {
-  const single = route.data[PERMISSION_ROUTE_DATA] as Permission | undefined;
-  const many = route.data['permissions'] as Permission[] | undefined;
+/** Reads the `permission` (or `permissions`) from route data: of a matched route (guard) or a route config (preloading). */
+export function requiredPermissions(route: { readonly data?: Data }): Permission[] {
+  const single = route.data?.[PERMISSION_ROUTE_DATA] as Permission | undefined;
+  const many = route.data?.['permissions'] as Permission[] | undefined;
   return [...(single ? [single] : []), ...(many ?? [])];
 }
 

@@ -1,6 +1,5 @@
 import { ApplicationConfig } from '@angular/core';
 import {
-  PreloadAllModules,
   provideRouter,
   withComponentInputBinding,
   withInMemoryScrolling,
@@ -14,6 +13,7 @@ import { routes } from './app.routes';
 import { authInterceptor } from '@app/core/auth/auth.interceptor';
 import { isTransferCacheable } from '@app/core/api/transfer-cache';
 import { recoverFromChunkLoadFailure } from '@app/core/routing/chunk-load-recovery';
+import { PermittedPreloading } from '@app/core/routing/permitted-preloading';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -23,8 +23,8 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
       // After a deploy, old tabs can't load the removed lazy chunks: reload the page once to get the new build.
       withNavigationErrorHandler((error) => recoverFromChunkLoadFailure(error)),
-      // Lazy pages download in the background after the first render, so later navigations are instant.
-      withPreloading(PreloadAllModules),
+      // Lazy pages the visitor may open download in the background, so later navigations are instant.
+      withPreloading(PermittedPreloading),
       // Cross-fade between pages where the browser supports the View Transitions API (no-op elsewhere).
       withViewTransitions()
     ),
