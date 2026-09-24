@@ -13,13 +13,13 @@
 
   <app-weekly-feature [ranking]="weeklyRanking()" [pending]="weeklyPending()" [error]="weekly.error()" (retry)="weekly.reload()" />
 
-  @if (unreadReleases().length > 0) {
+  @if (newInLibrary().length > 0) {
     <app-rail heading="New in your library" i18n-heading="@@home.mine.heading" seeAll="/updates" [seeAllParams]="{ feed: 'mine' }">
-      @for (release of unreadReleases(); track release.chapterId) {
+      @for (series of newInLibrary(); track series.work.id) {
         <li class="rail-item">
-          <app-work-card [work]="release.work">
-            <p cardMeta class="muted release-line" i18n="@@home.release.chapter">Chapter {{ release.chapterNumber }}</p>
-            <span cardActions><a class="btn btn-primary btn-sm" [routerLink]="['/read', release.chapterId]" i18n="@@home.release.read">Read</a></span>
+          <app-work-card [work]="series.work" [newChapters]="series.count">
+            <p cardMeta class="muted release-line" i18n="@@home.release.chapter">Chapter {{ series.first.chapterNumber }}</p>
+            <span cardActions><a class="btn btn-sm" [routerLink]="['/read', series.first.chapterId]" i18n="@@home.release.read">Read</a></span>
           </app-work-card>
         </li>
       }

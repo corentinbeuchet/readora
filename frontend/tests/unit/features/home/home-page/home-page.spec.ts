@@ -60,7 +60,7 @@ describe('HomePage (US-14)', () => {
     thenTheFeaturedSeriesIs({ title: 'Solo Leveling', href: '/works/w-solo' });
     thenTheFeaturedCoverLoadsFirst();
     thenTheNumberedListIs(['Rank 2 Omniscient Reader', 'Rank 3 Horimiya']);
-    thenThereIsALinkTo('Full ranking', '/rankings');
+    thenThereIsALinkTo('See all: Most read this week', '/rankings');
   });
 
   it('I can continue reading from the home page', async () => {
@@ -80,6 +80,16 @@ describe('HomePage (US-14)', () => {
     thenTheSectionOffers('New in your library', { series: 'Horimiya', line: 'Chapter 30' });
     thenTheSectionLinksTo('New in your library', 'Read', '/read/c-w-hori-30');
     thenTheSectionDoesNotShow('New in your library', 'Omniscient Reader');
+  });
+
+  it('Several new chapters of one series make one tile', async () => {
+    await givenIAmSignedInWith(['LIBRARY_USE']);
+
+    await givenIOpenTheHomePage({ mine: [release(SOLO, '8'), release(SOLO, '7'), release(SOLO, '6')] });
+
+    thenTheSectionShowsTimes('New in your library', 'Solo Leveling', 1);
+    thenTheSectionOffers('New in your library', { series: 'Solo Leveling', line: '3 new' });
+    thenTheSectionLinksTo('New in your library', 'Read', '/read/c-w-solo-6');
   });
 
   it('A visitor is invited to create an account after seeing the content', async () => {
@@ -210,6 +220,11 @@ describe('HomePage (US-14)', () => {
 
   function thenTheSectionDoesNotShow(heading: string, series: string): void {
     expect(text(section(heading))).not.toContain(series);
+  }
+
+  function thenTheSectionShowsTimes(heading: string, series: string, times: number): void {
+    const titles = Array.from(section(heading).querySelectorAll('.title')).map(text);
+    expect(titles.filter((title) => title === series)).toHaveLength(times);
   }
 
   function thenTheSectionSays(heading: string, message: string): void {

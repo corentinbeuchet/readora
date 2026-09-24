@@ -85,7 +85,16 @@
   font-weight: var(--fw-black);
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  color: var(--accent);
+  color: var(--text);
+
+  // The accent marks the podium only: fifty persimmon numerals would stop meaning anything.
+  &.podium {
+    color: var(--accent);
+  }
+}
+
+.actions:empty {
+  display: none;
 }
 
 // Row: rank, cover, text, then the projected actions on the right (under the text on a phone).
@@ -117,6 +126,17 @@
     flex: none;
     min-inline-size: 2.75rem;
     text-align: center;
+  }
+
+  // Under the text on a phone, lined up with it (cover width + gap), not under the cover.
+  .actions {
+    flex-basis: 100%;
+    padding-inline-start: calc(3.25rem + var(--space-4));
+
+    @include bp.from(md) {
+      flex-basis: auto;
+      padding-inline-start: 0;
+    }
   }
 
   .title::after {

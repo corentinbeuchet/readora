@@ -2,17 +2,19 @@
 
 :host {
   display: flex;
-  flex-wrap: wrap;
+  // The heading wraps inside its own box; "See all" and the rail arrows stay top-right.
   align-items: baseline;
   gap: var(--space-1) var(--space-4);
   margin-block-end: var(--space-3);
 }
 
 .heading {
-  margin-inline-end: auto;
+  flex: 1;
+  min-inline-size: 0;
 }
 
 .see-all {
+  flex: none;
   display: inline-flex;
   align-items: center;
   min-block-size: 1.75rem;

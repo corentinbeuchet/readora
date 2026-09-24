@@ -23,13 +23,14 @@
     }
   } @else if (releases.hasValue()) {
     <ul class="work-rows">
-      @for (release of releases.value(); track release.chapterId) {
+      @for (row of rows(); track row.release.chapterId) {
+        @let release = row.release;
         <li>
           <app-work-card [work]="release.work" variant="row">
             <p cardMeta class="muted release-line">
               <span class="release-chapter" i18n="@@discovery.updates.chapter">Chapter {{ release.chapterNumber }}</span>
-              @if (release.chapterTitle) {
-                <span>{{ release.chapterTitle }}</span>
+              @if (row.title) {
+                <span>{{ row.title }}</span>
               }
               <a class="release-team" [routerLink]="['/teams', release.team.id]"><span class="sr-only" i18n="@@discovery.updates.teamOf">{{ release.work.title }} chapter {{ release.chapterNumber }} translated by</span> {{ release.team.name }}</a>
               <time [attr.datetime]="release.publishedAt">{{ release.publishedAt | timeAgo }}</time>
@@ -38,8 +39,8 @@
               }
             </p>
             <span cardActions>
-              <a class="btn btn-primary btn-sm" [routerLink]="['/read', release.chapterId]"
-                 [attr.aria-label]="readNowLabels().get(release.chapterId)" i18n="@@discovery.updates.readNow">Read now</a>
+              <a class="btn btn-sm" [routerLink]="['/read', release.chapterId]"
+                 [attr.aria-label]="row.readNowLabel" i18n="@@discovery.updates.readNow">Read now</a>
             </span>
           </app-work-card>
         </li>
@@ -47,10 +48,10 @@
     </ul>
     <nav class="pager" aria-label="Updates pages" i18n-aria-label="@@discovery.updates.pager.label">
       @if (pageIndex() > 0) {
-        <a class="btn" routerLink="/updates" [queryParams]="{ page: pageIndex() - 1 || null }" queryParamsHandling="merge" i18n="@@discovery.updates.pager.newer">&larr; Newer</a>
+        <a class="btn" routerLink="/updates" [queryParams]="{ page: pageIndex() - 1 || null }" queryParamsHandling="merge"><app-icon name="chevron-left" /><span i18n="@@discovery.updates.pager.newerPage">Newer</span></a>
       }
       @if (releases.value().length >= 30) {
-        <a class="btn" routerLink="/updates" [queryParams]="{ page: pageIndex() + 1 }" queryParamsHandling="merge" i18n="@@discovery.updates.pager.older">Older &rarr;</a>
+        <a class="btn" routerLink="/updates" [queryParams]="{ page: pageIndex() + 1 }" queryParamsHandling="merge"><span i18n="@@discovery.updates.pager.olderPage">Older</span><app-icon name="chevron-right" /></a>
       }
     </nav>
   }

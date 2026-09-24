@@ -1,4 +1,4 @@
-import { ChapterGroup, ChapterSummary, TeamShare, groupByNumber, pickVersion, teamsOf } from '@app/core/models/chapter';
+import { ChapterGroup, ChapterSummary, TeamShare, groupByNumber, isDefaultChapterTitle, pickVersion, teamsOf } from '@app/core/models/chapter';
 
 const SHADOW = { id: 't-shadow', name: 'Shadow Scans' };
 const MOON = { id: 't-moon', name: 'Moon Scans' };
@@ -87,4 +87,17 @@ describe('chapter versions (US-12)', () => {
   function version(chapterNumber: string, team: { id: string; name: string }): ChapterSummary {
     return { id: `c-${chapterNumber}-${team.id}`, workId: 'w-1', chapterNumber, title: '', status: 'PUBLISHED', pageCount: 10, publishedAt: null, team };
   }
+});
+
+describe('isDefaultChapterTitle', () => {
+  it.each<[string | null, string, boolean]>([
+    ['Chapter 8', '8', true],
+    ['  chapter 8 ', '8', true],
+    ['', '8', true],
+    [null, '8', true],
+    ['The Hunter Awakens', '8', false],
+    ['Chapter 9', '8', false]
+  ])('"%s" for chapter %s only repeats the number: %s', (title, chapterNumber, expected) => {
+    expect(isDefaultChapterTitle(title, chapterNumber)).toBe(expected);
+  });
 });

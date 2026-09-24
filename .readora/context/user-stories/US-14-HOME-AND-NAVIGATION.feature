@@ -48,6 +48,13 @@ Feature: Home and navigation
     Then "New in your library" shows that chapter with a link to read it
 
   @ui @should
+  Scenario: Several new chapters of one series make one tile
+    Given chapters 6, 7 and 8 of "Solo Leveling" are new in the library of reader "Camille"
+    When she opens the home page
+    Then "New in your library" shows "Solo Leveling" once, marked "3 new"
+    And its link opens chapter 6, the first she has not read
+
+  @ui @should
   Scenario: A visitor is invited to create an account after seeing the content
     When a visitor opens the home page
     Then a prompt to create a free account comes after the first sections, not before them

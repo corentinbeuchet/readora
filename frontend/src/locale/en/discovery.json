@@ -33,8 +33,8 @@
     "discovery.updates.read": "Read",
     "discovery.updates.readNow": "Read now",
     "discovery.updates.pager.label": "Updates pages",
-    "discovery.updates.pager.newer": "← Newer",
-    "discovery.updates.pager.older": "Older →",
+    "discovery.updates.pager.newerPage": "Newer",
+    "discovery.updates.pager.olderPage": "Older",
     "discovery.updates.readNow.label": "Read now: {$title}, chapter {$chapter}",
     "discovery.updates.seoTitle": "Latest updates",
     "discovery.updates.seoDescription": "The newest manga, manhwa and comic chapters on Readora."

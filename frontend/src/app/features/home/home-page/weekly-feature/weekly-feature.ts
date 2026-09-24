@@ -1,5 +1,6 @@
 import { Component, computed, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { SectionHeader } from '@app/shared/ui/section-header/section-header';
 import { WORK_STATUS_LABELS, WORK_TYPE_LABELS } from '@app/core/models/catalog';
 import { RankedWork } from '@app/core/models/discovery';
 import { LoadError } from '@app/shared/ui/load-error';
@@ -14,7 +15,7 @@ import { WorkCover } from '@app/shared/ui/work-cover/work-cover';
  */
 @Component({
   selector: 'app-weekly-feature',
-  imports: [RouterLink, WorkCover, WorkCard, LoadError],
+  imports: [RouterLink, WorkCover, WorkCard, LoadError, SectionHeader],
   templateUrl: './weekly-feature.html',
   styleUrl: './weekly-feature.scss'
 })

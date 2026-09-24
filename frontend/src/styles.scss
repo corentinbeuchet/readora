@@ -561,9 +561,10 @@ fieldset.field {
   list-style: none;
 }
 
+// 10rem: at 768px four tiles and the edge of a fifth show, so the rail says it scrolls.
 @include bp.from(md) {
   .rail-item {
-    inline-size: 10.5rem;
+    inline-size: 10rem;
   }
 }
 

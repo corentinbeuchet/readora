@@ -5,7 +5,7 @@
       <p class="muted" i18n="@@catalog.works.intro">Browse manga, manhwa, manhua and comics published by scanlation teams.</p>
     </div>
     <ng-container *appHasPermission="'LIBRARY_USE'">
-      <a routerLink="/upload" class="btn btn-primary upload-cta" i18n="@@catalog.works.upload">+ Upload Series</a>
+      <a routerLink="/upload" class="btn btn-primary upload-cta"><app-icon name="plus" /><span i18n="@@catalog.works.uploadSeries">Upload a series</span></a>
     </ng-container>
   </header>
 
@@ -61,7 +61,11 @@
                 aria-describedby="genre-hint"
                 (click)="cycleGenre(chip.genre, chip.state)"
               >
-                <span class="chip-mark" aria-hidden="true">{{ chip.mark }}</span>
+                @if (chip.state === 'wanted') {
+                  <app-icon name="plus" />
+                } @else if (chip.state === 'excluded') {
+                  <app-icon name="minus" />
+                }
                 {{ chip.genre }}
               </button>
             </li>
@@ -109,9 +113,9 @@
       </ul>
 
       <nav class="pager" aria-label="Catalog pagination" i18n-aria-label="@@catalog.works.pager.label">
-        <button type="button" class="btn" (click)="previous()" [disabled]="!hasPrevious()" i18n="@@catalog.works.pager.previous">&larr; Previous</button>
+        <button type="button" class="btn" (click)="previous()" [disabled]="!hasPrevious()"><app-icon name="chevron-left" /><span i18n="@@catalog.works.pager.previousPage">Previous</span></button>
         <span class="muted" i18n="@@catalog.works.pager.page">Page {{ workList.page + 1 }} / {{ workList.totalPages || 1 }}</span>
-        <button type="button" class="btn" (click)="next()" [disabled]="!hasNext()" i18n="@@catalog.works.pager.next">Next &rarr;</button>
+        <button type="button" class="btn" (click)="next()" [disabled]="!hasNext()"><span i18n="@@catalog.works.pager.nextPage">Next</span><app-icon name="chevron-right" /></button>
       </nav>
     }
   }

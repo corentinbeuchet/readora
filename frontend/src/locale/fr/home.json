@@ -28,7 +28,6 @@
     "home.signup.create": "Créer un compte gratuit",
     "home.signup.login": "Se connecter",
     "home.weekly.heading": "Les plus lues cette semaine",
-    "home.weekly.fullRanking": "Classement complet",
     "home.weekly.loading": "Chargement du classement de la semaine…",
     "home.weekly.error": "Impossible de charger le classement de la semaine.",
     "home.weekly.rank": "Rang",

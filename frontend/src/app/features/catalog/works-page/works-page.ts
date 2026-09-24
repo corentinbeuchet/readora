@@ -106,7 +106,7 @@ export class WorksPage {
     const query = this.query();
     return (this.genres.hasValue() ? this.genres.value() : []).map((genre) => {
       const state: GenreState = query.genres?.includes(genre) ? 'wanted' : query.excludedGenres?.includes(genre) ? 'excluded' : 'off';
-      return { genre, state, label: GENRE_STATE_LABEL[state](genre), mark: state === 'wanted' ? '+' : state === 'excluded' ? '−' : '' };
+      return { genre, state, label: GENRE_STATE_LABEL[state](genre) };
     });
   });
 

@@ -1,6 +1,6 @@
 <article class="work-card" [class.row]="variant() === 'row'">
   @if (rank(); as position) {
-    <p class="rank"><span class="sr-only" i18n="@@workCard.rank">Rank</span> {{ position }}</p>
+    <p class="rank" [class.podium]="position <= 3"><span class="sr-only" i18n="@@workCard.rank">Rank</span> {{ position }}</p>
   }
   @if (variant() === 'row') {
     <app-work-cover class="cover" [src]="work().coverImageUrl" [thumbnail]="work().coverThumbnailUrl" width="72" height="101" [priority]="priority()" />
@@ -20,5 +20,5 @@
     </p>
     <ng-content select="[cardMeta]" />
   </div>
-  <ng-content select="[cardActions]" />
+  <div class="actions"><ng-content select="[cardActions]" /></div>
 </article>

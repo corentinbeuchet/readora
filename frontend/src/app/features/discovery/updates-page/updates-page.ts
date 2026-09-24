@@ -1,5 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { isDefaultChapterTitle } from '@app/core/models/chapter';
+import { Icon } from '@app/shared/ui/icon/icon';
 import { DiscoveryApi } from '@app/core/api/discovery-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { SeoService } from '@app/core/seo/seo.service';
@@ -12,7 +14,7 @@ import { TimeAgoPipe } from '@app/shared/ui/time-ago.pipe';
 /** Latest updates (US-08): newest chapters, optionally only my library and followed teams. */
 @Component({
   selector: 'app-updates-page',
-  imports: [TimeAgoPipe, WorkCard, WorkCardSkeleton, EmptyState, LoadError, RouterLink],
+  imports: [TimeAgoPipe, WorkCard, WorkCardSkeleton, EmptyState, LoadError, RouterLink, Icon],
   templateUrl: './updates-page.html',
   styleUrl: './updates-page.scss'
 })
@@ -28,15 +30,16 @@ export class UpdatesPage {
   protected readonly mine = computed(() => this.feed() === 'mine' && this.canFilter());
   protected readonly pageIndex = computed(() => Math.max(0, Math.trunc(Number(this.page())) || 0));
   protected readonly releases = this.discovery.latestResource(this.mine, this.pageIndex);
-  /** Accessible name of each row's "Read now" link, by chapter id. */
-  protected readonly readNowLabels = computed(
-    () =>
-      new Map(
-        (this.releases.hasValue() ? this.releases.value() : []).map((release) => [
-          release.chapterId,
-          $localize`:@@discovery.updates.readNow.label:Read now: ${release.work.title}:title:, chapter ${release.chapterNumber}:chapter:`
-        ])
-      )
+  /**
+   * One row per release, worked out once: the chapter's own title (nothing when it only repeats "Chapter N") and the
+   * accessible name of its "Read now" link.
+   */
+  protected readonly rows = computed(() =>
+    (this.releases.hasValue() ? this.releases.value() : []).map((release) => ({
+      release,
+      title: isDefaultChapterTitle(release.chapterTitle, release.chapterNumber) ? null : release.chapterTitle,
+      readNowLabel: $localize`:@@discovery.updates.readNow.label:Read now: ${release.work.title}:title:, chapter ${release.chapterNumber}:chapter:`
+    }))
   );
 
   constructor() {

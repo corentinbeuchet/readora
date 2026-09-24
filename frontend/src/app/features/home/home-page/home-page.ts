@@ -6,7 +6,7 @@ import { DiscoveryApi } from '@app/core/api/discovery-api';
 import { ListsApi } from '@app/core/api/lists-api';
 import { ReadingApi } from '@app/core/api/reading-api';
 import { AuthStore } from '@app/core/auth/auth-store';
-import { RankingPeriod } from '@app/core/models/discovery';
+import { RankingPeriod, groupNewChapters } from '@app/core/models/discovery';
 import { SeoService } from '@app/core/seo/seo.service';
 import { Icon } from '@app/shared/ui/icon/icon';
 import { ListCard } from '@app/shared/ui/list-card/list-card';
@@ -66,7 +66,10 @@ export class HomePage {
   protected readonly topLists = computed(() => (this.lists.hasValue() ? this.lists.value().slice(0, RAIL_SIZE) : []));
   protected readonly readingHistory = computed(() => (this.history.hasValue() ? this.history.value() : []));
   /** Chapters of the reader's library they have not finished yet. */
-  protected readonly unreadReleases = computed(() => (this.mine.hasValue() ? this.mine.value().filter((release) => !release.read).slice(0, RAIL_SIZE) : []));
+  /** One tile per series, however many of its chapters are new. */
+  protected readonly newInLibrary = computed(() =>
+    this.mine.hasValue() ? groupNewChapters(this.mine.value().filter((release) => !release.read)).slice(0, RAIL_SIZE) : []
+  );
   /** Keeps the room of "Continue reading" until the history has answered (see home-page.scss). */
   protected readonly historyPending = computed(() => !this.live() || this.history.isLoading());
 

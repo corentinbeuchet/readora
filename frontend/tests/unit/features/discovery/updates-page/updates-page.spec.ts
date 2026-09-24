@@ -8,13 +8,13 @@ import { Release } from '@app/core/models/discovery';
 import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
 import { API, FIXED_NOW, fail, freezeDate, ok, provideHttpTesting, settle } from '../../../test-utils';
 
-function release(id: string, title: string, number: string, minutesAgo: number, read = false): Release {
+function release(id: string, title: string, number: string, minutesAgo: number, read = false, chapterTitle = ''): Release {
   return {
     work: { id: `w-${title}`, title, type: 'MANGA', status: 'ONGOING', author: null, demographic: null, coverImageUrl: '', coverThumbnailUrl: null, genres: [] },
     team: { id: 't-shadow', name: 'Shadow Scans' },
     chapterId: id,
     chapterNumber: number,
-    chapterTitle: '',
+    chapterTitle,
     publishedAt: new Date(FIXED_NOW.getTime() - minutesAgo * 60_000).toISOString(),
     read
   };
@@ -50,6 +50,15 @@ describe('UpdatesPage (US-08)', () => {
     thenReleaseLinksTo(1, '/read/op-180');
     thenReleaseIsCreditedTo(1, 'Shadow Scans', '/teams/t-shadow');
     thenThereIsNoFeedChoice();
+  });
+
+  it('shows a chapter title only when it says more than the chapter number', async () => {
+    await givenIOpenTheUpdates('/updates');
+
+    await whenTheFeedAnswers([release('sl-6', 'Solo Leveling', '6', 5, false, 'Chapter 6'), release('op-1', 'One Piece', '1', 9, false, 'Romance Dawn')]);
+
+    thenReleaseLineIs(1, 'Chapter 6');
+    thenReleaseLineIs(2, 'Chapter 1 Romance Dawn');
   });
 
   it('shows only my library with read badges when "My library" is chosen', async () => {
@@ -118,7 +127,7 @@ describe('UpdatesPage (US-08)', () => {
   }
 
   function thenReleaseLinksTo(position: number, href: string): void {
-    expect(releaseRow(position).querySelector('a.btn-primary')!.getAttribute('href')).toBe(href);
+    expect(releaseRow(position).querySelector('a.btn[href^="/read/"]')!.getAttribute('href')).toBe(href);
   }
 
   function thenReleaseIsMarkedRead(position: number): void {
@@ -148,6 +157,12 @@ describe('UpdatesPage (US-08)', () => {
 
   function page(): HTMLElement {
     return harness.routeNativeElement as HTMLElement;
+  }
+
+  /** The chapter and its title, as the row's meta line shows them (team, age and badges left out). */
+  function thenReleaseLineIs(position: number, expected: string): void {
+    const parts = Array.from(releaseRow(position).querySelectorAll('.release-line > span:not(.badge)')).map((part) => part.textContent!.trim());
+    expect(parts.join(' ')).toBe(expected);
   }
 
   function releaseRow(position: number): HTMLElement {

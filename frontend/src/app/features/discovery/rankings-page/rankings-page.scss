@@ -6,6 +6,11 @@
   margin: var(--space-4) 0;
 }
 
+// Rows hold a numeral, a cover and a title: stretched to 1176px they would leave the right half empty.
+.work-rows {
+  max-inline-size: 48rem;
+}
+
 .score {
   display: inline-flex;
   flex-wrap: wrap;

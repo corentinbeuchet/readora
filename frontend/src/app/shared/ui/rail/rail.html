@@ -1,5 +1,6 @@
 <section class="rail" [attr.aria-labelledby]="headingId">
   <app-section-header [heading]="heading()" [headingId]="headingId" [seeAll]="seeAll()" [seeAllParams]="seeAllParams()">
+    @if (!(atStart() && atEnd())) {
     <span class="arrows">
       <button type="button" class="btn btn-ghost btn-icon" [disabled]="atStart()" (click)="page(-1)" [attr.aria-label]="backLabel()">
         <app-icon name="chevron-left" />
@@ -8,6 +9,7 @@
         <app-icon name="chevron-right" />
       </button>
     </span>
+    }
   </app-section-header>
   <ul #track class="track">
     <ng-content />

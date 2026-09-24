@@ -6,6 +6,15 @@ export interface TeamRef {
   name: string;
 }
 
+/**
+ * A chapter title that only repeats its number ("Chapter 8", or nothing): showing it next to "Chapter 8" says the same
+ * thing twice, so lists leave it out.
+ */
+export function isDefaultChapterTitle(title: string | null | undefined, chapterNumber: string): boolean {
+  const trimmed = (title ?? '').trim().toLowerCase();
+  return trimmed === '' || trimmed === `chapter ${chapterNumber}`.toLowerCase();
+}
+
 /** A page as the client sends it once its image is uploaded (publishing a chapter, the pages of a task). */
 export interface PagePayload {
   pageNumber: number;

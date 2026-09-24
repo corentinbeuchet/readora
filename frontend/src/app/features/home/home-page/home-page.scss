@@ -17,6 +17,11 @@
   display: none;
 }
 
+// A returning reader starts from "Continue reading": the visitor's pitch under the heading would only push it down.
+:host-context([data-has-session]) .masthead p {
+  display: none;
+}
+
 :host-context([data-has-session]) .continue-slot.pending {
   display: block;
   min-block-size: 11rem;

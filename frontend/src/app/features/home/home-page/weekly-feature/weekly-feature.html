@@ -1,8 +1,5 @@
 <section class="weekly" aria-labelledby="weekly-heading">
-  <div class="weekly-head">
-    <h2 id="weekly-heading" i18n="@@home.weekly.heading">Most read this week</h2>
-    <a class="full-ranking" routerLink="/rankings" i18n="@@home.weekly.fullRanking">Full ranking</a>
-  </div>
+  <app-section-header heading="Most read this week" i18n-heading="@@home.weekly.heading" headingId="weekly-heading" seeAll="/rankings" />
 
   @if (pending()) {
     <div class="feature" role="status">

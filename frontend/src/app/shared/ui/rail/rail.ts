@@ -44,6 +44,13 @@ export class Rail {
       const update = () => this.updateEnds();
       track.addEventListener('scroll', update, { passive: true });
       destroyRef.onDestroy(() => track.removeEventListener('scroll', update));
+      // A resize can make the rail fit (arrows go) or overflow (arrows come back).
+      const view = track.ownerDocument.defaultView;
+      if (view && 'ResizeObserver' in view) {
+        const observer = new view.ResizeObserver(update);
+        observer.observe(track);
+        destroyRef.onDestroy(() => observer.disconnect());
+      }
       this.updateEnds();
     });
   }
