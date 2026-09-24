@@ -12,7 +12,7 @@ const OMNI: WorkSummary = {
   status: 'ONGOING',
   author: 'Sing Shong',
   demographic: null,
-  coverImageUrl: '',
+  coverImageUrl: '', coverThumbnailUrl: null,
   genres: ['Action']
 };
 const OMEGA: WorkSummary = { ...OMNI, id: 'w-3', title: 'Omega Tower', author: null };

@@ -10,7 +10,7 @@ import { givenIAmSignedInWith } from '../../../core/auth/auth-fixtures';
 import { ANY_URL, API, FIXED_NOW, freezeDate, ok, provideHttpTesting, settle } from '../../../test-utils';
 
 function series(id: string, title: string): WorkSummary {
-  return { id, title, type: 'MANHWA', status: 'ONGOING', author: 'Chugong', demographic: null, coverImageUrl: `https://cdn.readora.test/${id}.webp`, genres: ['Action', 'Fantasy'] };
+  return { id, title, type: 'MANHWA', status: 'ONGOING', author: 'Chugong', demographic: null, coverImageUrl: `https://cdn.readora.test/${id}.webp`, coverThumbnailUrl: null, genres: ['Action', 'Fantasy'] };
 }
 
 const SOLO = series('w-solo', 'Solo Leveling');

@@ -127,6 +127,8 @@ export interface Work {
   author: string | null;
   demographic: Demographic | null;
   coverImageUrl: string | null;
+  /** The cover resized for cards and lists; `null` for a cover hosted elsewhere. */
+  coverThumbnailUrl: string | null;
   genres: string[];
   facts: WorkFacts;
 }
@@ -166,6 +168,8 @@ export interface WorkSummary {
   author: string | null;
   demographic: Demographic | null;
   coverImageUrl: string | null;
+  /** The cover resized for cards and lists; `null` for a cover hosted elsewhere. */
+  coverThumbnailUrl: string | null;
   genres: string[];
 }
 

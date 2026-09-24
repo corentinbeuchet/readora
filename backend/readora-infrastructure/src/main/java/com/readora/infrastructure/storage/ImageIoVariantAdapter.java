@@ -24,8 +24,9 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Optional;
 
-/// Data-saver copies with the JDK's ImageIO (JPEG, PNG, GIF) plus the TwelveMonkeys WebP reader: at most
-/// [#MAX_WIDTH] px wide, JPEG quality [#QUALITY].
+/// Data-saver copies and cover thumbnails with the JDK's ImageIO (JPEG, PNG, GIF) plus the TwelveMonkeys WebP
+/// reader: data-saver copies at most [#MAX_WIDTH] px wide at JPEG quality [#QUALITY], cover thumbnails
+/// [#THUMBNAIL_WIDTH] px wide at [#THUMBNAIL_QUALITY].
 ///
 /// Decoding is bounded: images above [#MAX_SOURCE_PIXELS] are skipped, wide images are decoded subsampled so no
 /// more than [#MAX_DECODED_PIXELS] are held in memory, and at most 4 uploads are converted at once.
@@ -34,6 +35,9 @@ public class ImageIoVariantAdapter implements ImageVariantPort {
 
     static final int MAX_WIDTH = 720;
     static final float QUALITY = 0.6f;
+    /// Covers are drawn at most 240 CSS px wide (`app-work-cover`): 480 px is sharp on 2x screens.
+    static final int THUMBNAIL_WIDTH = 480;
+    static final float THUMBNAIL_QUALITY = 0.8f;
     /// Long webtoon strips are allowed (e.g. 800 × 40 000); anything bigger is not worth decoding.
     static final long MAX_SOURCE_PIXELS = 50_000_000L;
     static final long MAX_DECODED_PIXELS = 25_000_000L;
@@ -48,6 +52,18 @@ public class ImageIoVariantAdapter implements ImageVariantPort {
     @Override
     @ConcurrencyLimit(4)
     public Optional<byte[]> lightVersion(byte[] image) {
+        return resized(image, MAX_WIDTH, QUALITY).filter(jpeg -> jpeg.length < image.length);
+    }
+
+    /// Always made for a readable image, even when not smaller than the original: the cover's thumbnail URL is
+    /// derived from its key, so it must exist.
+    @Override
+    @ConcurrencyLimit(4)
+    public Optional<byte[]> coverThumbnail(byte[] image) {
+        return resized(image, THUMBNAIL_WIDTH, THUMBNAIL_QUALITY);
+    }
+
+    private Optional<byte[]> resized(byte[] image, int maxWidth, float quality) {
         try (ImageInputStream in = ImageIO.createImageInputStream(new ByteArrayInputStream(image))) {
             Iterator<ImageReader> readers = in == null ? null : ImageIO.getImageReaders(in);
             if (readers == null || !readers.hasNext()) {
@@ -56,29 +72,28 @@ public class ImageIoVariantAdapter implements ImageVariantPort {
             ImageReader reader = readers.next();
             try {
                 reader.setInput(in, true, true);
-                BufferedImage decoded = decode(reader);
+                BufferedImage decoded = decode(reader, maxWidth);
                 if (decoded == null) {
                     return Optional.empty();
                 }
-                byte[] jpeg = toJpeg(scaled(decoded));
-                return jpeg.length < image.length ? Optional.of(jpeg) : Optional.empty();
+                return Optional.of(toJpeg(scaled(decoded, maxWidth), quality));
             } finally {
                 reader.dispose();
             }
         } catch (IOException | RuntimeException e) {
-            log.warn("No data-saver copy for an uploaded image: {}", e.toString());
+            log.warn("No resized copy of an uploaded image: {}", e.toString());
             return Optional.empty();
         }
     }
 
-    private static @org.jspecify.annotations.Nullable BufferedImage decode(ImageReader reader) throws IOException {
+    private static @org.jspecify.annotations.Nullable BufferedImage decode(ImageReader reader, int maxWidth) throws IOException {
         int width = reader.getWidth(0);
         int height = reader.getHeight(0);
         long pixels = (long) width * height;
         if (width <= 0 || height <= 0 || pixels > MAX_SOURCE_PIXELS) {
             return null;
         }
-        int step = Math.max(1, width / MAX_WIDTH);
+        int step = Math.max(1, width / maxWidth);
         while (pixels / ((long) step * step) > MAX_DECODED_PIXELS) {
             step++;
         }
@@ -88,8 +103,8 @@ public class ImageIoVariantAdapter implements ImageVariantPort {
     }
 
     /// JPEG has no alpha: transparent areas become white, like the reader's default page background.
-    private static BufferedImage scaled(BufferedImage source) {
-        int width = Math.min(MAX_WIDTH, source.getWidth());
+    private static BufferedImage scaled(BufferedImage source, int maxWidth) {
+        int width = Math.min(maxWidth, source.getWidth());
         int height = Math.max(1, (int) Math.round((double) source.getHeight() * width / source.getWidth()));
         BufferedImage target = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = target.createGraphics();
@@ -105,14 +120,14 @@ public class ImageIoVariantAdapter implements ImageVariantPort {
         return target;
     }
 
-    private static byte[] toJpeg(BufferedImage image) throws IOException {
+    private static byte[] toJpeg(BufferedImage image, float quality) throws IOException {
         ImageWriter writer = ImageIO.getImageWritersByFormatName("jpeg").next();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try (ImageOutputStream ios = ImageIO.createImageOutputStream(out)) {
             writer.setOutput(ios);
             ImageWriteParam param = writer.getDefaultWriteParam();
             param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-            param.setCompressionQuality(QUALITY);
+            param.setCompressionQuality(quality);
             writer.write(null, new IIOImage(image, null, null), param);
         } finally {
             writer.dispose();

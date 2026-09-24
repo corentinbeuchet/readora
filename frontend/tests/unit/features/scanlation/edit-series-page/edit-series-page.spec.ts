@@ -17,11 +17,11 @@ const SOLO_LEVELING: Work = {
   status: 'COMPLETED',
   author: 'Chugong',
   demographic: 'SHOUNEN',
-  coverImageUrl: '/api/v1/storage/assets/covers/w-1.webp',
+  coverImageUrl: '/api/v1/storage/assets/covers/w-1.webp', coverThumbnailUrl: null,
   genres: ['Action', 'Fantasy'],
   facts: { alternativeTitles: ['Na Honjaman Level Up'], artist: null, releaseYear: 2018, originalLanguage: 'KOREAN', contentRating: null }
 };
-const SUMMARY: WorkSummary = { id: 'w-1', title: 'Solo Leveling', type: 'MANHWA', status: 'COMPLETED', author: 'Chugong', demographic: 'SHOUNEN', coverImageUrl: null, genres: [] };
+const SUMMARY: WorkSummary = { id: 'w-1', title: 'Solo Leveling', type: 'MANHWA', status: 'COMPLETED', author: 'Chugong', demographic: 'SHOUNEN', coverImageUrl: null, coverThumbnailUrl: null, genres: [] };
 const MY_TEAM: MyTeam = { id: 't-1', name: 'Moon Scans', description: null, myRoles: ['LEADER'], boards: [{ projectId: 'p-1', work: SUMMARY, boardEnabled: true }] };
 
 describe('EditSeriesPage (US-04)', () => {

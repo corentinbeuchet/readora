@@ -6,7 +6,7 @@ import { ListCard } from '@app/shared/ui/list-card/list-card';
 import { ANY_URL } from '../../../test-utils';
 
 function series(id: string): WorkSummary {
-  return { id, title: `Series ${id}`, type: 'MANGA', status: 'ONGOING', author: null, demographic: null, coverImageUrl: `https://cdn.readora.test/${id}.webp`, genres: [] };
+  return { id, title: `Series ${id}`, type: 'MANGA', status: 'ONGOING', author: null, demographic: null, coverImageUrl: `https://cdn.readora.test/${id}.webp`, coverThumbnailUrl: null, genres: [] };
 }
 
 function listOf(count: number, overrides: Partial<ReadingList> = {}): ReadingList {

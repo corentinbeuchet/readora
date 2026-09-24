@@ -8,7 +8,7 @@ import { Permission } from '@app/core/models/identity';
 import { givenIAmSignedInWith } from '../../../core/auth/auth-fixtures';
 import { API, fail, ok, provideHttpTesting, settle } from '../../../test-utils';
 
-const SOLO: WorkSummary = { id: 'w-1', title: 'Solo Leveling', type: 'MANHWA', status: 'ONGOING', author: null, demographic: null, coverImageUrl: '', genres: [] };
+const SOLO: WorkSummary = { id: 'w-1', title: 'Solo Leveling', type: 'MANHWA', status: 'ONGOING', author: null, demographic: null, coverImageUrl: '', coverThumbnailUrl: null, genres: [] };
 const ORV: WorkSummary = { ...SOLO, id: 'w-2', title: 'Omniscient Reader' };
 
 function invitation(overrides: Partial<TeamInvitation> = {}): TeamInvitation {

@@ -20,7 +20,7 @@
     @if (first(); as top) {
       <div class="layout">
         <article class="feature">
-          <app-work-cover class="feature-cover" [src]="top.work.coverImageUrl" width="240" height="336" priority />
+          <app-work-cover class="feature-cover" [src]="top.work.coverImageUrl" [thumbnail]="top.work.coverThumbnailUrl" width="240" height="336" priority />
           <div class="feature-body">
             <p class="feature-rank"><span class="sr-only" i18n="@@home.weekly.rank">Rank</span> 1</p>
             <h3 class="feature-title"><a [routerLink]="['/works', top.work.id]">{{ top.work.title }}</a></h3>

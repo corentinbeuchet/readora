@@ -34,7 +34,7 @@
           (click)="openWork(work)"
           (keydown.enter)="openWork(work)"
         >
-          <app-work-cover class="omnisearch-cover" [src]="work.coverImageUrl" width="32" height="45" />
+          <app-work-cover class="omnisearch-cover" [src]="work.coverImageUrl" [thumbnail]="work.coverThumbnailUrl" width="32" height="45" />
           <span class="omnisearch-text">
             <span class="omnisearch-title">{{ work.title }}</span>
             <span class="omnisearch-meta muted">

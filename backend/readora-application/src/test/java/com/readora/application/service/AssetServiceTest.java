@@ -1,5 +1,6 @@
 package com.readora.application.service;
 
+import com.readora.application.port.in.ManageAssetsUseCase;
 import com.readora.application.port.out.ImageVariantPort;
 import com.readora.application.port.out.StoragePort;
 import org.junit.jupiter.api.DisplayName;
@@ -58,5 +59,45 @@ class AssetServiceTest {
         org.mockito.Mockito.reset(variants);
         assertThat(archives.upload("raw", "c1.zip", "application/zip", new byte[10]).litePublicUrl()).isNull();
         verifyNoInteractions(variants);
+    }
+
+    @Test
+    @DisplayName("An uploaded cover also gets its thumbnail stored next to it as <key>.thumb.jpg")
+    void coverGetsAThumbnail() {
+        byte[] cover = new byte[1000];
+        byte[] thumbnail = new byte[100];
+        when(variants.lightVersion(cover)).thenReturn(Optional.empty());
+        when(variants.coverThumbnail(cover)).thenReturn(Optional.of(thumbnail));
+        when(storage.getPublicCdnUrl(anyString())).thenAnswer(i -> "https://cdn/" + i.getArgument(0));
+
+        var stored = new AssetService(storage, variants).upload("covers", "cover.png", "image/png", cover);
+
+        verify(storage).storeAsset(stored.storageKey() + ".thumb.jpg", thumbnail, "image/jpeg");
+        assertThat(ManageAssetsUseCase.coverThumbnailOf(stored.publicUrl())).isEqualTo(stored.publicUrl() + ".thumb.jpg");
+    }
+
+    @Test
+    @DisplayName("A page upload gets no cover thumbnail")
+    void pageGetsNoThumbnail() {
+        when(variants.lightVersion(any())).thenReturn(Optional.empty());
+        when(storage.getPublicCdnUrl(anyString())).thenAnswer(i -> "https://cdn/" + i.getArgument(0));
+
+        new AssetService(storage, variants).upload("scans/w/c1", "p1.png", "image/png", new byte[10]);
+
+        verify(variants, never()).coverThumbnail(any());
+    }
+
+    @Test
+    @DisplayName("Only covers the server stored have a thumbnail: uploads and seed covers, not a cover hosted elsewhere")
+    void thumbnailOnlyForStoredCovers() {
+        String uuid = "0b8f3c1e-2a4d-4e6f-8a0b-1c2d3e4f5a6b";
+
+        assertThat(ManageAssetsUseCase.coverThumbnailOf("https://cdn.readora.com/covers/" + uuid + "-cover.png"))
+                .isEqualTo("https://cdn.readora.com/covers/" + uuid + "-cover.png.thumb.jpg");
+        assertThat(ManageAssetsUseCase.coverThumbnailOf("/api/v1/storage/assets/covers/" + uuid + "-a.webp")).endsWith(".thumb.jpg");
+        assertThat(ManageAssetsUseCase.coverThumbnailOf("http://localhost:9000/media/seed/covers/" + uuid + ".png")).endsWith(".thumb.jpg");
+        assertThat(ManageAssetsUseCase.coverThumbnailOf("https://example.com/covers/solo-leveling.jpg")).isNull();
+        assertThat(ManageAssetsUseCase.coverThumbnailOf("https://cdn.readora.com/scans/" + uuid + "-p1.png")).isNull();
+        assertThat(ManageAssetsUseCase.coverThumbnailOf(null)).isNull();
     }
 }

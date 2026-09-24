@@ -7,7 +7,7 @@ import { RankedWork } from '@app/core/models/discovery';
 import { API, ok, provideHttpTesting, settle } from '../../../test-utils';
 
 function ranked(rank: number, title: string, score: number, ratings = 0): RankedWork {
-  return { rank, work: { id: `w-${rank}`, title, type: 'MANGA', status: 'ONGOING', author: null, demographic: null, coverImageUrl: '', genres: [] }, score, ratings };
+  return { rank, work: { id: `w-${rank}`, title, type: 'MANGA', status: 'ONGOING', author: null, demographic: null, coverImageUrl: '', coverThumbnailUrl: null, genres: [] }, score, ratings };
 }
 
 describe('RankingsPage (US-08)', () => {

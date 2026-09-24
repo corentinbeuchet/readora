@@ -12,7 +12,7 @@ const SOLO: WorkSummary = {
   status: 'ONGOING',
   author: 'Chugong',
   demographic: null,
-  coverImageUrl: 'https://cdn.readora.test/solo.webp',
+  coverImageUrl: 'https://cdn.readora.test/solo.webp', coverThumbnailUrl: null,
   genres: ['Action']
 };
 

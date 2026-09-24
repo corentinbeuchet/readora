@@ -1,5 +1,7 @@
 package com.readora.infrastructure.config;
 
+import com.readora.application.port.in.ManageAssetsUseCase;
+import com.readora.application.port.out.ImageVariantPort;
 import com.readora.application.port.out.StoragePort;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -10,7 +12,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
-import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
@@ -19,6 +20,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.List;
+import javax.imageio.ImageIO;
 
 /// LOCAL/DEV ONLY: draws the page images and covers the local seed (db/seed-local) points to, and stores them in
 /// the media bucket, so seeded chapters can be read. Only keys under `seed/` are touched, and only when missing,
@@ -35,10 +37,12 @@ public class LocalSeedImages implements ApplicationRunner {
 
     private final JdbcClient jdbc;
     private final StoragePort storage;
+    private final ImageVariantPort imageVariants;
 
-    public LocalSeedImages(JdbcClient jdbc, StoragePort storage) {
+    public LocalSeedImages(JdbcClient jdbc, StoragePort storage, ImageVariantPort imageVariants) {
         this.jdbc = jdbc;
         this.storage = storage;
+        this.imageVariants = imageVariants;
     }
 
     @Override
@@ -111,6 +115,12 @@ public class LocalSeedImages implements ApplicationRunner {
             if (storage.loadAsset(key).isEmpty()) {
                 storage.storeAsset(key, png(work.title(), List.of()), "image/png");
                 stored++;
+            }
+            // Like an uploaded cover, a seed cover has its thumbnail next to it (ManageAssetsUseCase.coverThumbnailOf).
+            String thumbnailKey = key + ManageAssetsUseCase.COVER_THUMBNAIL_SUFFIX;
+            if (storage.loadAsset(thumbnailKey).isEmpty()) {
+                storage.loadAsset(key).flatMap(imageVariants::coverThumbnail)
+                        .ifPresent(thumbnail -> storage.storeAsset(thumbnailKey, thumbnail, "image/jpeg"));
             }
             if (work.coverUrl() == null) {
                 jdbc.sql("UPDATE works SET cover_image_url = ? WHERE CAST(id AS VARCHAR(36)) = ?").params(url, work.id()).update();

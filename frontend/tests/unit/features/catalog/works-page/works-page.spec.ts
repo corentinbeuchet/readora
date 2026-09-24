@@ -14,7 +14,7 @@ const SOLO: WorkSummary = {
   status: 'COMPLETED',
   author: 'Chugong',
   demographic: 'SHOUNEN',
-  coverImageUrl: '',
+  coverImageUrl: '', coverThumbnailUrl: null,
   genres: ['Action', 'Fantasy']
 };
 

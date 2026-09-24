@@ -10,7 +10,7 @@ const NOTHING_KNOWN: Work = {
   status: 'COMPLETED',
   author: null,
   demographic: null,
-  coverImageUrl: null,
+  coverImageUrl: null, coverThumbnailUrl: null,
   genres: ['Action'],
   facts: { alternativeTitles: [], artist: null, releaseYear: null, originalLanguage: null, contentRating: null }
 };

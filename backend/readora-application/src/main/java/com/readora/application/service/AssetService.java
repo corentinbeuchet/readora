@@ -57,6 +57,10 @@ public class AssetService implements ManageAssetsUseCase {
                 storagePort.storeAsset(liteKey, lite.get(), "image/jpeg");
                 liteUrl = storagePort.getPublicCdnUrl(liteKey);
             }
+            String thumbnailKey = ManageAssetsUseCase.coverThumbnailOf(storageKey);
+            if (thumbnailKey != null) {
+                imageVariants.coverThumbnail(data).ifPresent(thumbnail -> storagePort.storeAsset(thumbnailKey, thumbnail, "image/jpeg"));
+            }
         }
         return new StoredAsset(storageKey, storagePort.getPublicCdnUrl(storageKey), liteUrl);
     }

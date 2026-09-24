@@ -1,13 +1,9 @@
 package com.readora.acceptance.steps;
 
 import com.readora.acceptance.fakes.FakeStorage;
-import com.readora.acceptance.fakes.InMemoryCommentRepository;
-import com.readora.application.service.ReaderSocialService;
-import com.readora.domain.social.ChapterComment;
-import com.readora.domain.social.CommentContent;
-import com.readora.domain.social.CommentId;
 import com.readora.acceptance.fakes.InMemoryChapterReadRepository;
 import com.readora.acceptance.fakes.InMemoryChapterRepository;
+import com.readora.acceptance.fakes.InMemoryCommentRepository;
 import com.readora.acceptance.fakes.InMemoryLibraryRepository;
 import com.readora.acceptance.fakes.InMemoryTeamRepository;
 import com.readora.acceptance.fakes.InMemoryWorkRepository;
@@ -15,11 +11,17 @@ import com.readora.acceptance.fakes.MutableClock;
 import com.readora.application.port.in.ReadChapterUseCase.ChapterReading;
 import com.readora.application.port.in.TrackReadingUseCase.HistoryItem;
 import com.readora.application.port.in.TrackReadingUseCase.WorkProgress;
+import com.readora.application.port.out.ImageVariantPort;
+import com.readora.application.service.AssetService;
 import com.readora.application.service.ChapterReadingService;
 import com.readora.application.service.LibraryService;
+import com.readora.application.service.ReaderSocialService;
 import com.readora.application.service.ReadingTrackerService;
 import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.TeamId;
+import com.readora.domain.social.ChapterComment;
+import com.readora.domain.social.CommentContent;
+import com.readora.domain.social.CommentId;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.ChapterNumber;
@@ -33,13 +35,11 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
-import com.readora.application.service.AssetService;
-
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.Optional;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
 
@@ -81,8 +81,18 @@ public class ReadingExperienceStepDefinitions {
         library = new LibraryService(new InMemoryLibraryRepository(), works, reads, clock);
         storage = new FakeStorage();
         chapterReader = new ChapterReadingService(chapters, works, teams, storage);
-        // Stand-in for the ImageIO adapter (tested in infrastructure): a copy a quarter of the size.
-        assets = new AssetService(storage, image -> Optional.of(Arrays.copyOf(image, image.length / 4)));
+        // Stand-in for the ImageIO adapter (tested in infrastructure): copies a quarter of the size.
+        assets = new AssetService(storage, new ImageVariantPort() {
+            @Override
+            public Optional<byte[]> lightVersion(byte[] image) {
+                return Optional.of(Arrays.copyOf(image, image.length / 4));
+            }
+
+            @Override
+            public Optional<byte[]> coverThumbnail(byte[] image) {
+                return Optional.of(Arrays.copyOf(image, image.length / 4));
+            }
+        });
         dataSaver = false;
         comments = new InMemoryCommentRepository();
         social = new ReaderSocialService(comments, chapters, event -> { });

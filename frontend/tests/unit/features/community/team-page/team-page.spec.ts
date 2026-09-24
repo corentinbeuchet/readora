@@ -28,7 +28,7 @@ const TEAM: TeamProfile = {
 };
 
 function series(id: string, title: string): WorkSummary {
-  return { id, title, type: 'MANHWA', status: 'ONGOING', author: null, demographic: null, coverImageUrl: '', genres: [] };
+  return { id, title, type: 'MANHWA', status: 'ONGOING', author: null, demographic: null, coverImageUrl: '', coverThumbnailUrl: null, genres: [] };
 }
 
 describe('TeamPage (US-12)', () => {

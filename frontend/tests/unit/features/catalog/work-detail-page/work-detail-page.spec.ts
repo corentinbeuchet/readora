@@ -17,7 +17,7 @@ const WORK: Work = {
   status: 'ONGOING',
   author: null,
   demographic: null,
-  coverImageUrl: 'https://cdn.readora.com/covers/w-1.webp',
+  coverImageUrl: 'https://cdn.readora.com/covers/w-1.webp', coverThumbnailUrl: null,
   genres: ['Action'],
   facts: { alternativeTitles: [], artist: null, releaseYear: null, originalLanguage: null, contentRating: null }
 };

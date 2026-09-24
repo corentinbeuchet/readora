@@ -270,7 +270,7 @@ describe('UploadStudioPage', () => {
       thenTheStepSays('Chapter 5 of Solo Leveling is out, as the version of Moon Scans.');
     });
 
-    const SOLO_LEVELING: WorkSummary = { id: 'work-11', title: 'Solo Leveling', type: 'MANHWA', status: 'COMPLETED', author: 'Chugong', demographic: null, coverImageUrl: null, genres: ['Action'] };
+    const SOLO_LEVELING: WorkSummary = { id: 'work-11', title: 'Solo Leveling', type: 'MANHWA', status: 'COMPLETED', author: 'Chugong', demographic: null, coverImageUrl: null, coverThumbnailUrl: null, genres: ['Action'] };
 
     it('Uploading starts by finding the series', async () => {
       await givenIOpenTheStudioWithoutASeries({ myTeams: [MOON_SCANS] });

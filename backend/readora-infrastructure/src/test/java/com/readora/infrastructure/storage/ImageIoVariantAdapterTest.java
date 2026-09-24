@@ -42,6 +42,26 @@ class ImageIoVariantAdapterTest {
     }
 
     @Test
+    @DisplayName("A cover becomes a 480 px wide JPEG thumbnail")
+    void coverBecomesThumbnail() throws IOException {
+        byte[] thumbnail = adapter.coverThumbnail(noisyPng(800, 1200)).orElseThrow();
+
+        BufferedImage decoded = ImageIO.read(new ByteArrayInputStream(thumbnail));
+        assertThat(decoded.getWidth()).isEqualTo(480);
+        assertThat(decoded.getHeight()).isEqualTo(720);
+    }
+
+    @Test
+    @DisplayName("A cover thumbnail is made even when it is not smaller than the cover, never from garbage")
+    void thumbnailAlwaysMadeForReadableImages() throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ImageIO.write(new BufferedImage(10, 10, BufferedImage.TYPE_INT_RGB), "png", out);
+
+        assertThat(adapter.coverThumbnail(out.toByteArray())).isPresent();
+        assertThat(adapter.coverThumbnail("dummy image content".getBytes())).isEmpty();
+    }
+
+    @Test
     @DisplayName("WebP uploads can be read (TwelveMonkeys plugin registered)")
     void webpReaderIsAvailable() {
         assertThat(ImageIO.getImageReadersByMIMEType("image/webp").hasNext()).isTrue();

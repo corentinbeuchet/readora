@@ -119,7 +119,8 @@ breakpoints).
   `<app-field-errors id="…-error" [field]="f.x" />` (`shared/forms/`). Ids must be unique — never a static id inside `@for`.
 - Shared UI (`src/app/shared/`) before writing a copy: `app-work-card`, `app-work-card-skeleton`, `app-rail`,
   `app-section-header`, `app-empty-state`, `app-list-card`, `app-icon` (see "Design"), `app-load-error`,
-  `app-work-cover` (ngSrc + fallback), `app-dialog` (focus trap, Escape, labelledBy), `timeAgo` pipe,
+  `app-work-cover` (ngSrc + fallback; always pass `[thumbnail]="work.coverThumbnailUrl"`: a 480 px copy, the full
+  cover only when it fails), `app-dialog` (focus trap, Escape, labelledBy), `timeAgo` pipe,
   `app-field-errors`, `appAriaInvalid`, `app-work-facts-fields` + `WORK_FACTS_SCHEMA` (the optional facts of a
   series, for any form that creates or edits one: `apply(path.facts, WORK_FACTS_SCHEMA)`); shared styles `.work-grid`, `.work-rows`, `.rail-item`, `.skeleton`, `.tab`,
   `.pager`, `.wizard-*`, `.dialog-actions` in `styles.scss`. A third copy of anything means it should be shared.
@@ -340,10 +341,8 @@ lessons.
 - F18 Upgrade to stable Angular 22.2, then switch template-only members from `protected` to `private` (~106 today).
 - F23 `autoCsp` + `security.allowedHosts` for SSR. Blocked: Angular 22.1 build fails with "Cannot set both SSR and
   auto-CSP"; allowedHosts only applies to an SSR server (outputMode is static).
-- F43 Covers have no `sizes`: blocked, not a frontend fix. NgOptimizedImage only builds a `srcset` with an image loader,
-  and storage (MinIO/S3/CloudFront) serves only the original file, so `sizes` alone changes nothing. Needs the backend
-  to store resized cover/page variants (as it already does for page "lite" copies), then an `IMAGE_LOADER` mapping a
-  width to its variant, then `sizes` on `app-work-cover` and reader pages.
+- F43 Reader pages have no `sizes`/`srcset`: storage keeps the original and a 720 px data-saver copy only. (Covers are
+  done: a 480 px thumbnail, `coverThumbnailUrl`, covers every size a cover is drawn at.)
 - F48 (rest of US-13) Notification messages are English text stored by the backend (send a type + parameters instead);
   CloudFront must serve `/fr/*` fallbacks from `fr/index.csr.html` and may redirect `/` by `Accept-Language`;
   `VALIDATION_FAILED` details stay English (backstop checks the forms already make).

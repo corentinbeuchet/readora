@@ -95,7 +95,7 @@ class LocalSeedIntegrationTest extends AuthTestSupport {
     }
 
     @Test
-    @DisplayName("Seeded chapters can be read: their pages and the series covers are stored placeholder images")
+    @DisplayName("Seeded chapters can be read: their pages and the series covers (with thumbnails) are stored placeholder images")
     void seededChaptersHaveImages() throws Exception {
         mockMvc.perform(get("/api/v1/chapters/" + SOLO_LEVELING_DEMO_TEAM_CHAPTER_1))
                 .andExpect(status().isOk())
@@ -104,7 +104,11 @@ class LocalSeedIntegrationTest extends AuthTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.IMAGE_PNG));
         mockMvc.perform(get("/api/v1/works/00000000-0000-4000-9000-000000000013"))
-                .andExpect(jsonPath("$.data.coverImageUrl").value(endsWith("seed/covers/00000000-0000-4000-9000-000000000013.png")));
+                .andExpect(jsonPath("$.data.coverImageUrl").value(endsWith("seed/covers/00000000-0000-4000-9000-000000000013.png")))
+                .andExpect(jsonPath("$.data.coverThumbnailUrl").value(endsWith("seed/covers/00000000-0000-4000-9000-000000000013.png.thumb.jpg")));
+        mockMvc.perform(get("/api/v1/storage/assets/seed/covers/00000000-0000-4000-9000-000000000013.png.thumb.jpg"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.IMAGE_JPEG));
     }
 
     @Test

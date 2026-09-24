@@ -1,5 +1,6 @@
 package com.readora.web.dto;
 
+import com.readora.application.port.in.ManageAssetsUseCase;
 import com.readora.domain.work.Work;
 import org.jspecify.annotations.Nullable;
 
@@ -15,6 +16,8 @@ public record WorkSummaryDto(
         @Nullable String author,
         @Nullable String demographic,
         @Nullable String coverImageUrl,
+        /// The cover resized for cards and lists; `null` for a cover hosted elsewhere (use `coverImageUrl`).
+        @Nullable String coverThumbnailUrl,
         List<String> genres
 ) {
     public static WorkSummaryDto fromDomain(Work work) {
@@ -26,6 +29,7 @@ public record WorkSummaryDto(
                 work.getAuthor(),
                 Optional.ofNullable(work.getDemographic()).map(Enum::name).orElse(null),
                 work.getCoverImageUrl(),
+                ManageAssetsUseCase.coverThumbnailOf(work.getCoverImageUrl()),
                 work.getGenres().stream().sorted().toList()
         );
     }
