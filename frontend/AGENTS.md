@@ -347,6 +347,9 @@ lessons.
 - F48 (rest of US-13) Notification messages are English text stored by the backend (send a type + parameters instead);
   CloudFront must serve `/fr/*` fallbacks from `fr/index.csr.html` and may redirect `/` by `Accept-Language`;
   `VALIDATION_FAILED` details stay English (backstop checks the forms already make).
+- F49 (flaky, 2026-09-24) e2e `upload-studio.spec.ts` "a new series is published with its facts, and its page shows
+  them" failed once in a full parallel chromium + chromium-fr run; its report was overwritten before it was read. Not
+  reproduced since: 40/40 alone (`--repeat-each=8`), 79/79 in two full runs. Next failure: keep the trace, find the cause.
 
 Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = reported with path:line, re-check before acting):
 - R15 `shared/pages/file-utils.ts` zip-bomb guard uses JSZip private `_data` / `internalStream` and has no spec; `jszip` is a static import.
