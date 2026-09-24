@@ -105,6 +105,16 @@ export const routes: Routes = [
     canActivate: [guestGuard]
   },
   {
+    path: 'forgot-password',
+    loadComponent: () => import('@app/features/auth/forgot-password-page/forgot-password-page').then((m) => m.ForgotPasswordPage),
+    canActivate: [guestGuard]
+  },
+  {
+    // Not guest-only: the emailed link may be opened in a browser that is signed in.
+    path: 'reset-password',
+    loadComponent: () => import('@app/features/auth/reset-password-page/reset-password-page').then((m) => m.ResetPasswordPage)
+  },
+  {
     path: 'profile',
     loadComponent: () => import('@app/features/profile/profile-page/profile-page').then((m) => m.ProfilePage),
     canActivate: [authGuard]

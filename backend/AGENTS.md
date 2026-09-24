@@ -120,6 +120,12 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
   fields the client must always send; optional flags are `@Nullable Boolean` with a default in the controller.
 
 ## Integrations
+- Email goes through `MailPort` (`SmtpMailAdapter`, `spring.mail.*`): Mailpit in dev, the Amazon SES SMTP interface in
+  production (`READORA_MAIL_HOST/USERNAME/PASSWORD/FROM`, no defaults there). A failed delivery is logged, never thrown,
+  and mail is left out of the health check: a caller must answer the same whether an email went out, and an SMTP outage
+  must not restart the app. Anything that says whether an address has an account (reset links) answers the same both ways.
+- Ending sessions for security (password change or reset) *deletes* the refresh tokens (`deleteAllForUser`): a
+  revoked token presented later than the reuse grace is treated as theft and would sign the reader out everywhere.
 - Payments and Premium were removed on 2026-09-23 (Stripe checkout, cancel, webhooks, then the plans themselves:
   bookmarks became `LIBRARY_USE`). V22 dropped the payment-only columns and V23 the `subscriptions` table; a payments
   feature adds its own schema back. Bring the flow back from git

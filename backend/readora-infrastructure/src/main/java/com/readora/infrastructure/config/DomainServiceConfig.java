@@ -19,6 +19,7 @@ import com.readora.application.port.in.RateWorkUseCase;
 import com.readora.application.port.in.ReadChapterUseCase;
 import com.readora.application.port.in.ReaderInteractionUseCase;
 import com.readora.application.port.in.ReportPageUseCase;
+import com.readora.application.port.in.ResetPasswordUseCase;
 import com.readora.application.port.in.ReviewChaptersUseCase;
 import com.readora.application.port.in.TrackReadingUseCase;
 import com.readora.application.port.out.*;
@@ -34,6 +35,7 @@ import com.readora.application.service.LibraryService;
 import com.readora.application.service.ModerationService;
 import com.readora.application.service.NotificationService;
 import com.readora.application.service.PageReportService;
+import com.readora.application.service.PasswordResetService;
 import com.readora.application.service.ProfileService;
 import com.readora.application.service.RatingService;
 import com.readora.application.service.ReaderSocialService;
@@ -54,7 +56,7 @@ import static com.readora.infrastructure.config.UseCaseTransactions.transactiona
 /// Wires the framework-free application services. Every `port.in` bean is wrapped by
 /// [UseCaseTransactions#transactional] so each use-case call is atomic.
 @Configuration
-@EnableConfigurationProperties({SecurityProperties.class, CommentProperties.class})
+@EnableConfigurationProperties({SecurityProperties.class, CommentProperties.class, MailProperties.class})
 public class DomainServiceConfig {
 
     private final PlatformTransactionManager transactionManager;
@@ -127,6 +129,14 @@ public class DomainServiceConfig {
         return transactional(new AuthenticationService(userRepository, refreshTokenRepository, passwordHasher, tokenProvider,
                         securityProperties.jwt().refreshReuseGrace()),
                 AuthenticateUserUseCase.class, transactionManager);
+    }
+
+    @Bean
+    public ResetPasswordUseCase resetPasswordUseCase(UserAccountRepositoryPort users, PasswordResetTokenRepositoryPort resetTokens,
+                                                     RefreshTokenRepositoryPort refreshTokens, TokenProviderPort tokenProvider,
+                                                     PasswordHasherPort passwordHasher, MailPort mail, MailProperties mailProperties) {
+        return transactional(new PasswordResetService(users, resetTokens, refreshTokens, tokenProvider, passwordHasher, mail, Clock.systemUTC(),
+                mailProperties.siteUrl()), ResetPasswordUseCase.class, transactionManager);
     }
 
     @Bean

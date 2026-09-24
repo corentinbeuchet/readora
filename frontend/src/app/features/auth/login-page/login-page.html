@@ -30,6 +30,7 @@
         aria-describedby="login-password-error"
       />
       <app-field-errors id="login-password-error" [field]="loginForm.password" />
+      <a routerLink="/forgot-password" i18n="@@auth.login.forgot">Forgot your password?</a>
     </div>
 
     <button type="submit" class="btn btn-primary" [disabled]="signingIn.busy()">

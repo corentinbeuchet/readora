@@ -50,6 +50,18 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+/** `POST /auth/password-reset` (US-15): the email (and its link) speak the site's language. */
+export interface PasswordResetRequest {
+  email: string;
+  language: 'en' | 'fr';
+}
+
+/** `POST /auth/password-reset/confirm`: the token from the link and the new password. */
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
 export interface RegisterRequest {
   email: string;
   username: string;

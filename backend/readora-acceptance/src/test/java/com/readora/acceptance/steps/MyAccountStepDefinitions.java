@@ -1,10 +1,15 @@
 package com.readora.acceptance.steps;
 
 import com.readora.acceptance.fakes.FakeTokens;
+import com.readora.acceptance.fakes.InMemoryPasswordResetTokens;
 import com.readora.acceptance.fakes.InMemoryRefreshTokens;
 import com.readora.acceptance.fakes.InMemoryUserAccounts;
+import com.readora.acceptance.fakes.MutableClock;
+import com.readora.acceptance.fakes.RecordingMail;
 import com.readora.application.port.in.AuthenticateUserUseCase.AuthResult;
+import com.readora.application.port.in.ResetPasswordUseCase.SiteLanguage;
 import com.readora.application.service.AuthenticationService;
+import com.readora.application.service.PasswordResetService;
 import com.readora.domain.common.CodedException;
 import com.readora.domain.common.UserId;
 import com.readora.domain.identity.InvalidCredentialsException;
@@ -14,17 +19,25 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.jspecify.annotations.Nullable;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/// US-15 My account, through the real `AuthenticationService` over in-memory accounts and refresh tokens.
+/// US-15 My account, through the real `AuthenticationService` and `PasswordResetService` over in-memory accounts,
+/// tokens and a mailbox.
 public class MyAccountStepDefinitions {
 
     private AuthenticationService auth;
+    private PasswordResetService resets;
+    private RecordingMail mail;
+    private MutableClock clock;
     /// The refresh token of each signed-in device, by "<reader> <device>".
     private final Map<String, String> devices = new HashMap<>();
     private final Map<String, UserId> accounts = new HashMap<>();
@@ -33,7 +46,13 @@ public class MyAccountStepDefinitions {
     @Before
     public void setup() {
         FakeTokens tokens = new FakeTokens();
-        auth = new AuthenticationService(new InMemoryUserAccounts(), new InMemoryRefreshTokens(), tokens, tokens);
+        InMemoryUserAccounts accountRepository = new InMemoryUserAccounts();
+        InMemoryRefreshTokens refreshTokens = new InMemoryRefreshTokens();
+        auth = new AuthenticationService(accountRepository, refreshTokens, tokens, tokens);
+        mail = new RecordingMail();
+        clock = new MutableClock(Instant.now());
+        resets = new PasswordResetService(accountRepository, new InMemoryPasswordResetTokens(), refreshTokens, tokens, tokens, mail, clock,
+                "https://readora.test");
         devices.clear();
         accounts.clear();
         refusal = null;
@@ -72,14 +91,14 @@ public class MyAccountStepDefinitions {
         auth.login(email(reader), password);
     }
 
-    @Then("the second device of {string} is signed out")
-    public void theSecondDeviceIsSignedOut(String reader) {
-        assertThatThrownBy(() -> auth.refresh(devices.get(reader + " second"))).isInstanceOf(InvalidCredentialsException.class);
+    @Then("the {word} device of {string} is signed out")
+    public void theDeviceIsSignedOut(String device, String reader) {
+        assertThatThrownBy(() -> auth.refresh(devices.get(reader + " " + device))).isInstanceOf(InvalidCredentialsException.class);
     }
 
-    @Then("the first device of {string} stays signed in")
-    public void theFirstDeviceStaysSignedIn(String reader) {
-        auth.refresh(devices.get(reader + " first"));
+    @Then("the {word} device of {string} stays signed in")
+    public void theDeviceStaysSignedIn(String device, String reader) {
+        auth.refresh(devices.get(reader + " " + device));
     }
 
     @Then("the password change is refused with the error code {string}")
@@ -90,5 +109,53 @@ public class MyAccountStepDefinitions {
 
     private static String email(String reader) {
         return reader.toLowerCase(Locale.ROOT) + "@readora.test";
+    }
+    @When("someone asks for a password reset link for {string}")
+    public void someoneAsksForALink(String email) {
+        resets.requestReset(email, SiteLanguage.ENGLISH);
+    }
+
+    @Given("{string} asked for a password reset link")
+    public void askedForALink(String reader) {
+        resets.requestReset(email(reader), SiteLanguage.ENGLISH);
+    }
+
+    @Then("{string} receives an email with a link to choose a new password")
+    public void receivesAnEmailWithALink(String reader) {
+        assertThat(mail.sent()).singleElement().satisfies(sent -> {
+            assertThat(sent.to()).isEqualTo(email(reader));
+            assertThat(sent.text()).contains("https://readora.test/reset-password?token=");
+        });
+    }
+
+    @Then("no email is sent")
+    public void noEmailIsSent() {
+        assertThat(mail.sent()).isEmpty();
+    }
+
+    @When("the link from the email sets the password {string}")
+    @Given("the link from the email set the password {string}")
+    public void theLinkSetsThePassword(String password) {
+        try {
+            resets.resetPassword(tokenOfTheLastEmail(), password);
+        } catch (RuntimeException e) {
+            refusal = e;
+        }
+    }
+
+    @When("{int} minutes pass")
+    public void minutesPass(int minutes) {
+        clock.advance(Duration.ofMinutes(minutes));
+    }
+
+    @Then("the reset is refused with the error code {string}")
+    public void theResetIsRefused(String code) {
+        thePasswordChangeIsRefused(code);
+    }
+
+    private String tokenOfTheLastEmail() {
+        Matcher link = Pattern.compile("reset-password\\?token=(\\S+)").matcher(mail.sent().getLast().text());
+        assertThat(link.find()).isTrue();
+        return link.group(1);
     }
 }

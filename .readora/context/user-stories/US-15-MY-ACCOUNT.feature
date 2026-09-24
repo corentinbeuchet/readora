@@ -23,3 +23,33 @@ Feature: My account
     When "Camille" changes the password from "not-the-password" to "second-password" on the first device
     Then the password change is refused with the error code "WRONG_PASSWORD"
     And "Camille" can still log in with "first-password"
+
+  # Inspired by: every site with accounts. The link is the proof of owning the email; it works once, for 30 minutes,
+  # and the answer never says whether an email has an account.
+  @must
+  Scenario: Choosing a new password after forgetting it
+    When someone asks for a password reset link for "camille@readora.test"
+    Then "Camille" receives an email with a link to choose a new password
+    When the link from the email sets the password "second-password"
+    Then "Camille" can log in with "second-password" but not with "first-password"
+    And the first device of "Camille" is signed out
+
+  @must
+  Scenario: Asking for a link for an unknown email sends nothing
+    When someone asks for a password reset link for "nobody@readora.test"
+    Then no email is sent
+
+  @should
+  Scenario: A reset link works once
+    Given "Camille" asked for a password reset link
+    And the link from the email set the password "second-password"
+    When the link from the email sets the password "third-password"
+    Then the reset is refused with the error code "RESET_LINK_INVALID"
+
+  @should
+  Scenario: A reset link expires after 30 minutes
+    Given "Camille" asked for a password reset link
+    When 31 minutes pass
+    And the link from the email sets the password "second-password"
+    Then the reset is refused with the error code "RESET_LINK_INVALID"
+    And "Camille" can still log in with "first-password"

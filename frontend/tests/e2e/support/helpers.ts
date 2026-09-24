@@ -320,10 +320,7 @@ export interface ChapterForReview {
  * waits in the moderation queue instead of reaching readers.
  */
 export async function publishAFirstChapterForReview(request: APIRequestContext): Promise<ChapterForReview> {
-  const username = `newteam_${uniqueSuffix()}`;
-  const { accessToken } = await data<{ accessToken: string }>(
-    await request.post(`${API_URL}/auth/register`, { data: { email: `${username}@readora.test`, username, password: PASSWORD } })
-  );
+  const { accessToken } = await registerAccount(request, 'newteam');
   const headers = { Authorization: `Bearer ${accessToken}` };
   const teamName = `New Team ${uniqueSuffix()}`;
   const team = await data<{ id: string }>(await request.post(`${API_URL}/teams`, { headers, data: { name: teamName } }));
@@ -346,4 +343,41 @@ export async function sendBackIfWaiting(request: APIRequestContext, chapterId: s
 /** Whether a reader (anonymous) can open the chapter. */
 export async function chapterIsReadable(request: APIRequestContext, chapterId: string): Promise<boolean> {
   return (await request.get(`${API_URL}/chapters/${chapterId}`)).ok();
+}
+
+/** A reader account created through the API for one test (password `PASSWORD`). */
+export interface RegisteredAccount {
+  email: string;
+  username: string;
+  accessToken: string;
+}
+
+export async function registerAccount(request: APIRequestContext, prefix = 'e2e'): Promise<RegisteredAccount> {
+  const username = `${prefix}_${uniqueSuffix()}`;
+  const email = `${username}@readora.test`;
+  const { accessToken } = await data<{ accessToken: string }>(
+    await request.post(`${API_URL}/auth/register`, { data: { email, username, password: PASSWORD } })
+  );
+  return { email, username, accessToken };
+}
+
+/**
+ * Mailpit, the dev inbox of the docker compose stack (US-15 emails); against another environment set E2E_MAILPIT_URL
+ * to an inbox with the same API.
+ */
+export const MAILPIT_URL = (process.env['E2E_MAILPIT_URL'] ?? 'http://localhost:8025').replace(/\/+$/, '');
+
+/** The path (with its query) of the reset link in the newest email to `email`, once it arrived. */
+export async function resetLinkSentTo(request: APIRequestContext, email: string): Promise<string> {
+  let link: string | undefined;
+  await expect(async () => {
+    const found = (await (await request.get(`${MAILPIT_URL}/api/v1/search`, { params: { query: `to:"${email}"` } })).json()) as {
+      messages: { ID: string }[];
+    };
+    expect(found.messages.length).toBeGreaterThan(0);
+    const message = (await (await request.get(`${MAILPIT_URL}/api/v1/message/${found.messages[0].ID}`)).json()) as { Text: string };
+    link = /https?:\/\/\S+(\/reset-password\?token=\S+)/.exec(message.Text)?.[1];
+    expect(link).toBeDefined();
+  }).toPass({ timeout: 10_000 });
+  return link!;
 }

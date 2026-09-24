@@ -5,6 +5,7 @@ import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.UserId;
 import com.readora.domain.identity.Email;
 import com.readora.domain.identity.PasswordHash;
+import com.readora.domain.identity.PasswordResetToken;
 import com.readora.domain.identity.UserAccount;
 import com.readora.domain.library.ChapterRead;
 import com.readora.domain.library.LibraryEntry;
@@ -30,6 +31,7 @@ import com.readora.infrastructure.persistence.adapter.DiscoveryQueryAdapter;
 import com.readora.infrastructure.persistence.adapter.LibraryRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.NotificationRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.PageReportRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.PasswordResetTokenRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.RatingRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.ReadingListRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.ScanlationProjectRepositoryAdapter;
@@ -490,5 +492,25 @@ class PostgresMigrationTest {
 
         assertThat(chapterRepository.hasPublishedChapter(newTeam)).isTrue();
         assertThat(chapterRepository.findWaitingForReview(100)).extracting(Chapter::getId).doesNotContain(first.getId());
+    }
+
+    @Autowired
+    private PasswordResetTokenRepositoryAdapter resetTokens;
+
+    @Test
+    @DisplayName("Password reset tokens (V28) round-trip on PostgreSQL; a new link deletes the older ones")
+    void passwordResetTokensRunOnPostgres() {
+        UserAccount owner = userRepository.save(UserAccount.register(Email.of("pg-reset-" + java.util.UUID.randomUUID() + "@readora.test"),
+                "pgreset" + (System.nanoTime() % 100000), PasswordHash.of("hash")));
+        java.time.Instant now = java.time.Instant.parse("2026-09-24T10:00:00Z");
+        resetTokens.save(PasswordResetToken.issue(owner.getId(), "pg-reset-old-" + owner.getId().value(), now));
+        resetTokens.deleteAllForUser(owner.getId());
+        PasswordResetToken token = resetTokens.save(PasswordResetToken.issue(owner.getId(), "pg-reset-new-" + owner.getId().value(), now));
+        token.use(now.plusSeconds(60));
+        resetTokens.save(token);
+
+        assertThat(resetTokens.findByTokenHash("pg-reset-old-" + owner.getId().value())).isEmpty();
+        assertThat(resetTokens.findByTokenHash("pg-reset-new-" + owner.getId().value())).get()
+                .satisfies(found -> assertThat(found.isUsable(now.plusSeconds(120))).isFalse());
     }
 }

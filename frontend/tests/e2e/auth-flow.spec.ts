@@ -1,6 +1,6 @@
-import { Page } from '@playwright/test';
+import { APIRequestContext, Page } from '@playwright/test';
 import { test, expect } from './support/fixtures';
-import { PASSWORD, thenTheAccountMenuOffersTeamToolsButNotModeration, uniqueSuffix } from './support/helpers';
+import { PASSWORD, RegisteredAccount, registerAccount, resetLinkSentTo, thenTheAccountMenuOffersTeamToolsButNotModeration, uniqueSuffix } from './support/helpers';
 
 interface Account {
   email: string;
@@ -83,6 +83,25 @@ test.describe('Authentication flow', () => {
     await thenIAmSignedIn(page);
   });
 
+  test('a reader who forgot the password gets a link by email and chooses a new one (US-15)', async ({ page, request }) => {
+    const me = await givenIHaveAnAccount(request);
+
+    await whenIVisit(page, '/login');
+    await whenIAskForAResetLinkFor(page, me.email);
+
+    await thenISeeTheText(page, 'a link to choose a new password is on its way');
+
+    await whenIOpenTheLinkFromMyInbox(page, request, me.email);
+    await whenIChooseTheNewPassword(page, 'An0ther-Secret!');
+
+    await thenISeeTheText(page, 'Your password is changed.');
+
+    await whenIVisit(page, '/login');
+    await whenILogIn(page, { email: me.email, password: 'An0ther-Secret!' });
+
+    await thenIAmSignedIn(page);
+  });
+
   test('anonymous visitors are redirected away from guarded routes', async ({ page }) => {
     await whenIVisit(page, '/scanlation/00000000-0000-0000-0000-000000000000');
 
@@ -104,6 +123,28 @@ async function givenIHaveSignedUp(page: Page): Promise<Account> {
   await whenISubmitTheSignUpForm(page);
   await thenMyProfileIsShownFor(page, me.username);
   return me;
+}
+
+async function givenIHaveAnAccount(request: APIRequestContext): Promise<RegisteredAccount> {
+  return registerAccount(request);
+}
+
+async function whenIAskForAResetLinkFor(page: Page, email: string): Promise<void> {
+  await page.getByRole('link', { name: 'Forgot your password?' }).click();
+  // The login page has an Email field too: type only once the new page is there.
+  await expect(page.getByRole('heading', { name: 'Forgot your password' })).toBeVisible();
+  await page.getByLabel('Email').fill(email);
+  await page.getByRole('button', { name: 'Send me a link' }).click();
+}
+
+async function whenIOpenTheLinkFromMyInbox(page: Page, request: APIRequestContext, email: string): Promise<void> {
+  await page.goto(await resetLinkSentTo(request, email));
+}
+
+async function whenIChooseTheNewPassword(page: Page, password: string): Promise<void> {
+  await page.getByLabel('New password', { exact: true }).fill(password);
+  await page.getByLabel('Confirm the new password').fill(password);
+  await page.getByRole('button', { name: 'Save the new password' }).click();
 }
 
 async function whenIChangeMyPassword(page: Page, passwords: { from: string; to: string }): Promise<void> {

@@ -2,12 +2,16 @@ package com.readora.web.controller;
 
 import com.readora.application.port.in.AuthenticateUserUseCase.AuthResult;
 import com.readora.application.port.in.AuthenticateUserUseCase;
+import com.readora.application.port.in.ResetPasswordUseCase.SiteLanguage;
+import com.readora.application.port.in.ResetPasswordUseCase;
 import com.readora.domain.identity.InvalidCredentialsException;
 import com.readora.web.dto.ApiResponse;
 import com.readora.web.dto.AuthResponse;
 import com.readora.web.dto.ChangePasswordRequest;
 import com.readora.web.dto.LoginRequest;
+import com.readora.web.dto.PasswordResetRequest;
 import com.readora.web.dto.RegisterRequest;
+import com.readora.web.dto.ResetPasswordRequest;
 import com.readora.web.security.CurrentUserProvider;
 import com.readora.web.security.RefreshCookieProperties;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,11 +40,14 @@ public class AuthController {
     private final AuthenticateUserUseCase authenticateUserUseCase;
     private final RefreshCookieProperties securityProperties;
     private final CurrentUserProvider currentUserProvider;
+    private final ResetPasswordUseCase resetPasswordUseCase;
 
     public AuthController(AuthenticateUserUseCase authenticateUserUseCase,
                           RefreshCookieProperties securityProperties,
-                          CurrentUserProvider currentUserProvider) {
+                          CurrentUserProvider currentUserProvider,
+                          ResetPasswordUseCase resetPasswordUseCase) {
         this.authenticateUserUseCase = authenticateUserUseCase;
+        this.resetPasswordUseCase = resetPasswordUseCase;
         this.securityProperties = securityProperties;
         this.currentUserProvider = currentUserProvider;
     }
@@ -91,6 +98,20 @@ public class AuthController {
                 request.newPassword());
         return withRefreshCookie(ResponseEntity.ok(), result)
                 .body(ApiResponse.ok(AuthResponse.from(result)));
+    }
+
+    @PostMapping("/password-reset")
+    @Operation(summary = "Email a password reset link, if an account uses this address (the answer is the same either way)")
+    public ResponseEntity<ApiResponse<String>> requestPasswordReset(@Valid @RequestBody PasswordResetRequest request) {
+        resetPasswordUseCase.requestReset(request.email(), "fr".equals(request.language()) ? SiteLanguage.FRENCH : SiteLanguage.ENGLISH);
+        return ResponseEntity.ok(ApiResponse.ok("If an account uses this email, a reset link is on its way"));
+    }
+
+    @PostMapping("/password-reset/confirm")
+    @Operation(summary = "Choose a new password with the token of a reset link; every session of the account ends")
+    public ResponseEntity<ApiResponse<String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        resetPasswordUseCase.resetPassword(request.token(), request.newPassword());
+        return ResponseEntity.ok(ApiResponse.ok("Password changed"));
     }
 
     private ResponseEntity.BodyBuilder withRefreshCookie(ResponseEntity.BodyBuilder builder, AuthResult result) {

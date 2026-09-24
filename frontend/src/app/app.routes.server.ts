@@ -81,6 +81,8 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'read', renderMode: RenderMode.Client },
   { path: 'login', renderMode: RenderMode.Client },
   { path: 'register', renderMode: RenderMode.Client },
+  { path: 'forgot-password', renderMode: RenderMode.Client },
+  { path: 'reset-password', renderMode: RenderMode.Client },
   { path: 'profile', renderMode: RenderMode.Client },
   { path: 'library', renderMode: RenderMode.Client },
   { path: 'history', renderMode: RenderMode.Client },

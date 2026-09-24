@@ -48,6 +48,14 @@ services:
       exit 0;
       "
 
+  # Catches every email the backend sends (US-15 reset links): inbox at http://localhost:8025.
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: readora-mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
   backend:
     build:
       context: ./backend
@@ -91,6 +99,10 @@ services:
 
       READORA_JWT_SECRET: ${READORA_JWT_SECRET:-local-compose-readora-jwt-secret-change-me-0123456789}
 
+      READORA_MAIL_HOST: mailpit
+      READORA_MAIL_PORT: "1025"
+      READORA_SITE_URL: ${READORA_SITE_URL:-http://localhost:4200}
+
 
     ports:
       - "8080:8080"
@@ -102,6 +114,8 @@ services:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
+      mailpit:
+        condition: service_started
 
 volumes:
   postgres_data:

@@ -46,6 +46,7 @@ public final class ErrorCodes {
     public static final String TASK_HAS_NO_PAGES = "TASK_HAS_NO_PAGES";
     public static final String CHAPTER_NOT_WAITING = "CHAPTER_NOT_WAITING";
     public static final String WRONG_PASSWORD = "WRONG_PASSWORD";
+    public static final String RESET_LINK_INVALID = "RESET_LINK_INVALID";
 
     private ErrorCodes() {
     }

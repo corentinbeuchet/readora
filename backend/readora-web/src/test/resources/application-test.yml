@@ -15,6 +15,10 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  # Nothing listens there: tests that care about emails replace MailPort.
+  mail:
+    host: localhost
+    port: 3025
 
 aws:
   s3:
@@ -24,6 +28,9 @@ aws:
     domain: https://cdn-test.readora.com
 
 readora:
+  mail:
+    from: Readora Test <no-reply@readora.test>
+    site-url: http://localhost:4200
   cors:
     allowed-origins: http://localhost:4200
   jobs:

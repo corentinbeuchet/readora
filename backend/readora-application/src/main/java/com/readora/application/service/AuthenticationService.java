@@ -156,7 +156,8 @@ public class AuthenticationService implements AuthenticateUserUseCase {
         return new AuthResult(account, accessToken.value(), accessToken.expiresAt(), rawRefresh, tokenProvider.refreshTokenTtl());
     }
 
-    private static void validatePassword(String rawPassword) {
+    /// The one password rule, shared with `PasswordResetService`.
+    static void validatePassword(String rawPassword) {
         if (rawPassword == null || rawPassword.length() < PASSWORD_MIN_LENGTH) {
             throw new DomainValidationException("Password must be at least " + PASSWORD_MIN_LENGTH + " characters");
         }

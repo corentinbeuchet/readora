@@ -1,6 +1,13 @@
 import { Service, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AuthResponse, ChangePasswordRequest, LoginRequest, RegisterRequest } from '@app/core/models/identity';
+import {
+  AuthResponse,
+  ChangePasswordRequest,
+  LoginRequest,
+  PasswordResetRequest,
+  RegisterRequest,
+  ResetPasswordRequest
+} from '@app/core/models/identity';
 import { ApiClient } from './api-client';
 
 /** `/api/v1/auth` — every call carries the HttpOnly refresh cookie (`withCredentials`). */
@@ -22,6 +29,15 @@ export class AuthApi {
 
   changePassword(request: ChangePasswordRequest): Observable<AuthResponse> {
     return this.api.post<AuthResponse>('/auth/password', request, { withCredentials: true });
+  }
+
+  /** Answers the same whether an account uses the email or not (US-15). */
+  requestPasswordReset(request: PasswordResetRequest): Observable<string> {
+    return this.api.post<string>('/auth/password-reset', request);
+  }
+
+  resetPassword(request: ResetPasswordRequest): Observable<string> {
+    return this.api.post<string>('/auth/password-reset/confirm', request);
   }
 
   logout(): Observable<string> {

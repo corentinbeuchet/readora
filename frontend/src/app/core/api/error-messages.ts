@@ -45,6 +45,8 @@ export function errorMessageForCode(code: string | null, retryAfterSeconds: numb
       return $localize`:@@error.notOnTeam:This reader is not on the team. Invite them first.`;
     case 'BOARD_OFF':
       return $localize`:@@error.boardOff:The team does not use a task board for this series. A leader turns it on in the Studio.`;
+    case 'RESET_LINK_INVALID':
+      return $localize`:@@error.resetLinkInvalid:This link no longer works: it was already used, replaced by a newer one, or is older than 30 minutes. Ask for a new one.`;
     case 'WRONG_PASSWORD':
       return $localize`:@@error.wrongPassword:Your current password is not right. Type it again.`;
     case 'CHAPTER_NOT_WAITING':

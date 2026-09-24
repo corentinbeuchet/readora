@@ -45,6 +45,12 @@
             <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
 
+        <!-- Email (US-15 reset links): SMTP, Mailpit in dev, the SES SMTP interface in production -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- AWS S3 Client -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
