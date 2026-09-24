@@ -8,6 +8,7 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
@@ -17,8 +18,10 @@ import java.util.Locale;
 import java.util.UUID;
 
 /// Catalog search as one SQL query (plus the page count): genre rules are `EXISTS` sub-queries on `work_genres`,
-/// and the text also looks into `work_alt_titles` with an `EXISTS` (a join would repeat a series once per matching
-/// title), so nothing is filtered in memory and pagination stays correct.
+/// and the text matches the ids of a `UNION` of three lookups (title, author, other titles), so nothing is filtered
+/// in memory, a series is listed once however many of its titles match, and pagination stays correct. Each lookup
+/// can use its trigram index on PostgreSQL (V32); an `OR` of the three, or an `EXISTS` per series, made PostgreSQL
+/// scan every series (422 ms to 0.07 ms on 100k series).
 public final class WorkSpecifications {
 
     private static final char LIKE_ESCAPE = '\\';
@@ -32,10 +35,10 @@ public final class WorkSpecifications {
             String text = search.text();
             if (text != null) {
                 String pattern = "%" + escapeLike(text.toLowerCase(Locale.ROOT)) + "%";
-                predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("title")), pattern, LIKE_ESCAPE),
-                        cb.like(cb.lower(root.get("author")), pattern, LIKE_ESCAPE),
-                        cb.exists(hasOtherTitleLike(root, query, cb, pattern))));
+                predicates.add(root.get("id").in(((HibernateCriteriaBuilder) cb).union(
+                        idsWhereLike(query, cb, "title", pattern),
+                        idsWhereLike(query, cb, "author", pattern),
+                        idsWithOtherTitleLike(query, cb, pattern))));
             }
             inIfPresent(predicates, root.get("workType"), names(search.types()));
             inIfPresent(predicates, root.get("status"), names(search.statuses()));
@@ -60,12 +63,18 @@ public final class WorkSpecifications {
     }
 
     /// `pattern` is already lower-cased and escaped.
-    private static Subquery<UUID> hasOtherTitleLike(Root<WorkJpaEntity> root, CriteriaQuery<?> query, CriteriaBuilder cb, String pattern) {
+    private static Subquery<UUID> idsWhereLike(CriteriaQuery<?> query, CriteriaBuilder cb, String column, String pattern) {
+        Subquery<UUID> subquery = query.subquery(UUID.class);
+        Root<WorkJpaEntity> work = subquery.from(WorkJpaEntity.class);
+        return subquery.select(work.get("id")).where(cb.like(cb.lower(work.get(column)), pattern, LIKE_ESCAPE));
+    }
+
+    /// `pattern` is already lower-cased and escaped.
+    private static Subquery<UUID> idsWithOtherTitleLike(CriteriaQuery<?> query, CriteriaBuilder cb, String pattern) {
         Subquery<UUID> subquery = query.subquery(UUID.class);
         Root<WorkJpaEntity> work = subquery.from(WorkJpaEntity.class);
         Expression<String> otherTitle = work.join("alternativeTitles");
-        return subquery.select(work.get("id"))
-                .where(cb.equal(work.get("id"), root.get("id")), cb.like(cb.lower(otherTitle), pattern, LIKE_ESCAPE));
+        return subquery.select(work.get("id")).where(cb.like(cb.lower(otherTitle), pattern, LIKE_ESCAPE));
     }
 
     private static void inIfPresent(List<Predicate> predicates, Expression<String> column, List<String> values) {

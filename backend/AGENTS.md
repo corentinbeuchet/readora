@@ -86,8 +86,10 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 - Every schema change = new Flyway migration in `readora-infrastructure/src/main/resources/db/migration`. Never edit an applied one.
   Migrations also run on H2 (PostgreSQL mode) in tests: name every constraint you create, don't drop a constraint by
   its generated name (they differ per database: rebuild the table instead, model `V17__teams.sql`), and no expression
-  indexes (model: `teams.name_key` in `V18`). A migration that moves data gets a Testcontainers test that migrates
-  to the previous version, inserts rows, then migrates (model: `TeamsMigrationTest`).
+  indexes (model: `teams.name_key` in `V18`). What only PostgreSQL has (extensions, trigram or expression indexes)
+  goes in a Java migration in `db.migration` that does nothing on other databases (model: `V32__search_trigram_indexes`).
+  A migration that moves data gets a Testcontainers test that migrates to the previous version, inserts rows, then
+  migrates (model: `TeamsMigrationTest`).
 - `teams.id` equals the old project id for every team that existed before V17 (links and follows kept working);
   teams and projects created since have unrelated ids. `TeamId` and `ProjectId` are never interchangeable in code.
 - Entity column lengths == DTO `@Size` limits == migration column sizes.
@@ -225,8 +227,7 @@ Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = repor
 - R13 `POST /storage/upload` is `isAuthenticated()` only (any reader, 50 MB); `AssetService` skips the content-type
   allow-list when the type is blank and allows `application/octet-stream`.
 - Same sweep as R4 still to do (survey): uncoded reader-visible rules in `WorkManagementService`, `ReaderSocialService`.
-- R19/R20 (survey) Missing index `refresh_tokens(expires_at)`; `%text%` search on unindexed title/author. (The rankings
-  query was rewritten and indexed: V31.)
+- R19 (survey) Missing index `refresh_tokens(expires_at)`.
 - R21/R22 (survey) Unbounded lists (chapter comments, work chapters, library list/export, bookmarks, `GET /teams/mine`).
   (The chapter list counts pages instead of loading them: `ChapterSummary`.) The chapter list has one item per team version: when it
   gets paginated, paginate by chapter number on the server, so the versions of a number never split across pages.

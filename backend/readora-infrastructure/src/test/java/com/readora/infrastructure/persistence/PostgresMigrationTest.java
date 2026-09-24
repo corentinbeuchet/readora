@@ -46,6 +46,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
@@ -157,6 +158,17 @@ class PostgresMigrationTest {
 
         assertThat(page.totalElements()).isEqualTo(1);
         assertThat(page.items()).singleElement().extracting(Work::getTitle).isEqualTo("PG Known As");
+    }
+
+    @Autowired
+    private JdbcClient jdbc;
+
+    @Test
+    @DisplayName("The catalog search has trigram indexes on PostgreSQL (V32): title, author and other titles")
+    void catalogSearchHasTrigramIndexes() {
+        List<String> indexes = jdbc.sql("SELECT indexname FROM pg_indexes WHERE indexname LIKE '%trgm'").query(String.class).list();
+
+        assertThat(indexes).containsExactlyInAnyOrder("idx_works_title_trgm", "idx_works_author_trgm", "idx_work_alt_titles_title_trgm");
     }
 
     @Autowired
