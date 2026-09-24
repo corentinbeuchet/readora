@@ -53,3 +53,28 @@ Feature: My account
     And the link from the email sets the password "second-password"
     Then the reset is refused with the error code "RESET_LINK_INVALID"
     And "Camille" can still log in with "first-password"
+
+  # Inspired by: the GDPR right to erasure. What only the reader had goes; comments and reviews stay (a thread keeps its
+  # meaning) under a "deleted" name, and the account can never be used again.
+  @must
+  Scenario: Deleting my account
+    Given "Camille" commented on a chapter and keeps a series in the library
+    When "Camille" deletes the account with the password "first-password"
+    Then "Camille" can no longer log in with "first-password"
+    And the first device of "Camille" is signed out
+    And everything that was only for "Camille" is erased
+    And the comments of "Camille" stay, signed by a deleted account
+
+  @must
+  Scenario: Deleting my account needs my password
+    When "Camille" deletes the account with the password "not-the-password"
+    Then the deletion is refused with the error code "WRONG_PASSWORD"
+    And "Camille" can still log in with "first-password"
+
+  # A team always keeps a leader (US-12): its only leader names another one before leaving.
+  @should
+  Scenario: The only leader of a team names another one first
+    Given "Camille" leads the team "Nova Scans" alone
+    When "Camille" deletes the account with the password "first-password"
+    Then the deletion is refused with the error code "LAST_LEADER"
+    And "Camille" can still log in with "first-password"

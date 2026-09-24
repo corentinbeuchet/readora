@@ -124,6 +124,11 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
   production (`READORA_MAIL_HOST/USERNAME/PASSWORD/FROM`, no defaults there). A failed delivery is logged, never thrown,
   and mail is left out of the health check: a caller must answer the same whether an email went out, and an SMTP outage
   must not restart the app. Anything that says whether an address has an account (reset links) answers the same both ways.
+- A deleted account (US-15) keeps its `users` row under a `deleted_…` placeholder (`UserAccount.erase`, `deleted_at`):
+  comments and reviews keep an author. What only the reader had is deleted by `ReaderDataErasureAdapter`: a new table
+  keyed by a reader's id goes on its `READER_ROWS` list in the same commit, or it outlives the account (reports and
+  ratings stay on purpose: moderation records, and reviews that keep an author). Queries that
+  show readers (public profile, reader search) skip deleted accounts.
 - Ending sessions for security (password change or reset) *deletes* the refresh tokens (`deleteAllForUser`): a
   revoked token presented later than the reuse grace is treated as theft and would sign the reader out everywhere.
 - Payments and Premium were removed on 2026-09-23 (Stripe checkout, cancel, webhooks, then the plans themselves:

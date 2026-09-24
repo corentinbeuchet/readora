@@ -53,6 +53,11 @@ export class AuthStore {
     return this.authApi.register(request).pipe(tap((res) => this.applySession(res)));
   }
 
+  /** The account is erased on the server; this browser forgets the session (US-15). */
+  deleteAccount(password: string): Observable<string> {
+    return this.authApi.deleteAccount(password).pipe(tap(() => this.clearSession()));
+  }
+
   /** The other sessions end on the server; this one continues with the tokens it returns (US-15). */
   changePassword(request: ChangePasswordRequest): Observable<AuthResponse> {
     return this.authApi.changePassword(request).pipe(tap((res) => this.applySession(res)));

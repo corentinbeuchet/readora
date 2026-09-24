@@ -18,8 +18,8 @@ public class UserAccount extends AggregateRoot<UserId> {
     public static final int DISPLAY_NAME_MAX_LENGTH = 100;
     public static final int BIO_MAX_LENGTH = 1000;
 
-    private final Email email;
-    private final String username;
+    private Email email;
+    private String username;
     private PasswordHash passwordHash;
     private String displayName;
     private String bio;
@@ -27,11 +27,20 @@ public class UserAccount extends AggregateRoot<UserId> {
     private final Set<Role> roles = EnumSet.noneOf(Role.class);
     private final Instant createdAt;
     private Instant updatedAt;
+    /// When the owner deleted the account (US-15); the row stays so comments and reviews keep an author.
+    private @Nullable Instant deletedAt;
 
     public UserAccount(UserId id, Email email, String username, PasswordHash passwordHash, @Nullable String displayName,
                        @Nullable String bio, @Nullable String avatarUrl, @Nullable Set<Role> roles,
                        @Nullable Instant createdAt, @Nullable Instant updatedAt) {
+        this(id, email, username, passwordHash, displayName, bio, avatarUrl, roles, createdAt, updatedAt, null);
+    }
+
+    public UserAccount(UserId id, Email email, String username, PasswordHash passwordHash, @Nullable String displayName,
+                       @Nullable String bio, @Nullable String avatarUrl, @Nullable Set<Role> roles,
+                       @Nullable Instant createdAt, @Nullable Instant updatedAt, @Nullable Instant deletedAt) {
         super(id);
+        this.deletedAt = deletedAt;
         this.email = Objects.requireNonNull(email, "Email cannot be null");
         this.username = validateUsername(username);
         this.passwordHash = Objects.requireNonNull(passwordHash, "PasswordHash cannot be null");
@@ -95,6 +104,29 @@ public class UserAccount extends AggregateRoot<UserId> {
     public void changePassword(PasswordHash newHash) {
         this.passwordHash = Objects.requireNonNull(newHash, "PasswordHash cannot be null");
         this.updatedAt = Instant.now();
+    }
+
+    /// The owner deleted the account (US-15): nothing personal is left and it can never sign in again. The row keeps
+    /// its id under `placeholderUsername` so the comments and reviews written with it keep an author.
+    public void erase(String placeholderUsername, Email unreachableEmail, PasswordHash unusablePassword, Instant now) {
+        this.username = validateUsername(placeholderUsername);
+        this.email = Objects.requireNonNull(unreachableEmail, "Email cannot be null");
+        this.passwordHash = Objects.requireNonNull(unusablePassword, "PasswordHash cannot be null");
+        this.displayName = this.username;
+        this.bio = "";
+        this.avatarUrl = null;
+        this.roles.clear();
+        this.roles.add(Role.READER);
+        this.deletedAt = now;
+        this.updatedAt = now;
+    }
+
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
+
+    public @Nullable Instant getDeletedAt() {
+        return deletedAt;
     }
 
     public void grantRole(Role role) {

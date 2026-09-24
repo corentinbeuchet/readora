@@ -2,17 +2,21 @@ package com.readora.acceptance.steps;
 
 import com.readora.acceptance.fakes.FakeTokens;
 import com.readora.acceptance.fakes.InMemoryPasswordResetTokens;
+import com.readora.acceptance.fakes.InMemoryReaderData;
 import com.readora.acceptance.fakes.InMemoryRefreshTokens;
+import com.readora.acceptance.fakes.InMemoryTeamRepository;
 import com.readora.acceptance.fakes.InMemoryUserAccounts;
 import com.readora.acceptance.fakes.MutableClock;
 import com.readora.acceptance.fakes.RecordingMail;
 import com.readora.application.port.in.AuthenticateUserUseCase.AuthResult;
 import com.readora.application.port.in.ResetPasswordUseCase.SiteLanguage;
+import com.readora.application.service.AccountDeletionService;
 import com.readora.application.service.AuthenticationService;
 import com.readora.application.service.PasswordResetService;
 import com.readora.domain.common.CodedException;
 import com.readora.domain.common.UserId;
 import com.readora.domain.identity.InvalidCredentialsException;
+import com.readora.domain.scanlation.Team;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -38,6 +42,10 @@ public class MyAccountStepDefinitions {
     private PasswordResetService resets;
     private RecordingMail mail;
     private MutableClock clock;
+    private AccountDeletionService deletion;
+    private InMemoryUserAccounts accountRepository;
+    private InMemoryTeamRepository teams;
+    private InMemoryReaderData readerData;
     /// The refresh token of each signed-in device, by "<reader> <device>".
     private final Map<String, String> devices = new HashMap<>();
     private final Map<String, UserId> accounts = new HashMap<>();
@@ -46,13 +54,16 @@ public class MyAccountStepDefinitions {
     @Before
     public void setup() {
         FakeTokens tokens = new FakeTokens();
-        InMemoryUserAccounts accountRepository = new InMemoryUserAccounts();
+        accountRepository = new InMemoryUserAccounts();
         InMemoryRefreshTokens refreshTokens = new InMemoryRefreshTokens();
         auth = new AuthenticationService(accountRepository, refreshTokens, tokens, tokens);
         mail = new RecordingMail();
         clock = new MutableClock(Instant.now());
-        resets = new PasswordResetService(accountRepository, new InMemoryPasswordResetTokens(), refreshTokens, tokens, tokens, mail, clock,
-                "https://readora.test");
+        InMemoryPasswordResetTokens resetTokens = new InMemoryPasswordResetTokens();
+        resets = new PasswordResetService(accountRepository, resetTokens, refreshTokens, tokens, tokens, mail, clock, "https://readora.test");
+        teams = new InMemoryTeamRepository();
+        readerData = new InMemoryReaderData();
+        deletion = new AccountDeletionService(accountRepository, teams, readerData, refreshTokens, resetTokens, tokens, clock);
         devices.clear();
         accounts.clear();
         refusal = null;
@@ -157,5 +168,51 @@ public class MyAccountStepDefinitions {
         Matcher link = Pattern.compile("reset-password\\?token=(\\S+)").matcher(mail.sent().getLast().text());
         assertThat(link.find()).isTrue();
         return link.group(1);
+    }
+    @Given("{string} commented on a chapter and keeps a series in the library")
+    public void commentedAndKeepsASeries(String reader) {
+        readerData.addComment(accounts.get(reader), reader.toLowerCase(Locale.ROOT), "What a chapter!");
+        readerData.addReaderRow(accounts.get(reader), "library: Solo Leveling");
+    }
+
+    @Given("{string} leads the team {string} alone")
+    public void leadsTheTeamAlone(String reader, String teamName) {
+        teams.save(Team.create(teamName, null, accounts.get(reader)));
+    }
+
+    @When("{string} deletes the account with the password {string}")
+    public void deletesTheAccount(String reader, String password) {
+        try {
+            deletion.deleteAccount(accounts.get(reader), password);
+        } catch (RuntimeException e) {
+            refusal = e;
+        }
+    }
+
+    @Then("{string} can no longer log in with {string}")
+    public void canNoLongerLogIn(String reader, String password) {
+        assertThatThrownBy(() -> auth.login(email(reader), password)).isInstanceOf(InvalidCredentialsException.class);
+    }
+
+    @Then("everything that was only for {string} is erased")
+    public void everythingIsErased(String reader) {
+        assertThat(readerData.readerRowsOf(accounts.get(reader))).isEmpty();
+        assertThat(accountRepository.findById(accounts.get(reader))).get().satisfies(account -> {
+            assertThat(account.isDeleted()).isTrue();
+            assertThat(account.getBio()).isEmpty();
+            assertThat(account.getEmail().value()).endsWith("@deleted.invalid");
+        });
+    }
+
+    @Then("the comments of {string} stay, signed by a deleted account")
+    public void theCommentsStay(String reader) {
+        String placeholder = accountRepository.findById(accounts.get(reader)).orElseThrow().getUsername();
+        assertThat(placeholder).startsWith("deleted_");
+        assertThat(readerData.authorOf("What a chapter!")).isEqualTo(placeholder);
+    }
+
+    @Then("the deletion is refused with the error code {string}")
+    public void theDeletionIsRefused(String code) {
+        thePasswordChangeIsRefused(code);
     }
 }

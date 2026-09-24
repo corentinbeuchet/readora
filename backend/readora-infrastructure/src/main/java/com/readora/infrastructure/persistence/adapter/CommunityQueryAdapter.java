@@ -62,7 +62,7 @@ public class CommunityQueryAdapter implements CommunityQueryPort {
     public List<ReaderName> readersStartingWith(String prefix, int limit) {
         String literal = prefix.toLowerCase(java.util.Locale.ROOT).replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
         return entityManager.createQuery("select u.username, u.displayName from UserAccountJpaEntity u "
-                        + "where lower(u.username) like :prefix escape '\\' order by u.username", Object[].class)
+                        + "where lower(u.username) like :prefix escape '\\' and u.deletedAt is null order by u.username", Object[].class)
                 .setParameter("prefix", literal + "%")
                 .setMaxResults(limit)
                 .getResultList().stream()

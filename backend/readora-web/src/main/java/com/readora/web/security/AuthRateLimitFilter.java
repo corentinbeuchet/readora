@@ -25,7 +25,8 @@ import java.util.Set;
 public class AuthRateLimitFilter extends OncePerRequestFilter {
 
     private static final Set<String> LIMITED_PATHS = Set.of("/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/refresh",
-            "/api/v1/auth/password", "/api/v1/auth/password-reset", "/api/v1/auth/password-reset/confirm");
+            "/api/v1/auth/password", "/api/v1/auth/password-reset", "/api/v1/auth/password-reset/confirm",
+            "/api/v1/auth/delete-account");
 
     private final FixedWindowRateLimiter limiter;
     private final ObjectMapper objectMapper;

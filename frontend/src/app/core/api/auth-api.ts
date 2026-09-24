@@ -31,6 +31,11 @@ export class AuthApi {
     return this.api.post<AuthResponse>('/auth/password', request, { withCredentials: true });
   }
 
+  /** Erases the account (US-15); the refresh cookie is cleared by the answer. */
+  deleteAccount(password: string): Observable<string> {
+    return this.api.post<string>('/auth/delete-account', { password }, { withCredentials: true });
+  }
+
   /** Answers the same whether an account uses the email or not (US-15). */
   requestPasswordReset(request: PasswordResetRequest): Observable<string> {
     return this.api.post<string>('/auth/password-reset', request);

@@ -42,6 +42,14 @@
     "profile.password.error": "Votre mot de passe n'a pas pu être changé. Veuillez réessayer.",
     "profile.password.done": "Mot de passe changé. Vos autres appareils sont déconnectés.",
     "profile.page.tabAccount": "Compte",
-    "profile.page.passwordTitle": "Changer le mot de passe"
+    "profile.page.passwordTitle": "Changer le mot de passe",
+    "profile.delete.intro": "Votre bibliothèque, votre historique de lecture, vos listes, vos marque-pages et vos notifications sont effacés. Vos commentaires et vos critiques restent, signés par un compte supprimé. C'est définitif.",
+    "profile.delete.open": "Supprimer mon compte…",
+    "profile.delete.password": "Votre mot de passe",
+    "profile.delete.submitting": "Suppression…",
+    "profile.delete.submit": "Supprimer mon compte définitivement",
+    "profile.delete.passwordRequired": "Saisissez votre mot de passe pour confirmer",
+    "profile.delete.error": "Votre compte n'a pas pu être supprimé. Veuillez réessayer.",
+    "profile.page.deleteTitle": "Supprimer mon compte"
   }
 }

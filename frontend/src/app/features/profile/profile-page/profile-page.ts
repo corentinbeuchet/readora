@@ -7,12 +7,13 @@ import { SeoService } from '@app/core/seo/seo.service';
 import { BookmarkList } from './bookmark-list/bookmark-list';
 import { ProfileForm } from './profile-form/profile-form';
 import { ChangePassword } from './change-password/change-password';
+import { DeleteAccount } from './delete-account/delete-account';
 
 export type ProfileTab = 'overview' | 'bookmarks' | 'account';
 
 @Component({
   selector: 'app-profile-page',
-  imports: [NgOptimizedImage, DatePipe, Tabs, TabList, Tab, TabPanel, TabContent, ProfileForm, BookmarkList, ChangePassword],
+  imports: [NgOptimizedImage, DatePipe, Tabs, TabList, Tab, TabPanel, TabContent, ProfileForm, BookmarkList, ChangePassword, DeleteAccount],
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.scss'
 })

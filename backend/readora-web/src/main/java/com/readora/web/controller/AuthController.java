@@ -2,12 +2,14 @@ package com.readora.web.controller;
 
 import com.readora.application.port.in.AuthenticateUserUseCase.AuthResult;
 import com.readora.application.port.in.AuthenticateUserUseCase;
+import com.readora.application.port.in.DeleteAccountUseCase;
 import com.readora.application.port.in.ResetPasswordUseCase.SiteLanguage;
 import com.readora.application.port.in.ResetPasswordUseCase;
 import com.readora.domain.identity.InvalidCredentialsException;
 import com.readora.web.dto.ApiResponse;
 import com.readora.web.dto.AuthResponse;
 import com.readora.web.dto.ChangePasswordRequest;
+import com.readora.web.dto.DeleteAccountRequest;
 import com.readora.web.dto.LoginRequest;
 import com.readora.web.dto.PasswordResetRequest;
 import com.readora.web.dto.RegisterRequest;
@@ -41,13 +43,16 @@ public class AuthController {
     private final RefreshCookieProperties securityProperties;
     private final CurrentUserProvider currentUserProvider;
     private final ResetPasswordUseCase resetPasswordUseCase;
+    private final DeleteAccountUseCase deleteAccountUseCase;
 
     public AuthController(AuthenticateUserUseCase authenticateUserUseCase,
                           RefreshCookieProperties securityProperties,
                           CurrentUserProvider currentUserProvider,
-                          ResetPasswordUseCase resetPasswordUseCase) {
+                          ResetPasswordUseCase resetPasswordUseCase,
+                          DeleteAccountUseCase deleteAccountUseCase) {
         this.authenticateUserUseCase = authenticateUserUseCase;
         this.resetPasswordUseCase = resetPasswordUseCase;
+        this.deleteAccountUseCase = deleteAccountUseCase;
         this.securityProperties = securityProperties;
         this.currentUserProvider = currentUserProvider;
     }
@@ -98,6 +103,16 @@ public class AuthController {
                 request.newPassword());
         return withRefreshCookie(ResponseEntity.ok(), result)
                 .body(ApiResponse.ok(AuthResponse.from(result)));
+    }
+
+    @PostMapping("/delete-account")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
+    @Operation(summary = "Delete my account: what only I had is erased, comments and reviews stay under a placeholder name")
+    public ResponseEntity<ApiResponse<String>> deleteAccount(@Valid @RequestBody DeleteAccountRequest request) {
+        deleteAccountUseCase.deleteAccount(currentUserProvider.requireUserId(), request.password());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, clearedRefreshCookie().toString())
+                .body(ApiResponse.ok("Account deleted"));
     }
 
     @PostMapping("/password-reset")

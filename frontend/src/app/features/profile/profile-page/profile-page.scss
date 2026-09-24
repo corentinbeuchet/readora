@@ -28,3 +28,10 @@
   font-size: var(--fs-xl);
   font-weight: var(--fw-black);
 }
+
+// The irreversible part of the Account tab, set apart from the password form above it.
+.danger-zone {
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}

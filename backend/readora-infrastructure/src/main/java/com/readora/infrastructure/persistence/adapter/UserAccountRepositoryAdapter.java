@@ -83,7 +83,8 @@ public class UserAccountRepositoryAdapter implements UserAccountRepositoryPort {
                 entity.getAvatarUrl(),
                 parseRoles(entity.getRoles()),
                 entity.getCreatedAt(),
-                entity.getUpdatedAt()
+                entity.getUpdatedAt(),
+                entity.getDeletedAt()
         );
     }
 
@@ -112,6 +113,7 @@ public class UserAccountRepositoryAdapter implements UserAccountRepositoryPort {
         entity.setAvatarUrl(account.getAvatarUrl());
         entity.setRoles(joinRoles(account.getRoles()));
         entity.setUpdatedAt(account.getUpdatedAt());
+        entity.setDeletedAt(account.getDeletedAt());
 
         return entity;
     }

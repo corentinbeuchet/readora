@@ -1,0 +1,26 @@
+<p class="muted" i18n="@@profile.delete.intro">Your library, reading history, lists, bookmarks and notifications are erased. Your comments and reviews stay, signed by a deleted account. This cannot be undone.</p>
+
+<button type="button" class="btn btn-danger-outline" [attr.aria-expanded]="open()" aria-controls="delete-account-form" (click)="toggle()"
+        i18n="@@profile.delete.open">Delete my account…</button>
+
+<!-- A plain wrapper: [hidden] on the form itself would lose to .form's display: flex. -->
+<div id="delete-account-form" [hidden]="!open()">
+<form class="form" (submit)="onSubmit($event)" novalidate>
+  @if (deleting.error(); as message) {
+    <p class="form-error" role="alert">{{ message }}</p>
+  }
+  <div class="field">
+    <label for="delete-password" i18n="@@profile.delete.password">Your password</label>
+    <input id="delete-password" type="password" autocomplete="current-password" [formField]="deleteForm.password"
+           [appAriaInvalid]="deleteForm.password" aria-describedby="delete-password-error" />
+    <app-field-errors id="delete-password-error" [field]="deleteForm.password" />
+  </div>
+  <button type="submit" class="btn btn-danger" [disabled]="deleting.busy()">
+    @if (deleting.busy()) {
+      <ng-container i18n="@@profile.delete.submitting">Deleting…</ng-container>
+    } @else {
+      <ng-container i18n="@@profile.delete.submit">Delete my account for good</ng-container>
+    }
+  </button>
+</form>
+</div>

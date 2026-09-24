@@ -43,6 +43,12 @@ public class UserAccountJpaEntity {
     @Column(nullable = false)
     private Long version;
 
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    public Instant getDeletedAt() { return deletedAt; }
+    public void setDeletedAt(Instant deletedAt) { this.deletedAt = deletedAt; }
+
     public Long getVersion() {
         return version;
     }

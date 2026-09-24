@@ -3,6 +3,7 @@ package com.readora.infrastructure.config;
 import com.readora.application.port.in.AuthenticateUserUseCase;
 import com.readora.application.port.in.BrowseCatalogUseCase;
 import com.readora.application.port.in.CommunityUseCase;
+import com.readora.application.port.in.DeleteAccountUseCase;
 import com.readora.application.port.in.DirectPublishChapterUseCase;
 import com.readora.application.port.in.DiscoverUseCase;
 import com.readora.application.port.in.ManageAssetsUseCase;
@@ -23,6 +24,7 @@ import com.readora.application.port.in.ResetPasswordUseCase;
 import com.readora.application.port.in.ReviewChaptersUseCase;
 import com.readora.application.port.in.TrackReadingUseCase;
 import com.readora.application.port.out.*;
+import com.readora.application.service.AccountDeletionService;
 import com.readora.application.service.AssetService;
 import com.readora.application.service.AuthenticationService;
 import com.readora.application.service.BookmarkService;
@@ -137,6 +139,14 @@ public class DomainServiceConfig {
                                                      PasswordHasherPort passwordHasher, MailPort mail, MailProperties mailProperties) {
         return transactional(new PasswordResetService(users, resetTokens, refreshTokens, tokenProvider, passwordHasher, mail, Clock.systemUTC(),
                 mailProperties.siteUrl()), ResetPasswordUseCase.class, transactionManager);
+    }
+
+    @Bean
+    public DeleteAccountUseCase deleteAccountUseCase(UserAccountRepositoryPort users, TeamRepositoryPort teams, ReaderDataErasurePort erasure,
+                                                     RefreshTokenRepositoryPort refreshTokens, PasswordResetTokenRepositoryPort resetTokens,
+                                                     PasswordHasherPort passwordHasher) {
+        return transactional(new AccountDeletionService(users, teams, erasure, refreshTokens, resetTokens, passwordHasher, Clock.systemUTC()),
+                DeleteAccountUseCase.class, transactionManager);
     }
 
     @Bean

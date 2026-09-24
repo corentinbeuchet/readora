@@ -102,6 +102,21 @@ test.describe('Authentication flow', () => {
     await thenIAmSignedIn(page);
   });
 
+  test('a reader deletes the account and can no longer log in (US-15)', async ({ page }) => {
+    const me = await givenIHaveSignedUp(page);
+
+    await whenIOpenTheTab(page, 'Account');
+    await whenIDeleteMyAccount(page, me.password);
+
+    await thenIAmOn(page, '/');
+    await thenICanLogIn(page);
+
+    await whenIVisit(page, '/login');
+    await whenILogIn(page, { email: me.email, password: me.password });
+
+    await thenISeeTheAlert(page, /invalid email or password/i);
+  });
+
   test('anonymous visitors are redirected away from guarded routes', async ({ page }) => {
     await whenIVisit(page, '/scanlation/00000000-0000-0000-0000-000000000000');
 
@@ -145,6 +160,12 @@ async function whenIChooseTheNewPassword(page: Page, password: string): Promise<
   await page.getByLabel('New password', { exact: true }).fill(password);
   await page.getByLabel('Confirm the new password').fill(password);
   await page.getByRole('button', { name: 'Save the new password' }).click();
+}
+
+async function whenIDeleteMyAccount(page: Page, password: string): Promise<void> {
+  await page.getByRole('button', { name: 'Delete my account…' }).click();
+  await page.getByLabel('Your password').fill(password);
+  await page.getByRole('button', { name: 'Delete my account for good' }).click();
 }
 
 async function whenIChangeMyPassword(page: Page, passwords: { from: string; to: string }): Promise<void> {

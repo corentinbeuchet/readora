@@ -33,6 +33,7 @@ import com.readora.infrastructure.persistence.adapter.NotificationRepositoryAdap
 import com.readora.infrastructure.persistence.adapter.PageReportRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.PasswordResetTokenRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.RatingRepositoryAdapter;
+import com.readora.infrastructure.persistence.adapter.ReaderDataErasureAdapter;
 import com.readora.infrastructure.persistence.adapter.ReadingListRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.ScanlationProjectRepositoryAdapter;
 import com.readora.infrastructure.persistence.adapter.TeamInvitationRepositoryAdapter;
@@ -512,5 +513,26 @@ class PostgresMigrationTest {
         assertThat(resetTokens.findByTokenHash("pg-reset-old-" + owner.getId().value())).isEmpty();
         assertThat(resetTokens.findByTokenHash("pg-reset-new-" + owner.getId().value())).get()
                 .satisfies(found -> assertThat(found.isUsable(now.plusSeconds(120))).isFalse());
+    }
+
+    @Autowired
+    private ReaderDataErasureAdapter readerData;
+
+    @Test
+    @DisplayName("Erasing a reader's data (V29 deleted accounts) runs every statement on PostgreSQL")
+    void readerErasureRunsOnPostgres() {
+        UserAccount reader = userRepository.save(UserAccount.register(Email.of("pg-erase-" + java.util.UUID.randomUUID() + "@readora.test"),
+                "pgerase" + (System.nanoTime() % 100000), PasswordHash.of("hash")));
+        Work work = workRepository.save(Work.create("PG Erase", "", WorkType.MANGA, "c.png", Set.of("Action")));
+        library.save(LibraryEntry.add(reader.getId(), work.getId(), ReadingStatus.READING, java.time.Instant.parse("2026-09-24T10:00:00Z")));
+
+        readerData.renameCommentAuthor(reader.getId(), "deleted_pg");
+        readerData.eraseReaderData(reader.getId());
+        reader.erase("deleted_pg" + (System.nanoTime() % 100000), Email.of("deleted-pg-" + java.util.UUID.randomUUID() + "@deleted.invalid"),
+                PasswordHash.of("unusable"), java.time.Instant.parse("2026-09-24T10:05:00Z"));
+        userRepository.save(reader);
+
+        assertThat(library.find(reader.getId(), work.getId())).isEmpty();
+        assertThat(userRepository.findById(reader.getId())).get().satisfies(account -> assertThat(account.isDeleted()).isTrue());
     }
 }

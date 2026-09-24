@@ -58,7 +58,8 @@ public class CommunityService implements CommunityUseCase {
 
     @Override
     public PublicProfile profile(String username) {
-        UserAccount account = users.findByUsername(username).orElseThrow(() -> new NotFoundException("Reader", username));
+        UserAccount account = users.findByUsername(username).filter(found -> !found.isDeleted())
+                .orElseThrow(() -> new NotFoundException("Reader", username));
         var stats = community.readingStats(account.getId(), TOP_GENRES);
         List<Work> completed = stats.completedSeries().isEmpty() ? List.of() : works.findAllById(stats.completedSeries());
         return new PublicProfile(account.getUsername(), account.getDisplayName(), account.getAvatarUrl(), account.getBio(),
