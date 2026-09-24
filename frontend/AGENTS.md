@@ -161,6 +161,8 @@ interface is neutral and the cover art is the colour on the page.
   with the same root-absolute URL). Two voices through its width axis: `--wdth-display` + `--fw-black` for `h1`/`h2`,
   rank numerals and the logo; `--wdth-text` for everything else; `--wdth-condensed` for tab-bar labels.
   `font-variant-numeric: tabular-nums` for ranks, scores and counts. Prose is at most `--measure` wide.
+  The font files hold only weights 400-800 and widths 75-100% (`public/fonts/`, cut from `@fontsource-variable/archivo`):
+  a token outside those ranges needs them regenerated (command in `_fonts.scss`).
 - **Scales, never raw values:** `--space-1..8`, `--radius-sm|md|lg|pill` by role (covers and thumbnails = sm, a
   book corner; controls and cards = md; sheets, dialogs and feature panels = lg; chips = pill), `--dur-fast|base` +
   `--ease-out`, `--z-*`, `--page-max`. Motion only answers an action: no entrance animations, nothing auto-rotates
