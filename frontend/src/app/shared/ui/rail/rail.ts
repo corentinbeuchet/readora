@@ -51,7 +51,9 @@ export class Rail {
   /** One "page" forward or back: most of the visible width, so the peeking tile becomes the first one. */
   protected page(direction: 1 | -1): void {
     const track = this.track().nativeElement;
-    track.scrollBy({ left: direction * track.clientWidth * 0.85, behavior: 'smooth' });
+    // 'auto' uses the track's CSS scroll-behavior: smooth, which the reduced-motion rule turns off ('smooth' here
+    // would override it).
+    track.scrollBy({ left: direction * track.clientWidth * 0.85, behavior: 'auto' });
   }
 
   private updateEnds(): void {

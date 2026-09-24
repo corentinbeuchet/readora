@@ -50,7 +50,9 @@ apply while designing, `references/evidence.md` holds the research each rule com
 **Shape, space, motion**
 - [ ] Radius by role: covers `--radius-sm`, controls and cards `--radius-md`, panels and dialogs `--radius-lg`, chips `--radius-pill`.
 - [ ] Spacing from `--space-*`; page width `--page-max`; breakpoints only through `bp.from()`.
-- [ ] Motion answers an action and uses `--dur-*` / `--ease-out`. Nothing fades in on load, rotates or advances alone.
+- [ ] Motion answers an action and uses `--dur-*` / `--ease-out` (`--ease-in-out` for on-screen movement), under
+      300 ms. Nothing fades in on load, rotates or advances alone; nothing animates on a keyboard action or a
+      repeated one. Named properties, `transform`/`opacity` only; `:hover` through `@include ix.hover`.
 
 **Cards, lists, states**
 - [ ] One link per card (the title, stretched); cover `alt=""`; at most two badges; actions outside the link.

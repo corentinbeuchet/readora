@@ -74,7 +74,7 @@
     <div class="upload-progress-container">
       <div class="progress-bar-track" role="progressbar" aria-label="Upload progress" i18n-aria-label="@@upload.review.progress" aria-valuemin="0" aria-valuemax="100"
            [attr.aria-valuenow]="flow.progress()" [attr.aria-valuetext]="`${flow.statusText()} (${flow.progress()}%)`">
-        <div class="progress-bar-fill" [style.width.%]="flow.progress()"></div>
+        <div class="progress-bar-fill" [style.transform]="`scaleX(${flow.progress() / 100})`"></div>
       </div>
       <p class="progress-text" aria-live="polite">{{ flow.statusText() }} ({{ flow.progress() }}%)</p>
     </div>

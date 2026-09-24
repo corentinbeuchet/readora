@@ -2,6 +2,7 @@
 @use "tokens";
 @use "fonts";
 @use "breakpoints" as bp;
+@use "interaction" as ix;
 
 * {
   box-sizing: border-box;
@@ -135,15 +136,20 @@ html {
   font-weight: var(--fw-semibold);
   cursor: pointer;
   text-decoration: none;
-  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 
-  &:hover:not(:disabled) {
+  @include ix.hover(':not(:disabled)') {
     background: var(--surface-3);
     border-color: var(--surface-3);
   }
 
+  // A press is felt: the button gives a little (Emil Kowalski's 0.97), and springs back on release.
   &:active:not(:disabled) {
     border-color: var(--border-strong);
+    transform: scale(0.97);
   }
 
   &:disabled {
@@ -162,7 +168,7 @@ html {
   border-color: var(--accent-strong);
   color: var(--on-accent);
 
-  &:hover:not(:disabled) {
+  @include ix.hover(':not(:disabled)') {
     background: var(--accent);
     border-color: var(--accent);
   }
@@ -198,7 +204,7 @@ html {
   border-color: var(--danger);
   background: transparent;
 
-  &:hover:not(:disabled) {
+  @include ix.hover(':not(:disabled)') {
     background: var(--danger-hover);
   }
 }
@@ -225,9 +231,14 @@ html {
   color: var(--accent);
   padding: 0;
 
-  &:hover:not(:disabled) {
+  @include ix.hover(':not(:disabled)') {
     background: none;
     text-decoration: underline;
+  }
+
+  // Inline text: it doesn't shrink on press.
+  &:active:not(:disabled) {
+    transform: none;
   }
 }
 
@@ -366,11 +377,15 @@ fieldset.field {
   cursor: pointer;
   text-decoration: none;
 
-  &:hover,
   &[data-active="true"],
   &[aria-selected="true"],
   &[aria-pressed="true"],
   &.active {
+    color: var(--accent);
+  }
+
+  // Behind the hover mixin: on touch a stuck hover would look exactly like the pressed/selected state.
+  @include ix.hover {
     color: var(--accent);
   }
 
@@ -582,4 +597,18 @@ fieldset.field {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+
+  // The page crossfade is drawn on ::view-transition pseudo-elements, which `*` does not match.
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* Going to another page crossfades (withViewTransitions; same-route navigations skip it) on the motion tokens. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--dur-base);
+  animation-timing-function: var(--ease-out);
 }

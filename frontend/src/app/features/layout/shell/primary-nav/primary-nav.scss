@@ -1,4 +1,5 @@
 @use 'breakpoints' as bp;
+@use 'interaction' as ix;
 
 // Below lg the host is out of the header's flow: its <nav> is fixed to the bottom of the screen.
 :host {
@@ -94,8 +95,12 @@
     font-size: var(--fs-lg);
   }
 
-  &:hover,
   &.active {
+    color: var(--accent);
+  }
+
+  // On the phone tab bar a stuck hover would make two tabs look current.
+  @include ix.hover {
     color: var(--accent);
   }
 

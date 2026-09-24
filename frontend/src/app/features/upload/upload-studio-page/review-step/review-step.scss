@@ -70,10 +70,12 @@
   margin-bottom: 0.5rem;
 }
 
+// Scaled, not resized: transform skips layout on every progress tick. Linear: progress is constant motion.
 .progress-bar-fill {
   height: 100%;
   background: var(--accent);
-  transition: width 0.3s ease-out;
+  transform-origin: 0 50%;
+  transition: transform var(--dur-base) linear;
 }
 
 .progress-text {

@@ -1,0 +1,10 @@
+// Hover styles only where a mouse hovers. On a touch screen a tap fires :hover and leaves it stuck, so a hover that
+// looks like a state (active tab, pressed toggle) would lie. Components `@use 'interaction' as ix;` and write
+// `@include ix.hover { … }` (or `ix.hover(':not(:disabled)')`); keep `:focus-visible` rules outside it.
+@mixin hover($suffix: '') {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover#{$suffix} {
+      @content;
+    }
+  }
+}

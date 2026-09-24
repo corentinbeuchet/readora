@@ -1,3 +1,5 @@
+@use 'interaction' as ix;
+
 .cover-uploader-section {
   display: flex;
   flex-direction: column;
@@ -26,7 +28,7 @@
   padding: 1.5rem 1rem;
   cursor: pointer;
   background: var(--surface);
-  transition: border-color 0.2s, background-color 0.2s;
+  transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
 
   .cover-icon {
     font-size: var(--fs-icon-lg);
@@ -41,7 +43,7 @@
     font-size: var(--fs-xs);
   }
 
-  &:hover {
+  @include ix.hover {
     border-color: var(--accent);
     background: var(--surface-2);
   }

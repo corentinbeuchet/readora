@@ -8,6 +8,7 @@
   gap: var(--space-4);
   overflow-x: auto;
   overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
   scroll-snap-type: x proximity;
   scroll-padding-inline: var(--space-1);
   // Room for the focus ring of the first and last tile, and for the scrollbar.

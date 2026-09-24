@@ -1,3 +1,5 @@
+@use 'interaction' as ix;
+
 .page-uploader-container {
   display: flex;
   flex-direction: column;
@@ -11,10 +13,14 @@
   text-align: center;
   background: var(--surface);
   cursor: pointer;
-  transition: border-color 0.2s, background-color 0.2s;
+  transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
 
-  &:hover,
   &.dragging {
+    border-color: var(--accent);
+    background: var(--surface-2);
+  }
+
+  @include ix.hover {
     border-color: var(--accent);
     background: var(--surface-2);
   }
@@ -90,19 +96,21 @@
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border);
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: border-color var(--dur-fast) var(--ease-out);
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-card);
-  }
+  // No lift or shadow: a thumbnail doesn't float (shadows are for menus and dialogs).
+  @include ix.hover {
+    border-color: var(--border-strong);
 
-  /* Keyboard users must see the actions too, not only mouse users; touch screens have no hover, so always show them. */
-  &:hover,
-  &:focus-within {
     .page-overlay-actions {
       opacity: 1;
     }
+  }
+
+  /* Keyboard users must see the actions too, at once (no fade on a keyboard action); touch screens always show them. */
+  &:focus-within .page-overlay-actions {
+    opacity: 1;
+    transition: none;
   }
 
   @media (hover: none) {
@@ -148,7 +156,7 @@
     justify-content: center;
     gap: 0.35rem;
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: opacity var(--dur-fast) var(--ease-out);
   }
 
   .icon-btn {
@@ -168,9 +176,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.15s;
+    transition: background-color var(--dur-fast) var(--ease-out);
 
-    &:hover:not(:disabled) {
+    @include ix.hover(':not(:disabled)') {
       background: var(--accent);
     }
 
@@ -179,8 +187,10 @@
       cursor: not-allowed;
     }
 
-    &.btn-delete:hover:not(:disabled) {
-      background: var(--danger);
+    &.btn-delete {
+      @include ix.hover(':not(:disabled)') {
+        background: var(--danger);
+      }
     }
   }
 }

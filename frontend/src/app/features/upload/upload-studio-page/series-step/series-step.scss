@@ -1,4 +1,5 @@
 @use 'breakpoints' as bp;
+@use 'interaction' as ix;
 
 .form-layout {
   display: grid;
@@ -41,9 +42,13 @@
   border: 1px solid var(--border);
   color: var(--muted);
   cursor: pointer;
-  transition: all 0.15s;
+  // Colours only: animating font-weight (it changes on .selected) would reflow the variable font every frame.
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 
-  &:hover {
+  @include ix.hover {
     border-color: var(--accent);
     color: var(--text);
   }

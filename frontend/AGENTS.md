@@ -167,6 +167,16 @@ interface is neutral and the cover art is the colour on the page.
   book corner; controls and cards = md; sheets, dialogs and feature panels = lg; chips = pill), `--dur-fast|base` +
   `--ease-out`, `--z-*`, `--page-max`. Motion only answers an action: no entrance animations, nothing auto-rotates
   or auto-advances.
+- **Motion** (Emil Kowalski's design-engineering rules, adopted 2026-09-24; audit and rejected advice in the commit):
+  under 300 ms, from the tokens only (`--dur-fast` 120 ms for presses and hovers, `--dur-base` 200 ms for panels and
+  page changes; `--ease-out` for what enters or answers, `--ease-in-out` for what moves on screen, `linear` for
+  progress, never `ease-in`). Name the properties (never `transition: all`), animate `transform`/`opacity` (never
+  `width`, `height` or `font-weight`). Nothing animates on a keyboard action or on something done hundreds of times
+  (page turns, zoom, omnisearch, filters: `skipSameRouteTransitions` skips the page crossfade when the route stays
+  the same). `.btn` gives on press (`scale(0.97)`, not `.btn-link`). Every `:hover` goes through
+  `@include ix.hover` (`src/styles/_interaction.scss`): a tap would leave it stuck. Reduced motion stops all of it,
+  view transitions included; a script never asks for `behavior: 'smooth'` (CSS `scroll-behavior` does, so the rule
+  can turn it off). Not adopted: staggered or scroll entrances, springs, skeleton shimmer, hover lifts.
 - **Icons:** `<app-icon name="…">` only (typed set generated from Lucide by `npm run icons`,
   `scripts/generate-icons.mjs`); no emoji or text glyphs as icons, none inside translated strings. An icon is
   decoration (`aria-hidden`): the control's text or `aria-label` names it.

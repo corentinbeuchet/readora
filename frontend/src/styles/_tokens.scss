@@ -85,7 +85,10 @@
   /* Motion answers an action; nothing moves on its own. The global reduced-motion rule neutralises both. */
   --dur-fast: 120ms;
   --dur-base: 200ms;
-  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  /* Strong ease-out (Emil Kowalski): things that enter or answer a press move at once, then settle. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  /* For something that moves or morphs on screen (zoom, a panel sliding across). */
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 
   /* Layers, lowest to highest. */
   --z-header: 40;
