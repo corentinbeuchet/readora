@@ -5,7 +5,7 @@ import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamCredit;
-import com.readora.domain.work.Chapter;
+import com.readora.domain.work.ChapterSummary;
 import com.readora.domain.work.Demographic;
 import com.readora.domain.work.Work;
 import com.readora.domain.work.WorkId;
@@ -57,7 +57,7 @@ public interface BrowseCatalogUseCase {
 
     Optional<Work> getWork(WorkId workId);
     /// A published chapter with the team that translated it.
-    record CreditedChapter(Chapter chapter, TeamCredit team) {
+    record CreditedChapter(ChapterSummary chapter, TeamCredit team) {
     }
 
     /// Published chapters of a series in reading order.

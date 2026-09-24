@@ -110,6 +110,8 @@ class PostgresMigrationTest {
                 .satisfies(p -> assertThat(p.getTasks()).hasSize(1));
         assertThat(chapterRepository.findPublishedByWorkId(work.getId())).singleElement()
                 .satisfies(c -> assertThat(c.getPages()).hasSize(1));
+        assertThat(chapterRepository.findPublishedSummariesByWorkId(work.getId())).singleElement()
+                .satisfies(summary -> assertThat(summary.pageCount()).isEqualTo(1));
     }
 
     @Test

@@ -6,9 +6,9 @@ import com.readora.domain.identity.Email;
 import com.readora.domain.identity.PasswordHash;
 import com.readora.domain.identity.UserAccount;
 import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.ScanlationRole;
 import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamId;
-import com.readora.domain.scanlation.ScanlationRole;
 import com.readora.domain.scanlation.TeamMember;
 import com.readora.domain.work.*;
 import com.readora.infrastructure.persistence.adapter.ChapterRepositoryAdapter;
@@ -163,5 +163,34 @@ class QueryCountTest {
 
         assertThat(account.getUsername()).isEqualTo("count-reader");
         assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("The chapter list counts pages in one statement and loads no page, where the full chapters load every page")
+    void chapterListCountsPages() {
+        Work work = workRepository.save(Work.create("Long Series", "S", WorkType.MANGA, "c.png", Set.of("Action")));
+        TeamId team = teamRepository.save(Team.create("Long Series Team", null, UserId.of("long-leader"))).getId();
+        List<PageAsset> pages = IntStream.rangeClosed(1, 30).mapToObj(n -> PageAsset.create(n, "long/p" + n + ".webp", null)).toList();
+        IntStream.rangeClosed(1, 40).forEach(n -> {
+            Chapter chapter = Chapter.createDraft(work.getId(), ChapterNumber.of(String.valueOf(n)), "Ch " + n, team);
+            chapter.updatePages(pages);
+            chapter.publish(UserId.of("long-leader"));
+            chapterRepository.save(chapter);
+        });
+
+        statistics.clear();
+        List<ChapterSummary> summaries = chapterRepository.findPublishedSummariesByWorkId(work.getId());
+        long summaryStatements = statistics.getPrepareStatementCount();
+        long summaryEntities = statistics.getEntityLoadCount();
+        statistics.clear();
+        chapterRepository.findPublishedByWorkId(work.getId());
+        long fullEntities = statistics.getEntityLoadCount();
+
+        assertThat(summaries).hasSize(40).allSatisfy(summary -> assertThat(summary.pageCount()).isEqualTo(30));
+        assertThat(summaries.getFirst().chapterNumber()).isEqualTo(ChapterNumber.of("1"));
+        assertThat(summaries.getLast().chapterNumber()).isEqualTo(ChapterNumber.of("40"));
+        assertThat(summaryStatements).isEqualTo(1);
+        assertThat(summaryEntities).isZero();
+        assertThat(fullEntities).isEqualTo(40 + 40 * 30);
     }
 }

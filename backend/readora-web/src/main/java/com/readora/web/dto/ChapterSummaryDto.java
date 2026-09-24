@@ -1,7 +1,8 @@
 package com.readora.web.dto;
 
 import com.readora.application.port.in.BrowseCatalogUseCase.CreditedChapter;
-import com.readora.domain.work.Chapter;
+import com.readora.domain.work.ChapterStatus;
+import com.readora.domain.work.ChapterSummary;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
@@ -18,15 +19,15 @@ public record ChapterSummaryDto(
         TeamRefDto team
 ) {
     public static ChapterSummaryDto fromDomain(CreditedChapter credited) {
-        Chapter chapter = credited.chapter();
+        ChapterSummary chapter = credited.chapter();
         return new ChapterSummaryDto(
-                chapter.getId().value(),
-                chapter.getWorkId().value(),
-                chapter.getChapterNumber().value(),
-                chapter.getTitle(),
-                chapter.getStatus().name(),
-                chapter.getPages().size(),
-                chapter.getPublishedAt(),
+                chapter.id().value(),
+                chapter.workId().value(),
+                chapter.chapterNumber().value(),
+                chapter.title(),
+                ChapterStatus.PUBLISHED.name(),
+                chapter.pageCount(),
+                chapter.publishedAt(),
                 TeamRefDto.fromDomain(credited.team())
         );
     }

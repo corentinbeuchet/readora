@@ -4,6 +4,7 @@ import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.ChapterNumber;
+import com.readora.domain.work.ChapterSummary;
 import com.readora.domain.work.ReadingOrder;
 import com.readora.domain.work.WorkId;
 
@@ -36,6 +37,12 @@ public interface ChapterRepositoryPort {
         return findPublishedByWorkId(workId).stream()
                 .map(c -> new ReadingOrder.Version(c.getId(), c.getChapterNumber(), c.getTeamId(), Objects.requireNonNull(c.getPublishedAt())))
                 .toList();
+    }
+
+    /// The published chapters of a work in reading order with their page counts, not their pages (the chapter list).
+    /// Adapters should override this with a query that counts pages instead of loading them.
+    default List<ChapterSummary> findPublishedSummariesByWorkId(WorkId workId) {
+        return findPublishedByWorkId(workId).stream().map(ChapterSummary::of).toList();
     }
 
     /// Published chapters of a work in reading order (numeric chapter order); versions of one number are next to each

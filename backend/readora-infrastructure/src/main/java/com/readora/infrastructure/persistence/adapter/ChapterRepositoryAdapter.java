@@ -60,6 +60,16 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ChapterSummary> findPublishedSummariesByWorkId(WorkId workId) {
+        return springDataRepository.findSummariesByWorkIdAndStatus(workId.value(), ChapterStatus.PUBLISHED.name()).stream()
+                .map(row -> new ChapterSummary(ChapterId.of((UUID) row[0]), workId, ChapterNumber.of((String) row[1]), (String) row[2],
+                        TeamId.of((UUID) row[3]), (Instant) row[4], ((Number) row[5]).intValue()))
+                .sorted(ChapterSummary.READING_ORDER)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ReadingOrder.Version> findPublishedRefsByWorkId(WorkId workId) {
         return springDataRepository.findRefsByWorkIdAndStatus(workId.value(), ChapterStatus.PUBLISHED.name()).stream()
                 .map(row -> new ReadingOrder.Version(ChapterId.of((UUID) row[0]), ChapterNumber.of((String) row[1]),

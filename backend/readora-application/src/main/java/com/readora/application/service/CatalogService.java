@@ -19,6 +19,7 @@ import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamCredit;
 import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.Chapter;
+import com.readora.domain.work.ChapterSummary;
 import com.readora.domain.work.Work;
 import com.readora.domain.work.WorkId;
 
@@ -90,11 +91,11 @@ public class CatalogService implements BrowseCatalogUseCase {
 
     @Override
     public List<CreditedChapter> listPublishedChapters(WorkId workId) {
-        List<Chapter> chapters = chapterRepository.findPublishedByWorkId(workId);
-        Map<TeamId, TeamCredit> credits = teamRepository.findAllById(chapters.stream().map(Chapter::getTeamId).distinct().toList()).stream()
+        List<ChapterSummary> chapters = chapterRepository.findPublishedSummariesByWorkId(workId);
+        Map<TeamId, TeamCredit> credits = teamRepository.findAllById(chapters.stream().map(ChapterSummary::teamId).distinct().toList()).stream()
                 .collect(Collectors.toMap(Team::getId, TeamCredit::of));
         return chapters.stream()
-                .flatMap(chapter -> Optional.ofNullable(credits.get(chapter.getTeamId())).map(team -> new CreditedChapter(chapter, team)).stream())
+                .flatMap(chapter -> Optional.ofNullable(credits.get(chapter.teamId())).map(team -> new CreditedChapter(chapter, team)).stream())
                 .toList();
     }
 

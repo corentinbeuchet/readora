@@ -225,8 +225,8 @@ Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = repor
 - Same sweep as R4 still to do (survey): uncoded reader-visible rules in `WorkManagementService`, `ReaderSocialService`.
 - R19/R20 (survey) Missing index `refresh_tokens(expires_at)`; `%text%` search on unindexed title/author. (The rankings
   query was rewritten and indexed: V31.)
-- R21/R22 (survey) Unbounded lists (chapter comments, work chapters, library list/export, bookmarks, `GET /teams/mine`);
-  the chapter list loads every page row for `pageCount`. The chapter list now has one item per team version: when it
+- R21/R22 (survey) Unbounded lists (chapter comments, work chapters, library list/export, bookmarks, `GET /teams/mine`).
+  (The chapter list counts pages instead of loading them: `ChapterSummary`.) The chapter list has one item per team version: when it
   gets paginated, paginate by chapter number on the server, so the versions of a number never split across pages.
 - R23/R24 (survey) Scanlation "not a member" answers 400 instead of 403; `ProfileController` PUT lacks `@PreAuthorize`.
 - R27/R28 (survey) Several application services without unit tests; no graceful shutdown, structured logs or

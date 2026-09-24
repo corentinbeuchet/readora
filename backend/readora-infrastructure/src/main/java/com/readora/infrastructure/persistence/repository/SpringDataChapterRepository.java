@@ -22,6 +22,12 @@ public interface SpringDataChapterRepository extends JpaRepository<ChapterJpaEnt
 
     java.util.Optional<ChapterJpaEntity> findByWorkIdAndChapterNumberAndTeamId(UUID workId, String chapterNumber, UUID teamId);
 
+    /// Rows of `[id, chapterNumber, title, teamId, publishedAt, pageCount]`: pages are counted, not loaded.
+    @Query("""
+            select c.id, c.chapterNumber, c.title, c.teamId, c.publishedAt, (select count(p) from PageAssetJpaEntity p where p.chapter = c)
+            from ChapterJpaEntity c where c.workId = :workId and c.status = :status""")
+    List<Object[]> findSummariesByWorkIdAndStatus(@Param("workId") UUID workId, @Param("status") String status);
+
     /// Rows of `[id, chapterNumber, teamId, publishedAt]` for navigation and progress: no pages are loaded.
     @Query("select c.id, c.chapterNumber, c.teamId, c.publishedAt from ChapterJpaEntity c where c.workId = :workId and c.status = :status")
     List<Object[]> findRefsByWorkIdAndStatus(@Param("workId") UUID workId, @Param("status") String status);
