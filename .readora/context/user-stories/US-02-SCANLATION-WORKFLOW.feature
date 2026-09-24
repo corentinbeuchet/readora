@@ -52,3 +52,23 @@ Feature: Collaborative Scanlation Chapter Workflow Pipeline
   Scenario: The task board names who holds each task
     Given "Chapter 10" workflow task is assigned to "Bob" in stage "TRANSLATING"
     Then the task board shows the task is held by "@bob"
+
+  # Members hear when a chapter reaches their stage (in-app, US-10) instead of watching the board. Whoever acted is
+  # not told about their own work; with nobody in the role, the leaders are, so no chapter waits unseen.
+  Scenario: The members of the next stage are told a chapter is ready for them
+    Given "Chapter 10" workflow task is assigned to "Alice" in stage "RAW_UPLOADED"
+    When "Alice" uploads 22 cleaned pages
+    Then "Bob" is told "Solo Leveling: chapter 10 is ready for translation"
+    And "Alice" is not told about chapter 10
+    And "Charlie" is not told about chapter 10
+
+  Scenario: Cleaners are told when a raw chapter goes on the board
+    Given the team uses the task board for this series
+    When "Charlie" puts the 20 raw pages of chapter 12 on the board
+    Then "Alice" is told "Solo Leveling: chapter 12 is ready for cleaning"
+    And "Charlie" is not told about chapter 12
+
+  Scenario: With nobody in the next stage's role, the leaders are told
+    Given "Chapter 10" workflow task is assigned to "Bob" in stage "TRANSLATING"
+    When "Bob" uploads 22 translated pages
+    Then "LeaderBob" is told "Solo Leveling: chapter 10 is ready for typesetting"

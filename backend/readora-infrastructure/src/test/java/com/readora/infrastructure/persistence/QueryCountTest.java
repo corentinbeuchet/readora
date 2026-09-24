@@ -119,7 +119,7 @@ class QueryCountTest {
             Work work = workRepository.save(Work.create("Many Teams Work " + i, "S", WorkType.MANGA, "c.png", Set.of("Action")));
             Team team = teamRepository.save(Team.create("Many Teams " + i, null, UserId.of("many-leader")));
             ScanlationProject project = ScanlationProject.create("Many Teams " + i, work.getId(), team.getId());
-            project.addChapterTask(ChapterNumber.of("1"), List.of(PageAsset.create(1, "raw/p1.webp", null), PageAsset.create(2, "raw/p2.webp", null)));
+            project.addChapterTask(ChapterNumber.of("1"), List.of(PageAsset.create(1, "raw/p1.webp", null), PageAsset.create(2, "raw/p2.webp", null)), UserId.of("many-leader"));
             projectRepository.save(project);
             return team.getId();
         }).toList();
@@ -140,7 +140,7 @@ class QueryCountTest {
             team.addMember(TeamMember.of(UserId.of("tl-" + i), ScanlationRole.TRANSLATOR));
             teamRepository.save(team);
             ScanlationProject project = ScanlationProject.create("Group " + i, work.getId(), team.getId());
-            project.addChapterTask(ChapterNumber.of(String.valueOf(i + 1)), List.of(PageAsset.create(1, "raw/p1.webp", null)));
+            project.addChapterTask(ChapterNumber.of(String.valueOf(i + 1)), List.of(PageAsset.create(1, "raw/p1.webp", null)), UserId.of("leader-" + i));
             projectRepository.save(project);
         });
 

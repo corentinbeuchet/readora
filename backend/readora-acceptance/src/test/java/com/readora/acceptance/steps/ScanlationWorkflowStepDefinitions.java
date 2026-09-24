@@ -1,9 +1,17 @@
 package com.readora.acceptance.steps;
 
+import com.readora.acceptance.fakes.InMemoryChapterRepository;
+import com.readora.acceptance.fakes.InMemoryCommentRepository;
+import com.readora.acceptance.fakes.InMemoryLibraryRepository;
+import com.readora.acceptance.fakes.InMemoryNotificationRepository;
+import com.readora.acceptance.fakes.InMemoryTeamInvitationRepository;
 import com.readora.acceptance.fakes.InMemoryTeamRepository;
+import com.readora.acceptance.fakes.InMemoryWorkRepository;
+import com.readora.acceptance.fakes.NoUserAccounts;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
+import com.readora.application.service.NotificationService;
 import com.readora.application.service.ScanlationTaskService;
 import com.readora.domain.common.DomainEvent;
 import com.readora.domain.common.DomainValidationException;
@@ -17,6 +25,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +39,8 @@ public class ScanlationWorkflowStepDefinitions {
     private final List<DomainEvent> emittedEvents = new ArrayList<>();
 
     private ScanlationTaskService scanlationTaskService;
+    private NotificationService notifications;
+    private final InMemoryWorkRepository works = new InMemoryWorkRepository();
     private final InMemoryTeamRepository teams = new InMemoryTeamRepository();
     private Team currentTeam;
     private ScanlationProject currentProject;
@@ -89,7 +100,16 @@ public class ScanlationWorkflowStepDefinitions {
             }
         };
 
-        EventPublisherPort eventPublisher = emittedEvents::add;
+        InMemoryChapterRepository readerChapters = new InMemoryChapterRepository();
+        notifications = new NotificationService(new InMemoryNotificationRepository(), new InMemoryLibraryRepository(), readerChapters, works,
+                new InMemoryCommentRepository(), new InMemoryTeamInvitationRepository(), teams, projectRepo, new NoUserAccounts(), Clock.systemUTC());
+        // As `NotificationEventListener` does after commit.
+        EventPublisherPort eventPublisher = event -> {
+            emittedEvents.add(event);
+            if (event instanceof TaskStageAdvancedEvent reached) {
+                notifications.notifyTaskReady(reached.projectId(), reached.taskId(), reached.stage(), reached.by());
+            }
+        };
         scanlationTaskService = new ScanlationTaskService(projectRepo, teams, chapterRepo, eventPublisher);
     }
 
@@ -101,7 +121,8 @@ public class ScanlationWorkflowStepDefinitions {
 
     @Given("{string} has a scanlation project managed by {string}")
     public void projectManagedByTeam(String workTitle, String teamName) {
-        currentProject = ScanlationProject.create(teamName + " - " + workTitle, WorkId.generate(), currentTeam.getId());
+        Work work = works.save(Work.create(workTitle, "", WorkType.MANHWA, "", Set.of()));
+        currentProject = ScanlationProject.create(teamName + " - " + workTitle, work.getId(), currentTeam.getId());
         projectStore.put(currentProject.getId(), currentProject);
     }
 
@@ -212,7 +233,7 @@ public class ScanlationWorkflowStepDefinitions {
     @Given("{string} has passed proofreading and is in stage {string} with {int} pages uploaded")
     public void chapterInQcReview(String chapterName, String stageStr, int pageCount) {
         String num = chapterName.replaceAll("[^0-9.]", "");
-        currentTask = currentProject.addChapterTask(ChapterNumber.of(num.isEmpty() ? "10" : num), pages("final", pageCount));
+        currentTask = currentProject.addChapterTask(ChapterNumber.of(num.isEmpty() ? "10" : num), pages("final", pageCount), UserId.of("LeaderBob"));
         currentTask.advanceStage(WorkflowStage.valueOf(stageStr));
     }
 
@@ -264,5 +285,28 @@ public class ScanlationWorkflowStepDefinitions {
     public void verifyEventEmitted(String eventName) {
         assertThat(emittedEvents)
                 .anyMatch(e -> e.getClass().getSimpleName().equals(eventName));
+    }
+    @Given("the team uses the task board for this series")
+    public void theTeamUsesTheBoard() {
+        currentProject.turnBoardOn();
+    }
+
+    @When("{string} puts the {int} raw pages of chapter {int} on the board")
+    public void putsRawPagesOnTheBoard(String memberName, int pageCount, int chapter) {
+        currentTask = scanlationTaskService.uploadChapterTask(currentProject.getId(), ChapterNumber.of(String.valueOf(chapter)),
+                pages("raw", pageCount), UserId.of(memberName));
+    }
+
+    @Then("{string} is told {string}")
+    public void isTold(String memberName, String message) {
+        assertThat(notifications.recent(UserId.of(memberName))).singleElement().satisfies(notification -> {
+            assertThat(notification.message()).isEqualTo(message);
+            assertThat(notification.link()).isEqualTo("/scanlation/" + currentProject.getId().value());
+        });
+    }
+
+    @Then("{string} is not told about chapter {int}")
+    public void isNotTold(String memberName, int chapter) {
+        assertThat(notifications.recent(UserId.of(memberName))).noneMatch(n -> n.message().contains("chapter " + chapter + " "));
     }
 }

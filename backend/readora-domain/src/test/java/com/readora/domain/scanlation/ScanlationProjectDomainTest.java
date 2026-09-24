@@ -160,7 +160,7 @@ class ScanlationProjectDomainTest {
     void submittingNoPageIsRejected() {
         Team team = Team.create("Asura", null, UserId.of("Leader1"));
         ScanlationProject project = ScanlationProject.create("Asura", WorkId.generate(), team.getId());
-        WorkflowTask task = project.addChapterTask(ChapterNumber.of("5"), PAGES);
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("5"), PAGES, UserId.of("Leader1"));
         project.claimTask(team, task.getId(), UserId.of("Leader1"));
 
         assertThatThrownBy(() -> project.submitTaskWork(team, task.getId(), UserId.of("Leader1"), List.of()))
@@ -175,7 +175,7 @@ class ScanlationProjectDomainTest {
     void submittingDuplicatePageNumbersIsRejected() {
         Team team = Team.create("Asura", null, UserId.of("Leader1"));
         ScanlationProject project = ScanlationProject.create("Asura", WorkId.generate(), team.getId());
-        WorkflowTask task = project.addChapterTask(ChapterNumber.of("5"), PAGES);
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("5"), PAGES, UserId.of("Leader1"));
         project.claimTask(team, task.getId(), UserId.of("Leader1"));
         List<PageAsset> twice = List.of(PAGES.getFirst(), new PageAsset(1, "scans/test/other.webp", "https://cdn.test/other.webp", 800, 1200));
 
@@ -183,5 +183,21 @@ class ScanlationProjectDomainTest {
                 .isInstanceOf(DomainValidationException.class)
                 .hasMessageContaining("same number");
         assertThat(task.getPages()).isEqualTo(PAGES);
+    }
+    @Test
+    @DisplayName("Submitted work records that the task reached its next stage, and who moved it there")
+    void submittingRecordsTheStageReached() {
+        Team team = Team.create("Asura", null, UserId.of("Leader1"));
+        ScanlationProject project = ScanlationProject.create("Asura", WorkId.generate(), team.getId());
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("5"), PAGES, UserId.of("Leader1"));
+        project.pollDomainEvents();
+
+        project.submitTaskWork(team, task.getId(), UserId.of("Leader1"), PAGES);
+
+        assertThat(project.pollDomainEvents()).singleElement()
+                .isInstanceOfSatisfying(TaskStageAdvancedEvent.class, event -> {
+                    assertThat(event.stage()).isEqualTo(WorkflowStage.TRANSLATING);
+                    assertThat(event.by()).isEqualTo(UserId.of("Leader1"));
+                });
     }
 }

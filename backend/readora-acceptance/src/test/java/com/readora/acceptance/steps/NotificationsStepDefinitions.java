@@ -5,6 +5,7 @@ import com.readora.acceptance.fakes.InMemoryChapterRepository;
 import com.readora.acceptance.fakes.InMemoryCommentRepository;
 import com.readora.acceptance.fakes.InMemoryLibraryRepository;
 import com.readora.acceptance.fakes.InMemoryNotificationRepository;
+import com.readora.acceptance.fakes.InMemoryProjectRepository;
 import com.readora.acceptance.fakes.InMemoryTeamInvitationRepository;
 import com.readora.acceptance.fakes.InMemoryTeamRepository;
 import com.readora.acceptance.fakes.InMemoryWorkRepository;
@@ -56,7 +57,8 @@ public class NotificationsStepDefinitions {
         library = new InMemoryLibraryRepository();
         InMemoryCommentRepository comments = new InMemoryCommentRepository();
         notifications = new NotificationService(new InMemoryNotificationRepository(), library, chapters, works, comments,
-                new InMemoryTeamInvitationRepository(), new InMemoryTeamRepository(), new NoUserAccounts(), Clock.systemUTC());
+                new InMemoryTeamInvitationRepository(), new InMemoryTeamRepository(), new InMemoryProjectRepository(), new NoUserAccounts(),
+                Clock.systemUTC());
         libraryService = new LibraryService(library, works, new InMemoryChapterReadRepository(chapters), Clock.systemUTC());
         social = new ReaderSocialService(comments, chapters, event -> {
             if (event instanceof CommentPostedEvent posted && posted.parentId() != null) {

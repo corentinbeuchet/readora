@@ -110,7 +110,7 @@ public class CommunityStepDefinitions {
         InMemoryTeamInvitationRepository invitationRepository = new InMemoryTeamInvitationRepository();
         notificationRepository = new InMemoryNotificationRepository();
         NotificationService notifier = new NotificationService(notificationRepository, libraryRepository, chapters, works,
-                new InMemoryCommentRepository(), invitationRepository, teams, users, clock);
+                new InMemoryCommentRepository(), invitationRepository, teams, projects, users, clock);
         teamManagement = new TeamManagementService(teams, projects, works, users, invitationRepository, event -> {
             if (event instanceof TeamInvitedEvent invited) {
                 notifier.notifyInvitation(invited.invitationId());

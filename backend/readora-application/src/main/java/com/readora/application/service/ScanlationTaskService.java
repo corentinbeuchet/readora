@@ -42,8 +42,9 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
         project.requireMember(requireTeam(project), userId);
         project.requireBoard();
 
-        WorkflowTask task = project.addChapterTask(chapterNumber, rawPages);
+        WorkflowTask task = project.addChapterTask(chapterNumber, rawPages, userId);
         projectRepository.save(project);
+        project.pollDomainEvents().forEach(eventPublisher::publish);
         return task;
     }
 
@@ -63,6 +64,7 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
 
         project.submitTaskWork(requireTeam(project), taskId, userId, pages);
         projectRepository.save(project);
+        project.pollDomainEvents().forEach(eventPublisher::publish);
 
         return project.findTask(taskId).orElseThrow();
     }

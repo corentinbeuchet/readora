@@ -192,8 +192,9 @@ public class DomainServiceConfig {
     @Bean
     public NotifyUseCase notifyUseCase(NotificationRepositoryPort notifications, LibraryRepositoryPort library,
                                        ChapterRepositoryPort chapters, WorkRepositoryPort works, CommentRepositoryPort comments,
-                                       TeamInvitationRepositoryPort invitations, TeamRepositoryPort teams, UserAccountRepositoryPort users) {
-        return transactional(new NotificationService(notifications, library, chapters, works, comments, invitations, teams, users,
+                                       TeamInvitationRepositoryPort invitations, TeamRepositoryPort teams,
+                                       ScanlationProjectRepositoryPort projects, UserAccountRepositoryPort users) {
+        return transactional(new NotificationService(notifications, library, chapters, works, comments, invitations, teams, projects, users,
                         Clock.systemUTC()),
                 NotifyUseCase.class, transactionManager);
     }

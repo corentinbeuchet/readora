@@ -9,6 +9,7 @@ import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.TaskStageAdvancedEvent;
 import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.WorkflowStage;
 import com.readora.domain.scanlation.WorkflowTask;
@@ -79,6 +80,11 @@ class ScanlationTaskServiceTest {
 
         verify(projectRepository).save(project);
         verify(chapterRepository, never()).save(any());
+        ArgumentCaptor<TaskStageAdvancedEvent> event = ArgumentCaptor.forClass(TaskStageAdvancedEvent.class);
+        verify(eventPublisher).publish(event.capture());
+        assertThat(event.getValue().taskId()).isEqualTo(task.getId());
+        assertThat(event.getValue().stage()).isEqualTo(WorkflowStage.RAW_UPLOADED);
+        assertThat(event.getValue().by()).isEqualTo(leaderId);
     }
 
     @Test
@@ -124,7 +130,7 @@ class ScanlationTaskServiceTest {
         UserId leaderId = UserId.of("leader-1");
         Team team = Team.create("Asura Scans", null, leaderId);
         ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), team.getId());
-        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"), pages(20));
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"), pages(20), leaderId);
         task.advanceStage(WorkflowStage.QC_REVIEW);
 
         when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
@@ -143,7 +149,7 @@ class ScanlationTaskServiceTest {
         UserId leaderId = UserId.of("leader-1");
         Team team = Team.create("Asura Scans", null, leaderId);
         ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), team.getId());
-        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"), pages(3));
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"), pages(3), leaderId);
         task.advanceStage(WorkflowStage.QC_REVIEW);
         when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
         when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
@@ -181,7 +187,7 @@ class ScanlationTaskServiceTest {
         UserId leaderId = UserId.of("leader-1");
         Team team = Team.create("Asura Scans", null, leaderId);
         ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), team.getId());
-        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"), pages(20));
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"), pages(20), leaderId);
         task.advanceStage(WorkflowStage.TRANSLATING);
 
         when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
@@ -236,5 +242,24 @@ class ScanlationTaskServiceTest {
 
         assertThatThrownBy(() -> taskService.uploadChapterTask(projectId, ChapterNumber.of("1"), pages(20), leaderId)).isInstanceOf(DomainValidationException.class)
                 .hasMessageContaining("already exists");
+    }
+    @Test
+    @DisplayName("Submitting work tells the next stage: the event comes from the mutated board, not the saved copy")
+    void submitPublishesTheStageEvent() {
+        UserId leaderId = UserId.of("leader-1");
+        Team team = Team.create("Asura Scans", null, leaderId);
+        ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), team.getId());
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"));
+        task.advanceStage(WorkflowStage.TRANSLATING);
+        when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
+        when(projectRepository.save(any(ScanlationProject.class))).thenAnswer(i -> rebuilt(i.getArgument(0)));
+
+        taskService.submitWork(project.getId(), task.getId(), leaderId, pages(2));
+
+        ArgumentCaptor<TaskStageAdvancedEvent> event = ArgumentCaptor.forClass(TaskStageAdvancedEvent.class);
+        verify(eventPublisher).publish(event.capture());
+        assertThat(event.getValue().stage()).isEqualTo(WorkflowStage.TYPESETTING);
+        assertThat(event.getValue().by()).isEqualTo(leaderId);
     }
 }

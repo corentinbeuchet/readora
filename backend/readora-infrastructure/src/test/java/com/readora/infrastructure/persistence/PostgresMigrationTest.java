@@ -254,7 +254,7 @@ class PostgresMigrationTest {
         UserId leader = UserId.of("pg-leader");
         Team team = teamRepository.save(Team.create("PG Pages Team " + java.util.UUID.randomUUID(), null, leader));
         ScanlationProject created = ScanlationProject.create("PG Task Pages", work.getId(), team.getId());
-        WorkflowTask task = created.addChapterTask(ChapterNumber.of("1"), taskPages("raw", 3));
+        WorkflowTask task = created.addChapterTask(ChapterNumber.of("1"), taskPages("raw", 3), leader);
         projectRepository.save(created);
 
         ScanlationProject loaded = projectRepository.findById(created.getId()).orElseThrow();

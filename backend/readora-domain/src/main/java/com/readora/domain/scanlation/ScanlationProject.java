@@ -82,11 +82,19 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
                 .orElseThrow(() -> new DomainValidationException("User " + userId + " is not a member of project " + name));
     }
 
+    /// A task with no pages yet, as fixtures build a board (nobody is told about it).
     public WorkflowTask addChapterTask(ChapterNumber chapterNumber) {
-        return addChapterTask(chapterNumber, List.of());
+        return addTask(chapterNumber, List.of());
     }
 
-    public WorkflowTask addChapterTask(ChapterNumber chapterNumber, List<PageAsset> rawPages) {
+    /// Puts a raw chapter on the board; the members who clean are told (`TaskStageAdvancedEvent`).
+    public WorkflowTask addChapterTask(ChapterNumber chapterNumber, List<PageAsset> rawPages, UserId uploadedBy) {
+        WorkflowTask task = addTask(chapterNumber, rawPages);
+        registerEvent(TaskStageAdvancedEvent.now(getId(), task.getId(), task.getStage(), uploadedBy));
+        return task;
+    }
+
+    private WorkflowTask addTask(ChapterNumber chapterNumber, List<PageAsset> rawPages) {
         if (findTaskByChapter(chapterNumber).isPresent()) {
             throw DomainValidationException.withCode(ErrorCodes.TASK_ALREADY_EXISTS, "Task for chapter " + chapterNumber + " already exists in project " + name);
         }
@@ -151,6 +159,7 @@ public class ScanlationProject extends AggregateRoot<ProjectId> {
                 : current.nextStage();
         task.advanceStage(next);
         this.updatedAt = Instant.now();
+        registerEvent(TaskStageAdvancedEvent.now(getId(), taskId, next, userId));
     }
 
     /// Final QC approval: moves a task from `QC_REVIEW` to `PUBLISHED`.

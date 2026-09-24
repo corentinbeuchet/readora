@@ -2,7 +2,10 @@ package com.readora.application.port.in;
 
 import com.readora.domain.common.UserId;
 import com.readora.domain.notification.Notification;
+import com.readora.domain.scanlation.ProjectId;
+import com.readora.domain.scanlation.TaskId;
 import com.readora.domain.scanlation.TeamInvitationId;
+import com.readora.domain.scanlation.WorkflowStage;
 import com.readora.domain.social.CommentId;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.WorkId;
@@ -21,6 +24,10 @@ public interface NotifyUseCase {
 
     /// Tells a reader a team invited them (only while the invitation still waits for their answer).
     void notifyInvitation(TeamInvitationId invitationId);
+
+    /// Tells the members who work on the task's stage that a chapter waits for them, except `by` (who put it
+    /// there); when nobody holds that role, the team's leaders. Nothing when the task has moved on since.
+    void notifyTaskReady(ProjectId projectId, TaskId taskId, WorkflowStage stage, UserId by);
 
     List<Notification> recent(UserId userId);
 
