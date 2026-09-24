@@ -33,10 +33,13 @@ public interface ManageListsUseCase {
     /// A published list, or my own draft.
     ///
     /// @throws com.readora.domain.common.NotFoundException otherwise
+    @ReadOnly
     ListView get(@Nullable UserId viewer, UUID listId);
 
+    @ReadOnly
     List<ListView> top();
 
+    @ReadOnly
     List<ListView> mine(UserId ownerId);
 
     /// @return the list's upvotes

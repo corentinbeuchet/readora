@@ -1,5 +1,6 @@
 package com.readora.infrastructure.persistence;
 
+import com.readora.application.port.in.ReadOnly;
 import com.readora.domain.common.UserId;
 import com.readora.domain.common.ConcurrentModificationDomainException;
 import com.readora.domain.scanlation.ScanlationProject;
@@ -16,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.Set;
@@ -42,6 +44,14 @@ class UseCaseTransactionsTest {
     /// Stand-in for a `port.in` interface.
     interface TwoStepUseCase {
         void run(Work first, Work second);
+    }
+
+    /// A use case with a query marked [ReadOnly] and a command.
+    interface QueryAndCommandUseCase {
+        @ReadOnly
+        boolean query();
+
+        boolean command();
     }
 
     @Autowired
@@ -86,6 +96,25 @@ class UseCaseTransactionsTest {
 
         assertThat(workRepository.findById(first.getId())).isPresent();
         assertThat(workRepository.findById(second.getId())).isPresent();
+    }
+
+    @Test
+    @DisplayName("A method marked read-only runs in a read-only transaction; the others run read-write")
+    void readOnlyMethodsRunReadOnly() {
+        QueryAndCommandUseCase useCase = UseCaseTransactions.transactional(new QueryAndCommandUseCase() {
+            @Override
+            public boolean query() {
+                return TransactionSynchronizationManager.isCurrentTransactionReadOnly();
+            }
+
+            @Override
+            public boolean command() {
+                return TransactionSynchronizationManager.isCurrentTransactionReadOnly();
+            }
+        }, QueryAndCommandUseCase.class, transactionManager);
+
+        assertThat(useCase.query()).isTrue();
+        assertThat(useCase.command()).isFalse();
     }
 
     @Test

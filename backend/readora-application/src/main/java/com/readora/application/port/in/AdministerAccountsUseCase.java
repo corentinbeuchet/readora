@@ -16,6 +16,7 @@ public interface AdministerAccountsUseCase {
     int MAX_SUSPENSION_DAYS = 365;
 
     /// Accounts whose username or email starts with `query`.
+    @ReadOnly
     List<UserAccount> search(UserId actorId, String query);
 
     UserAccount assignRole(UserId actorId, UserId accountId, Role role);

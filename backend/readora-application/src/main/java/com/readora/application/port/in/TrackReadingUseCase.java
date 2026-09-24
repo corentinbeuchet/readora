@@ -40,8 +40,10 @@ public interface TrackReadingUseCase {
     ChapterRead recordRead(UserId userId, ChapterId chapterId, boolean finished);
 
     /// The series the reader read most recently, newest first, with the last chapter read in each.
+    @ReadOnly
     List<HistoryItem> history(UserId userId, int limit);
 
+    @ReadOnly
     WorkProgress progress(UserId userId, WorkId workId);
 
     /// "Mark all previous as read": every chapter number before this one becomes finished (one version each, by the

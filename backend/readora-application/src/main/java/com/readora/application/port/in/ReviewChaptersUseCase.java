@@ -18,6 +18,7 @@ public interface ReviewChaptersUseCase {
     /// The longest-waiting first.
     ///
     /// @throws com.readora.domain.common.AccessDeniedDomainException unless the actor can moderate
+    @ReadOnly
     List<WaitingChapter> waiting(UserId actorId);
 
     /// Publishes the chapter; its series' readers are told.

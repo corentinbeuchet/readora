@@ -56,7 +56,7 @@ public class HexagonalArchitectureArchTest {
     @ArchTest
     public static final ArchRule inbound_ports_are_use_cases =
             classes().that().resideInAPackage("..application.port.in..").and().areTopLevelClasses()
-                    .and().doNotHaveSimpleName("package-info")
+                    .and().doNotHaveSimpleName("package-info").and().areNotAnnotations()
                     .should().beInterfaces()
                     .andShould().haveSimpleNameEndingWith("UseCase");
 

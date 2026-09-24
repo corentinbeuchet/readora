@@ -16,11 +16,13 @@ public interface ReaderInteractionUseCase {
     UpvoteOutcome upvoteComment(CommentId commentId, UserId voterId);
 
     record UpvoteOutcome(CommentId commentId, int upvotes, boolean counted) {}
+    @ReadOnly
     List<ChapterComment> getCommentsForChapter(ChapterId chapterId);
 
     int MAX_TOP_COMMENTS = 10;
 
     /// The best comments shown at the end of a chapter (US-07): visible top-level comments without spoilers,
     /// most upvoted first (oldest first on a tie), at most `limit` (clamped to 1..[#MAX_TOP_COMMENTS]).
+    @ReadOnly
     List<ChapterComment> topComments(ChapterId chapterId, int limit);
 }

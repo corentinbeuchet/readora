@@ -37,5 +37,6 @@ public interface ReadChapterUseCase {
 
     /// @throws com.readora.domain.common.NotFoundException if the chapter or its work doesn't exist
     /// @throws com.readora.domain.common.DomainValidationException `CHAPTER_NOT_PUBLISHED` for unpublished chapters
+    @ReadOnly
     ChapterReading readChapter(ChapterId chapterId, UserId readerId, String viewMode);
 }

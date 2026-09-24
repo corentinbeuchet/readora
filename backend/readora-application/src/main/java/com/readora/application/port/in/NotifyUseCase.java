@@ -32,8 +32,10 @@ public interface NotifyUseCase {
     /// Tells the leaders of the chapter's team that a moderator sent it back (only while it is still a draft).
     void notifyChapterSentBack(ChapterId chapterId);
 
+    @ReadOnly
     List<Notification> recent(UserId userId);
 
+    @ReadOnly
     long unreadCount(UserId userId);
 
     void markAllRead(UserId userId);

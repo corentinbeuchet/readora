@@ -23,6 +23,7 @@ public interface ModerateCommentsUseCase {
     CommentReport report(UserId reporterId, CommentId commentId, CommentReportReason reason);
 
     /// @throws com.readora.domain.common.AccessDeniedDomainException unless the actor can moderate
+    @ReadOnly
     List<QueueItem> queue(UserId actorId);
 
     /// Hides the comment and closes every open report on it.

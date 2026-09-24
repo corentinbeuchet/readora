@@ -33,11 +33,15 @@ public interface DiscoverUseCase {
 
     /// @param viewer the signed-in reader, if any (read marks)
     /// @param onlyMine only the viewer's library and followed teams; needs a viewer
+    @ReadOnly
     List<Release> latest(@Nullable UserId viewer, boolean onlyMine, int page);
 
+    @ReadOnly
     List<RankedWork> popular(Period period);
 
+    @ReadOnly
     List<RankedWork> topRated();
 
+    @ReadOnly
     Optional<Work> surprise(CatalogQuery query);
 }

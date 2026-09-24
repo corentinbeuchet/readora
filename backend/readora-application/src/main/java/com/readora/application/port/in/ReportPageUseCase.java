@@ -20,6 +20,7 @@ public interface ReportPageUseCase {
 
     /// @throws com.readora.domain.common.NotFoundException if the project doesn't exist
     /// @throws com.readora.domain.common.AccessDeniedDomainException unless the actor is a member of the project or an admin
+    @ReadOnly
     List<PageReport> openReports(UserId actorId, ProjectId projectId);
 
     /// @throws com.readora.domain.common.NotFoundException if the report doesn't exist

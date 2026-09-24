@@ -23,12 +23,14 @@ public interface ManageLibraryUseCase {
     /// @throws com.readora.domain.common.NotFoundException if the work doesn't exist
     LibraryEntry save(UserId userId, WorkId workId, @Nullable ReadingStatus status);
 
+    @ReadOnly
     Optional<LibraryEntry> find(UserId userId, WorkId workId);
 
     /// @throws com.readora.domain.common.NotFoundException if the series is not in the reader's library
     void remove(UserId userId, WorkId workId);
 
     /// The reader's library, most recently updated first; a `null` status lists everything.
+    @ReadOnly
     List<LibraryItem> list(UserId userId, @Nullable ReadingStatus status);
 
     /// @param lastChapterRead number of the last chapter opened in the series, `null` if none
@@ -36,5 +38,6 @@ public interface ManageLibraryUseCase {
     }
 
     /// My whole library with the last chapter read in each series (US-12 export).
+    @ReadOnly
     List<ExportRow> export(UserId userId);
 }

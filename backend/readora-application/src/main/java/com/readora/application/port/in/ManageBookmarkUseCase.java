@@ -10,6 +10,8 @@ import java.util.Optional;
 
 public interface ManageBookmarkUseCase {
     Bookmark updateProgress(UserId userId, WorkId workId, ChapterId chapterId, int pageIndex);
+    @ReadOnly
     Optional<Bookmark> getBookmark(UserId userId, WorkId workId);
+    @ReadOnly
     List<Bookmark> listBookmarks(UserId userId);
 }

@@ -19,5 +19,6 @@ public interface ExportMyDataUseCase {
     }
 
     /// @throws com.readora.domain.common.NotFoundException if the account no longer exists
+    @ReadOnly
     AccountExport export(UserId userId);
 }

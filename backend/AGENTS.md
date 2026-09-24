@@ -41,6 +41,8 @@
   `DomainServiceConfig`, so each use-case call is one transaction (application layer stays Spring-free). Register new
   use cases the same way; pure I/O use cases (e.g. `ManageAssetsUseCase`) are not wrapped so they don't hold a DB
   connection. `InvalidCredentialsException` commits (security side effects stick).
+  A use-case method that only reads is marked `@ReadOnly` (`port.in.ReadOnly`) and runs read-only: no flush, no
+  dirty-checking snapshots, and PostgreSQL refuses writes. Never mark a method that saves anything, even on one path.
   Validate/mutate all aggregates in memory before the first save. External calls (S3) must be idempotent.
 - Every write on a resource checks ownership/membership, not just the global permission (e.g. publisher must belong to the work's project).
   Membership lives on the `Team` (one roster, roles valid for all its series), never on the `ScanlationProject` (a
@@ -95,7 +97,8 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
   Ordered collections carry `@OrderBy` (pages, chapters).
 - Every association declares `fetch = FetchType.LAZY` explicitly (`@ManyToOne`/`@OneToOne` default to EAGER); load what
   a use case needs with `JOIN FETCH` or an entity graph. Keep `spring.jpa.open-in-view=false`.
-- `@Transactional` at the use-case boundary (see Application services), `readOnly = true` for queries; never on controllers.
+- Transactions at the use-case boundary (see Application services; queries `@ReadOnly`) and `readOnly = true` on
+  adapter query methods; never on controllers.
 - Caches (`CacheConfig`, Caffeine per instance, `spring.cache.*`) only for read models that may be minutes old
   (rankings: `DiscoveryQueryAdapter.POPULAR_WORKS_CACHE`, 5 minutes); the caller rounds time arguments so requests share
   entries. Tests run with `spring.cache.type: none`; each cache has its own test (model: `RankingsCacheTest`).
@@ -221,7 +224,6 @@ or `git log --grep "review-2026-09-19/R<n>"` finds a fixed one; the rules above 
 Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = reported with path:line, re-check before acting):
 - R13 `POST /storage/upload` is `isAuthenticated()` only (any reader, 50 MB); `AssetService` skips the content-type
   allow-list when the type is blank and allows `application/octet-stream`.
-- R14 `UseCaseTransactions` never sets `readOnly`: query-only use cases run read-write, adapters' `readOnly = true` is ignored.
 - Same sweep as R4 still to do (survey): uncoded reader-visible rules in `WorkManagementService`, `ReaderSocialService`.
 - R19/R20 (survey) Missing index `refresh_tokens(expires_at)`; `%text%` search on unindexed title/author. (The rankings
   query was rewritten and indexed: V31.)

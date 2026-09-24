@@ -48,9 +48,11 @@ public interface CommunityUseCase {
     }
 
     /// @throws com.readora.domain.common.NotFoundException if there is no such reader
+    @ReadOnly
     PublicProfile profile(String username);
 
     /// @throws com.readora.domain.common.NotFoundException if there is no such team
+    @ReadOnly
     TeamPage team(TeamId teamId, @Nullable UserId viewer);
 
     /// @throws com.readora.domain.common.NotFoundException if there is no such team
@@ -62,5 +64,6 @@ public interface CommunityUseCase {
     ///
     /// @throws com.readora.domain.common.DomainValidationException if `text` (trimmed) is shorter than
     ///         [#READER_SEARCH_MIN] or longer than [#READER_SEARCH_MAX] characters
+    @ReadOnly
     List<ReaderRef> findReaders(String text);
 }

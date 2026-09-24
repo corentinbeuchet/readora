@@ -29,10 +29,13 @@ public interface RateWorkUseCase {
     /// @throws com.readora.domain.common.NotFoundException if the work doesn't exist
     WorkRating review(UserId userId, WorkId workId, int score, Review review);
 
+    @ReadOnly
     Optional<WorkRating> myRating(UserId userId, WorkId workId);
 
+    @ReadOnly
     RatingSummary summary(WorkId workId);
 
+    @ReadOnly
     List<ReviewItem> reviews(WorkId workId);
 
     /// @return the review's helpful votes

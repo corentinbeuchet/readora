@@ -9,5 +9,6 @@ import java.util.Optional;
 public interface CheckAccountStandingUseCase {
 
     /// The account's standing now; empty when it no longer exists or was deleted.
+    @ReadOnly
     Optional<AccountStanding> standingOf(UserId userId);
 }

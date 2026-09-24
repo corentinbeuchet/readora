@@ -55,6 +55,7 @@ public interface ManageTeamUseCase {
     /// The team's invitations still waiting for an answer, oldest first (leaders and admins).
     ///
     /// @throws com.readora.domain.common.AccessDeniedDomainException unless the actor leads the team (or is an admin)
+    @ReadOnly
     List<InvitationView> pendingInvitations(UserId actorId, TeamId teamId);
 
     /// Withdraws a pending invitation of the team.
@@ -64,6 +65,7 @@ public interface ManageTeamUseCase {
     void cancelInvitation(UserId actorId, TeamInvitationId invitationId);
 
     /// The invitations waiting for the user's answer, newest first.
+    @ReadOnly
     List<InvitationView> myInvitations(UserId userId);
 
     /// The invited reader joins the team with the invited roles.
@@ -95,6 +97,7 @@ public interface ManageTeamUseCase {
     ScanlationProject setBoard(UserId actorId, ProjectId projectId, boolean enabled);
 
     /// The teams the user is a member of, by name.
+    @ReadOnly
     List<MyTeam> myTeams(UserId userId);
 
     /// A task of one of my teams' boards that I can take on (open, in a stage my roles cover) or that I hold.
@@ -103,5 +106,6 @@ public interface ManageTeamUseCase {
 
     /// What waits for the user across their teams' task boards that are on: the tasks they hold first, then the open
     /// ones in stages their roles cover (a leader covers every stage), by series title and chapter number.
+    @ReadOnly
     List<WaitingTask> waitingFor(UserId userId);
 }

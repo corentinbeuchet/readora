@@ -50,17 +50,21 @@ public interface BrowseCatalogUseCase {
     /// Works matching `query`, most recently updated first. Page and size are clamped to valid values.
     ///
     /// @throws com.readora.domain.common.DomainValidationException if the text or the genre lists are too long
+    @ReadOnly
     Page<Work> searchWorks(CatalogQuery query, int page, int size);
 
     /// Every genre used in the catalog, sorted, to build the genre filter.
+    @ReadOnly
     List<String> listGenres();
 
+    @ReadOnly
     Optional<Work> getWork(WorkId workId);
     /// A published chapter with the team that translated it.
     record CreditedChapter(ChapterSummary chapter, TeamCredit team) {
     }
 
     /// Published chapters of a series in reading order.
+    @ReadOnly
     List<CreditedChapter> listPublishedChapters(WorkId workId);
     /// A team's task board for one series, with the team whose roster works on it and the usernames of the people
     /// on it (members and task assignees), so nobody is shown by account id.
@@ -78,8 +82,10 @@ public interface BrowseCatalogUseCase {
     /// A task board, for the members of its team (and admins).
     ///
     /// @throws com.readora.domain.common.AccessDeniedDomainException if the viewer is not on the team
+    @ReadOnly
     Optional<ProjectBoard> getProject(ProjectId projectId, UserId viewer);
 
     /// The task boards of a series that the viewer's teams run (every board for an admin).
+    @ReadOnly
     List<ProjectBoard> listProjectsByWork(WorkId workId, UserId viewer);
 }
