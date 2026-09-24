@@ -261,7 +261,7 @@ describe('ChapterList (US-12)', () => {
   }
 
   function thenRowIsRead(row: number): void {
-    expect(text(rows()[row - 1])).toContain('✓ Read');
+    expect(text(rows()[row - 1])).toContain('Read');
   }
 
   function thenRowIsNextUp(row: number): void {

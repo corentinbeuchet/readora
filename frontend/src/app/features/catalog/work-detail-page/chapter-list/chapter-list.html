@@ -1,7 +1,7 @@
 <div class="list-tools">
   @if (teams().length > 1) {
     <label class="field team-filter">
-      <span i18n="@@catalog.work.chapters.filter.label">Translated by</span>
+      <span i18n="@@catalog.work.chapters.filter.showBy">Show chapters by</span>
       <select #teamFilter (change)="filterByTeam(teamFilter.value)">
         <option value="" [selected]="!filteredTeam()" i18n="@@catalog.work.chapters.filter.all">All teams</option>
         @for (share of teams(); track share.team.id) {
@@ -25,7 +25,7 @@
         <span class="chapter-title">
           {{ chapter.title }}
           @if (row.read) {
-            <span class="chapter-state" i18n="@@catalog.work.chapters.read">✓ Read</span>
+            <span class="chapter-state"><app-icon name="check" /><span i18n="@@catalog.work.chapters.readState">Read</span></span>
           } @else if (row.next) {
             <span class="chapter-state chapter-state-next" i18n="@@catalog.work.chapters.nextUp">Next up</span>
           }

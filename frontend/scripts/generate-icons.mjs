@@ -14,6 +14,7 @@ const TARGET = resolve(ROOT, 'src/app/shared/ui/icon/icon-paths.ts');
 const ICONS = [
   'arrow-big-up',
   'bell',
+  'check',
   'chevron-left',
   'chevron-right',
   'clock',

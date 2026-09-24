@@ -1,12 +1,12 @@
 .ratings {
-  margin-top: 2rem;
+  margin-block-start: var(--space-7);
 }
 
 .rating-summary {
   display: flex;
   align-items: baseline;
-  gap: 0.35rem;
-  margin: 0.5rem 0 1rem;
+  gap: var(--space-1);
+  margin: var(--space-2) 0 var(--space-4);
 
   .score {
     color: var(--star);
@@ -27,7 +27,7 @@
 .score-options {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  gap: var(--space-1);
 }
 
 // Native radios, drawn as numbered buttons; focus and selection stay visible.
@@ -47,7 +47,7 @@
     padding: 0.35rem 0;
     text-align: center;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     background: var(--surface-2);
   }
 
@@ -94,4 +94,11 @@
   align-items: center;
   gap: 0.5rem;
   font-size: var(--fs-sm);
+}
+
+.review-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
 }

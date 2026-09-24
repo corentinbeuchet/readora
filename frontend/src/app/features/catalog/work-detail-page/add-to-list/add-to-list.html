@@ -1,5 +1,5 @@
 <div class="add-to-list">
-  <button type="button" class="btn btn-ghost" aria-controls="add-to-list-panel" [attr.aria-expanded]="open()" (click)="toggle()" i18n="@@catalog.addToList.open">Add to a list</button>
+  <button type="button" class="btn" aria-controls="add-to-list-panel" [attr.aria-expanded]="open()" (click)="toggle()" i18n="@@catalog.addToList.open">Add to a list</button>
   <div id="add-to-list-panel" class="add-to-list-panel" [hidden]="!open()">
     @if (mine.error()) {
       <app-load-error (retry)="mine.reload()" i18n="@@catalog.addToList.loadError">Your lists could not be loaded.</app-load-error>

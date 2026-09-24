@@ -1,3 +1,4 @@
+import { Icon } from '@app/shared/ui/icon/icon';
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { FormField, form, maxLength, required, submit } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
@@ -22,7 +23,7 @@ interface ReviewModel {
 /** Rating summary, my 1–10 rating, my review and the community's reviews of a series (US-09). */
 @Component({
   selector: 'app-work-ratings',
-  imports: [DecimalPipe, LoadError, FieldErrors, AriaInvalidDirective, FormField, HasPermissionDirective],
+  imports: [Icon, DecimalPipe, LoadError, FieldErrors, AriaInvalidDirective, FormField, HasPermissionDirective],
   templateUrl: './work-ratings.html',
   styleUrl: './work-ratings.scss'
 })

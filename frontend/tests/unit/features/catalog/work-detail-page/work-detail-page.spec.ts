@@ -287,7 +287,7 @@ describe('WorkDetailPage', () => {
 
     function thenChapterIsRead(chapter: number): void {
       expect(chapterLink(chapter).classList).toContain('chapter-read');
-      expect(chapterLink(chapter).textContent).toContain('✓ Read');
+      expect(chapterLink(chapter).textContent).toContain('Read');
     }
 
     function thenChapterIsUnread(chapter: number): void {

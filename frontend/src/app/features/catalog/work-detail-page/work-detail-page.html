@@ -9,7 +9,7 @@
   } @else if (work.value(); as w) {
     <article class="work-detail">
       <app-work-cover class="work-cover" [src]="w.coverImageUrl" [thumbnail]="w.coverThumbnailUrl" alt="Cover of {{ w.title }}" i18n-alt="@@catalog.work.coverAlt" width="240" height="336" priority />
-      <div class="work-body">
+      <header class="work-head">
         <h1>{{ w.title }}</h1>
         <p class="work-meta">
           <span class="badge">{{ typeLabels[w.type] }}</span>
@@ -18,9 +18,9 @@
             <span class="badge">{{ genre }}</span>
           }
         </p>
-        <p class="synopsis">{{ w.synopsis }}</p>
-        <app-work-fact-list [work]="w" />
-
+      </header>
+      <div class="work-body">
+        <!-- What to do comes before the description: on a phone the reader sees "Continue" without scrolling. -->
         <div class="work-actions">
           @if (resumeBookmark(); as bm) {
             <a [routerLink]="['/read', bm.chapterId]" [queryParams]="{ page: bm.page }" class="btn btn-primary" i18n="@@catalog.work.continueBookmark">Continue reading (page {{ bm.page }})</a>
@@ -36,8 +36,16 @@
           }
 
           <ng-container *appHasPermission="'LIBRARY_USE'">
-            @if (libraryStatus(); as status) {
-              <label class="field library-status">
+            @if (!libraryStatus()) {
+              <button type="button" class="btn" [disabled]="library.busy()" (click)="addToLibrary()"><app-icon name="plus" /><span i18n="@@catalog.work.addToLibraryButton">Add to library</span></button>
+            }
+          </ng-container>
+        </div>
+        <!-- Once in the library: its settings, quieter, on their own line. -->
+        <ng-container *appHasPermission="'LIBRARY_USE'">
+          @if (libraryStatus(); as status) {
+            <div class="library-row">
+              <label class="library-status">
                 <span i18n="@@catalog.work.libraryStatus">In my library</span>
                 <select [disabled]="library.busy()" (change)="changeLibraryStatus($event)">
                   @for (option of statuses; track option) {
@@ -50,15 +58,15 @@
                 <ng-container i18n="@@catalog.work.notify">Notify me of new chapters</ng-container>
               </label>
               <button type="button" class="btn btn-link" [disabled]="library.busy()" (click)="removeFromLibrary()" i18n="@@catalog.work.removeFromLibrary">Remove from library</button>
-            } @else {
-              <button type="button" class="btn" [disabled]="library.busy()" (click)="addToLibrary()" i18n="@@catalog.work.addToLibrary">+ Add to library</button>
-            }
-          </ng-container>
-        </div>
+            </div>
+          }
+        </ng-container>
         @if (library.error(); as message) {
           <p class="form-error" role="alert">{{ message }}</p>
         }
         <app-add-to-list *appHasPermission="'LIBRARY_USE'" [workId]="w.id" />
+        <p class="synopsis">{{ w.synopsis }}</p>
+        <app-work-fact-list [work]="w" />
       </div>
     </article>
 
@@ -84,7 +92,11 @@
     @defer (on viewport; hydrate on viewport) {
       <app-work-ratings [workId]="w.id" />
     } @placeholder {
-      <p class="muted" i18n="@@catalog.work.ratingsPlaceholder">Ratings and reviews</p>
+      <!-- The same frame as the loaded section (heading and room), so nothing jumps when it arrives. -->
+      <section class="ratings-placeholder" aria-labelledby="ratings-placeholder-heading">
+        <h2 id="ratings-placeholder-heading" i18n="@@catalog.ratings.heading">Ratings &amp; reviews</h2>
+        <span class="skeleton ratings-skeleton" aria-hidden="true"></span>
+      </section>
     }
   }
 </section>

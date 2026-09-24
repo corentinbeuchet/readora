@@ -75,10 +75,15 @@
   }
 }
 
+// The accent is kept for the chapter to read next (.chapter-next), so that one stands out.
 .chapter-number {
   font-weight: var(--fw-bold);
-  color: var(--accent);
+  color: var(--text);
   font-variant-numeric: tabular-nums;
+}
+
+.chapter-next .chapter-number {
+  color: var(--accent);
 }
 
 .chapter-title {
@@ -102,7 +107,7 @@
   color: var(--text);
 }
 
-// Read chapters are muted (still AA contrast) and labelled "✓ Read"; the next one is outlined and labelled.
+// Read chapters are muted (still AA contrast) and labelled "Read" with a check; the next one is outlined and labelled.
 .chapter-read {
   .chapter-number,
   .chapter-title,
@@ -113,6 +118,9 @@
 }
 
 .chapter-state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
   margin-inline-start: var(--space-2);
   font-size: var(--fs-sm);
   color: var(--muted);

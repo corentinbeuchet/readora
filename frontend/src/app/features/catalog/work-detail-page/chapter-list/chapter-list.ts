@@ -1,3 +1,4 @@
+import { Icon } from '@app/shared/ui/icon/icon';
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -15,7 +16,7 @@ const TEAMS_SHOWN = 3;
  */
 @Component({
   selector: 'app-chapter-list',
-  imports: [RouterLink, DatePipe],
+  imports: [Icon, RouterLink, DatePipe],
   templateUrl: './chapter-list.html',
   styleUrl: './chapter-list.scss'
 })

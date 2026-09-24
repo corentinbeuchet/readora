@@ -1,3 +1,4 @@
+import { Icon } from '@app/shared/ui/icon/icon';
 import { Component, computed, effect, inject, input, linkedSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CatalogApi } from '@app/core/api/catalog-api';
@@ -23,7 +24,7 @@ import { WORK_STATUS_LABELS, WORK_TYPE_LABELS } from '@app/core/models/catalog';
 
 @Component({
   selector: 'app-work-detail-page',
-  imports: [WorkCover, LoadError, RouterLink, HasPermissionDirective, WorkRatings, AddToList, ChapterList, WorkTeams, WorkFactList],
+  imports: [Icon, WorkCover, LoadError, RouterLink, HasPermissionDirective, WorkRatings, AddToList, ChapterList, WorkTeams, WorkFactList],
   templateUrl: './work-detail-page.html',
   styleUrl: './work-detail-page.scss'
 })

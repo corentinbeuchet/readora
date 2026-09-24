@@ -84,7 +84,7 @@ async function whenIChooseTheReadingMode(page: Page, mode: 'Vertical' | 'Paged')
 }
 
 async function whenIFilterTheChaptersBy(page: Page, team: PublishingTeam): Promise<void> {
-  await page.getByRole('combobox', { name: 'Translated by' }).selectOption({ label: team.name });
+  await page.getByRole('combobox', { name: 'Show chapters by' }).selectOption({ label: team.name });
   await expect(page).toHaveURL(new RegExp(`team=${team.id}`));
 }
 

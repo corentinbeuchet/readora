@@ -1,53 +1,114 @@
 @use 'breakpoints' as bp;
 
+// Phone: a small cover beside the title, then the actions, then the description; from md the cover takes the left
+// column and everything else stacks beside it.
 .work-detail {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  align-items: flex-start;
-  margin-bottom: 2.5rem;
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  grid-template-areas:
+    'cover head'
+    'body body';
+  align-items: start;
+  gap: var(--space-4);
+  margin-block-end: var(--space-7);
 
   @include bp.from(md) {
-    flex-direction: row;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      'cover head'
+      'cover body';
+    column-gap: var(--space-6);
   }
 }
 
 .work-cover {
-  width: 240px;
-  border-radius: var(--radius);
+  grid-area: cover;
+  inline-size: 100%;
+  border-radius: var(--radius-sm);
   background: var(--surface-2);
 }
 
+.work-head {
+  grid-area: head;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+// Beside the small phone cover the title column is narrow: a long word (a romanised title) must wrap, not overflow.
+.work-head h1 {
+  overflow-wrap: anywhere;
+}
+
 .work-body {
-  flex: 1;
+  grid-area: body;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
 .work-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  margin: 0.75rem 0;
+  gap: var(--space-1);
 }
 
 .synopsis {
   color: var(--muted);
-  line-height: 1.6;
-  margin-bottom: 1.25rem;
+  line-height: var(--lh-text);
+  max-inline-size: var(--measure);
 }
 
 .work-actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 0.75rem;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .up-to-date {
-  align-self: center;
   color: var(--muted);
   font-size: var(--fs-sm);
 }
 
+.library-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  font-size: var(--fs-sm);
+}
+
 .library-status {
-  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--muted);
+
+  // The .field select, compact: this row is secondary to the reading actions.
+  select {
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-strong);
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+  }
+}
+
+.ratings-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-block-start: var(--space-7);
+}
+
+.ratings-skeleton {
+  block-size: 6rem;
 }
