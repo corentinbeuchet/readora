@@ -170,6 +170,8 @@
     "upload.series.team.choose": "Choisissez l'une de vos équipes",
     "upload.series.team.none": "Une nouvelle série appartient à une équipe que vous dirigez. Créez d'abord une équipe : il suffit d'un nom, et vous pourrez inviter d'autres personnes ensuite.",
     "upload.series.team.start": "Créer une équipe",
-    "upload.series.team.required": "Choisissez l'équipe qui traduit la série"
+    "upload.series.team.required": "Choisissez l'équipe qui traduit la série",
+    "upload.success.reviewTitle": "Chapitre envoyé pour examen",
+    "upload.success.reviewText": "Le premier chapitre d'une équipe est vérifié par un modérateur avant que les lecteurs le voient. Le chapitre {$INTERPOLATION} paraîtra dès qu'il sera approuvé, et les chapitres suivants de l'équipe paraîtront directement."
   }
 }

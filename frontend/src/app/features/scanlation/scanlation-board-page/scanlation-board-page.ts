@@ -31,6 +31,8 @@ export class ScanlationBoardPage {
   protected readonly currentProject = computed(() => (this.project.hasValue() ? (this.project.value() ?? null) : null));
   /** Claim / submit / publish: `busyKey` is the task being changed. */
   protected readonly action = asyncAction($localize`:@@scanlation.board.actionError:The action could not be completed`);
+  /** What the last Publish did (out, or waiting for a moderator), announced politely. */
+  protected readonly published = signal('');
   /** The task whose work is being submitted, with where its pages go. */
   protected readonly submitTarget = signal<{ task: WorkflowTask; projectId: string; workId: string } | null>(null);
 
@@ -83,9 +85,15 @@ export class ScanlationBoardPage {
   }
 
   protected async publish(task: WorkflowTask): Promise<void> {
+    this.published.set('');
     await this.run(task, async () => {
-      await firstValueFrom(this.scanlationApi.publishTask(this.requireProjectId(), task.id));
+      const outcome = await firstValueFrom(this.scanlationApi.publishTask(this.requireProjectId(), task.id));
       this.project.update((p) => (p ? withTaskStage(p, task.id, 'PUBLISHED', 'COMPLETED', new Date()) : p));
+      this.published.set(
+        outcome.status === 'PENDING_REVIEW'
+          ? $localize`:@@scanlation.board.sentForReview:Chapter ${task.chapterNumber}:number: is the team's first: a moderator checks it before readers see it.`
+          : $localize`:@@scanlation.board.publishedNow:Chapter ${task.chapterNumber}:number: is out.`
+      );
     });
   }
 

@@ -575,4 +575,11 @@ public class CommunityStepDefinitions {
         return chapters.save(new Chapter(ChapterId.generate(), work.getId(), ChapterNumber.of(number), "Chapter " + number, ChapterStatus.PUBLISHED,
                 List.of(PageAsset.create(1, "p1.webp", null)), project != null ? project.getTeamId() : teams.anyTeam(), now, now, now));
     }
+    /// A team's first chapter waits for a moderator (US-11): this one already has a chapter out, in another series.
+    @Given("{string} has published chapters before")
+    public void hasPublishedBefore(String teamName) {
+        Work earlier = works.save(Work.create(teamName + " earlier series", "", WorkType.MANHWA, "", Set.of()));
+        chapters.save(Chapter.createPublished(earlier.getId(), ChapterNumber.of("1"), "", List.of(PageAsset.create(1, "p1.webp", null)),
+                teamNamed(teamName).getId(), account("mina")));
+    }
 }

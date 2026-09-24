@@ -1,6 +1,5 @@
 package com.readora.acceptance.steps;
 
-import com.readora.domain.common.UserId;
 import com.readora.acceptance.fakes.InMemoryTeamRepository;
 import com.readora.acceptance.fakes.InMemoryWorkRepository;
 import com.readora.application.port.out.ChapterRepositoryPort;
@@ -8,6 +7,8 @@ import com.readora.application.port.out.StoragePort;
 import com.readora.application.service.ChapterReadingService;
 import com.readora.application.service.ReaderSocialService;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.UserId;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.social.Bookmark;
 import com.readora.domain.social.ReadingStatus;
 import com.readora.domain.work.*;
@@ -53,6 +54,16 @@ public class ReaderViewerStepDefinitions {
             @Override
             public List<Chapter> findByWorkId(WorkId workId) {
                 return chapterStore.values().stream().filter(c -> c.getWorkId().equals(workId)).toList();
+            }
+
+            @Override
+            public boolean hasPublishedChapter(TeamId teamId) {
+                return chapterStore.values().stream().anyMatch(c -> c.getTeamId().equals(teamId) && c.isPublished());
+            }
+
+            @Override
+            public List<Chapter> findWaitingForReview(int limit) {
+                return chapterStore.values().stream().filter(Chapter::isWaitingForReview).limit(limit).toList();
             }
 
             @Override

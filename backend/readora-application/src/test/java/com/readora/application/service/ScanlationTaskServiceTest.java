@@ -4,6 +4,7 @@ import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
 import com.readora.application.port.out.TeamRepositoryPort;
+import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.UserId;
@@ -16,6 +17,7 @@ import com.readora.domain.scanlation.WorkflowTask;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.ChapterPublishedEvent;
+import com.readora.domain.work.ChapterStatus;
 import com.readora.domain.work.PageAsset;
 import com.readora.domain.work.WorkId;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,11 +52,14 @@ class ScanlationTaskServiceTest {
     @Mock
     private EventPublisherPort eventPublisher;
 
+    @Mock
+    private UserAccountRepositoryPort users;
+
     private ScanlationTaskService taskService;
 
     @BeforeEach
     void setUp() {
-        taskService = new ScanlationTaskService(projectRepository, teamRepository, chapterRepository, eventPublisher);
+        taskService = new ScanlationTaskService(projectRepository, teamRepository, chapterRepository, eventPublisher, users);
     }
 
     @Test
@@ -137,6 +142,7 @@ class ScanlationTaskServiceTest {
         when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
         when(chapterRepository.findByWorkIdAndChapterNumberAndTeam(project.getWorkId(), ChapterNumber.of("1"), team.getId()))
                 .thenReturn(Optional.empty());
+        when(chapterRepository.hasPublishedChapter(team.getId())).thenReturn(true);
 
         taskService.publishChapterFromQC(project.getId(), task.getId(), leaderId);
 
@@ -155,6 +161,7 @@ class ScanlationTaskServiceTest {
         when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
         when(chapterRepository.findByWorkIdAndChapterNumberAndTeam(project.getWorkId(), ChapterNumber.of("1"), team.getId()))
                 .thenReturn(Optional.empty());
+        when(chapterRepository.hasPublishedChapter(team.getId())).thenReturn(true);
 
         taskService.publishChapterFromQC(project.getId(), task.getId(), leaderId);
 
@@ -261,5 +268,25 @@ class ScanlationTaskServiceTest {
         verify(eventPublisher).publish(event.capture());
         assertThat(event.getValue().stage()).isEqualTo(WorkflowStage.TYPESETTING);
         assertThat(event.getValue().by()).isEqualTo(leaderId);
+    }
+
+    @Test
+    @DisplayName("A team's first chapter from QC waits for a moderator: hidden from readers, and nobody is told yet")
+    void aTeamsFirstChapterFromQcWaitsForReview() {
+        UserId leaderId = UserId.of("leader-1");
+        Team team = Team.create("Asura Scans", null, leaderId);
+        ScanlationProject project = ScanlationProject.create("Asura Scans", WorkId.generate(), team.getId());
+        WorkflowTask task = project.addChapterTask(ChapterNumber.of("1"), pages(3), leaderId);
+        task.advanceStage(WorkflowStage.QC_REVIEW);
+        when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
+        when(chapterRepository.findByWorkIdAndChapterNumberAndTeam(project.getWorkId(), ChapterNumber.of("1"), team.getId()))
+                .thenReturn(Optional.empty());
+        when(chapterRepository.hasPublishedChapter(team.getId())).thenReturn(false);
+
+        Chapter chapter = taskService.publishChapterFromQC(project.getId(), task.getId(), leaderId);
+
+        assertThat(chapter.getStatus()).isEqualTo(ChapterStatus.PENDING_REVIEW);
+        verify(eventPublisher, never()).publish(any(ChapterPublishedEvent.class));
     }
 }

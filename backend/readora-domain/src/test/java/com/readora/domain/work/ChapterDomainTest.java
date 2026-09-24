@@ -1,8 +1,9 @@
 package com.readora.domain.work;
 
+import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.TeamId;
-import com.readora.domain.common.DomainValidationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -51,5 +52,59 @@ class ChapterDomainTest {
         assertThat(chapter.isPublished()).isTrue();
         assertThat(chapter.getPublishedAt()).isNotNull();
         assertThat(chapter.getDomainEvents()).singleElement().isInstanceOf(ChapterPublishedEvent.class);
+    }
+    @Test
+    @DisplayName("A chapter released for review waits hidden, and nobody is told until a moderator approves it")
+    void aReviewedChapterGoesLiveOnApproval() {
+        Chapter chapter = aDraftWithPages();
+
+        chapter.release(UserId.of("leader"), true);
+
+        assertThat(chapter.getStatus()).isEqualTo(ChapterStatus.PENDING_REVIEW);
+        assertThat(chapter.isPublished()).isFalse();
+        assertThat(chapter.pollDomainEvents()).isEmpty();
+
+        chapter.approve();
+
+        assertThat(chapter.isPublished()).isTrue();
+        assertThat(chapter.getPublishedAt()).isNotNull();
+        assertThat(chapter.pollDomainEvents()).singleElement().isInstanceOf(ChapterPublishedEvent.class);
+    }
+
+    @Test
+    @DisplayName("A chapter sent back becomes a draft again and its team is told; it can then be released again")
+    void aChapterSentBackCanComeAgain() {
+        Chapter chapter = aDraftWithPages();
+        chapter.release(UserId.of("leader"), true);
+
+        chapter.sendBack();
+
+        assertThat(chapter.getStatus()).isEqualTo(ChapterStatus.DRAFT);
+        assertThat(chapter.pollDomainEvents()).singleElement().isInstanceOf(ChapterSentBackEvent.class);
+        chapter.release(UserId.of("leader"), true);
+        assertThat(chapter.isWaitingForReview()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Only a chapter waiting for review can be approved or sent back, and a waiting chapter is not released twice")
+    void reviewNeedsAWaitingChapter() {
+        Chapter draft = aDraftWithPages();
+        Chapter published = aDraftWithPages();
+        published.release(UserId.of("leader"), false);
+        Chapter waiting = aDraftWithPages();
+        waiting.release(UserId.of("leader"), true);
+
+        assertThatThrownBy(draft::approve).isInstanceOfSatisfying(DomainValidationException.class,
+                e -> assertThat(e.code()).isEqualTo(ErrorCodes.CHAPTER_NOT_WAITING));
+        assertThatThrownBy(published::sendBack).isInstanceOfSatisfying(DomainValidationException.class,
+                e -> assertThat(e.code()).isEqualTo(ErrorCodes.CHAPTER_NOT_WAITING));
+        assertThatThrownBy(() -> waiting.release(UserId.of("leader"), false)).isInstanceOf(DomainValidationException.class);
+        assertThat(published.isPublished()).isTrue();
+    }
+
+    private static Chapter aDraftWithPages() {
+        Chapter chapter = Chapter.createDraft(WorkId.generate(), ChapterNumber.of("1"), "Ch 1", TeamId.generate());
+        chapter.updatePages(List.of(PageAsset.create(1, "p1.webp", null)));
+        return chapter;
     }
 }

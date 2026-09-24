@@ -1,6 +1,5 @@
 package com.readora.application.service;
 
-import com.readora.domain.common.UserId;
 import com.readora.application.port.in.DirectPublishChapterUseCase;
 import com.readora.application.port.in.ManageWorkUseCase;
 import com.readora.application.port.out.ChapterRepositoryPort;
@@ -13,12 +12,14 @@ import com.readora.domain.common.AccessDeniedDomainException;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.NotFoundException;
+import com.readora.domain.common.UserId;
 import com.readora.domain.identity.Permission;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.ScanlationRole;
 import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.*;
+import com.readora.domain.work.ChapterStatus;
 
 import java.time.Clock;
 import java.util.List;
@@ -111,7 +112,9 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
         }
 
         ChapterNumber chapterNumber = ChapterNumber.of(chapterNumberStr.trim());
-        if (chapterRepository.findByWorkIdAndChapterNumberAndTeam(workId, chapterNumber, teamId).isPresent()) {
+        // A draft (e.g. sent back by a moderator) is published again; anything else already has this number.
+        Optional<Chapter> existing = chapterRepository.findByWorkIdAndChapterNumberAndTeam(workId, chapterNumber, teamId);
+        if (existing.isPresent() && existing.get().getStatus() != ChapterStatus.DRAFT) {
             throw DomainValidationException.withCode(ErrorCodes.CHAPTER_ALREADY_EXISTS,
                     "This team already has a chapter " + chapterNumber.value() + " of this series");
         }
@@ -120,7 +123,9 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
             throw new DomainValidationException("Cannot publish chapter with zero pages.");
         }
 
-        Chapter chapter = Chapter.createPublished(workId, chapterNumber, title != null ? title : "", pages, teamId, publisherId);
+        Chapter chapter = existing.orElseGet(() -> Chapter.createDraft(workId, chapterNumber, title != null ? title : "", teamId));
+        chapter.updatePages(pages);
+        ChapterRelease.release(chapter, publisherId, chapterRepository, userRepository);
         Chapter savedChapter = chapterRepository.save(chapter);
 
         chapter.pollDomainEvents().forEach(eventPublisher::publish);

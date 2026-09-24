@@ -114,6 +114,8 @@
     "upload.studio.notMyTeam": "You are not on the team this link was made for.",
     "upload.studio.seoTitle": "Upload Studio — Readora",
     "upload.studio.seoDescription": "Create manga series, upload chapter pages, and publish directly or via scanlation pipeline.",
+    "upload.success.reviewTitle": "Chapter sent for review",
+    "upload.success.reviewText": "A team's first chapter is checked by a moderator before readers see it. Chapter {$INTERPOLATION} goes out as soon as it is approved, and the team's next chapters go out straight away.",
     "upload.success.chapterTitle": "Chapter published",
     "upload.success.chapterText": "Chapter {$INTERPOLATION} of {$START_TAG_STRONG}{$INTERPOLATION_1}{$CLOSE_TAG_STRONG} is out, as the version of {$INTERPOLATION_2}.",
     "upload.success.taskTitle": "Chapter sent to the team",

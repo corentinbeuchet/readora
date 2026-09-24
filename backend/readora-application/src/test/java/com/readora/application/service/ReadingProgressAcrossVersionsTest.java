@@ -174,6 +174,16 @@ class ReadingProgressAcrossVersionsTest {
         }
 
         @Override
+        public boolean hasPublishedChapter(TeamId teamId) {
+            return published.values().stream().anyMatch(c -> c.getTeamId().equals(teamId) && c.isPublished());
+        }
+
+        @Override
+        public List<Chapter> findWaitingForReview(int limit) {
+            return published.values().stream().filter(Chapter::isWaitingForReview).limit(limit).toList();
+        }
+
+        @Override
         public Chapter save(Chapter chapter) {
             throw new UnsupportedOperationException("not used by the reading tracker");
         }

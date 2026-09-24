@@ -2,7 +2,7 @@
   "locale": "fr",
   "translations": {
     "moderation.page.title": "Modération",
-    "moderation.page.intro": "Commentaires signalés, les plus anciens d'abord. Masquer retire le commentaire pour tout le monde et clôt ses signalements.",
+    "moderation.page.intro": "Les plus anciens d'abord. Masquer retire le commentaire pour tout le monde et clôt ses signalements.",
     "moderation.page.loading": "Chargement des signalements…",
     "moderation.page.loadError": "Impossible de charger les signalements.",
     "moderation.page.empty": "Aucun signalement en attente. 🎉",
@@ -11,6 +11,20 @@
     "moderation.page.seeInContext": "Voir dans son contexte",
     "moderation.page.hide": "Masquer le commentaire{$START_TAG_SPAN} de {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
     "moderation.page.dismiss": "Rejeter le signalement{$START_TAG_SPAN} du commentaire de {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
-    "moderation.page.seoTitle": "Modération"
+    "moderation.page.seoTitle": "Modération",
+    "moderation.chapters.title": "Chapitres à examiner",
+    "moderation.chapters.intro": "Le premier chapitre d'une équipe attend ici avant que les lecteurs le voient. Parcourez ses pages, puis publiez-le ou renvoyez-le à l'équipe.",
+    "moderation.chapters.loading": "Chargement des chapitres…",
+    "moderation.chapters.loadError": "Impossible de charger les chapitres à examiner.",
+    "moderation.chapters.empty": "Aucun chapitre n'attend d'examen.",
+    "moderation.chapters.number": "Chapitre {$INTERPOLATION}",
+    "moderation.chapters.submitted": "envoyé le {$INTERPOLATION}",
+    "moderation.chapters.pageCount": "{VAR_PLURAL, plural, =0 {0 page} =1 {1 page} other {{INTERPOLATION} pages}}",
+    "moderation.chapters.page": "Page {$INTERPOLATION}",
+    "moderation.chapters.publish": "Publier{$START_TAG_SPAN} le chapitre {$INTERPOLATION} de {$INTERPOLATION_1}{$CLOSE_TAG_SPAN}",
+    "moderation.chapters.sendBack": "Renvoyer{$START_TAG_SPAN} le chapitre {$INTERPOLATION} de {$INTERPOLATION_1}{$CLOSE_TAG_SPAN}",
+    "moderation.chapters.published": "{$series} : le chapitre {$number} est paru.",
+    "moderation.chapters.sentBack": "{$series} : le chapitre {$number} a été renvoyé à {$team}.",
+    "moderation.page.commentsTitle": "Commentaires signalés"
   }
 }

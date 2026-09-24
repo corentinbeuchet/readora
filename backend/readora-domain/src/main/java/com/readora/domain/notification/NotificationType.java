@@ -4,5 +4,6 @@ public enum NotificationType {
     NEW_CHAPTER,
     COMMENT_REPLY,
     TEAM_INVITATION,
-    TASK_READY
+    TASK_READY,
+    CHAPTER_SENT_BACK
 }

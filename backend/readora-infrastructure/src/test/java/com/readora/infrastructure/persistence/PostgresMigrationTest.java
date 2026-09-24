@@ -466,4 +466,29 @@ class PostgresMigrationTest {
     private TeamId anyTeam() {
         return teamRepository.save(Team.create("Team " + java.util.UUID.randomUUID(), null, UserId.of("any-leader"))).getId();
     }
+    @Test
+    @DisplayName("First-chapter review queries (a team's published chapters, the waiting queue in order) run on PostgreSQL")
+    void chapterReviewQueriesRunOnPostgres() {
+        Work work = workRepository.save(Work.create("PG Review", "", WorkType.MANGA, "c.png", Set.of("Action")));
+        TeamId newTeam = teamRepository.save(Team.create("PG New Team " + java.util.UUID.randomUUID(), null, UserId.of("pg-new"))).getId();
+        Chapter first = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "", newTeam);
+        first.updatePages(List.of(PageAsset.create(1, "r/p1.webp", null)));
+        first.release(UserId.of("pg-new"), true);
+        chapterRepository.save(first);
+        Chapter second = Chapter.createDraft(work.getId(), ChapterNumber.of("2"), "", newTeam);
+        second.updatePages(List.of(PageAsset.create(1, "r/p2.webp", null)));
+        second.release(UserId.of("pg-new"), true);
+        chapterRepository.save(second);
+
+        assertThat(chapterRepository.hasPublishedChapter(newTeam)).isFalse();
+        assertThat(chapterRepository.findWaitingForReview(100)).extracting(Chapter::getId).contains(first.getId(), second.getId());
+        assertThat(chapterRepository.findWaitingForReview(1)).hasSize(1);
+
+        Chapter approved = chapterRepository.findById(first.getId()).orElseThrow();
+        approved.approve();
+        chapterRepository.save(approved);
+
+        assertThat(chapterRepository.hasPublishedChapter(newTeam)).isTrue();
+        assertThat(chapterRepository.findWaitingForReview(100)).extracting(Chapter::getId).doesNotContain(first.getId());
+    }
 }

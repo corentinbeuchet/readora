@@ -6,6 +6,7 @@ import com.readora.domain.scanlation.TeamInvitedEvent;
 import com.readora.domain.social.CommentId;
 import com.readora.domain.social.CommentPostedEvent;
 import com.readora.domain.work.ChapterPublishedEvent;
+import com.readora.domain.work.ChapterSentBackEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -53,6 +54,11 @@ public class NotificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void onTaskStageAdvanced(TaskStageAdvancedEvent event) {
         run("task " + event.taskId(), () -> notifyUseCase.notifyTaskReady(event.projectId(), event.taskId(), event.stage(), event.by()));
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void onChapterSentBack(ChapterSentBackEvent event) {
+        run("chapter sent back " + event.chapterId(), () -> notifyUseCase.notifyChapterSentBack(event.chapterId()));
     }
 
     private void run(String what, Runnable action) {

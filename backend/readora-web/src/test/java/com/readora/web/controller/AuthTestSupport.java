@@ -119,6 +119,22 @@ abstract class AuthTestSupport {
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.data.boardEnabled").value(true));
     }
 
+    /// An account that can moderate (US-11): a new reader given the `MODERATOR` role, signed in again so the token has it.
+    protected Session aModerator() throws Exception {
+        Session session = register();
+        var account = userAccountRepository.findById(UserId.of(session.userId())).orElseThrow();
+        account.grantRole(com.readora.domain.identity.Role.MODERATOR);
+        userAccountRepository.save(account);
+        return login(session.email());
+    }
+
+    /// A team's first chapter waits for a moderator (US-11): one approves it, so readers see it and the team's next
+    /// chapters go out straight away.
+    protected void givenAModeratorApproves(String chapterId) throws Exception {
+        mockMvc.perform(post("/api/v1/moderation/chapters/" + chapterId + "/approve").header("Authorization", aModerator().bearer()))
+                .andExpect(status().isOk());
+    }
+
     /// Every chapter is some team's version: a throwaway team for tests that are not about teams.
     protected TeamId anyTeam() {
         return teamRepositoryForTests.save(Team.create("Team " + java.util.UUID.randomUUID(), null, UserId.of("any-leader"))).getId();

@@ -5,6 +5,7 @@ import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
 import com.readora.application.port.out.TeamRepositoryPort;
+import com.readora.application.port.out.UserAccountRepositoryPort;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.NotFoundException;
@@ -26,13 +27,16 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
     private final TeamRepositoryPort teamRepository;
     private final ChapterRepositoryPort chapterRepository;
     private final EventPublisherPort eventPublisher;
+    private final UserAccountRepositoryPort users;
 
     public ScanlationTaskService(ScanlationProjectRepositoryPort projectRepository, TeamRepositoryPort teamRepository,
-                                 ChapterRepositoryPort chapterRepository, EventPublisherPort eventPublisher) {
+                                 ChapterRepositoryPort chapterRepository, EventPublisherPort eventPublisher,
+                                 UserAccountRepositoryPort users) {
         this.projectRepository = Objects.requireNonNull(projectRepository, "ScanlationProjectRepositoryPort cannot be null");
         this.teamRepository = Objects.requireNonNull(teamRepository, "TeamRepositoryPort cannot be null");
         this.chapterRepository = Objects.requireNonNull(chapterRepository, "ChapterRepositoryPort cannot be null");
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "EventPublisherPort cannot be null");
+        this.users = Objects.requireNonNull(users, "UserAccountRepositoryPort cannot be null");
     }
 
     @Override
@@ -70,7 +74,7 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
     }
 
     @Override
-    public void publishChapterFromQC(ProjectId projectId, TaskId taskId, UserId publisherId) {
+    public Chapter publishChapterFromQC(ProjectId projectId, TaskId taskId, UserId publisherId) {
         ScanlationProject project = requireProject(projectId);
 
         // Validate and mutate both aggregates in memory first; persist only once both transitions succeeded.
@@ -85,12 +89,12 @@ public class ScanlationTaskService implements ManageScanlationTaskUseCase {
         Chapter chapter = chapterRepository.findByWorkIdAndChapterNumberAndTeam(project.getWorkId(), task.getChapterNumber(), project.getTeamId())
                 .orElseGet(() -> Chapter.createDraft(project.getWorkId(), task.getChapterNumber(), "Chapter " + task.getChapterNumber(), project.getTeamId()));
         chapter.updatePages(pages);
-
-        chapter.publish(publisherId);
+        ChapterRelease.release(chapter, publisherId, chapterRepository, users);
 
         projectRepository.save(project);
         chapterRepository.save(chapter);
         chapter.pollDomainEvents().forEach(eventPublisher::publish);
+        return chapter;
     }
 
     private Team requireTeam(ScanlationProject project) {

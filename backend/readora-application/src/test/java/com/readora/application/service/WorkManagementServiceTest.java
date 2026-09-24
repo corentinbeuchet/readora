@@ -120,6 +120,7 @@ class WorkManagementServiceTest {
         Work work = Work.create("One Piece", "Pirates", WorkType.MANGA, "op.jpg", Set.of("Adventure"));
         Team team = givenATeamWorkingOn(work, publisherId);
         when(chapterRepository.save(any(Chapter.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(chapterRepository.hasPublishedChapter(team.getId())).thenReturn(true);
 
         List<PageAsset> pages = List.of(
                 PageAsset.create(1, "c1/p1.webp", "https://cdn.readora.com/c1/p1.webp"),
@@ -142,7 +143,8 @@ class WorkManagementServiceTest {
         UserId publisherId = UserId.of("pub-1");
         Work work = Work.create("One Piece", "Pirates", WorkType.MANGA, "op.jpg", Set.of("Adventure"));
         Team team = givenATeamWorkingOn(work, publisherId);
-        Chapter existing = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Existing", team.getId());
+        Chapter existing = Chapter.createPublished(work.getId(), ChapterNumber.of("1"), "Existing",
+                List.of(PageAsset.create(1, "c1/p1.webp", null)), team.getId(), publisherId);
         when(chapterRepository.findByWorkIdAndChapterNumberAndTeam(work.getId(), ChapterNumber.of("1"), team.getId())).thenReturn(Optional.of(existing));
 
         List<PageAsset> pages = List.of(PageAsset.create(1, "c1/p1.webp", "https://cdn.readora.com/c1/p1.webp"));
@@ -191,6 +193,7 @@ class WorkManagementServiceTest {
         UserId adminId = UserId.of("admin");
         UserAccount admin = mock(UserAccount.class);
         when(admin.can(com.readora.domain.identity.Permission.USER_MANAGE)).thenReturn(true);
+        when(admin.can(com.readora.domain.identity.Permission.COMMENT_MODERATE)).thenReturn(true);
         when(userRepository.findById(adminId)).thenReturn(Optional.of(admin));
         when(chapterRepository.save(any(Chapter.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -198,6 +201,41 @@ class WorkManagementServiceTest {
 
         assertThat(chapter.isPublished()).isTrue();
         assertThat(chapter.getTeamId()).isEqualTo(team.getId());
+    }
+
+    @Test
+    @DisplayName("A team's first chapter waits for a moderator: hidden from readers, and nobody is told yet")
+    void aTeamsFirstChapterWaitsForReview() {
+        UserId publisherId = UserId.of("pub-1");
+        Work work = Work.create("One Piece", "Pirates", WorkType.MANGA, "op.jpg", Set.of("Adventure"));
+        Team team = givenATeamWorkingOn(work, publisherId);
+        when(chapterRepository.save(any(Chapter.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(chapterRepository.hasPublishedChapter(team.getId())).thenReturn(false);
+
+        Chapter chapter = service.directPublishChapter(work.getId(), team.getId(), "1", "Romance Dawn",
+                List.of(PageAsset.create(1, "c1/p1.webp", null)), publisherId);
+
+        assertThat(chapter.getStatus()).isEqualTo(ChapterStatus.PENDING_REVIEW);
+        verify(eventPublisher, never()).publish(any());
+    }
+
+    @Test
+    @DisplayName("A chapter a moderator sent back (a draft) is published again with its new pages, keeping its identity")
+    void aDraftIsPublishedAgain() {
+        UserId publisherId = UserId.of("pub-1");
+        Work work = Work.create("One Piece", "Pirates", WorkType.MANGA, "op.jpg", Set.of("Adventure"));
+        Team team = givenATeamWorkingOn(work, publisherId);
+        Chapter sentBack = Chapter.createDraft(work.getId(), ChapterNumber.of("1"), "Romance Dawn", team.getId());
+        when(chapterRepository.findByWorkIdAndChapterNumberAndTeam(work.getId(), ChapterNumber.of("1"), team.getId())).thenReturn(Optional.of(sentBack));
+        when(chapterRepository.save(any(Chapter.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(chapterRepository.hasPublishedChapter(team.getId())).thenReturn(false);
+
+        Chapter chapter = service.directPublishChapter(work.getId(), team.getId(), "1", "Romance Dawn",
+                List.of(PageAsset.create(1, "c1/fixed.webp", null)), publisherId);
+
+        assertThat(chapter.getId()).isEqualTo(sentBack.getId());
+        assertThat(chapter.getStatus()).isEqualTo(ChapterStatus.PENDING_REVIEW);
+        assertThat(chapter.getPages()).extracting(PageAsset::storageKey).containsExactly("c1/fixed.webp");
     }
 
     private Team givenATeamWorkingOn(Work work, UserId leader) {

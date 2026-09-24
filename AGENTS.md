@@ -50,7 +50,8 @@ series; teams take chapters from RAW to published). Monorepo:
 - One API envelope: backend `ApiResponse.ok/error` ↔ frontend `ApiClient` unwraps it into typed values / `ApiError`.
 - Permission names are shared vocabulary: backend `Role` enum permission sets and `@PreAuthorize`,
   frontend route `data: { permission }` + `permissionGuard` and `*appHasPermission`. Rename in both places or neither.
-  Roles today: `READER`, `MODERATOR` (reader + `COMMENT_MODERATE`), `ADMIN` (everything). Free signed-in
+  Roles today: `READER`, `MODERATOR` (reader + `COMMENT_MODERATE`, which also covers reviewing a team's first
+  chapter), `ADMIN` (everything). Free signed-in
   features (library, bookmarks, history, lists, follows, notifications, export) share `LIBRARY_USE`; add a new
   permission only when a role must be able to lack it. There are no paid plans (Premium was removed on 2026-09-23).
   Team tools are not an account role: any reader can start or join a team, and what a member may do comes from

@@ -34,8 +34,10 @@ Feature: Collaborative Scanlation Chapter Workflow Pipeline
     Then the task stage advances to "TYPESETTING"
 
   # Readers get the pages the team uploaded at the last stage, never names made up from the chapter number (B19).
+  # A team's first chapter waits for a moderator (US-11); this team has published before.
   Scenario: Quality Checker publishes verified chapter
-    Given "Chapter 10" has passed proofreading and is in stage "QC_REVIEW" with 3 pages uploaded
+    Given the team has published chapters before
+    And "Chapter 10" has passed proofreading and is in stage "QC_REVIEW" with 3 pages uploaded
     When "Charlie" approves the final assembled chapter and triggers publication
     Then the chapter status becomes "PUBLISHED"
     And the chapter is credited to the team "FlameScans"

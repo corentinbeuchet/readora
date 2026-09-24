@@ -17,6 +17,12 @@ public interface ChapterRepositoryPort {
     List<Chapter> findByWorkId(WorkId workId);
     Chapter save(Chapter chapter);
 
+    /// Whether the team has a published chapter: until it has, its chapters are reviewed first (US-11).
+    boolean hasPublishedChapter(TeamId teamId);
+
+    /// Chapters waiting for a moderator, the longest-waiting first.
+    List<Chapter> findWaitingForReview(int limit);
+
     /// A team's version of a chapter number, published or not: a number exists at most once per team.
     default Optional<Chapter> findByWorkIdAndChapterNumberAndTeam(WorkId workId, ChapterNumber chapterNumber, TeamId teamId) {
         return findByWorkId(workId).stream()

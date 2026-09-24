@@ -1,7 +1,10 @@
 @let draft = wizard.draft();
 <div class="card wizard-card success-card">
   <div class="success-icon" aria-hidden="true">🎉</div>
-  @if (existing(); as target) {
+  @if (flow.createdChapterWaits()) {
+    <h2 i18n="@@upload.success.reviewTitle">Chapter sent for review</h2>
+    <p class="muted" i18n="@@upload.success.reviewText">A team's first chapter is checked by a moderator before readers see it. Chapter {{ draft.chapterNumber }} goes out as soon as it is approved, and the team's next chapters go out straight away.</p>
+  } @else if (existing(); as target) {
     @if (flow.createdChapterId()) {
       <h2 i18n="@@upload.success.chapterTitle">Chapter published</h2>
       <p class="muted" i18n="@@upload.success.chapterText">Chapter {{ draft.chapterNumber }} of <strong>{{ target.work.title }}</strong> is out, as the version of {{ target.team.name }}.</p>
@@ -16,7 +19,9 @@
 
   <div class="success-actions">
     @if (flow.createdChapterId(); as chapterId) {
-      <a [routerLink]="['/read', chapterId]" class="btn btn-primary" i18n="@@upload.success.read">Read Chapter {{ draft.chapterNumber }} Now</a>
+      @if (!flow.createdChapterWaits()) {
+        <a [routerLink]="['/read', chapterId]" class="btn btn-primary" i18n="@@upload.success.read">Read Chapter {{ draft.chapterNumber }} Now</a>
+      }
     }
     @if (series(); as work) {
       <a [routerLink]="['/works', work.id]" class="btn" i18n="@@upload.success.viewWork">View in Catalog</a>

@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test as base } from '@playwright/test';
 import {
+  ChapterForReview,
   PostedComment,
   dismissReportIfOpen,
   dismissReportsOn,
@@ -8,7 +9,9 @@ import {
   publishCommentedChapter,
   publishReportedComment,
   publishSeriesByTwoTeams,
-  publishSeriesWithFacts
+  publishSeriesWithFacts,
+  publishAFirstChapterForReview,
+  sendBackIfWaiting
 } from './helpers';
 
 /**
@@ -28,6 +31,8 @@ export const test = base.extend<{
   spoilerComment: PostedComment;
   /** A new published chapter whose one comment was reported and waits in the moderation queue (US-11); closed after. */
   reportedComment: PostedComment;
+  /** A new team's first chapter, waiting for a moderator (US-11); sent back after the test if still waiting. */
+  firstChapterForReview: ChapterForReview;
   /** An axe scan of the current page against WCAG 2.0/2.1/2.2 A and AA (`await axe().analyze()`). */
   axe: () => AxeBuilder;
 }>({
@@ -81,6 +86,11 @@ export const test = base.extend<{
     const reported = await publishReportedComment(request);
     await use(reported);
     await dismissReportIfOpen(request, reported.reportId);
+  },
+  firstChapterForReview: async ({ request }, use) => {
+    const waiting = await publishAFirstChapterForReview(request);
+    await use(waiting);
+    await sendBackIfWaiting(request, waiting.chapterId);
   },
   axe: async ({ page }, use) => {
     await use(() => new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']));

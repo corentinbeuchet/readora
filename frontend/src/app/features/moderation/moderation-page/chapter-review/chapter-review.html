@@ -1,0 +1,48 @@
+<section aria-labelledby="chapter-review-title">
+  <h2 id="chapter-review-title" i18n="@@moderation.chapters.title">Chapters waiting for review</h2>
+  <p class="muted" i18n="@@moderation.chapters.intro">A team's first chapter waits here before readers see it. Look through its pages, then publish it or send it back to the team.</p>
+
+  <p class="muted" role="status">{{ done() }}</p>
+  @if (action.error(); as message) {
+    <p class="form-error" role="alert">{{ message }}</p>
+  }
+
+  @if (waiting.isLoading() && !waiting.hasValue()) {
+    <p class="muted" role="status" i18n="@@moderation.chapters.loading">Loading chapters…</p>
+  } @else if (waiting.error()) {
+    <app-load-error (retry)="waiting.reload()" i18n="@@moderation.chapters.loadError">Could not load the chapters waiting for review.</app-load-error>
+  } @else if (waiting.hasValue() && waiting.value().length === 0) {
+    <p class="muted" i18n="@@moderation.chapters.empty">No chapter is waiting for review.</p>
+  } @else if (waiting.hasValue()) {
+    <ul class="waiting">
+      @for (chapter of waiting.value(); track chapter.chapterId) {
+        <li class="card waiting-item">
+          <p class="waiting-meta">
+            <strong>{{ chapter.work.title }}</strong>
+            <span i18n="@@moderation.chapters.number">Chapter {{ chapter.chapterNumber }}</span>
+            <span class="badge">{{ chapter.team.name }}</span>
+            <span class="muted" i18n="@@moderation.chapters.submitted">sent {{ chapter.submittedAt | date: 'medium' }}</span>
+          </p>
+          <details class="waiting-pages">
+            <summary i18n="@@moderation.chapters.pageCount">{chapter.pages.length, plural, =1 {1 page} other {{{ chapter.pages.length }} pages}}</summary>
+            <ul>
+              @for (page of chapter.pages; track page.pageNumber) {
+                @if (page.cdnUrl) {
+                  <li><a [href]="page.cdnUrl" target="_blank" rel="noopener" i18n="@@moderation.chapters.page">Page {{ page.pageNumber }}</a></li>
+                }
+              }
+            </ul>
+          </details>
+          <div class="waiting-actions">
+            <button type="button" class="btn btn-sm" [disabled]="action.busyKey() === chapter.chapterId" (click)="publish(chapter)">
+              <ng-container i18n="@@moderation.chapters.publish">Publish<span class="sr-only"> chapter {{ chapter.chapterNumber }} of {{ chapter.work.title }}</span></ng-container>
+            </button>
+            <button type="button" class="btn btn-sm" [disabled]="action.busyKey() === chapter.chapterId" (click)="sendBack(chapter)">
+              <ng-container i18n="@@moderation.chapters.sendBack">Send back<span class="sr-only"> chapter {{ chapter.chapterNumber }} of {{ chapter.work.title }}</span></ng-container>
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>

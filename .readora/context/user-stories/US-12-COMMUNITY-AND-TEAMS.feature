@@ -88,6 +88,7 @@ Feature: Community and scanlation teams
   Scenario: A team only publishes into a series it works on
     Given "Solo Leveling" is already translated by the team "Shadow Scans"
     And scanlator "Mina" leads the team "Moon Scans"
+    And "Moon Scans" has published chapters before
     When "Mina" publishes chapter 9 of "Solo Leveling" for "Moon Scans"
     Then the chapter is refused because "Moon Scans" does not work on the series
     When "Mina" adds the series "Solo Leveling" to "Moon Scans"

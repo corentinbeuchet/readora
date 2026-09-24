@@ -91,6 +91,16 @@ public class ScanlationWorkflowStepDefinitions {
             }
 
             @Override
+            public boolean hasPublishedChapter(TeamId teamId) {
+                return chapterStore.values().stream().anyMatch(c -> c.getTeamId().equals(teamId) && c.isPublished());
+            }
+
+            @Override
+            public List<Chapter> findWaitingForReview(int limit) {
+                return chapterStore.values().stream().filter(Chapter::isWaitingForReview).limit(limit).toList();
+            }
+
+            @Override
             public Chapter save(Chapter chapter) {
                 chapterStore.put(chapter.getId(), chapter);
                 // Like the JPA adapter: the returned object is rebuilt from state and carries no pending events.
@@ -110,7 +120,7 @@ public class ScanlationWorkflowStepDefinitions {
                 notifications.notifyTaskReady(reached.projectId(), reached.taskId(), reached.stage(), reached.by());
             }
         };
-        scanlationTaskService = new ScanlationTaskService(projectRepo, teams, chapterRepo, eventPublisher);
+        scanlationTaskService = new ScanlationTaskService(projectRepo, teams, chapterRepo, eventPublisher, new NoUserAccounts());
     }
 
     @Given("a scanlation team {string} exists")
@@ -189,8 +199,7 @@ public class ScanlationWorkflowStepDefinitions {
     @Then("the chapter is credited to the team {string}")
     public void theChapterIsCreditedToTheTeam(String teamName) {
         assertThat(currentTeam.getName()).isEqualTo(teamName);
-        assertThat(chapterStore.values()).filteredOn(Chapter::isPublished).singleElement()
-                .satisfies(chapter -> assertThat(chapter.getTeamId()).isEqualTo(currentTeam.getId()));
+        assertThat(taskChapter().getTeamId()).isEqualTo(currentTeam.getId());
     }
 
     @Then("the assignment is rejected because {string} is not on the team")
@@ -246,9 +255,8 @@ public class ScanlationWorkflowStepDefinitions {
 
     @Then("the published chapter has the {int} pages the team uploaded, in order")
     public void thePublishedChapterHasTheUploadedPages(int pageCount) {
-        assertThat(chapterStore.values()).filteredOn(Chapter::isPublished).singleElement()
-                .satisfies(chapter -> assertThat(chapter.getPages()).extracting(PageAsset::storageKey)
-                        .containsExactlyElementsOf(pages("final", pageCount).stream().map(PageAsset::storageKey).toList()));
+        assertThat(taskChapter().getPages()).extracting(PageAsset::storageKey)
+                .containsExactlyElementsOf(pages("final", pageCount).stream().map(PageAsset::storageKey).toList());
     }
 
     @Then("the publication is refused because the chapter has no pages")
@@ -276,9 +284,7 @@ public class ScanlationWorkflowStepDefinitions {
 
     @Then("the chapter status becomes {string}")
     public void verifyPublishedStatus(String statusStr) {
-        List<Chapter> chapters = chapterStore.values().stream().toList();
-        assertThat(chapters).isNotEmpty();
-        assertThat(chapters.getFirst().getStatus()).isEqualTo(ChapterStatus.valueOf(statusStr));
+        assertThat(taskChapter().getStatus()).isEqualTo(ChapterStatus.valueOf(statusStr));
     }
 
     @Then("a {string} is emitted to notify readers")
@@ -308,5 +314,19 @@ public class ScanlationWorkflowStepDefinitions {
     @Then("{string} is not told about chapter {int}")
     public void isNotTold(String memberName, int chapter) {
         assertThat(notifications.recent(UserId.of(memberName))).noneMatch(n -> n.message().contains("chapter " + chapter + " "));
+    }
+    /// A team's first chapter waits for a moderator (US-11): this team already has one out, in another series.
+    @Given("the team has published chapters before")
+    public void theTeamHasPublishedBefore() {
+        Chapter earlier = Chapter.createPublished(WorkId.generate(), ChapterNumber.of("1"), "", List.of(PageAsset.create(1, "p1.webp", null)),
+                currentTeam.getId(), UserId.of("LeaderBob"));
+        chapterStore.put(earlier.getId(), earlier);
+    }
+
+    /// The chapter of the current task (the store may also hold the team's earlier chapters).
+    private Chapter taskChapter() {
+        return chapterStore.values().stream()
+                .filter(chapter -> chapter.getWorkId().equals(currentProject.getWorkId()) && chapter.getChapterNumber().equals(currentTask.getChapterNumber()))
+                .findFirst().orElseThrow();
     }
 }

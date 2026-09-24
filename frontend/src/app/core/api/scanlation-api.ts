@@ -1,6 +1,7 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { PublishOutcome } from '@app/core/models/chapter';
 import { CreateTaskRequest, ScanlationProject, SubmitTaskRequest, WorkflowTask } from '@app/core/models/scanlation';
 import { ApiClient, parseEnvelope } from './api-client';
 
@@ -26,8 +27,9 @@ export class ScanlationApi {
     return this.api.post<WorkflowTask>(`/scanlation/projects/${projectId}/tasks/${taskId}/submit`, request);
   }
 
-  publishTask(projectId: string, taskId: string): Observable<string> {
-    return this.api.post<string>(`/scanlation/projects/${projectId}/tasks/${taskId}/publish`);
+  /** QC publishes the chapter; a team's first waits for a moderator (`status` says which). */
+  publishTask(projectId: string, taskId: string): Observable<PublishOutcome> {
+    return this.api.post<PublishOutcome>(`/scanlation/projects/${projectId}/tasks/${taskId}/publish`);
   }
 
   projectResource(projectId: Signal<string | null | undefined>): HttpResourceRef<ScanlationProject | undefined> {

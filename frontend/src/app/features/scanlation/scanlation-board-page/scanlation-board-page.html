@@ -36,6 +36,8 @@
       }
     }
 
+    <p class="muted" role="status">{{ published() }}</p>
+
     @if (action.error(); as error) {
       <p class="form-error" role="alert">{{ error }}</p>
     }

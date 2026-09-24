@@ -1,8 +1,9 @@
 package com.readora.domain.work;
 
-import com.readora.domain.common.UserId;
 import com.readora.domain.common.AggregateRoot;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.ErrorCodes;
+import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.TeamId;
 import org.jspecify.annotations.Nullable;
 
@@ -67,12 +68,64 @@ public class Chapter extends AggregateRoot<ChapterId> {
     }
 
     public void publish(UserId publisherId) {
+        requireReleasable();
+        goLive();
+    }
+
+    /// Publishes the chapter or, when `needsReview` (a team's first chapter, US-11), hands it to a moderator:
+    /// `PENDING_REVIEW` stays hidden from readers until [#approve()].
+    public void release(UserId publisherId, boolean needsReview) {
+        if (!needsReview) {
+            publish(publisherId);
+            return;
+        }
+        requireReleasable();
+        this.status = ChapterStatus.PENDING_REVIEW;
+        this.updatedAt = Instant.now();
+    }
+
+    /// A moderator lets readers see the chapter; its series' readers are told (`ChapterPublishedEvent`).
+    ///
+    /// @throws DomainValidationException `CHAPTER_NOT_WAITING` unless the chapter waits for review
+    public void approve() {
+        requireWaitingForReview();
+        goLive();
+    }
+
+    /// A moderator sends the chapter back to the team as a draft it can publish again; its leaders are told.
+    ///
+    /// @throws DomainValidationException `CHAPTER_NOT_WAITING` unless the chapter waits for review
+    public void sendBack() {
+        requireWaitingForReview();
+        this.status = ChapterStatus.DRAFT;
+        this.updatedAt = Instant.now();
+        registerEvent(ChapterSentBackEvent.now(this.id, this.teamId));
+    }
+
+    public boolean isWaitingForReview() {
+        return this.status == ChapterStatus.PENDING_REVIEW;
+    }
+
+    private void requireReleasable() {
         if (isPublished()) {
             throw new DomainValidationException("Chapter " + this.chapterNumber + " is already published.");
+        }
+        if (isWaitingForReview()) {
+            throw new DomainValidationException("Chapter " + this.chapterNumber + " already waits for a moderator.");
         }
         if (this.pages.isEmpty()) {
             throw new DomainValidationException("Cannot publish chapter with zero pages.");
         }
+    }
+
+    private void requireWaitingForReview() {
+        if (!isWaitingForReview()) {
+            throw DomainValidationException.withCode(ErrorCodes.CHAPTER_NOT_WAITING,
+                    "Chapter " + this.chapterNumber + " is not waiting for review");
+        }
+    }
+
+    private void goLive() {
         this.status = ChapterStatus.PUBLISHED;
         this.publishedAt = Instant.now();
         this.updatedAt = this.publishedAt;

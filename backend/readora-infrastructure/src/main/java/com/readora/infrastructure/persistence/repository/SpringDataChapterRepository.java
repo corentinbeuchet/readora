@@ -1,6 +1,7 @@
 package com.readora.infrastructure.persistence.repository;
 
 import com.readora.infrastructure.persistence.entity.ChapterJpaEntity;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,6 +15,10 @@ public interface SpringDataChapterRepository extends JpaRepository<ChapterJpaEnt
     List<ChapterJpaEntity> findByWorkId(UUID workId);
 
     List<ChapterJpaEntity> findByWorkIdAndStatus(UUID workId, String status);
+
+    boolean existsByTeamIdAndStatus(UUID teamId, String status);
+
+    List<ChapterJpaEntity> findByStatusOrderByUpdatedAtAsc(String status, Limit limit);
 
     java.util.Optional<ChapterJpaEntity> findByWorkIdAndChapterNumberAndTeamId(UUID workId, String chapterNumber, UUID teamId);
 

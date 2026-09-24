@@ -6,6 +6,7 @@ import com.readora.domain.work.*;
 import com.readora.infrastructure.persistence.entity.ChapterJpaEntity;
 import com.readora.infrastructure.persistence.entity.PageAssetJpaEntity;
 import com.readora.infrastructure.persistence.repository.SpringDataChapterRepository;
+import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,20 @@ public class ChapterRepositoryAdapter implements ChapterRepositoryPort {
     @Transactional(readOnly = true)
     public Optional<Chapter> findByWorkIdAndChapterNumberAndTeam(WorkId workId, ChapterNumber chapterNumber, TeamId teamId) {
         return springDataRepository.findByWorkIdAndChapterNumberAndTeamId(workId.value(), chapterNumber.value(), teamId.value()).map(this::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasPublishedChapter(TeamId teamId) {
+        return springDataRepository.existsByTeamIdAndStatus(teamId.value(), ChapterStatus.PUBLISHED.name());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Chapter> findWaitingForReview(int limit) {
+        return springDataRepository.findByStatusOrderByUpdatedAtAsc(ChapterStatus.PENDING_REVIEW.name(), Limit.of(limit)).stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     @Override

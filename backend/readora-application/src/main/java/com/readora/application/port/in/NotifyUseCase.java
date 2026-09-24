@@ -29,6 +29,9 @@ public interface NotifyUseCase {
     /// there); when nobody holds that role, the team's leaders. Nothing when the task has moved on since.
     void notifyTaskReady(ProjectId projectId, TaskId taskId, WorkflowStage stage, UserId by);
 
+    /// Tells the leaders of the chapter's team that a moderator sent it back (only while it is still a draft).
+    void notifyChapterSentBack(ChapterId chapterId);
+
     List<Notification> recent(UserId userId);
 
     long unreadCount(UserId userId);

@@ -118,6 +118,8 @@
     "scanlation.submit.opening": "Opening…",
     "scanlation.board.actionError": "The action could not be completed",
     "scanlation.board.seoTitle": "Task board",
+    "scanlation.board.sentForReview": "Chapter {$number} is the team's first: a moderator checks it before readers see it.",
+    "scanlation.board.publishedNow": "Chapter {$number} is out.",
     "scanlation.submit.title": "Submit work for chapter {$INTERPOLATION}",
     "scanlation.submit.stage": "Stage: {$INTERPOLATION}",
     "scanlation.submit.hint": "Add every page as your stage leaves it. They replace the chapter's current pages, and the next stage starts from them.",

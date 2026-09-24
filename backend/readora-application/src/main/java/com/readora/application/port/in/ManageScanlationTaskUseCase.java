@@ -4,6 +4,7 @@ import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.TaskId;
 import com.readora.domain.scanlation.WorkflowTask;
+import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.PageAsset;
 
@@ -20,8 +21,9 @@ public interface ManageScanlationTaskUseCase {
     /// The stage's work: its pages replace the task's pages and the task moves on to the next stage.
     WorkflowTask submitWork(ProjectId projectId, TaskId taskId, UserId userId, List<PageAsset> pages);
 
-    /// Quality control approves the task and the chapter is published with the task's pages (the last stage's).
+    /// Quality control approves the task and the chapter is published with the task's pages (the last stage's), or
+    /// waits for a moderator when it is the team's first (US-11): see the returned chapter's status.
     ///
     /// @throws com.readora.domain.common.DomainValidationException `TASK_HAS_NO_PAGES` if no page was uploaded
-    void publishChapterFromQC(ProjectId projectId, TaskId taskId, UserId publisherId);
+    Chapter publishChapterFromQC(ProjectId projectId, TaskId taskId, UserId publisherId);
 }

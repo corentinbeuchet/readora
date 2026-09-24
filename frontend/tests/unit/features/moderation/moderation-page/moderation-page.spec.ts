@@ -62,6 +62,8 @@ describe('ModerationPage (US-11)', () => {
     fixture = TestBed.createComponent(ModerationPage);
     await settle(fixture);
     http.expectOne(`${API}/moderation/reports`).flush(ok(reports));
+    // The chapters waiting for review are the chapter review's (it has its own spec).
+    http.match(`${API}/moderation/chapters`).forEach((request) => request.flush(ok([])));
     await settle(fixture);
   }
 
@@ -92,7 +94,8 @@ describe('ModerationPage (US-11)', () => {
   }
 
   function thenTheAlertSays(message: string): void {
-    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain(message);
+    const alerts: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('[role="alert"]'));
+    expect(alerts.map((alert) => alert.textContent).join(' ')).toContain(message);
   }
 
   function reportRow(position: number): HTMLElement {

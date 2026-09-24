@@ -134,3 +134,20 @@ export function teamsOf(chapters: readonly ChapterSummary[]): TeamShare[] {
   }
   return [...shares.values()].sort((a, b) => b.chapterCount - a.chapterCount || a.team.name.localeCompare(b.team.name));
 }
+
+/** A team's first chapter waiting for a moderator before readers see it (US-11, `GET /moderation/chapters`). */
+export interface WaitingChapter {
+  chapterId: string;
+  work: { id: string; title: string };
+  team: TeamRef;
+  chapterNumber: string;
+  title: string;
+  pages: PageAsset[];
+  submittedAt: string;
+}
+
+/** What publishing did: readers see the chapter (`PUBLISHED`), or it waits for a moderator (a team's first, US-11). */
+export interface PublishOutcome {
+  chapterId: string;
+  status: Chapter['status'];
+}

@@ -127,6 +127,8 @@
     "scanlation.submit.error": "Le travail n'a pas pu être envoyé. Veuillez réessayer.",
     "scanlation.submit.noPages": "Ajoutez d'abord les pages de votre étape.",
     "scanlation.submit.uploadFailed": "Pages non envoyées : {$count}. Envoyez de nouveau pour les renvoyer.",
-    "scanlation.board.task.assignedGone": "Assignée : un ancien compte"
+    "scanlation.board.task.assignedGone": "Assignée : un ancien compte",
+    "scanlation.board.sentForReview": "Le chapitre {$number} est le premier de l'équipe : un modérateur le vérifie avant que les lecteurs le voient.",
+    "scanlation.board.publishedNow": "Le chapitre {$number} est paru."
   }
 }

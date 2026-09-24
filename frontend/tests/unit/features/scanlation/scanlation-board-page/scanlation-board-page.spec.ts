@@ -204,6 +204,17 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
 
     thenColumnHasTasks('PUBLISHED', 1);
     thenColumnHasTasks('QC_REVIEW', 0);
+    thenTheBoardSays('Chapter 9 is out.');
+  });
+
+  it("the team's first chapter is published for review: the board says a moderator checks it first", async () => {
+    await givenIAmSignedInWith(['LIBRARY_USE']);
+    await givenIOpenTheBoard(PROJECT);
+
+    await whenIPublish(QC_TASK, { status: 'PENDING_REVIEW' });
+
+    thenColumnHasTasks('PUBLISHED', 1);
+    thenTheBoardSays("Chapter 9 is the team's first: a moderator checks it before readers see it.");
   });
 
   it('Upload Studio link is rendered and points to /upload for every member', async () => {
@@ -374,9 +385,9 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
     await settle(fixture);
   }
 
-  async function whenIPublish(task: WorkflowTask): Promise<void> {
+  async function whenIPublish(task: WorkflowTask, answer: { status: 'PUBLISHED' | 'PENDING_REVIEW' } = { status: 'PUBLISHED' }): Promise<void> {
     taskButton(task, '.btn-publish').click();
-    http.expectOne(`${TASKS_URL}/${task.id}/publish`).flush(ok('Chapter published successfully'));
+    http.expectOne(`${TASKS_URL}/${task.id}/publish`).flush(ok({ chapterId: `chapter-${task.chapterNumber}`, status: answer.status }));
     await settle(fixture);
   }
 
@@ -471,6 +482,10 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
 
   function thenTheUploadStudioLinkReads(text: string): void {
     expect(uploadLink()!.textContent).toContain(text);
+  }
+
+  function thenTheBoardSays(text: string): void {
+    expect(page().querySelector('.kanban-container > p[role="status"]')!.textContent!.trim()).toBe(text);
   }
 
   function thenISeeTheError(text: string): void {

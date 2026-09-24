@@ -44,6 +44,7 @@ public final class ErrorCodes {
     public static final String TEAM_REQUIRED = "TEAM_REQUIRED";
     public static final String BOARD_OFF = "BOARD_OFF";
     public static final String TASK_HAS_NO_PAGES = "TASK_HAS_NO_PAGES";
+    public static final String CHAPTER_NOT_WAITING = "CHAPTER_NOT_WAITING";
 
     private ErrorCodes() {
     }

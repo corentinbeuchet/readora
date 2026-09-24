@@ -306,3 +306,44 @@ export async function publishSeriesByTwoTeams(request: APIRequestContext): Promi
   }
   return { workId: series.workId, title: series.title, firstTeam: series.team, secondTeam };
 }
+
+/** A new team's first chapter (US-11): published by a reader created for the test, so it waits for a moderator. */
+export interface ChapterForReview {
+  workId: string;
+  title: string;
+  chapterId: string;
+  teamName: string;
+}
+
+/**
+ * A new reader starts a team, adds a series and publishes chapter 1 through the API: as the team's first chapter, it
+ * waits in the moderation queue instead of reaching readers.
+ */
+export async function publishAFirstChapterForReview(request: APIRequestContext): Promise<ChapterForReview> {
+  const username = `newteam_${uniqueSuffix()}`;
+  const { accessToken } = await data<{ accessToken: string }>(
+    await request.post(`${API_URL}/auth/register`, { data: { email: `${username}@readora.test`, username, password: PASSWORD } })
+  );
+  const headers = { Authorization: `Bearer ${accessToken}` };
+  const teamName = `New Team ${uniqueSuffix()}`;
+  const team = await data<{ id: string }>(await request.post(`${API_URL}/teams`, { headers, data: { name: teamName } }));
+  const title = `E2E First Chapter ${uniqueSuffix()}`;
+  const work = await data<{ id: string }>(
+    await request.post(`${API_URL}/works`, { headers, data: { title, synopsis: 'Created by the e2e suite.', type: 'MANGA', status: 'ONGOING', genres: ['Action'], teamId: team.id } })
+  );
+  const chapterId = await publishChapterFor(request, headers, work.id, { id: team.id, name: teamName, chapterIds: {} }, '1', 'The beginning');
+  return { workId: work.id, title, chapterId, teamName };
+}
+
+/** Clean-up: a chapter a test left waiting goes back to its team, so the shared queue stays short. */
+export async function sendBackIfWaiting(request: APIRequestContext, chapterId: string): Promise<void> {
+  const headers = await givenIAmThePublisher(request);
+  const response = await request.post(`${API_URL}/moderation/chapters/${chapterId}/send-back`, { headers });
+  // 400 CHAPTER_NOT_WAITING when the test already decided: nothing to clean.
+  expect(response.status(), `send back ${chapterId}: ${await response.text()}`).toBeLessThan(500);
+}
+
+/** Whether a reader (anonymous) can open the chapter. */
+export async function chapterIsReadable(request: APIRequestContext, chapterId: string): Promise<boolean> {
+  return (await request.get(`${API_URL}/chapters/${chapterId}`)).ok();
+}

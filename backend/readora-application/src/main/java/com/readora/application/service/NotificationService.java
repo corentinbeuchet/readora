@@ -30,6 +30,7 @@ import com.readora.domain.social.ChapterComment;
 import com.readora.domain.social.CommentId;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
+import com.readora.domain.work.ChapterStatus;
 import com.readora.domain.work.ReadingOrder;
 import com.readora.domain.work.WorkId;
 
@@ -133,6 +134,25 @@ public class NotificationService implements NotifyUseCase {
         notifications.saveAll(recipients.stream()
                 .map(user -> Notification.create(user, NotificationType.TASK_READY, message, "/scanlation/" + projectId.value(), now))
                 .toList());
+    }
+
+    @Override
+    public void notifyChapterSentBack(ChapterId chapterId) {
+        Chapter chapter = chapters.findById(chapterId).filter(c -> c.getStatus() == ChapterStatus.DRAFT).orElse(null);
+        Team team = chapter == null ? null : teams.findById(chapter.getTeamId()).orElse(null);
+        if (chapter == null || team == null) {
+            return;
+        }
+        String title = works.findById(chapter.getWorkId()).map(work -> work.getTitle()).orElse("A series of your team");
+        String message = title + ": chapter " + chapter.getChapterNumber().value() + " was not approved. Check its pages, then publish it again.";
+        Instant now = clock.instant();
+        List<Notification> batch = team.getMembers().stream()
+                .filter(member -> member.roles().contains(ScanlationRole.LEADER))
+                .map(member -> Notification.create(member.userId(), NotificationType.CHAPTER_SENT_BACK, message, "/scanlation", now))
+                .toList();
+        if (!batch.isEmpty()) {
+            notifications.saveAll(batch);
+        }
     }
 
     /// The work each stage waits for, as a notification says it ("ready for translation").

@@ -42,3 +42,40 @@ Feature: Keeping discussions healthy
     Given "Kenji" posted a comment a few seconds ago
     When he posts another comment right away
     Then he is asked to wait a few seconds before commenting again
+
+  # A new team's first chapter is checked by a moderator before readers see it (MangaDex reviews a group's first
+  # upload); once a team has a published chapter, the next ones go out straight away. COMMENT_MODERATE covers it.
+  @must
+  Scenario: A new team's first chapter waits for a moderator
+    When the new team "Nova Scans" publishes chapter 1 of "Omniscient Reader"
+    Then readers do not see chapter 1 of "Omniscient Reader"
+    And "Mina" sees chapter 1 of "Omniscient Reader" by "Nova Scans" waiting for review
+
+  @must
+  Scenario: A moderator approves a first chapter
+    Given "Kenji" keeps "Omniscient Reader" in his library
+    And the new team "Nova Scans" published chapter 1 of "Omniscient Reader" for review
+    When "Mina" approves the chapter
+    Then readers see chapter 1 of "Omniscient Reader"
+    And "Kenji" hears "Omniscient Reader: chapter 1 is out"
+
+  @should
+  Scenario: A moderator sends a first chapter back
+    Given the new team "Nova Scans" published chapter 1 of "Omniscient Reader" for review
+    When "Mina" sends the chapter back
+    Then readers do not see chapter 1 of "Omniscient Reader"
+    And the leader of "Nova Scans" hears "Omniscient Reader: chapter 1 was not approved. Check its pages, then publish it again."
+    And "Nova Scans" can publish chapter 1 of "Omniscient Reader" again for review
+
+  @must
+  Scenario: A team with a published chapter publishes straight away
+    Given the new team "Nova Scans" published chapter 1 of "Omniscient Reader" for review
+    And "Mina" approved the chapter
+    When "Nova Scans" publishes chapter 2 of "Omniscient Reader"
+    Then readers see chapter 2 of "Omniscient Reader"
+
+  @must
+  Scenario: Only moderators review chapters
+    Given the new team "Nova Scans" published chapter 1 of "Omniscient Reader" for review
+    When reader "Aoi" tries to approve the chapter
+    Then access is refused

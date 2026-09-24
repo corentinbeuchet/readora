@@ -32,6 +32,8 @@ export class PublishFlow {
   readonly statusText = signal('');
   readonly createdWork = signal<Work | null>(null);
   readonly createdChapterId = signal<string | null>(null);
+  /** The created chapter waits for a moderator (a team's first, US-11): readers don't see it yet. */
+  readonly createdChapterWaits = signal(false);
   readonly createdProjectId = signal<string | null>(null);
   /** CDN URL of the uploaded cover, kept so a retry does not upload it again. */
   private uploadedCoverUrl: string | null = null;
@@ -94,6 +96,7 @@ export class PublishFlow {
   startOver(): void {
     this.createdWork.set(null);
     this.createdChapterId.set(null);
+    this.createdChapterWaits.set(false);
     this.createdProjectId.set(null);
     this.uploadedCoverUrl = null;
     this.progress.set(0);
@@ -158,6 +161,7 @@ export class PublishFlow {
       })
     );
     this.createdChapterId.set(chapter.id);
+    this.createdChapterWaits.set(chapter.status === 'PENDING_REVIEW');
   }
 
   /**

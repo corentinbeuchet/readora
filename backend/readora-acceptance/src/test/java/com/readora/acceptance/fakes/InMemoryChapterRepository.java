@@ -1,6 +1,7 @@
 package com.readora.acceptance.fakes;
 
 import com.readora.application.port.out.ChapterRepositoryPort;
+import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterId;
 import com.readora.domain.work.ChapterNumber;
@@ -38,5 +39,15 @@ public class InMemoryChapterRepository implements ChapterRepositoryPort {
     public Chapter save(Chapter chapter) {
         chapters.put(chapter.getId(), chapter);
         return chapter;
+    }
+    @Override
+    public boolean hasPublishedChapter(TeamId teamId) {
+        return chapters.values().stream().anyMatch(c -> c.getTeamId().equals(teamId) && c.isPublished());
+    }
+
+    @Override
+    public List<Chapter> findWaitingForReview(int limit) {
+        return chapters.values().stream().filter(Chapter::isWaitingForReview)
+                .sorted(java.util.Comparator.comparing(Chapter::getUpdatedAt)).limit(limit).toList();
     }
 }

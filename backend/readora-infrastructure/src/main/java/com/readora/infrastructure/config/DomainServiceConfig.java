@@ -15,10 +15,11 @@ import com.readora.application.port.in.ManageTeamUseCase;
 import com.readora.application.port.in.ManageWorkUseCase;
 import com.readora.application.port.in.ModerateCommentsUseCase;
 import com.readora.application.port.in.NotifyUseCase;
-import com.readora.application.port.in.ReadChapterUseCase;
 import com.readora.application.port.in.RateWorkUseCase;
+import com.readora.application.port.in.ReadChapterUseCase;
 import com.readora.application.port.in.ReaderInteractionUseCase;
 import com.readora.application.port.in.ReportPageUseCase;
+import com.readora.application.port.in.ReviewChaptersUseCase;
 import com.readora.application.port.in.TrackReadingUseCase;
 import com.readora.application.port.out.*;
 import com.readora.application.service.AssetService;
@@ -26,16 +27,17 @@ import com.readora.application.service.AuthenticationService;
 import com.readora.application.service.BookmarkService;
 import com.readora.application.service.CatalogService;
 import com.readora.application.service.ChapterReadingService;
+import com.readora.application.service.ChapterReviewService;
 import com.readora.application.service.CommunityService;
 import com.readora.application.service.DiscoveryService;
 import com.readora.application.service.LibraryService;
 import com.readora.application.service.ModerationService;
 import com.readora.application.service.NotificationService;
 import com.readora.application.service.PageReportService;
-import com.readora.application.service.RatingService;
-import com.readora.application.service.ReadingListService;
 import com.readora.application.service.ProfileService;
+import com.readora.application.service.RatingService;
 import com.readora.application.service.ReaderSocialService;
+import com.readora.application.service.ReadingListService;
 import com.readora.application.service.ReadingTrackerService;
 import com.readora.application.service.ScanlationTaskService;
 import com.readora.application.service.TeamManagementService;
@@ -98,8 +100,9 @@ public class DomainServiceConfig {
             ScanlationProjectRepositoryPort projectRepository,
             TeamRepositoryPort teamRepository,
             ChapterRepositoryPort chapterRepository,
-            EventPublisherPort eventPublisher) {
-        return transactional(new ScanlationTaskService(projectRepository, teamRepository, chapterRepository, eventPublisher),
+            EventPublisherPort eventPublisher,
+            UserAccountRepositoryPort userRepository) {
+        return transactional(new ScanlationTaskService(projectRepository, teamRepository, chapterRepository, eventPublisher, userRepository),
                 ManageScanlationTaskUseCase.class, transactionManager);
     }
 
@@ -203,6 +206,13 @@ public class DomainServiceConfig {
     public ModerateCommentsUseCase moderateCommentsUseCase(CommentReportRepositoryPort reports, CommentRepositoryPort comments,
                                                            UserAccountRepositoryPort users) {
         return transactional(new ModerationService(reports, comments, users, Clock.systemUTC()), ModerateCommentsUseCase.class,
+                transactionManager);
+    }
+
+    @Bean
+    public ReviewChaptersUseCase reviewChaptersUseCase(ChapterRepositoryPort chapters, WorkRepositoryPort works, TeamRepositoryPort teams,
+                                                       UserAccountRepositoryPort users, EventPublisherPort eventPublisher) {
+        return transactional(new ChapterReviewService(chapters, works, teams, users, eventPublisher), ReviewChaptersUseCase.class,
                 transactionManager);
     }
 

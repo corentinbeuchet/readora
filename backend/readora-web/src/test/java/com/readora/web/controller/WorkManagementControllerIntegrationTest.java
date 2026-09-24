@@ -101,7 +101,7 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
     }
 
     @Test
-    @DisplayName("Direct publish chapter with pages creates published chapter and is viewable in reader")
+    @DisplayName("A team's first chapter waits for a moderator, then is viewable in the reader")
     void directPublishChapterFlow() throws Exception {
         Session scanlator = register();
 
@@ -146,9 +146,14 @@ class WorkManagementControllerIntegrationTest extends AuthTestSupport {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.chapterNumber").value("1"))
                 .andExpect(jsonPath("$.data.pages.length()").value(2))
+                .andExpect(jsonPath("$.data.status").value("PENDING_REVIEW"))
                 .andReturn();
 
         String chapterId = json(directRes).path("data").path("id").asString();
+        mockMvc.perform(get("/api/v1/chapters/" + chapterId))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("CHAPTER_NOT_PUBLISHED"));
+        givenAModeratorApproves(chapterId);
 
         // 3. Verify chapter is readable through ChapterReadingController
         mockMvc.perform(get("/api/v1/chapters/" + chapterId))

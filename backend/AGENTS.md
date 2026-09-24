@@ -19,7 +19,8 @@
 - Aggregates extend `AggregateRoot`; create them via intent-named factories (`UserAccount.register`, `Chapter.createPublished`,
   `ChapterComment.createReply`), which `registerEvent(...)` when something reacts to them. Events are records with a
   `now(...)` factory, and an event exists only once a listener consumes it (today `ChapterPublishedEvent`,
-  `CommentPostedEvent`, `TeamInvitedEvent`, `TaskStageAdvancedEvent`): add it together with its listener.
+  `CommentPostedEvent`, `TeamInvitedEvent`, `TaskStageAdvancedEvent`, `ChapterSentBackEvent`): add it together with its
+  listener.
 - Every state transition guards its preconditions (current stage/status, assignee, already-published). No silent re-transitions.
 - Child entities expose no public mutators; all changes go through the aggregate root. Return unmodifiable/copy collections.
 - Permissions are derived in the domain (`Role` permission sets → `UserAccount.effectivePermissions()`).
@@ -52,6 +53,10 @@
   A task carries real uploaded pages (`WorkflowTask.pages`: the raw pages, then what each stage submits, which
   replaces them); QC publishes exactly those pages (`TASK_HAS_NO_PAGES` when there are none). Never build page keys
   from a chapter number.
+  A team's first chapter waits for a moderator (US-11): every publishing path goes through `ChapterRelease.release`
+  (direct publish and QC), which queues it as `PENDING_REVIEW` while the team has no published chapter, unless the
+  publisher can moderate. Readers only ever query `PUBLISHED`; `ChapterReviewService` approves (readers are told) or
+  sends it back as a `DRAFT` that the team publishes again (its leaders are told).
   A chapter belongs to a team (`Chapter.teamId`, never null): whoever publishes names the team in the request, and
   the service checks both that the actor may publish for that team and that the team works on the series
   (`TEAM_NOT_ON_SERIES`). A payload that shows a chapter carries its `TeamCredit` (id + name).

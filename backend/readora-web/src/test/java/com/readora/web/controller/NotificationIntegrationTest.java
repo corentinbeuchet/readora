@@ -100,6 +100,9 @@ class NotificationIntegrationTest extends AuthTestSupport {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"teamId\":\"" + teamOf(team, workId) + "\",\"chapterNumber\":\"" + number + "\",\"title\":\"Ch\",\"pages\":[" + PAGE + "]}"))
                 .andExpect(status().isCreated()).andReturn();
-        return json(chapter).path("data").path("id").asString();
+        // The team's first chapter: readers see it (and are told) once a moderator approves it.
+        String chapterId = json(chapter).path("data").path("id").asString();
+        givenAModeratorApproves(chapterId);
+        return chapterId;
     }
 }

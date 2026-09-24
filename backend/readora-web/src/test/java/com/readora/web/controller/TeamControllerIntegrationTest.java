@@ -184,7 +184,8 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
     void findReadersByName() throws Exception {
         Session mina = register();
         Session bob = register();
-        String start = bob.username().substring(0, 6);
+        // Long enough to be unique among the test database's readers ("user_" + 6 random hex digits), whatever else registered.
+        String start = bob.username().substring(0, 11);
 
         mockMvc.perform(get("/api/v1/users").param("q", start)).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/users").param("q", start.toUpperCase()).header("Authorization", mina.bearer()))
@@ -272,9 +273,13 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
         String moon = givenATeamLedBy(mina);
         whenIAddTheSeries(mina, moon, workId).andExpect(status().isCreated());
 
-        String shadow5 = whenIPublish(shadowLeader, workId, shadow, "5").andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        var shadowPublished = whenIPublish(shadowLeader, workId, shadow, "5").andExpect(status().isCreated()).andReturn();
+        String shadow5 = shadowPublished.getResponse().getContentAsString();
+        givenAModeratorApproves(idOf(shadowPublished));
         String moon5 = idOf(whenIPublish(mina, workId, moon, "5").andExpect(status().isCreated()).andReturn());
-        String moon6 = idOf(whenIPublish(mina, workId, moon, "6").andExpect(status().isCreated()).andReturn());
+        givenAModeratorApproves(moon5);
+        String moon6 = idOf(whenIPublish(mina, workId, moon, "6")
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.data.status").value("PUBLISHED")).andReturn());
         whenIPublish(mina, workId, moon, "5")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("CHAPTER_ALREADY_EXISTS"));

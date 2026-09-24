@@ -3,8 +3,6 @@ package com.readora.web.controller;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.UserId;
-import com.readora.domain.identity.Role;
-import com.readora.domain.identity.UserAccount;
 import com.readora.domain.work.*;
 import com.readora.web.ReadoraApplication;
 import org.junit.jupiter.api.DisplayName;
@@ -43,7 +41,7 @@ class ModerationIntegrationTest extends AuthTestSupport {
         String chapterId = chapter();
         Session aoi = register();
         Session kenji = register();
-        Session mina = registerModerator();
+        Session mina = aModerator();
         String spoiler = comment(aoi, chapterId, "He dies in the end");
         String rant = comment(aoi, chapterId, "Just an opinion");
 
@@ -75,14 +73,6 @@ class ModerationIntegrationTest extends AuthTestSupport {
         String second = report(kenji, rant, "HARASSMENT");
         mockMvc.perform(post("/api/v1/moderation/reports/" + second + "/dismiss").header("Authorization", mina.bearer())).andExpect(status().isOk());
         mockMvc.perform(get("/api/v1/comments/chapter/" + chapterId)).andExpect(jsonPath("$.data[*].id", hasItem(rant)));
-    }
-
-    private Session registerModerator() throws Exception {
-        Session session = register();
-        UserAccount account = userAccountRepository.findById(UserId.of(session.userId())).orElseThrow();
-        account.grantRole(Role.MODERATOR);
-        userAccountRepository.save(account);
-        return login(session.email());
     }
 
     private String chapter() {

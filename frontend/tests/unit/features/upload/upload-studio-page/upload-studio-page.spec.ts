@@ -200,6 +200,18 @@ describe('UploadStudioPage', () => {
     thenTheSuccessLinksAre(['/read/chap-999', '/works/work-123']);
   });
 
+  it("a new team's first chapter is sent for review: the studio says so and offers no reading link yet", async () => {
+    await givenIAmOnTheReview({ series: { title: 'Omniscient Reader' }, chapter: { number: '1' }, pages: ['p1.png'] });
+
+    await whenIPublish();
+    await whenTheSeriesIsCreated({ ...WORK, id: 'work-123', title: 'Omniscient Reader' });
+    await whenEveryPageUploads();
+    await whenTheChapterIsPublished({ ...CHAPTER, id: 'chap-999', workId: 'work-123', status: 'PENDING_REVIEW' });
+
+    thenTheStepIs('Chapter sent for review');
+    thenTheSuccessLinksAre(['/works/work-123']);
+  });
+
   it('the facts typed in the series step are sent with the new series; what is left empty is left out', async () => {
     await givenIOpenTheStudio();
     whenITypeTheFacts({ otherTitles: 'Jeonjijeok Dokja Sijeom\n\nORV', artist: 'Sleepy-C', year: '2020', language: 'KOREAN' });

@@ -6,6 +6,7 @@ import com.readora.domain.scanlation.TaskId;
 import com.readora.domain.scanlation.WorkflowTask;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.web.dto.ApiResponse;
+import com.readora.web.dto.ChapterStatusDto;
 import com.readora.web.dto.CreateTaskRequest;
 import com.readora.web.dto.PageAssetDto;
 import com.readora.web.dto.SubmitTaskRequest;
@@ -84,13 +85,13 @@ public class ScanlationTaskController {
 
     @PostMapping("/{taskId}/publish")
     @PreAuthorize("hasAuthority('LIBRARY_USE')")
-    @Operation(summary = "QC approve and publish chapter")
-    public ResponseEntity<ApiResponse<String>> publishFromQC(
+    @Operation(summary = "QC approve and publish chapter (a team's first chapter waits for a moderator: status PENDING_REVIEW)")
+    public ResponseEntity<ApiResponse<ChapterStatusDto>> publishFromQC(
             @PathVariable UUID projectId,
             @PathVariable UUID taskId
     ) {
-        scanlationTaskUseCase.publishChapterFromQC(ProjectId.of(projectId), TaskId.of(taskId), currentUserProvider.requireUserId());
-        return ResponseEntity.ok(ApiResponse.ok("Chapter published successfully"));
+        var chapter = scanlationTaskUseCase.publishChapterFromQC(ProjectId.of(projectId), TaskId.of(taskId), currentUserProvider.requireUserId());
+        return ResponseEntity.ok(ApiResponse.ok(ChapterStatusDto.fromDomain(chapter)));
     }
 
     /// The task right after the caller acted on it: only the caller can hold it then (claim assigns them, upload and

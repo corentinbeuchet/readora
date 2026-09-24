@@ -97,6 +97,16 @@ public class SocialCommentsStepDefinitions {
             }
 
             @Override
+            public boolean hasPublishedChapter(TeamId teamId) {
+                return true;
+            }
+
+            @Override
+            public List<Chapter> findWaitingForReview(int limit) {
+                return List.of();
+            }
+
+            @Override
             public Chapter save(Chapter chapter) {
                 return chapter;
             }

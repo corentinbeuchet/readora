@@ -1,6 +1,6 @@
 import { APIRequestContext, Page } from '@playwright/test';
 import { test, expect } from './support/fixtures';
-import { PostedComment, givenIAmLoggedInAsTheModerator, signUp, visibleCommentsOf } from './support/helpers';
+import { ChapterForReview, PostedComment, chapterIsReadable, givenIAmLoggedInAsTheModerator, signUp, visibleCommentsOf } from './support/helpers';
 
 /**
  * US-11 moderation queue, with the seed `moderator` account. The queue is shared by every test (and holds the seed's
@@ -34,6 +34,17 @@ test.describe('Moderation queue', () => {
 
     await thenTheReportIsNoLongerQueued(page, reportedComment);
     await thenReadersStillSeeTheComment(request, reportedComment);
+  });
+
+  test("a new team's first chapter waits for review until a moderator publishes it", async ({ page, request, firstChapterForReview }) => {
+    await thenReadersCannotOpen(request, firstChapterForReview);
+
+    await givenIAmLoggedInAsTheModerator(page);
+    await whenIOpenTheModerationQueue(page);
+    await whenIPublishTheChapter(page, firstChapterForReview);
+
+    await thenTheQueueSays(page, `${firstChapterForReview.title} chapter 1 is out.`);
+    await thenReadersCanOpen(request, firstChapterForReview);
   });
 
   test('a reader without moderation rights is refused the queue', async ({ page }) => {
@@ -87,4 +98,20 @@ async function thenIAmRefused(page: Page): Promise<void> {
 
 function queueItem(page: Page, comment: PostedComment) {
   return page.getByRole('listitem').filter({ hasText: comment.content });
+}
+
+async function whenIPublishTheChapter(page: Page, chapter: ChapterForReview): Promise<void> {
+  await page.getByRole('button', { name: `Publish chapter 1 of ${chapter.title}` }).click();
+}
+
+async function thenTheQueueSays(page: Page, message: string): Promise<void> {
+  await expect(page.getByRole('status').filter({ hasText: message })).toBeVisible();
+}
+
+async function thenReadersCannotOpen(request: APIRequestContext, chapter: ChapterForReview): Promise<void> {
+  expect(await chapterIsReadable(request, chapter.chapterId)).toBe(false);
+}
+
+async function thenReadersCanOpen(request: APIRequestContext, chapter: ChapterForReview): Promise<void> {
+  expect(await chapterIsReadable(request, chapter.chapterId)).toBe(true);
 }

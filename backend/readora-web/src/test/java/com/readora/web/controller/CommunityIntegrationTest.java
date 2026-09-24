@@ -46,6 +46,7 @@ class CommunityIntegrationTest extends AuthTestSupport {
                         .contentType(MediaType.APPLICATION_JSON).content("{\"teamId\":\"" + teamId + "\",\"chapterNumber\":\"1\",\"title\":\"Ch\",\"pages\":[" + PAGE + "]}"))
                 .andExpect(status().isCreated()).andReturn();
         String chapterId = json(chapter).path("data").path("id").asString();
+        givenAModeratorApproves(chapterId);
 
         Session kenji = register();
         mockMvc.perform(put("/api/v1/teams/" + teamId + "/follow")).andExpect(status().isUnauthorized());
