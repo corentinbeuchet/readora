@@ -25,7 +25,7 @@ describe('guarded routes (real router)', () => {
     http.verify();
   });
 
-  it.each(['/upload', '/moderation', '/profile', '/scanlation'])('sends an anonymous visitor from %s to login with a returnUrl', async (url) => {
+  it.each(['/upload', '/moderation', '/admin', '/profile', '/scanlation'])('sends an anonymous visitor from %s to login with a returnUrl', async (url) => {
     await whenIOpen(url);
 
     thenIAmOn(`/login?returnUrl=${encodeURIComponent(url)}`);
@@ -33,7 +33,8 @@ describe('guarded routes (real router)', () => {
 
   it.each([
     ['/upload', []],
-    ['/moderation', ['LIBRARY_USE']]
+    ['/moderation', ['LIBRARY_USE']],
+    ['/admin', ['LIBRARY_USE', 'COMMENT_MODERATE']]
   ] as [string, Permission[]][])('sends a user without the permission from %s to /forbidden', async (url, permissions) => {
     await givenIAmSignedInWith(permissions);
 
@@ -44,7 +45,8 @@ describe('guarded routes (real router)', () => {
 
   it.each([
     ['/upload', 'LIBRARY_USE'],
-    ['/moderation', 'COMMENT_MODERATE']
+    ['/moderation', 'COMMENT_MODERATE'],
+    ['/admin', 'USER_MANAGE']
   ] as [string, Permission][])('lets a user with the permission open %s', async (url, permission) => {
     await givenIAmSignedInWith([permission]);
 

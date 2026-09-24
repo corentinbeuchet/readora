@@ -47,6 +47,10 @@ public final class ErrorCodes {
     public static final String CHAPTER_NOT_WAITING = "CHAPTER_NOT_WAITING";
     public static final String WRONG_PASSWORD = "WRONG_PASSWORD";
     public static final String RESET_LINK_INVALID = "RESET_LINK_INVALID";
+    public static final String ACCOUNT_SUSPENDED = "ACCOUNT_SUSPENDED";
+    public static final String ACCOUNT_BANNED = "ACCOUNT_BANNED";
+    public static final String ACCOUNT_CLOSED = "ACCOUNT_CLOSED";
+    public static final String SELF_ADMINISTRATION = "SELF_ADMINISTRATION";
 
     private ErrorCodes() {
     }

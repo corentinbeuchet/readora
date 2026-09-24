@@ -1,7 +1,9 @@
 package com.readora.infrastructure.config;
 
+import com.readora.application.port.in.AdministerAccountsUseCase;
 import com.readora.application.port.in.AuthenticateUserUseCase;
 import com.readora.application.port.in.BrowseCatalogUseCase;
+import com.readora.application.port.in.CheckAccountStandingUseCase;
 import com.readora.application.port.in.CommunityUseCase;
 import com.readora.application.port.in.DeleteAccountUseCase;
 import com.readora.application.port.in.DirectPublishChapterUseCase;
@@ -25,6 +27,7 @@ import com.readora.application.port.in.ResetPasswordUseCase;
 import com.readora.application.port.in.ReviewChaptersUseCase;
 import com.readora.application.port.in.TrackReadingUseCase;
 import com.readora.application.port.out.*;
+import com.readora.application.service.AccountAdministrationService;
 import com.readora.application.service.AccountDeletionService;
 import com.readora.application.service.AccountExportService;
 import com.readora.application.service.AssetService;
@@ -154,6 +157,19 @@ public class DomainServiceConfig {
     @Bean
     public ExportMyDataUseCase exportMyDataUseCase(UserAccountRepositoryPort users, ReaderDataExportPort readerData) {
         return transactional(new AccountExportService(users, readerData, Clock.systemUTC()), ExportMyDataUseCase.class, transactionManager);
+    }
+
+    @Bean
+    public AdministerAccountsUseCase administerAccountsUseCase(UserAccountRepositoryPort users, RefreshTokenRepositoryPort refreshTokens) {
+        return transactional(new AccountAdministrationService(users, refreshTokens, Clock.systemUTC()), AdministerAccountsUseCase.class,
+                transactionManager);
+    }
+
+    /// Same (stateless) service, one instance per use case: a single bean would be a second candidate for both interfaces.
+    @Bean
+    public CheckAccountStandingUseCase checkAccountStandingUseCase(UserAccountRepositoryPort users, RefreshTokenRepositoryPort refreshTokens) {
+        return transactional(new AccountAdministrationService(users, refreshTokens, Clock.systemUTC()), CheckAccountStandingUseCase.class,
+                transactionManager);
     }
 
     @Bean

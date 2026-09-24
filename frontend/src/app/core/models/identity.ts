@@ -20,6 +20,28 @@ export const ROLE_LABELS: Record<Role, string> = {
   ADMIN: $localize`:@@role.admin:Admin`
 };
 
+/** What an admin decided about an account (US-16). */
+export type AccountStanding = 'ACTIVE' | 'SUSPENDED' | 'BANNED';
+
+/** An account as an admin sees it (`GET /admin/accounts`). */
+export interface AdminAccount {
+  id: string;
+  username: string;
+  email: string;
+  displayName: string;
+  roles: Role[];
+  standing: AccountStanding;
+  /** Set while `standing` is `SUSPENDED`. */
+  suspendedUntil: string | null;
+  createdAt: string;
+}
+
+/** The roles an admin gives, in the order offered. */
+export const ROLES: readonly Role[] = ['READER', 'MODERATOR', 'ADMIN'];
+
+/** Accounts are searched from this many characters (the API refuses fewer). */
+export const ACCOUNT_SEARCH_MIN = 2;
+
 export interface UserProfile {
   id: string;
   email: string;

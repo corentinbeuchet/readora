@@ -48,4 +48,12 @@ public class InMemoryUserAccounts implements UserAccountRepositoryPort {
         accounts.put(account.getId(), account);
         return account;
     }
+    @Override
+    public java.util.List<UserAccount> search(String prefix, int limit) {
+        String lower = prefix.toLowerCase(java.util.Locale.ROOT);
+        return accounts.values().stream().filter(account -> !account.isDeleted())
+                .filter(account -> account.getUsername().toLowerCase(java.util.Locale.ROOT).startsWith(lower)
+                        || account.getEmail().value().startsWith(lower))
+                .sorted(java.util.Comparator.comparing(UserAccount::getUsername)).limit(limit).toList();
+    }
 }

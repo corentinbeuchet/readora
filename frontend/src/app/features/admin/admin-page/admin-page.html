@@ -1,0 +1,72 @@
+<section class="page">
+  <h1 i18n="@@admin.page.title">Accounts</h1>
+
+  <div class="field search-field">
+    <label for="account-search" i18n="@@admin.page.search">Find an account</label>
+    <input id="account-search" type="search" autocomplete="off" aria-describedby="account-search-hint" [value]="typed()"
+           (input)="typed.set(search.value)" #search />
+    <p id="account-search-hint" class="muted" i18n="@@admin.page.searchHint">The start of a username or an email, {{ searchMin }} characters or more.</p>
+  </div>
+
+  <p class="muted" role="status">{{ done() }}</p>
+  @if (action.error(); as message) {
+    <p class="form-error" role="alert">{{ message }}</p>
+  }
+
+  @if (query().length < searchMin) {
+    <p class="muted" i18n="@@admin.page.prompt">Type the start of a username or an email.</p>
+  } @else if (accounts.isLoading() && !accounts.hasValue()) {
+    <p class="muted" role="status" i18n="@@admin.page.loading">Looking for accounts…</p>
+  } @else if (accounts.error()) {
+    <app-load-error (retry)="accounts.reload()" i18n="@@admin.page.loadError">The accounts could not be loaded.</app-load-error>
+  } @else if (accounts.hasValue() && accounts.value().length === 0) {
+    <p class="muted" i18n="@@admin.page.none">No account starts with that.</p>
+  } @else if (accounts.hasValue()) {
+    <ul class="accounts">
+      @for (account of accounts.value(); track account.id) {
+        <li class="card account">
+          <p class="account-meta">
+            <strong>&#64;{{ account.username }}</strong>
+            <span class="muted">{{ account.email }}</span>
+            <span class="badge">{{ roleLabels[account.roles[0]] }}</span>
+            @switch (account.standing) {
+              @case ('SUSPENDED') {
+                <span class="badge badge-accent" i18n="@@admin.page.suspendedUntil">Suspended until {{ account.suspendedUntil | date: 'mediumDate' }}</span>
+              }
+              @case ('BANNED') {
+                <span class="badge badge-accent" i18n="@@admin.page.bannedBadge">Banned</span>
+              }
+            }
+          </p>
+          @if (account.id === me()) {
+            <p class="muted" i18n="@@admin.page.yourAccount">This is your account: another admin changes it.</p>
+          } @else {
+            <div class="account-actions">
+              <label [for]="`role-${account.id}`" class="sr-only" i18n="@@admin.page.roleOf">Role of {{ account.username }}</label>
+              <select [id]="`role-${account.id}`" #role>
+                @for (option of roles; track option) {
+                  <option [value]="option" [selected]="option === account.roles[0]">{{ roleLabels[option] }}</option>
+                }
+              </select>
+              <button type="button" class="btn btn-sm" [disabled]="action.busyKey() === account.id" (click)="assignRole(account, role.value)">
+                <ng-container i18n="@@admin.page.changeRole">Change role<span class="sr-only"> of {{ account.username }}</span></ng-container>
+              </button>
+              @if (account.standing === 'ACTIVE') {
+                <button type="button" class="btn btn-sm" [disabled]="action.busyKey() === account.id" (click)="suspend(account)">
+                  <ng-container i18n="@@admin.page.suspend">Suspend<span class="sr-only"> {{ account.username }}</span> for {{ suspensionDays }} days</ng-container>
+                </button>
+                <button type="button" class="btn btn-sm btn-danger-outline" [disabled]="action.busyKey() === account.id" (click)="ban(account)">
+                  <ng-container i18n="@@admin.page.ban">Ban<span class="sr-only"> {{ account.username }}</span></ng-container>
+                </button>
+              } @else {
+                <button type="button" class="btn btn-sm" [disabled]="action.busyKey() === account.id" (click)="reinstate(account)">
+                  <ng-container i18n="@@admin.page.reinstate">Let<span class="sr-only"> {{ account.username }}</span> back in</ng-container>
+                </button>
+              }
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  }
+</section>

@@ -53,6 +53,8 @@ const FILE_OF_PREFIX = {
   library: 'library',
   lists: 'lists',
   moderation: 'moderation',
+  // Staff tools share the moderation file.
+  admin: 'moderation',
   profile: 'profile',
   reader: 'reader',
   scanlation: 'scanlation',

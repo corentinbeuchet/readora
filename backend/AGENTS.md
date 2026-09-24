@@ -124,6 +124,11 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
   production (`READORA_MAIL_HOST/USERNAME/PASSWORD/FROM`, no defaults there). A failed delivery is logged, never thrown,
   and mail is left out of the health check: a caller must answer the same whether an email went out, and an SMTP outage
   must not restart the app. Anything that says whether an address has an account (reset links) answers the same both ways.
+- An admin suspends (until a date) or bans an account (US-16, `AccountStanding`): login refuses it with
+  `ACCOUNT_SUSPENDED`/`ACCOUNT_BANNED` (only after the password matched), its refresh tokens are deleted, and
+  `AccountStandingFilter` (in the security chain, after the bearer token) refuses its *writes* on every request, as it
+  does for a deleted account (`ACCOUNT_CLOSED`): an access token outlives those decisions by up to its lifetime.
+  An admin never administers their own account (`SELF_ADMINISTRATION`).
 - A deleted account (US-15) keeps its `users` row under a `deleted_…` placeholder (`UserAccount.erase`, `deleted_at`):
   comments and reviews keep an author. What only the reader had is deleted by `ReaderDataErasureAdapter`: a new table
   keyed by a reader's id goes on its `READER_ROWS` list in the same commit, or it outlives the account (reports and

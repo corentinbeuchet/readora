@@ -3,6 +3,7 @@ package com.readora.infrastructure.persistence;
 import com.readora.application.port.out.CommunityQueryPort;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.UserId;
+import com.readora.domain.identity.AccountStanding;
 import com.readora.domain.identity.Email;
 import com.readora.domain.identity.PasswordHash;
 import com.readora.domain.identity.PasswordResetToken;
@@ -557,5 +558,29 @@ class PostgresMigrationTest {
         });
         assertThat(data.teams()).singleElement().satisfies(team -> assertThat(team.roles()).containsExactly("LEADER"));
         assertThat(data.comments()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Account search (LIKE prefix with escapes on username or email) and account standing (V30) run on PostgreSQL")
+    void accountSearchAndStandingRunOnPostgres() {
+        String suffix = Long.toString(System.nanoTime() % 1_000_000);
+        UserAccount kenji = userRepository.save(UserAccount.register(Email.of("pg_admin_" + suffix + "@readora.test"), "pg_kenji" + suffix,
+                PasswordHash.of("hash")));
+        userRepository.save(UserAccount.register(Email.of("pgxadmin" + suffix + "@readora.test"), "pgxkenji" + suffix, PasswordHash.of("hash")));
+
+        // "_" is a LIKE wildcard: escaped, "pg_" must not match "pgx".
+        assertThat(userRepository.search("PG_KENJI" + suffix, 20)).extracting(UserAccount::getId).containsExactly(kenji.getId());
+        assertThat(userRepository.search("pg_admin_" + suffix, 20)).extracting(UserAccount::getId).containsExactly(kenji.getId());
+
+        java.time.Instant now = java.time.Instant.parse("2026-09-24T10:00:00Z");
+        UserAccount loaded = userRepository.findById(kenji.getId()).orElseThrow();
+        loaded.suspendUntil(now.plus(java.time.Duration.ofDays(7)), now);
+        userRepository.save(loaded);
+
+        assertThat(userRepository.findById(kenji.getId())).get().satisfies(account -> {
+            assertThat(account.getStanding()).isEqualTo(AccountStanding.SUSPENDED);
+            assertThat(account.getSuspendedUntil()).isEqualTo(now.plus(java.time.Duration.ofDays(7)));
+            assertThat(account.isInGoodStanding(now.plus(java.time.Duration.ofDays(8)))).isTrue();
+        });
     }
 }

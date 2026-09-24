@@ -25,6 +25,26 @@
     "moderation.chapters.sendBack": "Renvoyer{$START_TAG_SPAN} le chapitre {$INTERPOLATION} de {$INTERPOLATION_1}{$CLOSE_TAG_SPAN}",
     "moderation.chapters.published": "{$series} : le chapitre {$number} est paru.",
     "moderation.chapters.sentBack": "{$series} : le chapitre {$number} a été renvoyé à {$team}.",
-    "moderation.page.commentsTitle": "Commentaires signalés"
+    "moderation.page.commentsTitle": "Commentaires signalés",
+    "admin.page.title": "Comptes",
+    "admin.page.search": "Trouver un compte",
+    "admin.page.searchHint": "Le début d'un nom d'utilisateur ou d'un e-mail, {$INTERPOLATION} caractères ou plus.",
+    "admin.page.prompt": "Saisissez le début d'un nom d'utilisateur ou d'un e-mail.",
+    "admin.page.loading": "Recherche des comptes…",
+    "admin.page.loadError": "Les comptes n'ont pas pu être chargés.",
+    "admin.page.none": "Aucun compte ne commence ainsi.",
+    "admin.page.suspendedUntil": "Suspendu jusqu'au {$INTERPOLATION}",
+    "admin.page.bannedBadge": "Banni",
+    "admin.page.yourAccount": "C'est votre compte : un autre administrateur le modifie.",
+    "admin.page.roleOf": "Rôle de {$INTERPOLATION}",
+    "admin.page.changeRole": "Changer le rôle{$START_TAG_SPAN} de {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "admin.page.ban": "Bannir{$START_TAG_SPAN} {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "admin.page.seoTitle": "Comptes",
+    "admin.page.roleChanged": "{$username} est maintenant {$role}.",
+    "admin.page.suspended": "{$username} est suspendu pour {$days} jours.",
+    "admin.page.banned": "{$username} est banni.",
+    "admin.page.reinstated": "{$username} peut de nouveau utiliser son compte.",
+    "admin.page.suspend": "Suspendre{$START_TAG_SPAN} {$INTERPOLATION}{$CLOSE_TAG_SPAN} pendant {$INTERPOLATION_1} jours",
+    "admin.page.reinstate": "Laisser revenir{$START_TAG_SPAN} {$INTERPOLATION}{$CLOSE_TAG_SPAN}"
   }
 }

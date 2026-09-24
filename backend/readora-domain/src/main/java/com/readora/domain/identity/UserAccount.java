@@ -29,6 +29,8 @@ public class UserAccount extends AggregateRoot<UserId> {
     private Instant updatedAt;
     /// When the owner deleted the account (US-15); the row stays so comments and reviews keep an author.
     private @Nullable Instant deletedAt;
+    private AccountStanding standing;
+    private @Nullable Instant suspendedUntil;
 
     public UserAccount(UserId id, Email email, String username, PasswordHash passwordHash, @Nullable String displayName,
                        @Nullable String bio, @Nullable String avatarUrl, @Nullable Set<Role> roles,
@@ -39,8 +41,17 @@ public class UserAccount extends AggregateRoot<UserId> {
     public UserAccount(UserId id, Email email, String username, PasswordHash passwordHash, @Nullable String displayName,
                        @Nullable String bio, @Nullable String avatarUrl, @Nullable Set<Role> roles,
                        @Nullable Instant createdAt, @Nullable Instant updatedAt, @Nullable Instant deletedAt) {
+        this(id, email, username, passwordHash, displayName, bio, avatarUrl, roles, createdAt, updatedAt, deletedAt, AccountStanding.ACTIVE, null);
+    }
+
+    public UserAccount(UserId id, Email email, String username, PasswordHash passwordHash, @Nullable String displayName,
+                       @Nullable String bio, @Nullable String avatarUrl, @Nullable Set<Role> roles,
+                       @Nullable Instant createdAt, @Nullable Instant updatedAt, @Nullable Instant deletedAt,
+                       AccountStanding standing, @Nullable Instant suspendedUntil) {
         super(id);
         this.deletedAt = deletedAt;
+        this.standing = Objects.requireNonNull(standing, "AccountStanding cannot be null");
+        this.suspendedUntil = suspendedUntil;
         this.email = Objects.requireNonNull(email, "Email cannot be null");
         this.username = validateUsername(username);
         this.passwordHash = Objects.requireNonNull(passwordHash, "PasswordHash cannot be null");
@@ -119,6 +130,55 @@ public class UserAccount extends AggregateRoot<UserId> {
         this.roles.add(Role.READER);
         this.deletedAt = now;
         this.updatedAt = now;
+    }
+
+    /// The standing at `now`: a suspension whose date has passed counts as lifted.
+    public AccountStanding standingAt(Instant now) {
+        if (standing == AccountStanding.SUSPENDED && suspendedUntil != null && !now.isBefore(suspendedUntil)) {
+            return AccountStanding.ACTIVE;
+        }
+        return standing;
+    }
+
+    /// May sign in and write at `now` (US-16).
+    public boolean isInGoodStanding(Instant now) {
+        return !isDeleted() && standingAt(now) == AccountStanding.ACTIVE;
+    }
+
+    /// An admin keeps the account out until `until` (US-16).
+    public void suspendUntil(Instant until, Instant now) {
+        this.standing = AccountStanding.SUSPENDED;
+        this.suspendedUntil = Objects.requireNonNull(until, "until cannot be null");
+        this.updatedAt = now;
+    }
+
+    /// An admin keeps the account out until reinstated (US-16).
+    public void ban(Instant now) {
+        this.standing = AccountStanding.BANNED;
+        this.suspendedUntil = null;
+        this.updatedAt = now;
+    }
+
+    public void reinstate(Instant now) {
+        this.standing = AccountStanding.ACTIVE;
+        this.suspendedUntil = null;
+        this.updatedAt = now;
+    }
+
+    /// An admin sets the one role the account has (US-16): reader, moderator or admin.
+    public void assignRole(Role role, Instant now) {
+        Objects.requireNonNull(role, "Role cannot be null");
+        this.roles.clear();
+        this.roles.add(role);
+        this.updatedAt = now;
+    }
+
+    public AccountStanding getStanding() {
+        return standing;
+    }
+
+    public @Nullable Instant getSuspendedUntil() {
+        return suspendedUntil;
     }
 
     public boolean isDeleted() {

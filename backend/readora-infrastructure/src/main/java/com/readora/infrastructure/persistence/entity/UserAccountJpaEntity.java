@@ -46,6 +46,17 @@ public class UserAccountJpaEntity {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
+    @Column(nullable = false, length = 20)
+    private String standing = "ACTIVE";
+
+    @Column(name = "suspended_until")
+    private Instant suspendedUntil;
+
+    public String getStanding() { return standing; }
+    public void setStanding(String standing) { this.standing = standing; }
+    public Instant getSuspendedUntil() { return suspendedUntil; }
+    public void setSuspendedUntil(Instant suspendedUntil) { this.suspendedUntil = suspendedUntil; }
+
     public Instant getDeletedAt() { return deletedAt; }
     public void setDeletedAt(Instant deletedAt) { this.deletedAt = deletedAt; }
 

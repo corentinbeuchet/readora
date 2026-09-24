@@ -50,6 +50,7 @@
               <div role="group" class="menu-group" aria-label="Team tools" i18n-aria-label="@@shell.menu.team">
                 <button type="button" ngMenuItem value="/scanlation" i18n="@@shell.menu.scanlation">Studio</button>
                 <button *appHasPermission="'COMMENT_MODERATE'" type="button" ngMenuItem value="/moderation" i18n="@@shell.menu.moderation">Moderation</button>
+                <button *appHasPermission="'USER_MANAGE'" type="button" ngMenuItem value="/admin" i18n="@@shell.menu.admin">Accounts</button>
               </div>
               <div role="separator" class="menu-separator"></div>
             }

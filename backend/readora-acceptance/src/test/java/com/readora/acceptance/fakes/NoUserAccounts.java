@@ -38,4 +38,8 @@ public class NoUserAccounts implements UserAccountRepositoryPort {
     public UserAccount save(UserAccount account) {
         throw new UnsupportedOperationException("no accounts in these scenarios");
     }
+    @Override
+    public java.util.List<UserAccount> search(String prefix, int limit) {
+        return java.util.List.of();
+    }
 }

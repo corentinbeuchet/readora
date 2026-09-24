@@ -5,6 +5,7 @@ import com.readora.application.port.out.PasswordHasherPort;
 import com.readora.application.port.out.RefreshTokenRepositoryPort;
 import com.readora.application.port.out.TokenProviderPort;
 import com.readora.application.port.out.UserAccountRepositoryPort;
+import com.readora.domain.common.AccessDeniedDomainException;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.ErrorCodes;
 import com.readora.domain.common.NotFoundException;
@@ -18,6 +19,7 @@ import com.readora.domain.identity.UserAccount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
@@ -35,6 +37,7 @@ public class AuthenticationService implements AuthenticateUserUseCase {
     private final Duration refreshReuseGrace;
     /// Compared against when the email is unknown, so a failed login costs the same time either way.
     private final PasswordHash timingDummyHash;
+    private final Clock clock;
 
     public AuthenticationService(UserAccountRepositoryPort userRepository,
                                  RefreshTokenRepositoryPort refreshTokenRepository,
@@ -51,6 +54,16 @@ public class AuthenticationService implements AuthenticateUserUseCase {
                                  PasswordHasherPort passwordHasher,
                                  TokenProviderPort tokenProvider,
                                  Duration refreshReuseGrace) {
+        this(userRepository, refreshTokenRepository, passwordHasher, tokenProvider, refreshReuseGrace, Clock.systemUTC());
+    }
+
+    public AuthenticationService(UserAccountRepositoryPort userRepository,
+                                 RefreshTokenRepositoryPort refreshTokenRepository,
+                                 PasswordHasherPort passwordHasher,
+                                 TokenProviderPort tokenProvider,
+                                 Duration refreshReuseGrace,
+                                 Clock clock) {
+        this.clock = Objects.requireNonNull(clock, "Clock cannot be null");
         this.refreshReuseGrace = Objects.requireNonNull(refreshReuseGrace, "Refresh reuse grace cannot be null");
         this.userRepository = Objects.requireNonNull(userRepository, "UserAccountRepositoryPort cannot be null");
         this.refreshTokenRepository = Objects.requireNonNull(refreshTokenRepository, "RefreshTokenRepositoryPort cannot be null");
@@ -90,6 +103,8 @@ public class AuthenticationService implements AuthenticateUserUseCase {
         if (maybeAccount.isEmpty() || !passwordMatches) {
             throw new InvalidCredentialsException("Invalid email or password");
         }
+        // Only after the password matched: a stranger learns nothing about an account's standing.
+        requireGoodStanding(maybeAccount.get());
         return issueTokens(maybeAccount.get());
     }
 
@@ -100,7 +115,7 @@ public class AuthenticationService implements AuthenticateUserUseCase {
         }
         RefreshToken current = refreshTokenRepository.findByTokenHash(tokenProvider.hashRefreshToken(rawRefreshToken))
                 .orElseThrow(() -> InvalidCredentialsException.sessionExpired("Unknown refresh token"));
-        Instant now = Instant.now();
+        Instant now = clock.instant();
 
         if (current.getRevokedAt() != null) {
             if (current.getRevokedAt().plus(refreshReuseGrace).isBefore(now)) {
@@ -118,7 +133,8 @@ public class AuthenticationService implements AuthenticateUserUseCase {
             throw InvalidCredentialsException.sessionExpired("Refresh token expired or revoked");
         }
         UserAccount account = userRepository.findById(current.getUserId())
-                .orElseThrow(() -> InvalidCredentialsException.sessionExpired("Refresh token owner no longer exists"));
+                .filter(owner -> owner.isInGoodStanding(clock.instant()))
+                .orElseThrow(() -> InvalidCredentialsException.sessionExpired("Refresh token owner no longer exists or may not sign in"));
         return issueTokens(account);
     }
 
@@ -148,10 +164,20 @@ public class AuthenticationService implements AuthenticateUserUseCase {
         return issueTokens(saved);
     }
 
+    private void requireGoodStanding(UserAccount account) {
+        switch (account.standingAt(clock.instant())) {
+            case SUSPENDED -> throw AccessDeniedDomainException.withCode(ErrorCodes.ACCOUNT_SUSPENDED,
+                    "This account is suspended until " + account.getSuspendedUntil());
+            case BANNED -> throw AccessDeniedDomainException.withCode(ErrorCodes.ACCOUNT_BANNED, "This account is banned");
+            case ACTIVE -> {
+            }
+        }
+    }
+
     private AuthResult issueTokens(UserAccount account) {
         TokenProviderPort.AccessToken accessToken = tokenProvider.issueAccessToken(account);
         String rawRefresh = tokenProvider.generateRefreshToken();
-        Instant refreshExpiry = Instant.now().plus(tokenProvider.refreshTokenTtl());
+        Instant refreshExpiry = clock.instant().plus(tokenProvider.refreshTokenTtl());
         refreshTokenRepository.save(RefreshToken.issue(account.getId(), tokenProvider.hashRefreshToken(rawRefresh), refreshExpiry));
         return new AuthResult(account, accessToken.value(), accessToken.expiresAt(), rawRefresh, tokenProvider.refreshTokenTtl());
     }

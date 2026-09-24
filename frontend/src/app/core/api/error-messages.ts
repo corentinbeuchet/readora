@@ -45,6 +45,14 @@ export function errorMessageForCode(code: string | null, retryAfterSeconds: numb
       return $localize`:@@error.notOnTeam:This reader is not on the team. Invite them first.`;
     case 'BOARD_OFF':
       return $localize`:@@error.boardOff:The team does not use a task board for this series. A leader turns it on in the Studio.`;
+    case 'ACCOUNT_SUSPENDED':
+      return $localize`:@@error.accountSuspended:This account is suspended for now. It comes back by itself at the end of the suspension.`;
+    case 'ACCOUNT_BANNED':
+      return $localize`:@@error.accountBanned:This account is banned.`;
+    case 'ACCOUNT_CLOSED':
+      return $localize`:@@error.accountClosed:This account was deleted.`;
+    case 'SELF_ADMINISTRATION':
+      return $localize`:@@error.selfAdministration:You cannot change your own account from here: ask another admin.`;
     case 'RESET_LINK_INVALID':
       return $localize`:@@error.resetLinkInvalid:This link no longer works: it was already used, replaced by a newer one, or is older than 30 minutes. Ask for a new one.`;
     case 'WRONG_PASSWORD':

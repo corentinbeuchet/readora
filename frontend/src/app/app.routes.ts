@@ -95,6 +95,13 @@ export const routes: Routes = [
   },
 
   {
+    path: 'admin',
+    loadComponent: () => import('@app/features/admin/admin-page/admin-page').then((m) => m.AdminPage),
+    canActivate: [permissionGuard],
+    data: { permission: 'USER_MANAGE' }
+  },
+
+  {
     path: 'login',
     loadComponent: () => import('@app/features/auth/login-page/login-page').then((m) => m.LoginPage),
     canActivate: [guestGuard]

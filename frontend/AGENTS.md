@@ -184,7 +184,7 @@ interface is neutral and the cover art is the colour on the page.
   chapter and the team (`.sr-only` prefix). Same pattern in the reader toolbar (model: `chapter-list/`).
 - **Navigation** (US-14): one `<nav aria-label="Primary">` (`shell/primary-nav/`), a bottom tab bar below `lg` and
   header links from `lg`, by CSS only; at most five entries shown at once; the logo is the way home (no "Home" link
-  in the header); team tools (the Studio, and Moderation for moderators) live in the account menu. A new section must earn its
+  in the header); team tools (the Studio, Moderation for moderators, Accounts for admins) live in the account menu. A new section must earn its
   place in those five. The footer may repeat sections (it is far from the header); two links to one page in the same
   view are a bug. Pages that need the whole phone screen call `LayoutStore.setTabBarHidden`.
 - **Home page:** only the frame is prerendered; rankings, latest chapters, lists and everything personal load in

@@ -1,18 +1,22 @@
 package com.readora.infrastructure.persistence.adapter;
 
 import com.readora.application.port.out.UserAccountRepositoryPort;
+import com.readora.domain.common.UserId;
+import com.readora.domain.identity.AccountStanding;
 import com.readora.domain.identity.Email;
 import com.readora.domain.identity.PasswordHash;
 import com.readora.domain.identity.Role;
 import com.readora.domain.identity.UserAccount;
-import com.readora.domain.common.UserId;
 import com.readora.infrastructure.persistence.entity.UserAccountJpaEntity;
 import com.readora.infrastructure.persistence.repository.SpringDataUserAccountRepository;
+import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -84,7 +88,9 @@ public class UserAccountRepositoryAdapter implements UserAccountRepositoryPort {
                 parseRoles(entity.getRoles()),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
-                entity.getDeletedAt()
+                entity.getDeletedAt(),
+                AccountStanding.valueOf(entity.getStanding()),
+                entity.getSuspendedUntil()
         );
     }
 
@@ -114,6 +120,8 @@ public class UserAccountRepositoryAdapter implements UserAccountRepositoryPort {
         entity.setRoles(joinRoles(account.getRoles()));
         entity.setUpdatedAt(account.getUpdatedAt());
         entity.setDeletedAt(account.getDeletedAt());
+        entity.setStanding(account.getStanding().name());
+        entity.setSuspendedUntil(account.getSuspendedUntil());
 
         return entity;
     }
@@ -131,5 +139,11 @@ public class UserAccountRepositoryAdapter implements UserAccountRepositoryPort {
                 .filter(s -> !s.isEmpty())
                 .map(Role::valueOf)
                 .collect(Collectors.toCollection(() -> EnumSet.noneOf(Role.class)));
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserAccount> search(String prefix, int limit) {
+        String literal = prefix.toLowerCase(Locale.ROOT).replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
+        return springDataRepository.searchByUsernameOrEmail(literal, Limit.of(limit)).stream().map(this::toDomain).toList();
     }
 }

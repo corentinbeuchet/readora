@@ -106,3 +106,9 @@ export async function settle(target: { detectChanges(): void }, ticks = 3): Prom
   await new Promise<void>((resolve) => setTimeout(resolve, 0));
   target.detectChanges();
 }
+
+/** `settle()` for specs on fake timers (its real `setTimeout` would never fire): lets pending work run, then renders. */
+export async function settleUnderFakeTimers(target: { detectChanges(): void }): Promise<void> {
+  await vi.advanceTimersByTimeAsync(0);
+  target.detectChanges();
+}

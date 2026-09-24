@@ -210,6 +210,20 @@ export const MODERATOR = {
   password: process.env['E2E_MODERATOR_PASSWORD'] ?? 'readora-dev'
 };
 
+/**
+ * Account with `USER_MANAGE` (US-16). Defaults to the `admin` dev seed account; against another environment set
+ * E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD.
+ */
+export const ADMIN = {
+  email: process.env['E2E_ADMIN_EMAIL'] ?? 'admin@readora.local',
+  password: process.env['E2E_ADMIN_PASSWORD'] ?? 'readora-dev'
+};
+
+/** Logs in through the UI as the admin account. */
+export async function givenIAmLoggedInAsTheAdmin(page: Page): Promise<void> {
+  await logIn(page, ADMIN);
+}
+
 /** Logs in through the UI as the moderator account. */
 export async function givenIAmLoggedInAsTheModerator(page: Page): Promise<void> {
   await logIn(page, MODERATOR);

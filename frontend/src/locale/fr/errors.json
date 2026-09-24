@@ -38,6 +38,10 @@
     "error.taskHasNoPages": "Ce chapitre n'a pas encore de pages : envoyez les pages de la dernière étape, puis publiez.",
     "error.chapterNotWaiting": "Ce chapitre a déjà été examiné. La liste montre maintenant ce qui attend encore.",
     "error.wrongPassword": "Votre mot de passe actuel n'est pas le bon. Saisissez-le de nouveau.",
-    "error.resetLinkInvalid": "Ce lien ne fonctionne plus : il a déjà servi, un lien plus récent l'a remplacé, ou il a plus de 30 minutes. Demandez-en un nouveau."
+    "error.resetLinkInvalid": "Ce lien ne fonctionne plus : il a déjà servi, un lien plus récent l'a remplacé, ou il a plus de 30 minutes. Demandez-en un nouveau.",
+    "error.accountSuspended": "Ce compte est suspendu pour le moment. Il revient de lui-même à la fin de la suspension.",
+    "error.accountBanned": "Ce compte est banni.",
+    "error.accountClosed": "Ce compte a été supprimé.",
+    "error.selfAdministration": "Vous ne pouvez pas modifier votre propre compte ici : demandez à un autre administrateur."
   }
 }

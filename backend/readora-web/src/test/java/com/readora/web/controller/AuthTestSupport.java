@@ -128,6 +128,15 @@ abstract class AuthTestSupport {
         return login(session.email());
     }
 
+    /// An account that can manage users (US-16): a new reader made admin, signed in again so the token has it.
+    protected Session anAdmin() throws Exception {
+        Session session = register();
+        var account = userAccountRepository.findById(UserId.of(session.userId())).orElseThrow();
+        account.grantRole(com.readora.domain.identity.Role.ADMIN);
+        userAccountRepository.save(account);
+        return login(session.email());
+    }
+
     /// A team's first chapter waits for a moderator (US-11): one approves it, so readers see it and the team's next
     /// chapters go out straight away.
     protected void givenAModeratorApproves(String chapterId) throws Exception {

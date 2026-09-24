@@ -33,6 +33,7 @@
     "shell.menu.team": "Team tools",
     "shell.menu.scanlation": "Studio",
     "shell.menu.moderation": "Moderation",
+    "shell.menu.admin": "Accounts",
     "shell.menu.logout": "Log out",
     "shell.login": "Log in",
     "shell.signUp": "Sign up",
