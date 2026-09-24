@@ -25,6 +25,11 @@ spring:
         format_sql: true
         jdbc:
           batch_size: 25
+  # Hot read models (rankings) kept in memory per instance: bounded, and never older than 5 minutes.
+  cache:
+    cache-names: popular-works
+    caffeine:
+      spec: maximumSize=32,expireAfterWrite=5m
   # Email (US-15). Dev: Mailpit on localhost:1025 (docker compose runs one, inbox on http://localhost:8025).
   mail:
     host: ${READORA_MAIL_HOST:localhost}

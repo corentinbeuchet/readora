@@ -15,6 +15,9 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  # Tests see their writes at once; RankingsCacheTest checks the cache itself.
+  cache:
+    type: none
   # Nothing listens there: tests that care about emails replace MailPort.
   mail:
     host: localhost

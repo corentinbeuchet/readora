@@ -33,6 +33,9 @@ import java.util.stream.IntStream;
 
 public class DiscoveryService implements DiscoverUseCase {
 
+    /// How often rankings can change (they are computed, and cached, per 5-minute window).
+    static final Duration RANKING_STEP = Duration.ofMinutes(5);
+
     private final DiscoveryQueryPort discovery;
     private final WorkRepositoryPort workRepository;
     private final RatingRepositoryPort ratingRepository;
@@ -105,8 +108,11 @@ public class DiscoveryService implements DiscoverUseCase {
                 query.types(), query.statuses(), query.demographics()));
     }
 
+    /// Rankings move in steps of `RANKING_STEP`: the period starts at the beginning of the current step, so every request
+    /// in a step asks the same question (and a cache can answer it).
     private Instant since(Period period) {
         Instant now = clock.instant();
+        now = now.minusMillis(now.toEpochMilli() % RANKING_STEP.toMillis());
         return switch (period) {
             case TODAY -> now.minus(Duration.ofDays(1));
             case WEEK -> now.minus(Duration.ofDays(7));

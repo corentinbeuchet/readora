@@ -36,6 +36,8 @@ Feature: Latest updates and rankings
 
   # Inspired by: comix.to, WEBTOON trending
   # Score: reads + 3 × comments + 5 × library adds during the chosen period.
+  # The period starts at the current 5-minute step and the ranking is kept that long: it may lag new activity by up to
+  # 5 minutes (a cheap query and a cache instead of recounting every series on every visit).
   @should
   Scenario: Popular this week
     Given "Horimiya" had the most reads, comments and library adds this week

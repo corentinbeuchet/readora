@@ -96,6 +96,9 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 - Every association declares `fetch = FetchType.LAZY` explicitly (`@ManyToOne`/`@OneToOne` default to EAGER); load what
   a use case needs with `JOIN FETCH` or an entity graph. Keep `spring.jpa.open-in-view=false`.
 - `@Transactional` at the use-case boundary (see Application services), `readOnly = true` for queries; never on controllers.
+- Caches (`CacheConfig`, Caffeine per instance, `spring.cache.*`) only for read models that may be minutes old
+  (rankings: `DiscoveryQueryAdapter.POPULAR_WORKS_CACHE`, 5 minutes); the caller rounds time arguments so requests share
+  entries. Tests run with `spring.cache.type: none`; each cache has its own test (model: `RankingsCacheTest`).
 - No "load everything then filter in memory"; write a query (`findByWorkIdAndStatus`). Hot queries get a statement-count
   assertion in tests (Hibernate statistics or datasource-proxy) to catch N+1.
 
@@ -220,8 +223,8 @@ Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = repor
   allow-list when the type is blank and allows `application/octet-stream`.
 - R14 `UseCaseTransactions` never sets `readOnly`: query-only use cases run read-write, adapters' `readOnly = true` is ignored.
 - Same sweep as R4 still to do (survey): uncoded reader-visible rules in `WorkManagementService`, `ReaderSocialService`.
-- R19/R20 (survey) Rankings query: three correlated counts per work; missing indexes `chapter_reads(work_id, read_at)`,
-  `refresh_tokens(expires_at)`; `%text%` search on unindexed title/author.
+- R19/R20 (survey) Missing index `refresh_tokens(expires_at)`; `%text%` search on unindexed title/author. (The rankings
+  query was rewritten and indexed: V31.)
 - R21/R22 (survey) Unbounded lists (chapter comments, work chapters, library list/export, bookmarks, `GET /teams/mine`);
   the chapter list loads every page row for `pageCount`. The chapter list now has one item per team version: when it
   gets paginated, paginate by chapter number on the server, so the versions of a number never split across pages.
