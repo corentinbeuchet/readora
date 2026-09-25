@@ -1,8 +1,11 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { PagedResponse } from '@app/core/models/api';
 import { MyTeam, ScanlationProject, ScanlationRole, TeamInvitation, WaitingTask } from '@app/core/models/scanlation';
 import { ApiClient, parseEnvelope } from './api-client';
+
+const NOTHING_WAITS: PagedResponse<WaitingTask> = { items: [], page: 0, size: 0, totalElements: 0, totalPages: 0 };
 
 /**
  * Running a team (US-12), `/api/v1/teams`: any signed-in reader; the server requires the caller to lead the team
@@ -20,12 +23,12 @@ export class TeamsApi {
     });
   }
 
-  /** What waits for me across my teams' boards: the tasks I hold first, then open ones my roles cover. */
-  waitingResource(enabled: Signal<boolean>): HttpResourceRef<WaitingTask[]> {
-    return httpResource<WaitingTask[]>(() => (enabled() ? this.api.url('/teams/mine/tasks') : undefined), {
-      parse: (raw) => parseEnvelope<WaitingTask[]>(raw) ?? [],
-      defaultValue: []
-    });
+  /** What waits for me across my teams' boards, 20 per page: the tasks I hold first, then open ones my roles cover. */
+  waitingResource(enabled: Signal<boolean>, page: Signal<number>): HttpResourceRef<PagedResponse<WaitingTask>> {
+    return httpResource<PagedResponse<WaitingTask>>(
+      () => (enabled() ? { url: this.api.url('/teams/mine/tasks'), params: { page: page() } } : undefined),
+      { parse: (raw) => parseEnvelope<PagedResponse<WaitingTask>>(raw) ?? NOTHING_WAITS, defaultValue: NOTHING_WAITS }
+    );
   }
 
   create(request: { name: string; description: string }): Observable<MyTeam> {

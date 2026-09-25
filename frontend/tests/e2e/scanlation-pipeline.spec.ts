@@ -1,6 +1,6 @@
-import { Page } from '@playwright/test';
+import { Locator, Page } from '@playwright/test';
 import { test as base, expect } from './support/fixtures';
-import { signUp, thenTheAccountMenuOffersTeamToolsButNotModeration } from './support/helpers';
+import { givenIAmLoggedInAs, signUp, thenTheAccountMenuOffersTeamToolsButNotModeration } from './support/helpers';
 
 const test = base.extend<{
   /** A second, independent browser session (its own context: cookies and storage are not shared with `page`). */
@@ -31,6 +31,21 @@ test.describe('Scanlation Collaborative Multi-Role Pipeline Suite', () => {
     await thenICanSeeTheHeading(page, 'Project unavailable');
   });
 
+  test('the Studio shows what waits for me 20 at a time', async ({ page, busyLeader }) => {
+    await givenIAmLoggedInAs(page, busyLeader.account);
+
+    await whenIVisit(page, '/scanlation');
+
+    await thenTheChaptersWaitingForMeAre(page, 20);
+    await thenICanSee(page, 'Page 1 / 2');
+
+    await whenIShowTheNextPageOfWhatWaits(page);
+
+    await thenTheChaptersWaitingForMeAre(page, 1);
+    await thenICanSee(page, `Chapter 21 of ${busyLeader.title}`);
+    await thenICanSee(page, 'Page 2 / 2');
+  });
+
   test('two collaborators have isolated sessions (one browser context each)', async ({ page, otherSession }) => {
     const cleanerName = await givenIAmSignedUpAs(page, 'cleaner');
 
@@ -56,12 +71,28 @@ async function whenIVisit(page: Page, url: string): Promise<void> {
   await page.goto(url);
 }
 
+async function whenIShowTheNextPageOfWhatWaits(page: Page): Promise<void> {
+  await whatWaitsForMe(page).getByRole('button', { name: 'Next' }).click();
+}
+
 async function whenIReload(page: Page): Promise<void> {
   await page.reload();
 }
 
 async function thenIAmOn(page: Page, url: string | RegExp): Promise<void> {
   await expect(page).toHaveURL(url);
+}
+
+function whatWaitsForMe(page: Page): Locator {
+  return page.getByRole('region', { name: 'Waiting for you' });
+}
+
+async function thenTheChaptersWaitingForMeAre(page: Page, count: number): Promise<void> {
+  await expect(whatWaitsForMe(page).getByRole('listitem')).toHaveCount(count);
+}
+
+async function thenICanSee(page: Page, text: string): Promise<void> {
+  await expect(page.getByText(text, { exact: true })).toBeVisible();
 }
 
 async function thenICanSeeTheHeading(page: Page, name: string): Promise<void> {

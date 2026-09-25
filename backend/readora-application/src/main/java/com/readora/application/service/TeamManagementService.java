@@ -1,5 +1,6 @@
 package com.readora.application.service;
 
+import com.readora.application.port.in.BrowseCatalogUseCase;
 import com.readora.application.port.in.ManageTeamUseCase;
 import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
@@ -215,7 +216,7 @@ public class TeamManagementService implements ManageTeamUseCase {
     }
 
     @Override
-    public List<WaitingTask> waitingFor(UserId userId) {
+    public BrowseCatalogUseCase.Page<WaitingTask> waitingFor(UserId userId, int page, int size) {
         List<Team> mine = teams.findByMember(userId);
         Map<TeamId, Team> teamsById = mine.stream().collect(Collectors.toMap(Team::getId, team -> team));
         // Unfinished tasks of boards that are on, as plain columns (no page is loaded); roles are checked per team here.
@@ -238,11 +239,16 @@ public class TeamManagementService implements ManageTeamUseCase {
                 waiting.add(new WaitingTask(task.projectId(), task.workId(), title, team, task.taskId(), task.chapterNumber(), task.stage(), mineTask));
             }
         }
-        return waiting.stream()
+        int safePage = Math.max(0, page);
+        int safeSize = Math.clamp(size, 1, MAX_WAITING_PAGE_SIZE);
+        List<WaitingTask> items = waiting.stream()
                 .sorted(Comparator.comparing((WaitingTask w) -> !w.mine())
                         .thenComparing(WaitingTask::workTitle, String.CASE_INSENSITIVE_ORDER)
                         .thenComparing(WaitingTask::chapterNumber))
+                .skip((long) safePage * safeSize)
+                .limit(safeSize)
                 .toList();
+        return new BrowseCatalogUseCase.Page<>(items, safePage, safeSize, waiting.size());
     }
 
     private void requireLeaderOrAdmin(Team team, UserId actorId) {

@@ -1,10 +1,12 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test as base } from '@playwright/test';
 import {
+  BusyLeader,
   ChapterForReview,
   PostedComment,
   dismissReportIfOpen,
   dismissReportsOn,
+  leadABusyTeam,
   publishChapter,
   publishCommentedChapter,
   publishReportedComment,
@@ -33,6 +35,8 @@ export const test = base.extend<{
   reportedComment: PostedComment;
   /** A new team's first chapter, waiting for a moderator (US-11); sent back after the test if still waiting. */
   firstChapterForReview: ChapterForReview;
+  /** A new reader leading a team with 21 raw chapters waiting on its task board (more than one Studio page). */
+  busyLeader: BusyLeader;
   /** An axe scan of the current page against WCAG 2.0/2.1/2.2 A and AA (`await axe().analyze()`). */
   axe: () => AxeBuilder;
 }>({
@@ -63,6 +67,9 @@ export const test = base.extend<{
       });
     }
     await use(context);
+  },
+  busyLeader: async ({ request }, use) => {
+    await use(await leadABusyTeam(request, 21));
   },
   publishedChapter: async ({ request }, use) => {
     await use(await publishChapter(request));

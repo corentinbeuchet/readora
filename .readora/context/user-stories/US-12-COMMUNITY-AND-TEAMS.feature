@@ -224,6 +224,15 @@ Feature: Community and scanlation teams
     Then "Bob" sees chapters "3" of "Solo Leveling" waiting for them
     And "Mina" sees chapters "3, 4" of "Solo Leveling" waiting for them
 
+  # A busy team can have hundreds of chapters in progress: the Studio shows them a page at a time.
+  @should
+  Scenario: What waits for a member comes 20 at a time
+    Given reader "Mina" leads the team "Moon Scans"
+    And "Mina" adds the series "Solo Leveling" to "Moon Scans"
+    And on the board of "Moon Scans" for "Solo Leveling", chapters 1 to 25 wait for "TRANSLATING"
+    Then the first page of what waits for "Mina" holds chapters 1 to 20, of 25 in all
+    And the second page holds chapters 21 to 25
+
   @should @ui
   Scenario: The Studio lists what waits for me, first what I claimed
     Given "Bob" claimed chapter 2 of "Solo Leveling" and chapter 3 waits for a translator

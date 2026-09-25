@@ -127,7 +127,7 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
     }
 
     @Test
-    @DisplayName("A member sees the open tasks their roles cover across their teams, and the ones they claimed first")
+    @DisplayName("A member sees the open tasks their roles cover across their teams, the ones they claimed first, a page at a time")
     void waitingForMe() throws Exception {
         Session mina = register();
         Session bob = register();
@@ -144,19 +144,24 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
         }
         givenTheyJoinTheTeam(mina, team, bob, "CLEANER_REDRAWER");
         String second = json(mockMvc.perform(get("/api/v1/teams/mine/tasks").header("Authorization", bob.bearer())).andReturn())
-                .path("data").path(1).path("taskId").asString();
+                .path("data").path("items").path(1).path("taskId").asString();
         mockMvc.perform(post("/api/v1/scanlation/projects/" + project + "/tasks/" + second + "/claim").header("Authorization", bob.bearer()))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/v1/teams/mine/tasks").header("Authorization", bob.bearer()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.length()").value(2))
-                .andExpect(jsonPath("$.data[0].chapterNumber").value("2"))
-                .andExpect(jsonPath("$.data[0].mine").value(true))
-                .andExpect(jsonPath("$.data[0].projectId").value(project))
-                .andExpect(jsonPath("$.data[1].chapterNumber").value("1"))
-                .andExpect(jsonPath("$.data[1].mine").value(false))
-                .andExpect(jsonPath("$.data[1].stage").value("RAW_UPLOADED"));
+                .andExpect(jsonPath("$.data.items.length()").value(2))
+                .andExpect(jsonPath("$.data.totalElements").value(2))
+                .andExpect(jsonPath("$.data.items[0].chapterNumber").value("2"))
+                .andExpect(jsonPath("$.data.items[0].mine").value(true))
+                .andExpect(jsonPath("$.data.items[0].projectId").value(project))
+                .andExpect(jsonPath("$.data.items[1].chapterNumber").value("1"))
+                .andExpect(jsonPath("$.data.items[1].mine").value(false))
+                .andExpect(jsonPath("$.data.items[1].stage").value("RAW_UPLOADED"));
+        mockMvc.perform(get("/api/v1/teams/mine/tasks?page=1&size=1").header("Authorization", bob.bearer()))
+                .andExpect(jsonPath("$.data.items.length()").value(1))
+                .andExpect(jsonPath("$.data.items[0].chapterNumber").value("1"))
+                .andExpect(jsonPath("$.data.totalPages").value(2));
         mockMvc.perform(get("/api/v1/teams/mine/tasks")).andExpect(status().isUnauthorized());
     }
 

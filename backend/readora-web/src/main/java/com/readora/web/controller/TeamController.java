@@ -11,6 +11,7 @@ import com.readora.web.dto.ApiResponse;
 import com.readora.web.dto.CreateTeamRequest;
 import com.readora.web.dto.InviteMemberRequest;
 import com.readora.web.dto.MyTeamDto;
+import com.readora.web.dto.PagedResponse;
 import com.readora.web.dto.ScanlationProjectDto;
 import com.readora.web.dto.TeamInvitationDto;
 import com.readora.web.dto.TeamMemberRequest;
@@ -55,10 +56,12 @@ public class TeamController {
 
     @GetMapping("/mine/tasks")
     @PreAuthorize("hasAuthority('LIBRARY_USE')")
-    @Operation(summary = "What waits for me across my teams' task boards: tasks I hold, then open ones my roles cover")
-    public ResponseEntity<ApiResponse<List<WaitingTaskDto>>> waitingForMe() {
-        return ResponseEntity.ok(ApiResponse.ok(teams.waitingFor(currentUserProvider.requireUserId()).stream()
-                .map(WaitingTaskDto::fromDomain).toList()));
+    @Operation(summary = "What waits for me across my teams' task boards, a page at a time: tasks I hold, then open ones my roles cover")
+    public ResponseEntity<ApiResponse<PagedResponse<WaitingTaskDto>>> waitingForMe(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ApiResponse.ok(PagedResponse.from(
+                teams.waitingFor(currentUserProvider.requireUserId(), page, size), WaitingTaskDto::fromDomain)));
     }
 
     @PostMapping

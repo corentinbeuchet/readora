@@ -107,7 +107,10 @@ public interface ManageTeamUseCase {
     }
 
     /// What waits for the user across their teams' task boards that are on: the tasks they hold first, then the open
-    /// ones in stages their roles cover (a leader covers every stage), by series title and chapter number.
+    /// ones in stages their roles cover (a leader covers every stage), by series title and chapter number; one page
+    /// of at most [#MAX_WAITING_PAGE_SIZE] (a negative page is the first, a size out of range is clamped).
     @ReadOnly
-    List<WaitingTask> waitingFor(UserId userId);
+    BrowseCatalogUseCase.Page<WaitingTask> waitingFor(UserId userId, int page, int size);
+
+    int MAX_WAITING_PAGE_SIZE = 50;
 }

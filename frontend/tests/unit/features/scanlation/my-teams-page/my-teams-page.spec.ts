@@ -27,6 +27,7 @@ describe('MyTeamsPage (US-12)', () => {
   let fixture: ComponentFixture<MyTeamsPage>;
   let http: HttpTestingController;
   let lastRequest: TestRequest;
+  let lastWaitingRequest: TestRequest;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -217,6 +218,23 @@ describe('MyTeamsPage (US-12)', () => {
     thenEachWaitingChapterLinksTo('/scanlation/p-1');
   });
 
+  it('shows what waits for me 20 at a time, the next page on request', async () => {
+    await givenIAmOnMyTeams({ teams: [team({ myRoles: ['TRANSLATOR'] })], waitingForMe: [waitingTask({ chapterNumber: '1' })], waitingPages: 2 });
+
+    thenICanSee('Page 1 / 2');
+    await whenIShowTheNextPageOfWhatWaits([waitingTask({ taskId: 'task-21', chapterNumber: '21' })]);
+
+    thenWhatWaitsWasAskedForPage(1);
+    thenTheWaitingChaptersAre(['Chapter 21 of Solo Leveling']);
+    thenICanSee('Page 2 / 2');
+  });
+
+  it('shows no pager when what waits fits on one page', async () => {
+    await givenIAmOnMyTeams({ teams: [team({ myRoles: ['TRANSLATOR'] })], waitingForMe: [waitingTask()] });
+
+    thenICannotSee('Page 1 /');
+  });
+
   it('asks for nothing that waits while I am on no team', async () => {
     await givenIAmOnMyTeams({ teams: [] });
 
@@ -246,6 +264,7 @@ describe('MyTeamsPage (US-12)', () => {
     invitations?: TeamInvitation[];
     waitingForAnAnswer?: TeamInvitation[];
     waitingForMe?: WaitingTask[];
+    waitingPages?: number;
   }): Promise<void> {
     await givenIAmSignedInWith(given.permissions ?? ['LIBRARY_USE']);
     fixture = TestBed.createComponent(MyTeamsPage);
@@ -253,7 +272,7 @@ describe('MyTeamsPage (US-12)', () => {
     http.expectOne(`${API}/teams/mine`).flush(ok(given.teams));
     http.expectOne(`${API}/invitations/mine`).flush(ok(given.invitations ?? []));
     await settle(fixture);
-    await whenWhatWaitsIsAnswered(given.waitingForMe ?? []);
+    await whenWhatWaitsIsAnswered(given.waitingForMe ?? [], given.waitingPages);
     if (given.waitingForAnAnswer) {
       http.expectOne(`${API}/teams/t-1/invitations`).flush(ok(given.waitingForAnAnswer));
       await settle(fixture);
@@ -292,9 +311,19 @@ describe('MyTeamsPage (US-12)', () => {
   }
 
   /** Being on a team (loaded, created, joined) asks what waits for me; nothing is asked while I am on none. */
-  async function whenWhatWaitsIsAnswered(waiting: WaitingTask[]): Promise<void> {
-    http.match(`${API}/teams/mine/tasks`).forEach((request) => request.flush(ok(waiting)));
+  async function whenWhatWaitsIsAnswered(waiting: WaitingTask[], totalPages = 1): Promise<void> {
+    http.match((request) => request.url === `${API}/teams/mine/tasks`).forEach((request) => {
+      lastWaitingRequest = request;
+      const page = Number(request.request.params.get('page'));
+      request.flush(ok({ items: waiting, page, size: 20, totalElements: (totalPages - 1) * 20 + waiting.length, totalPages }));
+    });
     await settle(fixture);
+  }
+
+  async function whenIShowTheNextPageOfWhatWaits(waiting: WaitingTask[]): Promise<void> {
+    button('Next').click();
+    await settle(fixture);
+    await whenWhatWaitsIsAnswered(waiting, 2);
   }
 
   async function whenICreateTheTeam(draft: { name: string; description: string }, server: { answer: object; status?: number }): Promise<void> {
@@ -401,7 +430,11 @@ describe('MyTeamsPage (US-12)', () => {
   }
 
   function thenWhatWaitsWasNotAskedFor(): void {
-    http.expectNone(`${API}/teams/mine/tasks`);
+    http.expectNone((request) => request.url === `${API}/teams/mine/tasks`);
+  }
+
+  function thenWhatWaitsWasAskedForPage(page: number): void {
+    expect(lastWaitingRequest.request.params.get('page')).toBe(String(page));
   }
 
   function waitingItems(): HTMLElement[] {

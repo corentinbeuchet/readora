@@ -14,11 +14,14 @@ import com.readora.acceptance.fakes.InMemoryTeamInvitationRepository;
 import com.readora.acceptance.fakes.InMemoryTeamRepository;
 import com.readora.acceptance.fakes.InMemoryUserAccounts;
 import com.readora.acceptance.fakes.InMemoryWorkRepository;
+import com.readora.application.port.in.BrowseCatalogUseCase;
 import com.readora.application.port.in.CommunityUseCase.PublicProfile;
 import com.readora.application.port.in.CommunityUseCase.TeamPage;
 import com.readora.application.port.in.CommunityUseCase.TeamSeries;
 import com.readora.application.port.in.DiscoverUseCase.Release;
 import com.readora.application.port.in.ManageLibraryUseCase.ExportRow;
+import com.readora.application.port.in.ManageTeamUseCase;
+import com.readora.application.port.in.ManageTeamUseCase.WaitingTask;
 import com.readora.application.port.in.ManageWorkUseCase;
 import com.readora.application.port.in.ReadChapterUseCase.ChapterReading;
 import com.readora.application.service.CatalogService;
@@ -65,6 +68,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -85,6 +89,7 @@ public class CommunityStepDefinitions {
     private ChapterReadingService chapterReader;
     private ChapterReading opened;
     private @Nullable RuntimeException refusal;
+    private String waitingMember = "";
     private DiscoveryService discovery;
     private LibraryService library;
     private ReadingTrackerService reading;
@@ -304,6 +309,14 @@ public class CommunityStepDefinitions {
         return java.util.Arrays.stream(commaSeparated.split(",")).map(String::trim).map(ScanlationRole::valueOf).collect(java.util.stream.Collectors.toSet());
     }
 
+    private static List<String> chapterNumbers(BrowseCatalogUseCase.Page<WaitingTask> page) {
+        return page.items().stream().map(waiting -> waiting.chapterNumber().value()).toList();
+    }
+
+    private static List<String> chapterRange(int first, int last) {
+        return IntStream.rangeClosed(first, last).mapToObj(String::valueOf).toList();
+    }
+
     private String usernameOf(String member) {
         return users.findById(account(member)).orElseThrow().getUsername();
     }
@@ -386,9 +399,32 @@ public class CommunityStepDefinitions {
         projects.save(board);
     }
 
+    @Given("on the board of {string} for {string}, chapters {int} to {int} wait for {string}")
+    public void chaptersWaitOnTheBoard(String teamName, String title, int first, int last, String stage) {
+        ScanlationProject board = projects.findById(boardOf(teamName, title)).orElseThrow();
+        board.turnBoardOn();
+        for (int chapter = first; chapter <= last; chapter++) {
+            board.addChapterTask(ChapterNumber.of(String.valueOf(chapter))).advanceStage(WorkflowStage.valueOf(stage));
+        }
+        projects.save(board);
+    }
+
+    @Then("the first page of what waits for {string} holds chapters {int} to {int}, of {int} in all")
+    public void theFirstPageOfWhatWaits(String member, int first, int last, int total) {
+        waitingMember = member;
+        BrowseCatalogUseCase.Page<WaitingTask> page = teamManagement.waitingFor(account(member), 0, 20);
+        assertThat(page.totalElements()).isEqualTo(total);
+        assertThat(chapterNumbers(page)).containsExactlyElementsOf(chapterRange(first, last));
+    }
+
+    @Then("the second page holds chapters {int} to {int}")
+    public void theSecondPageHolds(int first, int last) {
+        assertThat(chapterNumbers(teamManagement.waitingFor(account(waitingMember), 1, 20))).containsExactlyElementsOf(chapterRange(first, last));
+    }
+
     @Then("{string} sees chapters {string} of {string} waiting for them")
     public void seesChaptersWaiting(String member, String numbers, String title) {
-        assertThat(teamManagement.waitingFor(account(member)))
+        assertThat(teamManagement.waitingFor(account(member), 0, ManageTeamUseCase.MAX_WAITING_PAGE_SIZE).items())
                 .allSatisfy(waiting -> assertThat(waiting.workTitle()).isEqualTo(title))
                 .extracting(waiting -> waiting.chapterNumber().value())
                 .containsExactly(numbers.split(",\\s*"));

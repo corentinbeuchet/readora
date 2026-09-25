@@ -137,7 +137,7 @@ describe('EditSeriesPage (US-04)', () => {
     http.expectOne(`${API}/invitations/mine`).flush(ok([]));
     await opening;
     await settle(harness);
-    http.expectOne(`${API}/teams/mine/tasks`).flush(ok([]));
+    http.expectOne(`${API}/teams/mine/tasks?page=0`).flush(ok({ items: [], page: 0, size: 20, totalElements: 0, totalPages: 0 }));
     // The panel lists the team's members and, for a leader, the invitations waiting for an answer (none here).
     http.match((request) => request.url.endsWith('/invitations')).forEach((request) => request.flush(ok([])));
     http.match((request) => /\/teams\/[^/]+$/.test(request.url)).forEach((request) => request.flush(ok(null)));

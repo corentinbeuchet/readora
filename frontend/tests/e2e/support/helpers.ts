@@ -346,6 +346,45 @@ export async function publishAFirstChapterForReview(request: APIRequestContext):
   return { workId: work.id, title, chapterId, teamName };
 }
 
+/** A new reader leading a team whose task board holds `chapters` raw chapters, all waiting for them (US-12). */
+export interface BusyLeader {
+  account: RegisteredAccount;
+  title: string;
+}
+
+/** A new reader starts a team, adds a series, turns its task board on and puts raw chapters 1 to `chapters` on it. */
+export async function leadABusyTeam(request: APIRequestContext, chapters: number): Promise<BusyLeader> {
+  const account = await registerAccount(request, 'busy');
+  const headers = { Authorization: `Bearer ${account.accessToken}` };
+  const team = await data<{ id: string }>(await request.post(`${API_URL}/teams`, { headers, data: { name: `Busy Team ${uniqueSuffix()}` } }));
+  const title = `E2E Busy Series ${uniqueSuffix()}`;
+  const work = await data<{ id: string }>(
+    await request.post(`${API_URL}/works`, { headers, data: { title, synopsis: 'Created by the e2e suite.', type: 'MANGA', status: 'ONGOING', genres: ['Action'], teamId: team.id } })
+  );
+  const [project] = await data<{ id: string }[]>(await request.get(`${API_URL}/works/${work.id}/projects`, { headers }));
+  await data(await request.put(`${API_URL}/scanlation/projects/${project.id}/board`, { headers, data: { enabled: true } }));
+  const raw = await data<{ storageKey: string; cdnUrl: string }>(
+    await request.post(`${API_URL}/storage/upload?folder=${encodeURIComponent(`scans/${work.id}/${team.id}/raw`)}`, {
+      headers,
+      multipart: { file: { name: '1.png', mimeType: 'image/png', buffer: PAGE_PNG } }
+    })
+  );
+  for (let chapter = 1; chapter <= chapters; chapter++) {
+    await data(
+      await request.post(`${API_URL}/scanlation/projects/${project.id}/tasks`, {
+        headers,
+        data: { chapterNumber: String(chapter), pages: [{ pageNumber: 1, storageKey: raw.storageKey, cdnUrl: raw.cdnUrl, width: 1, height: 1 }] }
+      })
+    );
+  }
+  return { account, title };
+}
+
+/** Logs in through the UI as an account a test created. */
+export async function givenIAmLoggedInAs(page: Page, account: { email: string }): Promise<void> {
+  await logIn(page, { email: account.email, password: PASSWORD });
+}
+
 /** Clean-up: a chapter a test left waiting goes back to its team, so the shared queue stays short. */
 export async function sendBackIfWaiting(request: APIRequestContext, chapterId: string): Promise<void> {
   const headers = await givenIAmThePublisher(request);

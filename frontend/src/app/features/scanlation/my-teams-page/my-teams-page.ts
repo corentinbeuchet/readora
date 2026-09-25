@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { FormField, form, maxLength, required, submit } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -11,13 +11,14 @@ import { asyncAction } from '@app/core/utils/async-action';
 import { AriaInvalidDirective } from '@app/shared/forms/aria-invalid.directive';
 import { FieldErrors } from '@app/shared/forms/field-errors';
 import { EmptyState } from '@app/shared/ui/empty-state/empty-state';
+import { Icon } from '@app/shared/ui/icon/icon';
 import { LoadError } from '@app/shared/ui/load-error';
 import { TeamPanel } from './team-panel/team-panel';
 
 /** The Studio (US-12): my invitations, what waits for me, the teams I belong to with their boards, and a new-team form. */
 @Component({
   selector: 'app-my-teams-page',
-  imports: [RouterLink, LoadError, EmptyState, FieldErrors, AriaInvalidDirective, FormField, HasPermissionDirective, TeamPanel],
+  imports: [RouterLink, LoadError, EmptyState, FieldErrors, AriaInvalidDirective, FormField, HasPermissionDirective, TeamPanel, Icon],
   templateUrl: './my-teams-page.html',
   styleUrl: './my-teams-page.scss'
 })
@@ -32,8 +33,15 @@ export class MyTeamsPage {
   protected readonly answering = asyncAction();
   protected readonly roleLabels = SCANLATION_ROLE_LABELS;
   protected readonly hasTeams = computed(() => this.teams.hasValue() && this.teams.value().length > 0);
+  /** The page of "Waiting for you" shown, from 0. */
+  protected readonly waitingPage = signal(0);
   /** What I can take on next across my teams' boards, and what I hold (listed first by the server); only with a team. */
-  protected readonly waiting = this.api.waitingResource(computed(() => this.canView() && this.hasTeams()));
+  protected readonly waiting = this.api.waitingResource(computed(() => this.canView() && this.hasTeams()), this.waitingPage);
+  /** Kept while the next page loads (the resource is empty meanwhile), so the pager and its focused button stay put. */
+  protected readonly waitingPages = linkedSignal<number, number>({
+    source: () => (this.waiting.status() === 'resolved' ? this.waiting.value().totalPages : -1),
+    computation: (total, previous) => (total >= 0 ? total : (previous?.value ?? 0))
+  });
   protected readonly stageLabels = WORKFLOW_STAGE_LABELS;
   protected readonly creating = asyncAction();
   protected readonly model = signal({ name: '', description: '' });
@@ -53,8 +61,13 @@ export class MyTeamsPage {
       await firstValueFrom(this.api.acceptInvitation(invitation.id));
       this.invitations.update((pending) => pending.filter((i) => i.id !== invitation.id));
       this.teams.reload();
+      this.waitingPage.set(0);
       this.waiting.reload();
     }, { key: invitation.id });
+  }
+
+  protected showWaitingPage(page: number): void {
+    this.waitingPage.set(Math.min(Math.max(page, 0), Math.max(this.waitingPages() - 1, 0)));
   }
 
   protected async decline(invitation: TeamInvitation): Promise<void> {
