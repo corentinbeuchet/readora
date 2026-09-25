@@ -1,3 +1,23 @@
+// Title, byline, description and actions: one column with room between them.
+.list-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-block-end: var(--space-4);
+
+  > p:not(.list-meta) {
+    max-inline-size: var(--measure);
+  }
+}
+
+// Meta as separate pieces with a gap, never a string joined by "·".
+.list-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+}
+
 .list-items {
   display: flex;
   flex-direction: column;
@@ -22,7 +42,7 @@
 .upvotes {
   display: inline-flex;
   align-items: center;
-  gap: 0.15rem;
+  gap: var(--space-1);
 }
 
 // Edit mode: one row per series with its note field and the remove button.

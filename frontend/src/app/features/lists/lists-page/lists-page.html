@@ -9,7 +9,7 @@
         <app-section-header heading="My lists" i18n-heading="@@lists.page.mine.heading" headingId="my-lists-heading" />
         <ul class="list-cards">
           @for (list of mine.value(); track list.id) {
-            <li><app-list-card [list]="list" showVisibility /></li>
+            <li><app-list-card [list]="list" showVisibility [showOwner]="false" /></li>
           }
         </ul>
       </section>

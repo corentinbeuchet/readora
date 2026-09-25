@@ -1,5 +1,7 @@
+import { WorkCardSkeleton } from '@app/shared/ui/work-card-skeleton/work-card-skeleton';
+import { SectionHeader } from '@app/shared/ui/section-header/section-header';
 import { Component, computed, effect, inject, input } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CommunityApi } from '@app/core/api/community-api';
 import { SeoService } from '@app/core/seo/seo.service';
@@ -9,7 +11,7 @@ import { WorkCard } from '@app/shared/ui/work-card/work-card';
 /** A reader's public profile (US-12): chapters read, favourite genres, completed series. */
 @Component({
   selector: 'app-public-profile-page',
-  imports: [LoadError, RouterLink, DatePipe, WorkCard],
+  imports: [NgOptimizedImage, SectionHeader, WorkCardSkeleton, LoadError, RouterLink, DatePipe, WorkCard],
   templateUrl: './public-profile-page.html',
   styleUrl: './public-profile-page.scss'
 })

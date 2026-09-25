@@ -1,6 +1,6 @@
 <section class="page">
   @if (list.isLoading() && !current()) {
-    <p class="muted" role="status" i18n="@@lists.list.loading">Loading the list…</p>
+    <app-work-card-skeleton variant="row" count="3" i18n="@@lists.list.loading">Loading the list…</app-work-card-skeleton>
   } @else if (list.error()) {
     <app-load-error [error]="list.error()" notFound="This list doesn't exist or is private." i18n-notFound="@@lists.list.notFound" (retry)="list.reload()">
       <ng-container i18n="@@lists.list.loadError">Could not load the list.</ng-container>
@@ -47,12 +47,13 @@
         </div>
       </form>
     } @else {
-      <header>
+      <header class="list-header">
         <h1>{{ l.title }}</h1>
-        <p class="muted">
-          <ng-container i18n="@@lists.list.byline">by <a [routerLink]="['/u', l.ownerUsername]">{{ l.ownerUsername }}</a></ng-container> · <ng-container i18n="@@lists.list.seriesCount">{l.items.length, plural, other {{{ l.items.length }} series}}</ng-container>
+        <p class="muted list-meta">
+          <span i18n="@@lists.list.byline">by <a [routerLink]="['/u', l.ownerUsername]">{{ l.ownerUsername }}</a></span>
+          <span i18n="@@lists.list.seriesCount">{l.items.length, plural, other {{{ l.items.length }} series}}</span>
           @if (!l.published) {
-            · <span class="badge" i18n="@@lists.list.private">private</span>
+            <span class="badge" i18n="@@lists.list.private">private</span>
           }
         </p>
         @if (l.description) {

@@ -29,7 +29,9 @@ describe('Shell navigation', () => {
         provideRouter([
           { path: '', component: DummyPage },
           { path: 'works', component: DummyPage },
-          { path: 'scanlation', component: DummyPage }
+          { path: 'scanlation', component: DummyPage },
+          { path: 'login', component: DummyPage },
+          { path: 'register', component: DummyPage }
         ]),
         provideHttpClient(),
         provideHttpClientTesting()
@@ -87,6 +89,14 @@ describe('Shell navigation', () => {
     thenTheRouterNavigatedTimes(1);
     thenIAmOn('/works');
     thenTheCurrentPageLinkIs('Browse');
+  });
+
+  it.each(['/login', '/register'])('on %s the header leaves the log-in and sign-up links to the page', async (url) => {
+    givenIAmOnTheSite();
+    await givenIHaveOpened(url);
+
+    thenTheHeaderHasNoLinkTo('/login');
+    thenTheHeaderHasNoLinkTo('/register');
   });
 
   it('hides the site header, footer and tab bar in the reader zen mode', () => {
@@ -255,6 +265,10 @@ describe('Shell navigation', () => {
 
   function thenIAmOn(url: string): void {
     expect(router.url).toBe(url);
+  }
+
+  function thenTheHeaderHasNoLinkTo(href: string): void {
+    expect((fixture.nativeElement as HTMLElement).querySelector(`header a[href="${href}"]`)).toBeNull();
   }
 
   function thenICanLogIn(): void {

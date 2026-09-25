@@ -44,7 +44,7 @@
     "profile.form.bioMax": "Bio must be at most 1000 characters",
     "profile.form.avatarPattern": "Avatar must be an http(s) URL",
     "profile.form.saveError": "Could not save your profile",
-    "profile.page.joined": "@{$INTERPOLATION} · joined {$INTERPOLATION_1}",
+    "profile.page.joinedOn": "joined {$START_TAG_TIME}{$INTERPOLATION}{$CLOSE_TAG_TIME}",
     "profile.page.sections": "Profile sections",
     "profile.page.tabOverview": "Overview",
     "profile.page.tabBookmarks": "Bookmarks",

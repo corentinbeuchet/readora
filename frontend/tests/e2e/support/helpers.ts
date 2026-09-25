@@ -65,7 +65,7 @@ export async function signUp(page: Page, prefix = 'e2e'): Promise<string> {
   await page.getByLabel('Username').fill(username);
   await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
   await page.getByLabel('Confirm password').fill(PASSWORD);
-  await page.getByRole('button', { name: 'Sign up' }).click();
+  await page.getByRole('button', { name: 'Create my account' }).click();
   await expect(page).toHaveURL(/\/profile$/);
   return username;
 }

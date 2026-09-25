@@ -34,6 +34,8 @@ export class Shell {
 
   /** The page shown (with its query), so the footer can offer the same page in another language. */
   protected readonly url = signal(this.router.url);
+  /** On /login and /register the form links to the other page, so the header's own auth links would repeat it. */
+  protected readonly onAuthPage = computed(() => /^\/(login|register)(?:[/?#]|$)/.test(this.url()));
   /** Scanlators, uploaders and moderators get a "Team tools" group in the account menu (US-14). */
   /** Any signed-in reader can start or join a team; Moderation is added for moderators. */
   protected readonly hasTeamTools = computed(() => this.auth.isAuthenticated());

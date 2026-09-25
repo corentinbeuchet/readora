@@ -1,6 +1,6 @@
 <section class="page">
   @if (profile.isLoading()) {
-    <p class="muted" role="status" i18n="@@community.profile.loading">Loading the profile…</p>
+    <app-work-card-skeleton count="4" i18n="@@community.profile.loading">Loading the profile…</app-work-card-skeleton>
   } @else if (profile.error()) {
     <app-load-error [error]="profile.error()" notFound="This reader could not be found." i18n-notFound="@@community.profile.notFound" (retry)="profile.reload()">
       <ng-container i18n="@@community.profile.loadError">Could not load the profile.</ng-container>
@@ -8,11 +8,18 @@
     </app-load-error>
   } @else if (profile.hasValue() && profile.value(); as p) {
     <header class="profile-header">
-      <h1>{{ p.displayName }}</h1>
-      <p class="muted" i18n="@@community.profile.since">@{{ p.username }} · reading on Readora since {{ p.joinedAt | date: 'longDate' }}</p>
-      @if (p.bio) {
-        <p>{{ p.bio }}</p>
+      @if (p.avatarUrl) {
+        <img class="profile-avatar" [ngSrc]="p.avatarUrl" alt="" width="64" height="64" />
+      } @else {
+        <div class="profile-avatar profile-avatar-placeholder" aria-hidden="true">{{ (p.displayName || p.username).charAt(0) }}</div>
       }
+      <div class="profile-text">
+        <h1>{{ p.displayName }}</h1>
+        <p class="muted profile-meta"><span>&#64;{{ p.username }}</span><span i18n="@@community.profile.readingSince">reading on Readora since <time class="nowrap">{{ p.joinedAt | date: 'longDate' }}</time></span></p>
+        @if (p.bio) {
+          <p>{{ p.bio }}</p>
+        }
+      </div>
     </header>
 
     <dl class="stats">
@@ -26,7 +33,7 @@
       </div>
     </dl>
 
-    <h2 i18n="@@community.profile.completed">Completed series</h2>
+    <app-section-header heading="Completed series" i18n-heading="@@community.profile.completed" headingId="completed-heading" />
     @if (p.completedSeries.length === 0) {
       <p class="muted" i18n="@@community.profile.completedNone">None yet.</p>
     } @else {

@@ -5,7 +5,7 @@
     "community.profile.notFound": "Ce lecteur est introuvable.",
     "community.profile.loadError": "Impossible de charger le profil.",
     "community.profile.browse": "Parcourir le catalogue",
-    "community.profile.since": "@{$INTERPOLATION} · lit sur Readora depuis {$INTERPOLATION_1}",
+    "community.profile.readingSince": "lit sur Readora depuis {$START_TAG_TIME}{$INTERPOLATION}{$CLOSE_TAG_TIME}",
     "community.profile.chaptersRead": "Chapitres lus",
     "community.profile.favouriteGenres": "Genres préférés",
     "community.profile.completed": "Séries terminées",

@@ -210,7 +210,7 @@ async function whenIReload(page: Page): Promise<void> {
 }
 
 async function whenISubmitTheSignUpForm(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Sign up' }).click();
+  await page.getByRole('button', { name: 'Create my account' }).click();
 }
 
 async function whenIFillTheSignUpForm(page: Page, account: Account, typed: { confirmation: string }): Promise<void> {

@@ -7,7 +7,7 @@
     "library.history.empty": "Vous n'avez encore rien lu.",
     "library.history.browse": "Parcourir le catalogue",
     "library.history.chapter": "Chapitre {$INTERPOLATION}",
-    "library.history.finished": "(terminé)",
+    "library.history.finishedBadge": "Terminé",
     "library.history.continue": "Continuer",
     "library.history.continue.label": "Continuer {$title}, chapitre {$chapter}",
     "library.history.seoTitle": "Historique de lecture",

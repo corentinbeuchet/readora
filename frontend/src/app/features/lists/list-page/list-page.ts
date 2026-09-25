@@ -1,3 +1,4 @@
+import { WorkCardSkeleton } from '@app/shared/ui/work-card-skeleton/work-card-skeleton';
 import { Component, computed, effect, inject, input, linkedSignal, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -21,7 +22,7 @@ interface Draft {
 /** One list (US-05): readers see and upvote it; the owner edits it and decides when it is public. */
 @Component({
   selector: 'app-list-page',
-  imports: [LoadError, RouterLink, WorkCard, EmptyState, Icon],
+  imports: [WorkCardSkeleton, LoadError, RouterLink, WorkCard, EmptyState, Icon],
   templateUrl: './list-page.html',
   styleUrl: './list-page.scss'
 })

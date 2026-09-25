@@ -18,7 +18,7 @@
     "profile.form.bioMax": "La bio doit contenir au plus 1000 caractères",
     "profile.form.avatarPattern": "L'avatar doit être une URL http(s)",
     "profile.form.saveError": "Impossible d'enregistrer votre profil",
-    "profile.page.joined": "@{$INTERPOLATION} · inscrit le {$INTERPOLATION_1}",
+    "profile.page.joinedOn": "inscrit le {$START_TAG_TIME}{$INTERPOLATION}{$CLOSE_TAG_TIME}",
     "profile.page.sections": "Sections du profil",
     "profile.page.tabOverview": "Aperçu",
     "profile.page.tabBookmarks": "Marque-pages",

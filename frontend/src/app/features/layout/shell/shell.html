@@ -58,8 +58,11 @@
           </ng-template>
         </div>
       } @else {
-        <a routerLink="/login" class="btn" i18n="@@shell.login">Log in</a>
-        <a routerLink="/register" class="btn btn-primary" i18n="@@shell.signUp">Sign up</a>
+        <!-- The log-in and sign-up pages link to each other in their forms: the header doesn't repeat those links. -->
+        @if (!onAuthPage()) {
+          <a routerLink="/login" class="btn" i18n="@@shell.login">Log in</a>
+          <a routerLink="/register" class="btn btn-primary" i18n="@@shell.signUp">Sign up</a>
+        }
       }
     </div>
   </header>

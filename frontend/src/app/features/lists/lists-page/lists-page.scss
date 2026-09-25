@@ -1,6 +1,6 @@
 @use 'breakpoints' as bp;
 
-section {
+.page > section {
   margin-block-start: var(--space-5);
 }
 

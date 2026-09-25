@@ -72,6 +72,7 @@ async function thenMyProfileIsShownFor(page: Page, username: string): Promise<vo
   await expect(page.getByRole('heading', { level: 1 })).toContainText(username);
 }
 
+/** On /login the header drops its own "Log in" link (no second link to the page you are on): the form is the way in. */
 async function thenICanLogIn(page: Page): Promise<void> {
-  await expect(page.getByRole('banner').getByRole('link', { name: 'Log in' })).toBeVisible();
+  await expect(page.getByRole('main').getByRole('button', { name: 'Log in' })).toBeVisible();
 }

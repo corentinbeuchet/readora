@@ -8,7 +8,7 @@
       }
       <div>
         <h1>{{ user.displayName || user.username }}</h1>
-        <p class="muted" i18n="@@profile.page.joined">&#64;{{ user.username }} · joined {{ user.createdAt | date: 'mediumDate' }}</p>
+        <p class="muted profile-meta"><span>&#64;{{ user.username }}</span><span i18n="@@profile.page.joinedOn">joined <time class="nowrap">{{ user.createdAt | date: 'mediumDate' }}</time></span></p>
         <p>
           @for (role of (user.roles || []); track role) {
             <span class="badge">{{ roleLabels[role] }}</span>

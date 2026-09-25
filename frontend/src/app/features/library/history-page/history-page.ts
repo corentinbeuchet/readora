@@ -1,3 +1,4 @@
+import { TimeAgoPipe } from '@app/shared/ui/time-ago.pipe';
 import { Component, computed, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -12,7 +13,7 @@ import { WorkCardSkeleton } from '@app/shared/ui/work-card-skeleton/work-card-sk
 /** Reading history (US-07): the series I read most recently, each with a "Continue" button. */
 @Component({
   selector: 'app-history-page',
-  imports: [WorkCard, WorkCardSkeleton, EmptyState, LoadError, RouterLink, DatePipe],
+  imports: [TimeAgoPipe, WorkCard, WorkCardSkeleton, EmptyState, LoadError, RouterLink, DatePipe],
   templateUrl: './history-page.html',
   styleUrl: './history-page.scss'
 })

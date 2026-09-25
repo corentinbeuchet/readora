@@ -8,7 +8,9 @@
   </div>
   <div class="body">
     <a class="title" [routerLink]="['/lists', list().id]">{{ list().title }}</a>
-    <p class="muted" i18n="@@listCard.by">by {{ list().ownerUsername }}</p>
+    @if (showOwner()) {
+      <p class="muted" i18n="@@listCard.by">by {{ list().ownerUsername }}</p>
+    }
     <p class="facts">
       <span i18n="@@listCard.seriesCount">{list().items.length, plural, =1 {1 series} other {{{ list().items.length }} series}}</span>
       <span class="upvotes"><app-icon name="arrow-big-up" /><span class="sr-only" i18n="@@listCard.upvotes">Upvotes:</span> {{ list().upvotes }}</span>

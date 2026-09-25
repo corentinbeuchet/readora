@@ -16,17 +16,15 @@
         <li>
           <app-work-card [work]="item.work" variant="row">
             <p cardMeta class="muted read-line">
-              <span class="read-chapter">
-                <ng-container i18n="@@library.history.chapter">Chapter {{ item.lastRead.chapterNumber }}</ng-container>
-                @if (item.lastRead.finished) {
-                  <ng-container i18n="@@library.history.finished">(finished)</ng-container>
-                }
-              </span>
-              <time [attr.datetime]="item.lastRead.readAt">{{ item.lastRead.readAt | date: 'medium' }}</time>
+              <span class="read-chapter" i18n="@@library.history.chapter">Chapter {{ item.lastRead.chapterNumber }}</span>
+              @if (item.lastRead.finished) {
+                <span class="badge" i18n="@@library.history.finishedBadge">Finished</span>
+              }
+              <time [attr.datetime]="item.lastRead.readAt" [attr.title]="item.lastRead.readAt | date: 'medium'">{{ item.lastRead.readAt | timeAgo }}</time>
             </p>
             <span cardActions>
               <a
-                class="btn btn-primary btn-sm"
+                class="btn btn-sm"
                 [routerLink]="['/read', item.lastRead.chapterId]"
                 [attr.aria-label]="continueLabels().get(item.work.id)"
                 i18n="@@library.history.continue"

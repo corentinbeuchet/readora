@@ -92,6 +92,6 @@ describe('HistoryPage (US-07 reading history)', () => {
   }
 
   function continueLink(position: number): HTMLAnchorElement {
-    return rows()[position - 1].querySelector<HTMLAnchorElement>('a.btn-primary')!;
+    return rows()[position - 1].querySelector<HTMLAnchorElement>('a.btn[href^="/read/"]')!;
   }
 });

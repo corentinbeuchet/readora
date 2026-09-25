@@ -111,7 +111,16 @@ html {
 .page-narrow {
   max-width: 480px;
   margin: 0 auto;
-  padding: 2rem var(--space-page);
+  padding: var(--space-6) var(--space-page);
+}
+
+/* The narrow pages (log in, sign up): heading, one intro line, then the form card, with room between them. */
+.page-narrow > h1 {
+  margin-block-end: var(--space-2);
+}
+
+.page-narrow > h1 + p {
+  margin-block-end: var(--space-5);
 }
 
 .card {

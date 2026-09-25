@@ -5,7 +5,7 @@
     "community.profile.notFound": "This reader could not be found.",
     "community.profile.loadError": "Could not load the profile.",
     "community.profile.browse": "Browse the catalog",
-    "community.profile.since": "@{$INTERPOLATION} · reading on Readora since {$INTERPOLATION_1}",
+    "community.profile.readingSince": "reading on Readora since {$START_TAG_TIME}{$INTERPOLATION}{$CLOSE_TAG_TIME}",
     "community.profile.chaptersRead": "Chapters read",
     "community.profile.favouriteGenres": "Favourite genres",
     "community.profile.completed": "Completed series",

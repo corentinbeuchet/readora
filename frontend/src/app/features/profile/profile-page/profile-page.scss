@@ -1,16 +1,37 @@
 .profile-header {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  margin-bottom: 1.5rem;
+  gap: var(--space-5);
+  margin-block-end: var(--space-5);
 
   h1 {
-    margin-bottom: 0.25rem;
+    margin-block-end: var(--space-1);
   }
 
   .badge {
-    margin-right: 0.35rem;
+    margin-inline-end: var(--space-1);
   }
+}
+
+.profile-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+// A tab's heading sits apart from the form under it; forms stay at a readable width.
+[ngTabPanel] > h2 {
+  margin-block-end: var(--space-4);
+}
+
+app-profile-form,
+app-change-password {
+  display: block;
+  max-inline-size: 32rem;
 }
 
 .profile-avatar {
