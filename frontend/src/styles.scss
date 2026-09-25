@@ -595,13 +595,15 @@ fieldset.field {
   gap: var(--space-2);
 }
 
-/* Previous / next page links under a list. */
+/* Previous / next page links under a list. It wraps: in French at 320px "Précédent", the page and "Suivant" with
+   their icons are wider than the screen. */
 .pager {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 1rem;
-  margin-top: 1.5rem;
+  gap: var(--space-2) var(--space-4);
+  margin-block-start: var(--space-5);
 }
 
 /*
