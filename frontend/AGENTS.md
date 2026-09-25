@@ -207,9 +207,10 @@ interface is neutral and the cover art is the colour on the page.
   what belongs there and how to fill it. Meta information is separate elements or badges, not strings joined by
   "·". No all-caps labels above headings, no numbering that is not a real order, no sign-up wall: accounts are
   offered after the content, where they help (continue reading, follow, comment).
-- Follow-ups of this pass (not done): series page, catalog filter panel and sort, reader chrome, auth
-  pages; backend: catalog `sort`, a chapter pointer on `LibraryItem` (a "Continue" on library rows), title and cover
-  on bookmarks; a new `og-default.png` in the new palette.
+- Follow-ups (the 2026-09-24 polish audit did the series page, the reader chrome, the auth pages and the catalog
+  controls): catalog sort; the #1 weekly feature's synopsis (rankings send `WorkSummary`, which has none); zooming the
+  reader through the layout width instead of `transform`; backend: catalog `sort`, a chapter pointer on `LibraryItem`
+  (a "Continue" on library rows), title and cover on bookmarks; a new `og-default.png` in the new palette.
 
 ## Routing & auth
 - Every route uses `loadComponent`. Permissions in route data: `canActivate: [permissionGuard], data: { permission: 'COMMENT_MODERATE' }`.
