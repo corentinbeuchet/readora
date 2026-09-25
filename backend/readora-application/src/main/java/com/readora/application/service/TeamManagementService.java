@@ -17,14 +17,11 @@ import com.readora.domain.identity.UserAccount;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.ScanlationRole;
-import com.readora.domain.scanlation.TaskStatus;
 import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.scanlation.TeamInvitation;
 import com.readora.domain.scanlation.TeamInvitationId;
 import com.readora.domain.scanlation.TeamMember;
-import com.readora.domain.scanlation.WorkflowStage;
-import com.readora.domain.scanlation.WorkflowTask;
 import com.readora.domain.work.Work;
 import com.readora.domain.work.WorkId;
 import org.jspecify.annotations.Nullable;
@@ -100,8 +97,9 @@ public class TeamManagementService implements ManageTeamUseCase {
     public List<InvitationView> pendingInvitations(UserId actorId, TeamId teamId) {
         Team team = requireTeam(teamId);
         requireLeaderOrAdmin(team, actorId);
-        Map<UserId, String> names = new HashMap<>();
-        return invitations.findPendingByTeam(teamId).stream().map(invitation -> view(invitation, team, names)).toList();
+        List<TeamInvitation> pending = invitations.findPendingByTeam(teamId);
+        Map<UserId, String> names = namesOf(pending);
+        return pending.stream().map(invitation -> view(invitation, team, names)).toList();
     }
 
     @Override
@@ -114,9 +112,12 @@ public class TeamManagementService implements ManageTeamUseCase {
 
     @Override
     public List<InvitationView> myInvitations(UserId userId) {
-        Map<UserId, String> names = new HashMap<>();
-        return invitations.findPendingByInvitee(userId).stream()
-                .flatMap(invitation -> teams.findById(invitation.getTeamId()).map(team -> view(invitation, team, names)).stream())
+        List<TeamInvitation> pending = invitations.findPendingByInvitee(userId);
+        Map<TeamId, Team> teamsById = teams.findAllById(pending.stream().map(TeamInvitation::getTeamId).distinct().toList()).stream()
+                .collect(Collectors.toMap(Team::getId, team -> team));
+        Map<UserId, String> names = namesOf(pending);
+        return pending.stream()
+                .flatMap(invitation -> Optional.ofNullable(teamsById.get(invitation.getTeamId())).map(team -> view(invitation, team, names)).stream())
                 .toList();
     }
 
@@ -140,6 +141,13 @@ public class TeamManagementService implements ManageTeamUseCase {
     private InvitationView view(TeamInvitation invitation, Team team, Map<UserId, String> names) {
         return new InvitationView(invitation, team.getName(), usernameOf(invitation.getInviteeId(), names),
                 usernameOf(invitation.getInvitedBy(), names));
+    }
+
+    /// The usernames of everyone named in these invitations, in one query (a missing one is looked up by [#usernameOf]).
+    private Map<UserId, String> namesOf(List<TeamInvitation> invitations) {
+        return new HashMap<>(users.findUsernames(invitations.stream()
+                .flatMap(invitation -> java.util.stream.Stream.of(invitation.getInviteeId(), invitation.getInvitedBy()))
+                .distinct().toList()));
     }
 
     private String usernameOf(UserId userId, Map<UserId, String> names) {
@@ -166,7 +174,7 @@ public class TeamManagementService implements ManageTeamUseCase {
         Team team = requireTeam(teamId);
         requireLeaderOrAdmin(team, actorId);
         Work work = works.findById(workId).orElseThrow(() -> new NotFoundException("Work", workId));
-        if (projects.findByTeamId(teamId).stream().anyMatch(project -> project.getWorkId().equals(workId))) {
+        if (projects.existsByTeamAndWork(teamId, workId)) {
             throw DomainValidationException.withCode(ErrorCodes.SERIES_ALREADY_IN_TEAM, team.getName() + " already works on " + work.getTitle());
         }
         return projects.save(ScanlationProject.create(team.getName() + " - " + work.getTitle(), workId, teamId));
@@ -189,14 +197,19 @@ public class TeamManagementService implements ManageTeamUseCase {
         List<Team> mine = teams.findByMember(userId).stream()
                 .sorted(Comparator.comparing(Team::getName, String.CASE_INSENSITIVE_ORDER))
                 .toList();
-        Map<TeamId, List<ScanlationProject>> projectsByTeam = projects.findByTeamIds(mine.stream().map(Team::getId).toList()).stream()
-                .collect(Collectors.groupingBy(ScanlationProject::getTeamId));
-        List<WorkId> workIds = projectsByTeam.values().stream().flatMap(List::stream).map(ScanlationProject::getWorkId).distinct().toList();
-        Map<WorkId, Work> series = works.findAllById(workIds).stream().collect(Collectors.toMap(Work::getId, work -> work));
+        // Plain columns only: loading the projects would load every task and page of every board.
+        List<ScanlationProjectRepositoryPort.BoardRef> refs = projects.findBoardRefs(mine.stream().map(Team::getId).toList());
+        Map<WorkId, String> titles = works.findTitles(refs.stream().map(ScanlationProjectRepositoryPort.BoardRef::workId).distinct().toList());
+        Map<TeamId, List<Board>> boardsByTeam = new HashMap<>();
+        for (ScanlationProjectRepositoryPort.BoardRef ref : refs) {
+            String title = titles.get(ref.workId());
+            if (title != null) {
+                boardsByTeam.computeIfAbsent(ref.teamId(), id -> new ArrayList<>()).add(new Board(ref.projectId(), ref.workId(), title, ref.boardEnabled()));
+            }
+        }
         return mine.stream()
-                .map(team -> new MyTeam(team, projectsByTeam.getOrDefault(team.getId(), List.of()).stream()
-                        .flatMap(project -> Optional.ofNullable(series.get(project.getWorkId())).map(work -> new Board(project.getId(), work, project.isBoardEnabled())).stream())
-                        .sorted(Comparator.comparing((Board board) -> board.work().getTitle(), String.CASE_INSENSITIVE_ORDER))
+                .map(team -> new MyTeam(team, boardsByTeam.getOrDefault(team.getId(), List.of()).stream()
+                        .sorted(Comparator.comparing(Board::title, String.CASE_INSENSITIVE_ORDER))
                         .toList()))
                 .toList();
     }
@@ -205,36 +218,30 @@ public class TeamManagementService implements ManageTeamUseCase {
     public List<WaitingTask> waitingFor(UserId userId) {
         List<Team> mine = teams.findByMember(userId);
         Map<TeamId, Team> teamsById = mine.stream().collect(Collectors.toMap(Team::getId, team -> team));
-        List<ScanlationProject> boards = projects.findByTeamIds(teamsById.keySet());
-        Map<WorkId, Work> series = works.findAllById(boards.stream().map(ScanlationProject::getWorkId).distinct().toList()).stream()
-                .collect(Collectors.toMap(Work::getId, work -> work));
+        // Unfinished tasks of boards that are on, as plain columns (no page is loaded); roles are checked per team here.
+        List<ScanlationProjectRepositoryPort.OpenTask> open = projects.findOpenTasks(teamsById.keySet());
+        Map<WorkId, String> titles = works.findTitles(open.stream().map(ScanlationProjectRepositoryPort.OpenTask::workId).distinct().toList());
         List<WaitingTask> waiting = new ArrayList<>();
-        for (ScanlationProject board : boards) {
-            if (!board.isBoardEnabled()) {
-                continue;
-            }
-            Team team = teamsById.get(board.getTeamId());
-            Work work = series.get(board.getWorkId());
-            if (team == null || work == null) {
+        for (ScanlationProjectRepositoryPort.OpenTask task : open) {
+            Team team = teamsById.get(task.teamId());
+            String title = titles.get(task.workId());
+            if (team == null || title == null) {
                 continue;
             }
             TeamMember member = team.findMember(userId).orElse(null);
             if (member == null) {
                 continue;
             }
-            for (WorkflowTask task : board.getTasks()) {
-                boolean done = task.getStatus() == TaskStatus.COMPLETED || task.getStage() == WorkflowStage.PUBLISHED;
-                boolean mineTask = userId.equals(task.getAssigneeId());
-                boolean open = task.getAssigneeId() == null && member.hasRole(task.getStage().requiredRole());
-                if (!done && (mineTask || open)) {
-                    waiting.add(new WaitingTask(board.getId(), work, team, task, mineTask));
-                }
+            boolean mineTask = userId.equals(task.assigneeId());
+            boolean takeable = task.assigneeId() == null && member.hasRole(task.stage().requiredRole());
+            if (mineTask || takeable) {
+                waiting.add(new WaitingTask(task.projectId(), task.workId(), title, team, task.taskId(), task.chapterNumber(), task.stage(), mineTask));
             }
         }
         return waiting.stream()
                 .sorted(Comparator.comparing((WaitingTask w) -> !w.mine())
-                        .thenComparing(w -> w.work().getTitle(), String.CASE_INSENSITIVE_ORDER)
-                        .thenComparing(w -> w.task().getChapterNumber()))
+                        .thenComparing(WaitingTask::workTitle, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(WaitingTask::chapterNumber))
                 .toList();
     }
 

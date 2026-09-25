@@ -5,10 +5,10 @@ import com.readora.domain.work.*;
 import com.readora.infrastructure.persistence.entity.WorkJpaEntity;
 import com.readora.infrastructure.persistence.repository.SpringDataWorkRepository;
 import com.readora.infrastructure.persistence.repository.WorkSpecifications;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,7 +16,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class WorkRepositoryAdapter implements WorkRepositoryPort {
@@ -31,6 +34,16 @@ public class WorkRepositoryAdapter implements WorkRepositoryPort {
     @Transactional(readOnly = true)
     public Optional<Work> findById(WorkId id) {
         return springDataRepository.findById(id.value()).map(this::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<WorkId, String> findTitles(Collection<WorkId> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return springDataRepository.findTitlesByIds(ids.stream().map(WorkId::value).toList()).stream()
+                .collect(Collectors.toMap(row -> WorkId.of((UUID) row[0]), row -> (String) row[1]));
     }
 
     @Override

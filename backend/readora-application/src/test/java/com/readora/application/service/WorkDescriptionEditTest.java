@@ -39,7 +39,9 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Answers.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.withSettings;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -63,13 +65,15 @@ class WorkDescriptionEditTest {
 
     private Work series;
     private final List<ScanlationProject> boardsOfTheSeries = new ArrayList<>();
+    private final List<Team> teamsOfTheSeries = new ArrayList<>();
     private @Nullable Work edited;
     private @Nullable RuntimeException refusal;
 
     @BeforeEach
     void setUp() {
         workRepository = mock(WorkRepositoryPort.class);
-        projectRepository = mock(ScanlationProjectRepositoryPort.class);
+        // Its light reads (existsByTeamAndWork, findTeamIdsByWork) derive from the stubbed full reads.
+        projectRepository = mock(ScanlationProjectRepositoryPort.class, withSettings().defaultAnswer(CALLS_REAL_METHODS));
         teamRepository = mock(TeamRepositoryPort.class);
         userRepository = mock(UserAccountRepositoryPort.class);
         service = new WorkManagementService(workRepository, mock(ChapterRepositoryPort.class), projectRepository, teamRepository, userRepository,
@@ -175,7 +179,8 @@ class WorkDescriptionEditTest {
 
     private Team givenATeamTranslatingTheSeries(String name, UserId leader) {
         Team team = Team.create(name, null, leader);
-        when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
+        teamsOfTheSeries.add(team);
+        when(teamRepository.findAllById(any())).thenReturn(List.copyOf(teamsOfTheSeries));
         boardsOfTheSeries.add(ScanlationProject.create(name + " - " + series.getTitle(), series.getId(), team.getId()));
         return team;
     }

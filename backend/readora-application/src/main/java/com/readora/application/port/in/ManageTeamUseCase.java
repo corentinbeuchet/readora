@@ -4,12 +4,13 @@ import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.ScanlationRole;
+import com.readora.domain.scanlation.TaskId;
 import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.scanlation.TeamInvitation;
 import com.readora.domain.scanlation.TeamInvitationId;
-import com.readora.domain.scanlation.WorkflowTask;
-import com.readora.domain.work.Work;
+import com.readora.domain.scanlation.WorkflowStage;
+import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.WorkId;
 import org.jspecify.annotations.Nullable;
 
@@ -21,7 +22,7 @@ import java.util.Set;
 public interface ManageTeamUseCase {
 
     /// One of the team's series with its task board (`boardEnabled`: the team uses the board for it).
-    record Board(ProjectId projectId, Work work, boolean boardEnabled) {
+    record Board(ProjectId projectId, WorkId workId, String title, boolean boardEnabled) {
     }
 
     /// A team the caller belongs to, with its boards (series title order).
@@ -101,7 +102,8 @@ public interface ManageTeamUseCase {
     List<MyTeam> myTeams(UserId userId);
 
     /// A task of one of my teams' boards that I can take on (open, in a stage my roles cover) or that I hold.
-    record WaitingTask(ProjectId projectId, Work work, Team team, WorkflowTask task, boolean mine) {
+    record WaitingTask(ProjectId projectId, WorkId workId, String workTitle, Team team, TaskId taskId, ChapterNumber chapterNumber,
+                       WorkflowStage stage, boolean mine) {
     }
 
     /// What waits for the user across their teams' task boards that are on: the tasks they hold first, then the open

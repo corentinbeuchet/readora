@@ -50,7 +50,8 @@ class WorkManagementServiceTest {
     void setUp() {
         workRepository = mock(WorkRepositoryPort.class);
         chapterRepository = mock(ChapterRepositoryPort.class);
-        projectRepository = mock(ScanlationProjectRepositoryPort.class);
+        // Its light reads (existsByTeamAndWork, findTeamIdsByWork) derive from the stubbed full reads.
+        projectRepository = mock(ScanlationProjectRepositoryPort.class, withSettings().defaultAnswer(CALLS_REAL_METHODS));
         teamRepository = mock(TeamRepositoryPort.class);
         userRepository = mock(UserAccountRepositoryPort.class);
         eventPublisher = mock(EventPublisherPort.class);

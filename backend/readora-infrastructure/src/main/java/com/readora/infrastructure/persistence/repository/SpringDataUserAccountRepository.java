@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,4 +27,8 @@ public interface SpringDataUserAccountRepository extends JpaRepository<UserAccou
     @Query("select u from UserAccountJpaEntity u where u.deletedAt is null "
             + "and (lower(u.username) like :pattern escape '\\' or lower(u.email) like :pattern escape '\\') order by u.username")
     List<UserAccountJpaEntity> searchByUsernameOrEmail(@Param("pattern") String pattern, Limit limit);
+
+    /// Rows of `[id, username]`.
+    @Query("select u.id, u.username from UserAccountJpaEntity u where u.id in :ids")
+    List<Object[]> findUsernamesByIds(@Param("ids") Collection<String> ids);
 }

@@ -9,8 +9,10 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public interface WorkRepositoryPort {
     Optional<Work> findById(WorkId id);
@@ -18,6 +20,12 @@ public interface WorkRepositoryPort {
 
     /// The works that exist among `ids`, in no particular order (one query, for list pages).
     List<Work> findAllById(Collection<WorkId> ids);
+
+    /// The titles of these series, without the rest of them (genres, other titles). Adapters answer it with one query of
+    /// plain columns.
+    default Map<WorkId, String> findTitles(Collection<WorkId> ids) {
+        return findAllById(ids).stream().collect(Collectors.toMap(Work::getId, Work::getTitle));
+    }
 
     /// Criteria are combined with AND; empty sets and a `null` text don't filter.
     /// Genres arrive lower-cased and match case-insensitively: every `includedGenres` entry must be present,

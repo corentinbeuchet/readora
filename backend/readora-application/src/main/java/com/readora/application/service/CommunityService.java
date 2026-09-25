@@ -10,7 +10,6 @@ import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.NotFoundException;
 import com.readora.domain.common.UserId;
 import com.readora.domain.identity.UserAccount;
-import com.readora.domain.scanlation.ScanlationProject;
 import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.scanlation.TeamMember;
@@ -69,12 +68,13 @@ public class CommunityService implements CommunityUseCase {
     @Override
     public TeamPage team(TeamId teamId, @Nullable UserId viewer) {
         Team team = requireTeam(teamId);
-        List<ScanlationProject> teamProjects = projects.findByTeamId(teamId);
+        // Plain columns: loading the projects would load every task and page of every board.
+        List<ScanlationProjectRepositoryPort.BoardRef> teamProjects = projects.findBoardRefs(List.of(teamId));
         Map<WorkId, Long> chapterCounts = community.countPublishedChapters(teamId);
-        Map<WorkId, Work> seriesById = works.findAllById(teamProjects.stream().map(ScanlationProject::getWorkId).toList()).stream()
+        Map<WorkId, Work> seriesById = works.findAllById(teamProjects.stream().map(ScanlationProjectRepositoryPort.BoardRef::workId).toList()).stream()
                 .collect(Collectors.toMap(Work::getId, work -> work));
         List<TeamSeries> series = teamProjects.stream()
-                .flatMap(project -> Optional.ofNullable(seriesById.get(project.getWorkId()))
+                .flatMap(project -> Optional.ofNullable(seriesById.get(project.workId()))
                         .map(work -> new TeamSeries(work, chapterCounts.getOrDefault(work.getId(), 0L))).stream())
                 .sorted(Comparator.comparingLong(TeamSeries::chapterCount).reversed().thenComparing(entry -> entry.work().getTitle()))
                 .toList();

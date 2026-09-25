@@ -3,6 +3,10 @@ package com.readora.infrastructure.persistence.adapter;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
 import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.*;
+import com.readora.domain.scanlation.ProjectId;
+import com.readora.domain.scanlation.TaskId;
+import com.readora.domain.scanlation.TeamId;
+import com.readora.domain.scanlation.WorkflowStage;
 import com.readora.domain.work.ChapterNumber;
 import com.readora.domain.work.PageAsset;
 import com.readora.domain.work.WorkId;
@@ -14,6 +18,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.Collection;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -45,6 +51,42 @@ public class ScanlationProjectRepositoryAdapter implements ScanlationProjectRepo
         return springDataRepository.findByTeamId(teamId.value()).stream()
                 .map(this::toDomain)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BoardRef> findBoardRefs(Collection<TeamId> teamIds) {
+        if (teamIds.isEmpty()) {
+            return List.of();
+        }
+        return springDataRepository.findBoardRefsByTeamIds(teamIds.stream().map(TeamId::value).toList()).stream()
+                .map(row -> new BoardRef(ProjectId.of((UUID) row[0]), TeamId.of((UUID) row[1]), WorkId.of((UUID) row[2]), (Boolean) row[3]))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OpenTask> findOpenTasks(Collection<TeamId> teamIds) {
+        if (teamIds.isEmpty()) {
+            return List.of();
+        }
+        return springDataRepository.findOpenTasksByTeamIds(teamIds.stream().map(TeamId::value).toList()).stream()
+                .map(row -> new OpenTask(ProjectId.of((UUID) row[0]), TeamId.of((UUID) row[1]), WorkId.of((UUID) row[2]),
+                        new TaskId((UUID) row[3]), ChapterNumber.of((String) row[4]), WorkflowStage.valueOf((String) row[5]),
+                        row[6] == null ? null : UserId.of((String) row[6])))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByTeamAndWork(TeamId teamId, WorkId workId) {
+        return springDataRepository.existsByTeamIdAndWorkId(teamId.value(), workId.value());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TeamId> findTeamIdsByWork(WorkId workId) {
+        return springDataRepository.findTeamIdsByWorkId(workId.value()).stream().map(TeamId::of).toList();
     }
 
     @Override

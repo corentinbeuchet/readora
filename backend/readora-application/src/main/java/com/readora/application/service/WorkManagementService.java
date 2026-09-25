@@ -147,9 +147,7 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
 
     /// A series has no owner: it belongs to the teams that translate it, so their leaders keep its page right.
     private void requireSeriesLeaderOrAdmin(Work work, UserId editorId) {
-        boolean leadsATeamOfTheSeries = projectRepository.findByWorkId(work.getId()).stream()
-                .map(project -> teamRepository.findById(project.getTeamId()))
-                .flatMap(Optional::stream)
+        boolean leadsATeamOfTheSeries = teamRepository.findAllById(projectRepository.findTeamIdsByWork(work.getId())).stream()
                 .anyMatch(team -> team.isLeader(editorId));
         if (!leadsATeamOfTheSeries && !isAdmin(editorId)) {
             throw new AccessDeniedDomainException("Only a leader of a team that translates " + work.getTitle() + " can edit it");
@@ -166,7 +164,7 @@ public class WorkManagementService implements ManageWorkUseCase, DirectPublishCh
         if (!onTheTeam && !isAdmin(publisherId)) {
             throw new AccessDeniedDomainException("Only a leader or quality checker of " + team.getName() + " can publish its chapters");
         }
-        if (projectRepository.findByTeamId(teamId).stream().noneMatch(project -> project.getWorkId().equals(workId))) {
+        if (!projectRepository.existsByTeamAndWork(teamId, workId)) {
             throw DomainValidationException.withCode(ErrorCodes.TEAM_NOT_ON_SERIES, team.getName() + " does not work on this series yet");
         }
     }

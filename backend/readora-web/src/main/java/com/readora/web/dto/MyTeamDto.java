@@ -16,7 +16,7 @@ public record MyTeamDto(UUID id, String name, @Nullable String description, List
     }
 
     public static MyTeamDto fromDomain(MyTeam mine, UserId me) {
-        return of(mine.team(), me, mine.boards().stream().map(b -> new Board(b.projectId().value(), SeriesRefDto.fromDomain(b.work()), b.boardEnabled())).toList());
+        return of(mine.team(), me, mine.boards().stream().map(b -> new Board(b.projectId().value(), new SeriesRefDto(b.workId().value(), b.title()), b.boardEnabled())).toList());
     }
 
     public static MyTeamDto fromDomain(Team team, UserId me) {

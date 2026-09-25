@@ -9,8 +9,8 @@ public record WaitingTaskDto(UUID projectId, SeriesRefDto work, TeamRefDto team,
                              boolean mine) {
 
     public static WaitingTaskDto fromDomain(WaitingTask waiting) {
-        return new WaitingTaskDto(waiting.projectId().value(), SeriesRefDto.fromDomain(waiting.work()),
-                new TeamRefDto(waiting.team().getId().value(), waiting.team().getName()), waiting.task().getId().value(),
-                waiting.task().getChapterNumber().value(), waiting.task().getStage().name(), waiting.mine());
+        return new WaitingTaskDto(waiting.projectId().value(), new SeriesRefDto(waiting.workId().value(), waiting.workTitle()),
+                new TeamRefDto(waiting.team().getId().value(), waiting.team().getName()), waiting.taskId().value(),
+                waiting.chapterNumber().value(), waiting.stage().name(), waiting.mine());
     }
 }

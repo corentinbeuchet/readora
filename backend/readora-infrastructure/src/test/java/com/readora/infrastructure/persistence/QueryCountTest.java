@@ -154,6 +154,33 @@ class QueryCountTest {
     }
 
     @Test
+    @DisplayName("The Studio reads a team's boards and open tasks as plain columns: 3 statements and no entity for 30 boards of 12 tasks of 5 pages")
+    void studioReadsLoadNoTaskOrPage() {
+        Team team = teamRepository.save(Team.create("Studio Scale", null, UserId.of("studio-leader")));
+        List<WorkId> workIds = IntStream.range(0, 30).mapToObj(i -> {
+            Work work = workRepository.save(Work.create("Studio Scale Work " + i, "S", WorkType.MANGA, "c.png", Set.of("Action")));
+            ScanlationProject project = ScanlationProject.create("Studio Scale " + i, work.getId(), team.getId());
+            project.turnBoardOn();
+            IntStream.rangeClosed(1, 12).forEach(chapter -> project.addChapterTask(ChapterNumber.of(String.valueOf(chapter)),
+                    IntStream.rangeClosed(1, 5).mapToObj(page -> PageAsset.create(page, "raw/c" + chapter + "p" + page + ".webp", null)).toList(),
+                    UserId.of("studio-leader")));
+            projectRepository.save(project);
+            return work.getId();
+        }).toList();
+
+        statistics.clear();
+        var boards = projectRepository.findBoardRefs(List.of(team.getId()));
+        var open = projectRepository.findOpenTasks(List.of(team.getId()));
+        var titles = workRepository.findTitles(workIds);
+
+        assertThat(boards).hasSize(30);
+        assertThat(open).hasSize(30 * 12);
+        assertThat(titles).hasSize(30);
+        assertThat(statistics.getPrepareStatementCount()).isEqualTo(3);
+        assertThat(statistics.getEntityLoadCount()).isZero();
+    }
+
+    @Test
     @DisplayName("Logging in loads the account in one statement")
     void accountLoadsInOneStatement() {
         accountRepository.save(UserAccount.register(Email.of("count@readora.test"), "count-reader", PasswordHash.of("hash")));

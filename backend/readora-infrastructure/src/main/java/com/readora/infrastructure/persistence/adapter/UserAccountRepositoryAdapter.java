@@ -14,9 +14,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,6 +37,16 @@ public class UserAccountRepositoryAdapter implements UserAccountRepositoryPort {
     @Override
     public Optional<UserAccount> findById(UserId id) {
         return springDataRepository.findById(id.value()).map(this::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UserId, String> findUsernames(Collection<UserId> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return springDataRepository.findUsernamesByIds(ids.stream().map(UserId::value).distinct().toList()).stream()
+                .collect(Collectors.toMap(row -> UserId.of((String) row[0]), row -> (String) row[1]));
     }
 
     @Override

@@ -389,8 +389,8 @@ public class CommunityStepDefinitions {
     @Then("{string} sees chapters {string} of {string} waiting for them")
     public void seesChaptersWaiting(String member, String numbers, String title) {
         assertThat(teamManagement.waitingFor(account(member)))
-                .allSatisfy(waiting -> assertThat(waiting.work().getTitle()).isEqualTo(title))
-                .extracting(waiting -> waiting.task().getChapterNumber().value())
+                .allSatisfy(waiting -> assertThat(waiting.workTitle()).isEqualTo(title))
+                .extracting(waiting -> waiting.chapterNumber().value())
                 .containsExactly(numbers.split(",\\s*"));
     }
 
