@@ -1,5 +1,6 @@
 package com.readora.application.service;
 
+import com.readora.application.port.in.BrowseCatalogUseCase;
 import com.readora.application.port.in.CommunityUseCase;
 import com.readora.application.port.out.CommunityQueryPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CommunityService implements CommunityUseCase {
 
@@ -66,29 +68,47 @@ public class CommunityService implements CommunityUseCase {
     }
 
     @Override
-    public TeamPage team(TeamId teamId, @Nullable UserId viewer) {
+    public TeamPage team(TeamId teamId, @Nullable UserId viewer, int seriesPage) {
         Team team = requireTeam(teamId);
         // Plain columns: loading the projects would load every task and page of every board.
-        List<ScanlationProjectRepositoryPort.BoardRef> teamProjects = projects.findBoardRefs(List.of(teamId));
+        List<WorkId> workIds = projects.findBoardRefs(List.of(teamId)).stream().map(ScanlationProjectRepositoryPort.BoardRef::workId).distinct().toList();
+        List<CommunityQueryPort.PublishedChapter> latestRows = community.latestPublishedChapters(teamId, TEAM_LATEST_CHAPTERS);
         Map<WorkId, Long> chapterCounts = community.countPublishedChapters(teamId);
-        Map<WorkId, Work> seriesById = works.findAllById(teamProjects.stream().map(ScanlationProjectRepositoryPort.BoardRef::workId).toList()).stream()
-                .collect(Collectors.toMap(Work::getId, work -> work));
-        List<TeamSeries> series = teamProjects.stream()
-                .flatMap(project -> Optional.ofNullable(seriesById.get(project.workId()))
-                        .map(work -> new TeamSeries(work, chapterCounts.getOrDefault(work.getId(), 0L))).stream())
-                .sorted(Comparator.comparingLong(TeamSeries::chapterCount).reversed().thenComparing(entry -> entry.work().getTitle()))
+        Map<WorkId, String> titles = works.findTitles(Stream.concat(workIds.stream(), latestRows.stream().map(CommunityQueryPort.PublishedChapter::workId)).distinct().toList());
+
+        // Ordered on ids, titles and counts; only the series of the page shown are loaded.
+        List<WorkId> ordered = workIds.stream()
+                .filter(titles::containsKey)
+                .sorted(Comparator.comparingLong((WorkId id) -> chapterCounts.getOrDefault(id, 0L)).reversed()
+                        .thenComparing(id -> titles.getOrDefault(id, "")))
+                .toList();
+        int page = Math.max(0, seriesPage);
+        List<WorkId> onPage = ordered.stream().skip((long) page * TEAM_SERIES_PAGE_SIZE).limit(TEAM_SERIES_PAGE_SIZE).toList();
+        Map<WorkId, Work> seriesById = works.findAllById(onPage).stream().collect(Collectors.toMap(Work::getId, work -> work));
+        List<TeamSeries> series = onPage.stream()
+                .flatMap(id -> Optional.ofNullable(seriesById.get(id)).map(work -> new TeamSeries(work, chapterCounts.getOrDefault(id, 0L))).stream())
                 .toList();
 
+        List<TeamChapter> latest = latestRows.stream()
+                .map(c -> new TeamChapter(c.id(), c.workId(), titles.getOrDefault(c.workId(), ""), c.number(), c.title(), c.pageCount(), c.publishedAt()))
+                .toList();
+        boolean following = viewer != null && community.isFollowing(viewer, teamId);
+        return new TeamPage(teamId, team.getName(), team.getDescription(),
+                new BrowseCatalogUseCase.Page<>(series, page, TEAM_SERIES_PAGE_SIZE, ordered.size()),
+                membersOf(team), latest, community.countFollowers(teamId), following);
+    }
+
+    @Override
+    public List<TeamMemberView> members(TeamId teamId) {
+        return membersOf(requireTeam(teamId));
+    }
+
+    private List<TeamMemberView> membersOf(Team team) {
         Map<UserId, String> names = community.usernames(team.getMembers().stream().map(TeamMember::userId).toList());
-        List<TeamMemberView> members = team.getMembers().stream()
+        return team.getMembers().stream()
                 .flatMap(member -> Optional.ofNullable(names.get(member.userId())).map(name -> new TeamMemberView(name, member.roles())).stream())
                 .sorted(Comparator.comparing(TeamMemberView::username))
                 .toList();
-        List<TeamChapter> latest = community.latestPublishedChapters(teamId, TEAM_LATEST_CHAPTERS).stream()
-                .map(c -> new TeamChapter(c.id(), c.workId(), c.number(), c.title(), c.pageCount(), c.publishedAt()))
-                .toList();
-        boolean following = viewer != null && community.isFollowing(viewer, teamId);
-        return new TeamPage(teamId, team.getName(), team.getDescription(), series, members, latest, community.countFollowers(teamId), following);
     }
 
     @Override

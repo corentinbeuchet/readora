@@ -49,10 +49,16 @@ public class CommunityController {
     }
 
     @GetMapping("/teams/{teamId}")
-    @Operation(summary = "A scanlation team's page: members, series, latest chapters, followers")
-    public ResponseEntity<ApiResponse<TeamPageDto>> team(@PathVariable UUID teamId) {
+    @Operation(summary = "A scanlation team's page: members, a page of its series (24), latest chapters, followers")
+    public ResponseEntity<ApiResponse<TeamPageDto>> team(@PathVariable UUID teamId, @RequestParam(defaultValue = "0") int page) {
         UserId viewer = currentUserProvider.current().map(AuthenticatedUser::userId).orElse(null);
-        return ResponseEntity.ok(ApiResponse.ok(TeamPageDto.fromDomain(community.team(TeamId.of(teamId), viewer))));
+        return ResponseEntity.ok(ApiResponse.ok(TeamPageDto.fromDomain(community.team(TeamId.of(teamId), viewer, page))));
+    }
+
+    @GetMapping("/teams/{teamId}/members")
+    @Operation(summary = "A scanlation team's members and their roles")
+    public ResponseEntity<ApiResponse<List<TeamPageDto.Member>>> members(@PathVariable UUID teamId) {
+        return ResponseEntity.ok(ApiResponse.ok(community.members(TeamId.of(teamId)).stream().map(TeamPageDto.Member::fromDomain).toList()));
     }
 
     @PutMapping("/teams/{teamId}/follow")

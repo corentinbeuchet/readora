@@ -17,6 +17,7 @@ import java.util.Set;
 public interface CommunityUseCase {
     int TOP_GENRES = 3;
     int TEAM_LATEST_CHAPTERS = 10;
+    int TEAM_SERIES_PAGE_SIZE = 24;
 
     record PublicProfile(String username, String displayName, @Nullable String avatarUrl, String bio, Instant joinedAt,
                          long chaptersRead, List<String> topGenres, List<Work> completedSeries) {
@@ -37,13 +38,15 @@ public interface CommunityUseCase {
     record TeamSeries(Work work, long chapterCount) {
     }
 
-    record TeamChapter(ChapterId id, WorkId workId, ChapterNumber number, String title, int pageCount, Instant publishedAt) {
+    /// @param workTitle the title of its series, which may be on another page of the team's series
+    record TeamChapter(ChapterId id, WorkId workId, String workTitle, ChapterNumber number, String title, int pageCount, Instant publishedAt) {
     }
 
-    /// @param series        every series the team works on, the one with the most chapters first
+    /// @param series        one page of the series the team works on ([#TEAM_SERIES_PAGE_SIZE] each), the ones with
+    ///                      the most chapters first
     /// @param latestChapters the team's latest chapters across its series, newest first
     /// @param following     whether the viewer follows the team (false for guests)
-    record TeamPage(TeamId id, String name, @Nullable String description, List<TeamSeries> series, List<TeamMemberView> members,
+    record TeamPage(TeamId id, String name, @Nullable String description, BrowseCatalogUseCase.Page<TeamSeries> series, List<TeamMemberView> members,
                     List<TeamChapter> latestChapters, long followers, boolean following) {
     }
 
@@ -51,9 +54,15 @@ public interface CommunityUseCase {
     @ReadOnly
     PublicProfile profile(String username);
 
+    /// @param seriesPage the page of the team's series, from 0 (a negative page is the first)
     /// @throws com.readora.domain.common.NotFoundException if there is no such team
     @ReadOnly
-    TeamPage team(TeamId teamId, @Nullable UserId viewer);
+    TeamPage team(TeamId teamId, @Nullable UserId viewer, int seriesPage);
+
+    /// The team's members by username, for the Studio roster (the team page without its series and chapters).
+    /// @throws com.readora.domain.common.NotFoundException if there is no such team
+    @ReadOnly
+    List<TeamMemberView> members(TeamId teamId);
 
     /// @throws com.readora.domain.common.NotFoundException if there is no such team
     void follow(UserId userId, TeamId teamId);

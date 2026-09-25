@@ -1,12 +1,12 @@
 <section class="page">
-  @if (team.isLoading()) {
+  @if (team.isLoading() && !shown()) {
     <p class="muted" role="status" i18n="@@community.team.loading">Loading the team…</p>
   } @else if (team.error()) {
     <app-load-error [error]="team.error()" notFound="This team could not be found." i18n-notFound="@@community.team.notFound" (retry)="team.reload()">
       <ng-container i18n="@@community.team.loadError">Could not load the team.</ng-container>
       <a actions routerLink="/works" class="btn btn-link" i18n="@@community.team.browse">Browse the catalog</a>
     </app-load-error>
-  } @else if (team.hasValue() && team.value(); as t) {
+  } @else if (shown(); as t) {
     <header class="profile-header">
       <h1>{{ t.name }}</h1>
       @if (t.description) {
@@ -26,16 +26,16 @@
       }
     </header>
 
-    <section aria-labelledby="team-series">
+    <section aria-labelledby="team-series" [attr.aria-busy]="team.isLoading()">
       <app-section-header heading="Series" i18n-heading="@@community.team.series" headingId="team-series" />
-      @if (t.series.length === 0) {
+      @if (t.series.items.length === 0 && t.series.totalElements === 0) {
         <app-empty-state>
           <ng-container i18n="@@community.team.seriesNone">This team has not started a series yet.</ng-container>
           <a emptyAction routerLink="/works" class="btn btn-primary" i18n="@@community.team.browse">Browse the catalog</a>
         </app-empty-state>
       } @else {
         <ul class="work-grid">
-          @for (entry of t.series; track entry.work.id) {
+          @for (entry of t.series.items; track entry.work.id) {
             <li>
               <app-work-card [work]="entry.work" [priority]="$first">
                 <p cardMeta class="muted series-count" i18n="@@community.team.seriesChapters">{entry.chapterCount, plural, =0 {No chapter yet} =1 {1 chapter} other {{{ entry.chapterCount }} chapters}}</p>
@@ -43,6 +43,17 @@
             </li>
           }
         </ul>
+        @if (t.series.totalPages > 1) {
+          <nav class="pager" aria-label="Pages of the team's series" i18n-aria-label="@@community.team.pager.label">
+            @if (pageIndex() > 0) {
+              <a class="btn" [routerLink]="[]" [queryParams]="{ page: pageIndex() - 1 || null }" queryParamsHandling="merge"><app-icon name="chevron-left" /><span i18n="@@community.team.pager.previous">Previous</span></a>
+            }
+            <span class="muted" i18n="@@community.team.pager.page">Page {{ pageIndex() + 1 }} / {{ t.series.totalPages }}</span>
+            @if (pageIndex() + 1 < t.series.totalPages) {
+              <a class="btn" [routerLink]="[]" [queryParams]="{ page: pageIndex() + 1 }" queryParamsHandling="merge"><span i18n="@@community.team.pager.next">Next</span><app-icon name="chevron-right" /></a>
+            }
+          </nav>
+        }
       }
     </section>
 

@@ -4,18 +4,20 @@ import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { CommunityApi } from '@app/core/api/community-api';
 import { HasPermissionDirective } from '@app/core/auth/has-permission.directive';
+import { TeamProfile } from '@app/core/models/community';
 import { SCANLATION_ROLE_LABELS } from '@app/core/models/scanlation';
 import { SeoService } from '@app/core/seo/seo.service';
 import { asyncAction } from '@app/core/utils/async-action';
 import { EmptyState } from '@app/shared/ui/empty-state/empty-state';
+import { Icon } from '@app/shared/ui/icon/icon';
 import { LoadError } from '@app/shared/ui/load-error';
 import { SectionHeader } from '@app/shared/ui/section-header/section-header';
 import { WorkCard } from '@app/shared/ui/work-card/work-card';
 
-/** A scanlation team's page (US-12): every series it translates, members, latest chapters, follow. */
+/** A scanlation team's page (US-12): its series 24 at a time (`?page=`), members, latest chapters, follow. */
 @Component({
   selector: 'app-team-page',
-  imports: [LoadError, RouterLink, HasPermissionDirective, WorkCard, SectionHeader, EmptyState],
+  imports: [LoadError, RouterLink, HasPermissionDirective, WorkCard, SectionHeader, EmptyState, Icon],
   templateUrl: './team-page.html',
   styleUrl: './team-page.scss'
 })
@@ -25,17 +27,28 @@ export class TeamPage {
 
   /** Bound from `teams/:teamId`. */
   readonly teamId = input<string>();
+  /** The `?page=` query parameter: the page of the team's series, from 0. */
+  readonly page = input<string>();
 
-  protected readonly team = this.api.teamResource(this.teamId);
-  protected readonly following = linkedSignal(() => (this.team.hasValue() ? (this.team.value()?.following ?? false) : false));
-  protected readonly followers = linkedSignal(() => (this.team.hasValue() ? (this.team.value()?.followers ?? 0) : 0));
+  protected readonly pageIndex = computed(() => Math.max(0, Math.trunc(Number(this.page())) || 0));
+  protected readonly team = this.api.teamResource(this.teamId, this.pageIndex);
+  /**
+   * The team shown: kept while another page of its series loads (the resource is empty meanwhile), so the header,
+   * members and the pager's focused link stay put; another team replaces it.
+   */
+  protected readonly shown = linkedSignal<TeamProfile | undefined, TeamProfile | undefined>({
+    source: () => (this.team.hasValue() ? this.team.value() : undefined),
+    computation: (loaded, previous) => loaded ?? (previous?.value?.id === this.teamId() ? previous?.value : undefined)
+  });
+  protected readonly following = linkedSignal(() => this.shown()?.following ?? false);
+  protected readonly followers = linkedSignal(() => this.shown()?.followers ?? 0);
   protected readonly members = computed(() =>
-    (this.team.hasValue() ? (this.team.value()?.members ?? []) : []).map((m) => ({ username: m.username, roles: m.roles.map((role) => SCANLATION_ROLE_LABELS[role]) }))
+    (this.shown()?.members ?? []).map((m) => ({ username: m.username, roles: m.roles.map((role) => SCANLATION_ROLE_LABELS[role]) }))
   );
   /** The latest chapters with the title of their series: the team may translate several. */
   protected readonly latestChapters = computed(() => {
-    const loaded = this.team.hasValue() ? this.team.value() : undefined;
-    const titles = new Map((loaded?.series ?? []).map((entry) => [entry.work.id, entry.work.title]));
+    const loaded = this.shown();
+    const titles = new Map((loaded?.latestSeries ?? []).map((series) => [series.id, series.title]));
     return (loaded?.latestChapters ?? []).map((chapter) => ({
       chapter,
       seriesTitle: titles.get(chapter.workId) ?? '',
@@ -47,11 +60,11 @@ export class TeamPage {
 
   constructor() {
     effect(() => {
-      const loaded = this.team.hasValue() ? this.team.value() : undefined;
+      const loaded = this.shown();
       if (loaded) {
         this.seo.update({
           title: $localize`:@@community.team.seoTitle:${loaded.name}:name: — scanlation team`,
-          description: loaded.description ?? $localize`:@@community.team.seoDescriptionSeries:${loaded.name}:name: translates ${loaded.series.map((entry) => entry.work.title).join(', ')}:series:.`,
+          description: loaded.description ?? $localize`:@@community.team.seoDescriptionSeries:${loaded.name}:name: translates ${loaded.series.items.map((entry) => entry.work.title).join(', ')}:series:.`,
           path: `/teams/${loaded.id}`
         });
       }

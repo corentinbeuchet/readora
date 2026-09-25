@@ -180,14 +180,38 @@ public class CommunityStepDefinitions {
         publish(works.findById(first.getWorkId()).orElseThrow(), first, "1");
         publish(works.findById(first.getWorkId()).orElseThrow(), first, "2");
         publish(secondSeries, second, "1");
-        team = community.team(first.getTeamId(), null);
+        team = community.team(first.getTeamId(), null, 0);
+    }
+
+    @Given("the team {string} also translates {int} series without a chapter")
+    public void theTeamAlsoTranslatesSeries(String teamName, int count) {
+        ScanlationProject first = team(teamName);
+        for (int n = 1; n <= count; n++) {
+            Work series = works.save(Work.create(String.format("Quiet Series %02d", n), "", WorkType.MANHWA, "", Set.of()));
+            projects.save(ScanlationProject.create(teamName, series.getId(), first.getTeamId()));
+        }
+    }
+
+    @Then("the first page of its series starts with {string} and {string} and holds {int} of {int}")
+    public void theFirstPageOfItsSeries(String first, String second, int onPage, int total) {
+        assertThat(team.series().totalElements()).isEqualTo(total);
+        assertThat(team.series().items()).hasSize(onPage)
+                .extracting(series -> series.work().getTitle()).startsWith(first, second);
+    }
+
+    @Then("the second page of its series holds the other {int}")
+    public void theSecondPageOfItsSeries(int count) {
+        TeamPage second = community.team(team.id(), null, 1);
+        assertThat(second.series().items()).hasSize(count)
+                .extracting(series -> series.work().getTitle())
+                .doesNotContainAnyElementsOf(team.series().items().stream().map(series -> series.work().getTitle()).toList());
     }
 
     @Then("they see its members, every series it translates and its latest chapters")
     public void theySeeMembersSeriesAndChapters() {
         assertThat(team.name()).isEqualTo("Shadow Scans");
         assertThat(team.members()).extracting(m -> m.username()).containsExactly("leader", "translator");
-        assertThat(team.series()).extracting(series -> series.work().getTitle(), TeamSeries::chapterCount)
+        assertThat(team.series().items()).extracting(series -> series.work().getTitle(), TeamSeries::chapterCount)
                 .containsExactly(org.assertj.core.groups.Tuple.tuple("Solo Leveling", 2L), org.assertj.core.groups.Tuple.tuple("Omniscient Reader", 1L));
         assertThat(team.latestChapters()).hasSize(3);
     }
@@ -211,7 +235,7 @@ public class CommunityStepDefinitions {
 
     @Then("the page of the team {string} lists no series yet")
     public void thePageListsNoSeriesYet(String teamName) {
-        assertThat(community.team(teamNamed(teamName).getId(), null).series()).isEmpty();
+        assertThat(community.team(teamNamed(teamName).getId(), null, 0).series().items()).isEmpty();
     }
 
     @Then("the team is refused because the name is taken")
@@ -450,7 +474,7 @@ public class CommunityStepDefinitions {
 
     @Then("the page of the team {string} lists the series {string}")
     public void thePageListsTheSeries(String teamName, String title) {
-        assertThat(community.team(teamNamed(teamName).getId(), null).series()).extracting(series -> series.work().getTitle()).containsExactly(title);
+        assertThat(community.team(teamNamed(teamName).getId(), null, 0).series().items()).extracting(series -> series.work().getTitle()).containsExactly(title);
     }
 
     @When("{string} publishes chapter {int} of {string} for {string}")

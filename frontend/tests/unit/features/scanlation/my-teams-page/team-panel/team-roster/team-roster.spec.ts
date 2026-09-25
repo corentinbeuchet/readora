@@ -94,7 +94,7 @@ describe('TeamRoster (US-12)', () => {
   }
 
   function answerTheRoster(members: Member[]): void {
-    http.expectOne(`${API}/teams/t-1`).flush(ok({ id: 't-1', name: 'Moon Scans', description: null, series: [], members, latestChapters: [], followers: 0, following: false }));
+    http.expectOne(`${API}/teams/t-1/members`).flush(ok(members));
   }
 
   function thenTheRequestWas(method: string, url: string, body: unknown): void {

@@ -33,11 +33,11 @@ export class TeamRoster {
   protected readonly roleLabels = SCANLATION_ROLE_LABELS;
   protected readonly leads = computed(() => leadsTeam(this.team()));
   private readonly teamId = computed(() => this.team().id);
-  protected readonly roster = this.communityApi.teamResource(this.teamId);
+  protected readonly roster = this.communityApi.membersResource(this.teamId);
   private readonly me = computed(() => this.auth.user()?.username ?? null);
   /** One row per member, mine first, with what I may do on it. */
   protected readonly rows = computed(() => {
-    const members = this.roster.hasValue() ? (this.roster.value()?.members ?? []) : [];
+    const members = this.roster.hasValue() ? (this.roster.value() ?? []) : [];
     const me = this.me();
     return [...members]
       .sort((a, b) => Number(b.username === me) - Number(a.username === me))

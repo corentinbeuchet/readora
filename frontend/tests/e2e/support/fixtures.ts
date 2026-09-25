@@ -7,6 +7,8 @@ import {
   dismissReportIfOpen,
   dismissReportsOn,
   leadABusyTeam,
+  startATeamWithSeries,
+  TeamWithSeries,
   publishChapter,
   publishCommentedChapter,
   publishReportedComment,
@@ -37,6 +39,8 @@ export const test = base.extend<{
   firstChapterForReview: ChapterForReview;
   /** A new reader leading a team with 21 raw chapters waiting on its task board (more than one Studio page). */
   busyLeader: BusyLeader;
+  /** A new team with 25 series (one more than a page of its team page), no chapter. */
+  teamWithManySeries: TeamWithSeries;
   /** An axe scan of the current page against WCAG 2.0/2.1/2.2 A and AA (`await axe().analyze()`). */
   axe: () => AxeBuilder;
 }>({
@@ -70,6 +74,9 @@ export const test = base.extend<{
   },
   busyLeader: async ({ request }, use) => {
     await use(await leadABusyTeam(request, 21));
+  },
+  teamWithManySeries: async ({ request }, use) => {
+    await use(await startATeamWithSeries(request, 25));
   },
   publishedChapter: async ({ request }, use) => {
     await use(await publishChapter(request));

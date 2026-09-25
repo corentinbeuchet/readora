@@ -1,7 +1,7 @@
 import { HttpClient, httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal, inject } from '@angular/core';
 import { Observable, catchError } from 'rxjs';
-import { PublicProfile, ReaderRef, TeamProfile } from '@app/core/models/community';
+import { PublicProfile, ReaderRef, TeamMember, TeamProfile } from '@app/core/models/community';
 import { ApiClient, parseEnvelope, toApiError } from './api-client';
 
 /** Public profiles, team pages, team follows and the library export (US-12). */
@@ -20,14 +20,28 @@ export class CommunityApi {
     );
   }
 
-  teamResource(teamId: Signal<string | undefined>): HttpResourceRef<TeamProfile | undefined> {
+  /** A team's page with one page of its series (from 0). */
+  teamResource(teamId: Signal<string | undefined>, seriesPage: Signal<number>): HttpResourceRef<TeamProfile | undefined> {
     return httpResource<TeamProfile | undefined>(
       () => {
         const id = teamId();
-        return id ? this.api.url(`/teams/${id}`) : undefined;
+        const page = seriesPage();
+        if (!id) {
+          return undefined;
+        }
+        // The first page has no parameter: the same URL as a link to the team.
+        return { url: this.api.url(`/teams/${id}`), params: page > 0 ? { page } : undefined };
       },
       { parse: (raw) => parseEnvelope<TeamProfile>(raw) }
     );
+  }
+
+  /** A team's members and their roles (the Studio roster), without the rest of its page. */
+  membersResource(teamId: Signal<string | undefined>): HttpResourceRef<TeamMember[] | undefined> {
+    return httpResource<TeamMember[] | undefined>(() => {
+      const id = teamId();
+      return id ? this.api.url(`/teams/${id}/members`) : undefined;
+    }, { parse: (raw) => parseEnvelope<TeamMember[]>(raw) ?? [] });
   }
 
   /** Readers whose username starts with `text` (at least 2 characters), to invite them to a team. */

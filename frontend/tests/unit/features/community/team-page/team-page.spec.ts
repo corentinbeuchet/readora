@@ -4,7 +4,8 @@ import { provideRouter } from '@angular/router';
 import { TeamPage } from '@app/features/community/team-page/team-page';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { WorkSummary } from '@app/core/models/catalog';
-import { TeamProfile } from '@app/core/models/community';
+import { PagedResponse } from '@app/core/models/api';
+import { TeamProfile, TeamSeries } from '@app/core/models/community';
 import { mockUser, signIn } from '../../../core/auth/auth-fixtures';
 import { API, ok, provideHttpTesting, settle } from '../../../test-utils';
 
@@ -14,18 +15,28 @@ const TEAM: TeamProfile = {
   id: 't-1',
   name: 'Shadow Scans',
   description: 'We translate action series.',
-  series: [
+  series: onePage([
     { work: series('w-1', 'Solo Leveling'), chapterCount: 2 },
     { work: series('w-2', 'Omniscient Reader'), chapterCount: 1 }
-  ],
+  ]),
   members: [{ username: 'leader', roles: ['LEADER'] }, { username: 'translator', roles: ['TRANSLATOR'] }],
   latestChapters: [
     { id: 'c-5', workId: 'w-1', chapterNumber: '5', title: 'Arise', status: 'PUBLISHED', pageCount: 20, publishedAt: null, team: SHADOW_SCANS },
     { id: 'c-9', workId: 'w-2', chapterNumber: '1', title: 'Prologue', status: 'PUBLISHED', pageCount: 30, publishedAt: null, team: SHADOW_SCANS }
   ],
+  latestSeries: [{ id: 'w-1', title: 'Solo Leveling' }, { id: 'w-2', title: 'Omniscient Reader' }],
   followers: 3,
   following: false
 };
+
+function onePage(items: TeamSeries[], page = 0, totalElements = items.length): PagedResponse<TeamSeries> {
+  return { items, page, size: 24, totalElements, totalPages: Math.ceil(totalElements / 24) };
+}
+
+/** `count` series from "Series <from>" on, with no chapter. */
+function quietSeries(from: number, count: number): TeamSeries[] {
+  return Array.from({ length: count }, (_, i) => ({ work: series(`w-q${from + i}`, `Series ${from + i}`), chapterCount: 0 }));
+}
 
 function series(id: string, title: string): WorkSummary {
   return { id, title, type: 'MANHWA', status: 'ONGOING', author: null, demographic: null, coverImageUrl: '', coverThumbnailUrl: null, genres: [] };
@@ -67,16 +78,32 @@ describe('TeamPage (US-12)', () => {
     thenTheLatestChapterTitlesAre([]);
   });
 
-  it('The team page lists every series as a card', async () => {
+  it('each series is a card with the number of chapters the team published', async () => {
     await givenIAmOnTheTeamPageOf(TEAM);
 
     thenTheSeriesCardsLinkTo(['/works/w-1', '/works/w-2']);
     thenTheSeriesCardSays('Solo Leveling', '2 chapters');
     thenTheSeriesCardSays('Omniscient Reader', '1 chapter');
+    thenThereIsNoPager();
+  });
+
+  it('The team page lists its series as cards, 24 per page', async () => {
+    await givenIAmOnTheTeamPageOf({ ...TEAM, series: onePage(quietSeries(1, 24), 0, 30) });
+
+    thenThereAreSeriesCards(24);
+    thenTheSeriesCardSays('Series 1', 'No chapter yet');
+    thenICanSee('Page 1 / 2');
+    thenTheNextPageLinkGoesTo('page=1');
+
+    await whenIOpenPageOfItsSeries(1, onePage(quietSeries(25, 6), 1, 30));
+
+    thenThereAreSeriesCards(6);
+    thenICanSee('Page 2 / 2');
+    thenICanSee('Shadow Scans');
   });
 
   it('a team without a series says so and points to the catalog', async () => {
-    await givenIAmOnTheTeamPageOf({ ...TEAM, series: [], latestChapters: [] });
+    await givenIAmOnTheTeamPageOf({ ...TEAM, series: onePage([]), latestChapters: [], latestSeries: [] });
 
     thenICanSee('This team has not started a series yet.');
     thenThereIsALinkTo('/works');
@@ -108,6 +135,14 @@ describe('TeamPage (US-12)', () => {
     await settle(fixture);
   }
 
+  /** What the router does for `?page=`: the input changes, the page asks for that page of series. */
+  async function whenIOpenPageOfItsSeries(page: number, answer: PagedResponse<TeamSeries>): Promise<void> {
+    fixture.componentRef.setInput('page', String(page));
+    await settle(fixture);
+    http.expectOne(`${API}/teams/t-1?page=${page}`).flush(ok({ ...TEAM, series: answer }));
+    await settle(fixture);
+  }
+
   async function whenIClickFollow(answer: { nowFollowing: boolean }): Promise<void> {
     followButton().click();
     lastRequest = http.expectOne(`${API}/teams/t-1/follow`);
@@ -136,6 +171,19 @@ describe('TeamPage (US-12)', () => {
 
   function thenTheSeriesCardsLinkTo(hrefs: string[]): void {
     expect(seriesCards().map((card) => card.querySelector('a')?.getAttribute('href'))).toEqual(hrefs);
+  }
+
+  function thenThereAreSeriesCards(count: number): void {
+    expect(seriesCards()).toHaveLength(count);
+  }
+
+  function thenThereIsNoPager(): void {
+    expect(fixture.nativeElement.querySelector('nav.pager')).toBeNull();
+  }
+
+  function thenTheNextPageLinkGoesTo(query: string): void {
+    const next = Array.from(fixture.nativeElement.querySelectorAll('nav.pager a') as NodeListOf<HTMLAnchorElement>).find((a) => a.textContent!.includes('Next'));
+    expect(next?.getAttribute('href')).toContain(query);
   }
 
   function thenTheSeriesCardSays(title: string, text: string): void {

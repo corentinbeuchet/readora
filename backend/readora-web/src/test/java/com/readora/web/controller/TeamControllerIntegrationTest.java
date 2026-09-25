@@ -44,7 +44,7 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
         mockMvc.perform(get("/api/v1/teams/" + teamId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.members[0].username").value(mina.username()))
-                .andExpect(jsonPath("$.data.series.length()").value(0));
+                .andExpect(jsonPath("$.data.series.items.length()").value(0));
         whenICreateTheTeam(register(), name.toUpperCase())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("TEAM_NAME_TAKEN"));
@@ -79,7 +79,7 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
                 .andExpect(jsonPath("$.code").value("SERIES_ALREADY_IN_TEAM"));
         whenIAddTheSeries(mina, moonScans, UUID.randomUUID().toString()).andExpect(status().isNotFound());
 
-        mockMvc.perform(get("/api/v1/teams/" + moonScans)).andExpect(jsonPath("$.data.series.length()").value(1));
+        mockMvc.perform(get("/api/v1/teams/" + moonScans)).andExpect(jsonPath("$.data.series.items.length()").value(1));
         mockMvc.perform(get("/api/v1/works/" + workId + "/projects").header("Authorization", mina.bearer()))
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].teamId").value(moonScans));
@@ -265,7 +265,7 @@ class TeamControllerIntegrationTest extends AuthTestSupport {
         mockMvc.perform(get("/api/v1/works/" + workId + "/projects").header("Authorization", mina.bearer()))
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].teamId").value(moonScans));
-        mockMvc.perform(get("/api/v1/teams/" + moonScans)).andExpect(jsonPath("$.data.series[0].work.id").value(workId));
+        mockMvc.perform(get("/api/v1/teams/" + moonScans)).andExpect(jsonPath("$.data.series.items[0].work.id").value(workId));
     }
 
     @Test

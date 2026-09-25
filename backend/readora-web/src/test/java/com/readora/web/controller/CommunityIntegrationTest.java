@@ -55,14 +55,22 @@ class CommunityIntegrationTest extends AuthTestSupport {
         mockMvc.perform(get("/api/v1/teams/" + teamId).header("Authorization", kenji.bearer()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.name").value(teamName))
-                .andExpect(jsonPath("$.data.series.length()").value(1))
-                .andExpect(jsonPath("$.data.series[0].work.title").value(title))
-                .andExpect(jsonPath("$.data.series[0].chapterCount").value(1))
+                .andExpect(jsonPath("$.data.series.items.length()").value(1))
+                .andExpect(jsonPath("$.data.series.totalElements").value(1))
+                .andExpect(jsonPath("$.data.series.items[0].work.title").value(title))
+                .andExpect(jsonPath("$.data.series.items[0].chapterCount").value(1))
+                .andExpect(jsonPath("$.data.latestSeries[0].title").value(title))
                 .andExpect(jsonPath("$.data.members[0].username").value(leader.username()))
                 .andExpect(jsonPath("$.data.latestChapters[0].id").value(chapterId))
                 .andExpect(jsonPath("$.data.followers").value(1))
                 .andExpect(jsonPath("$.data.following").value(true));
         mockMvc.perform(get("/api/v1/teams/" + teamId)).andExpect(jsonPath("$.data.following").value(false));
+        mockMvc.perform(get("/api/v1/teams/" + teamId + "/members"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].username").value(leader.username()))
+                .andExpect(jsonPath("$.data[0].roles[0]").value("LEADER"));
+        mockMvc.perform(get("/api/v1/teams/" + UUID.randomUUID() + "/members")).andExpect(status().isNotFound());
         mockMvc.perform(get("/api/v1/chapters/" + chapterId))
                 .andExpect(jsonPath("$.data.team.id").value(teamId))
                 .andExpect(jsonPath("$.data.team.name").value(teamName));

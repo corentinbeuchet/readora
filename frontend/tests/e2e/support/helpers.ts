@@ -380,6 +380,29 @@ export async function leadABusyTeam(request: APIRequestContext, chapters: number
   return { account, title };
 }
 
+/** A team with many series and no chapter (US-12), started by a new reader. */
+export interface TeamWithSeries {
+  teamId: string;
+  name: string;
+}
+
+/** A new reader starts a team and creates `count` series for it ("… 01", "… 02", …), each with its task board. */
+export async function startATeamWithSeries(request: APIRequestContext, count: number): Promise<TeamWithSeries> {
+  const { accessToken } = await registerAccount(request, 'many');
+  const headers = { Authorization: `Bearer ${accessToken}` };
+  const name = `Many Series Team ${uniqueSuffix()}`;
+  const team = await data<{ id: string }>(await request.post(`${API_URL}/teams`, { headers, data: { name } }));
+  for (let n = 1; n <= count; n++) {
+    await data(
+      await request.post(`${API_URL}/works`, {
+        headers,
+        data: { title: `E2E Team Series ${uniqueSuffix()} ${String(n).padStart(2, '0')}`, synopsis: 'Created by the e2e suite.', type: 'MANGA', status: 'ONGOING', genres: ['Action'], teamId: team.id }
+      })
+    );
+  }
+  return { teamId: team.id, name };
+}
+
 /** Logs in through the UI as an account a test created. */
 export async function givenIAmLoggedInAs(page: Page, account: { email: string }): Promise<void> {
   await logIn(page, { email: account.email, password: PASSWORD });

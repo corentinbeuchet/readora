@@ -41,7 +41,7 @@ describe('MyTeamsPage (US-12)', () => {
     // Each panel loads its roster (own spec: team-roster) and a leader's its invitations waiting for an answer (own
     // spec: invite-member), unless a test answered them.
     http.match((request) => /\/teams\/[^/]+\/invitations$/.test(request.url)).forEach((request) => request.flush(ok([])));
-    http.match((request) => /\/teams\/[^/]+$/.test(request.url)).forEach((request) => request.flush(ok(null)));
+    http.match((request) => /\/teams\/[^/]+\/members$/.test(request.url)).forEach((request) => request.flush(ok([])));
     // Typing a username asks for suggestions after a pause (own spec: invite-member).
     http.match((request) => request.url === `${API}/users`).forEach((request) => request.flush(ok([])));
     http.verify();
@@ -374,7 +374,7 @@ describe('MyTeamsPage (US-12)', () => {
 
   /** Signed-in tests are "reader" (`mockUser`), so a roster with "reader" lists me. */
   async function givenTheRosterOfMoonScansIs(members: { username: string; roles: ScanlationRole[] }[]): Promise<void> {
-    http.expectOne(`${API}/teams/t-1`).flush(ok({ id: 't-1', name: 'Moon Scans', description: null, series: [], members, latestChapters: [], followers: 0, following: false }));
+    http.expectOne(`${API}/teams/t-1/members`).flush(ok(members));
     await settle(fixture);
   }
 

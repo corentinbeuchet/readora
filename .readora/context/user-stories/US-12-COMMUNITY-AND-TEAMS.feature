@@ -27,11 +27,20 @@ Feature: Community and scanlation teams
     When a reader opens the page of the team "Shadow Scans"
     Then they see its members, every series it translates and its latest chapters
 
+  # A team can translate hundreds of series: its page shows them 24 at a time, the most translated first.
+  @could
+  Scenario: A team page shows its series 24 at a time, the most translated first
+    Given the team "Shadow Scans" also translates 25 series without a chapter
+    When a reader opens the page of the team "Shadow Scans"
+    Then the first page of its series starts with "Solo Leveling" and "Omniscient Reader" and holds 24 of 27
+    And the second page of its series holds the other 3
+
   @could @ui
-  Scenario: The team page lists every series as a card
-    Given the team "Shadow Scans" translates "Solo Leveling" and "Omniscient Reader"
+  Scenario: The team page lists its series as cards, 24 per page
+    Given the team "Shadow Scans" translates 30 series
     When a reader opens the page of the team "Shadow Scans"
     Then each series is a card with the number of chapters the team published
+    And a pager leads to the other 6
 
   # Inspired by: comix.to and MangaDex chapter lists. One row per chapter number, the teams inside (decided 2026-09-20):
   # read marks and "Next up" are per number, so a flat list of versions would show one chapter as read and unread.
