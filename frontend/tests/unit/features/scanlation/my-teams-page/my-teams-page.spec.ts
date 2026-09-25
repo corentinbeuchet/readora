@@ -111,15 +111,41 @@ describe('MyTeamsPage (US-12)', () => {
   it('creates a team and shows it first', async () => {
     await givenIAmOnMyTeams({ teams: [team()] });
 
+    await whenIClick('New team');
     await whenICreateTheTeam({ name: ' Sun Scans ', description: 'Romance.' }, { answer: ok(team({ id: 't-2', name: 'Sun Scans', boards: [] })) });
 
     thenTheRequestWas('POST', `${API}/teams`, { name: 'Sun Scans', description: 'Romance.' });
     thenMyTeamsAre(['Sun Scans', 'Moon Scans']);
+    thenTheNewTeamFormIsOpen(false);
+    thenFocusIsOnTheNewTeamButton();
+  });
+
+  it('with a team, the new team form opens from the header and Cancel closes it', async () => {
+    await givenIAmOnMyTeams({ teams: [team()] });
+
+    thenTheNewTeamFormIsOpen(false);
+
+    await whenIClick('New team');
+
+    thenTheNewTeamFormIsOpen(true);
+    thenFocusIsOnTheTeamName();
+
+    await whenIClick('Cancel');
+
+    thenTheNewTeamFormIsOpen(false);
+    thenFocusIsOnTheNewTeamButton();
+  });
+
+  it('without a team, the new team form is open from the start', async () => {
+    await givenIAmOnMyTeams({ teams: [] });
+
+    thenTheNewTeamFormIsOpen(true);
   });
 
   it('a team name that is taken is explained, and nothing is added', async () => {
     await givenIAmOnMyTeams({ teams: [team()] });
 
+    await whenIClick('New team');
     await whenICreateTheTeam({ name: 'Moon Scans', description: '' }, { answer: fail('A team named Moon Scans already exists', 'TEAM_NAME_TAKEN'), status: 400 });
 
     thenISeeTheAlert('A team already has this name. Choose another one.');
@@ -137,7 +163,7 @@ describe('MyTeamsPage (US-12)', () => {
   it('a translator in one team can still start their own team', async () => {
     await givenIAmOnMyTeams({ teams: [team({ myRoles: ['TRANSLATOR'] })], permissions: ['LIBRARY_USE'] });
 
-    thenThereIsANewTeamForm();
+    thenThereIsANewTeamButton();
   });
 
   it('a leader adds an existing series: the ones the team already has are left out', async () => {
@@ -541,8 +567,21 @@ describe('MyTeamsPage (US-12)', () => {
     expect(rows.map((span) => span.textContent!.trim())).toEqual(titles);
   }
 
-  function thenThereIsANewTeamForm(): void {
-    expect(fixture.nativeElement.querySelector('.new-team')).not.toBeNull();
+  function thenThereIsANewTeamButton(): void {
+    expect(button('New team')).toBeDefined();
+  }
+
+  function thenTheNewTeamFormIsOpen(open: boolean): void {
+    expect(fixture.nativeElement.querySelector('form.new-team') !== null).toBe(open);
+    expect(button('New team').getAttribute('aria-expanded')).toBe(String(open));
+  }
+
+  function thenFocusIsOnTheNewTeamButton(): void {
+    expect(document.activeElement).toBe(button('New team'));
+  }
+
+  function thenFocusIsOnTheTeamName(): void {
+    expect(document.activeElement).toBe(fixture.nativeElement.querySelector('#new-team-name'));
   }
 
   /** Identity never travels in a body; a DELETE has none (`body` null). */

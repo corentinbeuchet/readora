@@ -1,8 +1,37 @@
 <section class="page">
   <div class="studio-header">
     <h1 i18n="@@scanlation.teams.heading">Studio</h1>
-    <a routerLink="/upload" class="btn" i18n="@@scanlation.studio.publish">Publish a chapter</a>
+    <div class="studio-actions">
+      <a routerLink="/upload" class="btn" i18n="@@scanlation.studio.publish">Publish a chapter</a>
+      <button *appHasPermission="'LIBRARY_USE'" #newTeamToggle type="button" class="btn" [attr.aria-expanded]="newTeamOpen()"
+              aria-controls="new-team" (click)="toggleNewTeam()" i18n="@@scanlation.teams.new.open">New team</button>
+    </div>
   </div>
+
+  @if (newTeamOpen()) {
+    <form id="new-team" class="card form new-team" (submit)="create($event)" novalidate aria-labelledby="new-team-heading">
+      <h2 id="new-team-heading" i18n="@@scanlation.teams.new.heading">New team</h2>
+      <div class="field">
+        <label for="new-team-name" i18n="@@scanlation.teams.new.name">Name</label>
+        <input #newTeamName id="new-team-name" type="text" [formField]="newTeamForm.name"
+               [appAriaInvalid]="newTeamForm.name" aria-describedby="new-team-name-error" />
+        <app-field-errors id="new-team-name-error" [field]="newTeamForm.name" />
+      </div>
+      <div class="field">
+        <label for="new-team-description" i18n="@@scanlation.teams.new.description">What the team translates</label>
+        <textarea id="new-team-description" rows="2" [formField]="newTeamForm.description"
+                  [appAriaInvalid]="newTeamForm.description" aria-describedby="new-team-description-error"></textarea>
+        <app-field-errors id="new-team-description-error" [field]="newTeamForm.description" />
+      </div>
+      @if (creating.error(); as message) {
+        <p class="form-error" role="alert">{{ message }}</p>
+      }
+      <div class="new-team-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="creating.busy()" i18n="@@scanlation.teams.new.submit">Create team</button>
+        <button type="button" class="btn" (click)="closeNewTeam()" i18n="@@scanlation.teams.new.cancel">Cancel</button>
+      </div>
+    </form>
+  }
 
   @if (invitations.status() === 'loading') {
     <p class="muted" role="status" i18n="@@scanlation.invitations.loading">Loading your invitations…</p>
@@ -76,7 +105,7 @@
     </app-load-error>
   } @else if (teams.value().length === 0) {
     <app-empty-state>
-      <ng-container i18n="@@scanlation.teams.empty">You are not on a team yet. Create one below, or ask a team leader to invite you.</ng-container>
+      <ng-container i18n="@@scanlation.teams.empty">You are not on a team yet. Start one with the form above, or ask a team leader to invite you.</ng-container>
     </app-empty-state>
   } @else {
     <ul class="team-list">
@@ -86,25 +115,4 @@
     </ul>
   }
 
-  <ng-container *appHasPermission="'LIBRARY_USE'">
-    <form class="card form new-team" (submit)="create($event)" novalidate>
-      <h2 i18n="@@scanlation.teams.new.heading">New team</h2>
-      <div class="field">
-        <label for="new-team-name" i18n="@@scanlation.teams.new.name">Name</label>
-        <input id="new-team-name" type="text" [formField]="newTeamForm.name"
-               [appAriaInvalid]="newTeamForm.name" aria-describedby="new-team-name-error" />
-        <app-field-errors id="new-team-name-error" [field]="newTeamForm.name" />
-      </div>
-      <div class="field">
-        <label for="new-team-description" i18n="@@scanlation.teams.new.description">What the team translates</label>
-        <textarea id="new-team-description" rows="2" [formField]="newTeamForm.description"
-                  [appAriaInvalid]="newTeamForm.description" aria-describedby="new-team-description-error"></textarea>
-        <app-field-errors id="new-team-description-error" [field]="newTeamForm.description" />
-      </div>
-      @if (creating.error(); as message) {
-        <p class="form-error" role="alert">{{ message }}</p>
-      }
-      <button type="submit" class="btn btn-primary" [disabled]="creating.busy()" i18n="@@scanlation.teams.new.submit">Create team</button>
-    </form>
-  </ng-container>
 </section>

@@ -1,4 +1,4 @@
-import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
+import { Component, ElementRef, Injector, afterNextRender, computed, inject, linkedSignal, signal, viewChild } from '@angular/core';
 import { FormField, form, maxLength, required, submit } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -25,6 +25,9 @@ import { TeamPanel } from './team-panel/team-panel';
 export class MyTeamsPage {
   private readonly api = inject(TeamsApi);
   private readonly auth = inject(AuthStore);
+  private readonly injector = inject(Injector);
+  private readonly newTeamToggle = viewChild<ElementRef<HTMLButtonElement>>('newTeamToggle');
+  private readonly newTeamName = viewChild<ElementRef<HTMLInputElement>>('newTeamName');
 
   private readonly canView = computed(() => this.auth.can('LIBRARY_USE'));
   protected readonly teams = this.api.mineResource(this.canView);
@@ -43,6 +46,8 @@ export class MyTeamsPage {
     computation: (total, previous) => (total >= 0 ? total : (previous?.value ?? 0))
   });
   protected readonly stageLabels = WORKFLOW_STAGE_LABELS;
+  /** Starting a team is rare once I have one: the form opens from the header, and is open while I am on no team. */
+  protected readonly newTeamOpen = linkedSignal(() => this.canView() && this.teams.status() === 'resolved' && this.teams.value().length === 0);
   protected readonly creating = asyncAction();
   protected readonly model = signal({ name: '', description: '' });
   protected readonly newTeamForm = form(this.model, (path) => {
@@ -77,6 +82,22 @@ export class MyTeamsPage {
     }, { key: invitation.id });
   }
 
+  protected toggleNewTeam(): void {
+    if (this.newTeamOpen()) {
+      this.closeNewTeam();
+      return;
+    }
+    this.newTeamOpen.set(true);
+    afterNextRender(() => this.newTeamName()?.nativeElement.focus(), { injector: this.injector });
+  }
+
+  /** Closes the form; focus goes back to the button that opens it (the form and its buttons are gone). */
+  protected closeNewTeam(): void {
+    this.newTeamOpen.set(false);
+    this.creating.clearError();
+    afterNextRender(() => this.newTeamToggle()?.nativeElement.focus(), { injector: this.injector });
+  }
+
   /** Creates the team (I become its leader) and shows it first in the list. */
   protected async create(event: Event): Promise<void> {
     event.preventDefault();
@@ -88,6 +109,7 @@ export class MyTeamsPage {
         this.teams.update((teams) => [team, ...teams]);
         this.model.set({ name: '', description: '' });
         f().reset();
+        this.closeNewTeam();
       });
     });
   }
