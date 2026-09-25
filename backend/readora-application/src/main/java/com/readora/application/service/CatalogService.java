@@ -11,15 +11,18 @@ import com.readora.application.port.out.WorkRepositoryPort.WorkSearch;
 import com.readora.application.port.out.WorkRepositoryPort;
 import com.readora.domain.common.AccessDeniedDomainException;
 import com.readora.domain.common.DomainValidationException;
+import com.readora.domain.common.NotFoundException;
 import com.readora.domain.common.UserId;
 import com.readora.domain.identity.Permission;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.TaskId;
 import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamCredit;
 import com.readora.domain.scanlation.TeamId;
 import com.readora.domain.work.Chapter;
 import com.readora.domain.work.ChapterSummary;
+import com.readora.domain.work.PageAsset;
 import com.readora.domain.work.Work;
 import com.readora.domain.work.WorkId;
 
@@ -110,6 +113,17 @@ public class CatalogService implements BrowseCatalogUseCase {
             throw new AccessDeniedDomainException("Only the team's members can open its task board");
         }
         return Optional.of(new ProjectBoard(project.get(), team.get(), usernamesOn(List.of(project.get()), List.of(team.get()))));
+    }
+
+    @Override
+    public List<PageAsset> taskPages(ProjectId projectId, TaskId taskId, UserId viewer) {
+        ScanlationProject project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new NotFoundException("Scanlation project", projectId));
+        Team team = teamRepository.findById(project.getTeamId()).orElseThrow(() -> new NotFoundException("Team", project.getTeamId()));
+        if (team.findMember(viewer).isEmpty() && !isAdmin(viewer)) {
+            throw new AccessDeniedDomainException("Only the team's members can open its task board");
+        }
+        return project.findTask(taskId).orElseThrow(() -> new NotFoundException("Task", taskId)).getPages();
     }
 
     @Override

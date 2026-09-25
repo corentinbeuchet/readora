@@ -10,9 +10,17 @@ import { PageAsset, PagePayload } from '@app/core/models/chapter';
 const PROJECT_ID = 'proj-1';
 const TASKS_URL = `${API}/scanlation/projects/${PROJECT_ID}/tasks`;
 
-const RAW_TASK: WorkflowTask = { id: 't-raw', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, assigneeUsername: null, pageCount: 2, pages: [rawPage(1), rawPage(2)], updatedAt: '2026-09-13T00:00:00Z' };
-const MY_TASK: WorkflowTask = { id: 't-mine', chapterNumber: '11', stage: 'CLEANING', status: 'IN_PROGRESS', assigneeId: 'user-1', assigneeUsername: 'user-1-name', pageCount: 1, pages: [rawPage(1)], updatedAt: '2026-09-13T00:00:00Z' };
-const QC_TASK: WorkflowTask = { id: 't-qc', chapterNumber: '9', stage: 'QC_REVIEW', status: 'PENDING', assigneeId: null, assigneeUsername: null, pageCount: 1, pages: [rawPage(1)], updatedAt: '2026-09-13T00:00:00Z' };
+const RAW_TASK: WorkflowTask = { id: 't-raw', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, assigneeUsername: null, pageCount: 2, updatedAt: '2026-09-13T00:00:00Z' };
+const MY_TASK: WorkflowTask = { id: 't-mine', chapterNumber: '11', stage: 'CLEANING', status: 'IN_PROGRESS', assigneeId: 'user-1', assigneeUsername: 'user-1-name', pageCount: 1, updatedAt: '2026-09-13T00:00:00Z' };
+const QC_TASK: WorkflowTask = { id: 't-qc', chapterNumber: '9', stage: 'QC_REVIEW', status: 'PENDING', assigneeId: null, assigneeUsername: null, pageCount: 1, updatedAt: '2026-09-13T00:00:00Z' };
+
+/** Chapters 1 to `count`, published one day apart in that order. */
+function publishedChapters(count: number): WorkflowTask[] {
+  return Array.from({ length: count }, (_, i) => ({
+    id: `t-pub-${i + 1}`, chapterNumber: String(i + 1), stage: 'PUBLISHED', status: 'COMPLETED', assigneeId: null, assigneeUsername: null,
+    pageCount: 20, updatedAt: new Date(Date.UTC(2026, 8, 1 + i)).toISOString()
+  }));
+}
 
 function rawPage(pageNumber: number): PageAsset {
   return { pageNumber, storageKey: `raw/p${pageNumber}.webp`, cdnUrl: `https://cdn.test/raw/p${pageNumber}.webp`, width: 800, height: 1200, description: null, liteCdnUrl: null };
@@ -137,12 +145,34 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
     thenICanSee('Assigned: you');
   });
 
-  it('a task lists the pages the last stage left, as links to open them', async () => {
+  it("A task's pages load when a member opens them", async () => {
     await givenIAmSignedInWith(['LIBRARY_USE']);
     await givenIOpenTheBoard(PROJECT);
 
     thenTaskCardShows('RAW_UPLOADED', 1, '2 pages');
+    thenNoPagesWereAskedFor();
+
+    await whenIOpenThePagesOf(RAW_TASK, [rawPage(1), rawPage(2)]);
+
     thenTheTaskLinksToItsPages(RAW_TASK, ['https://cdn.test/raw/p1.webp', 'https://cdn.test/raw/p2.webp']);
+  });
+
+  it('The published column shows the latest 10 chapters, older ones on request', async () => {
+    await givenIAmSignedInWith(['LIBRARY_USE']);
+    await givenIOpenTheBoard({ ...PROJECT, tasks: publishedChapters(14) });
+
+    thenColumnHasTasks('PUBLISHED', 10);
+    thenTaskCardShows('PUBLISHED', 1, 'Chapter 14');
+    thenTheColumnCountIs('PUBLISHED', 14);
+
+    await whenIClick('Show 4 older chapters');
+
+    thenColumnHasTasks('PUBLISHED', 14);
+    thenTaskCardShows('PUBLISHED', 14, 'Chapter 1');
+
+    await whenIClick('Show only the latest 10');
+
+    thenColumnHasTasks('PUBLISHED', 10);
   });
 
   it('Submit uploads the pages of my stage, then the task moves on to the next stage with them', async () => {
@@ -461,6 +491,29 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
   /** In the last round of uploads: a page already uploaded is not sent again. */
   function thenThisManyPagesWereUploaded(count: number): void {
     expect(pageUploads.length).toBe(count);
+  }
+
+  /** Clicking the summary opens the `<details>`; the list's pages are asked for then. */
+  async function whenIOpenThePagesOf(task: WorkflowTask, pages: PageAsset[]): Promise<void> {
+    const details = taskCard(task).querySelector<HTMLDetailsElement>('details.task-pages')!;
+    details.open = true;
+    details.dispatchEvent(new Event('toggle'));
+    await settle(fixture);
+    http.expectOne(`${TASKS_URL}/${task.id}/pages`).flush(ok(pages));
+    await settle(fixture);
+  }
+
+  async function whenIClick(label: string): Promise<void> {
+    Array.from(page().querySelectorAll('button')).find((b) => b.textContent!.replace(/\s+/g, ' ').trim() === label)!.click();
+    await settle(fixture);
+  }
+
+  function thenNoPagesWereAskedFor(): void {
+    http.expectNone((request) => request.url.endsWith('/pages'));
+  }
+
+  function thenTheColumnCountIs(stage: string, count: number): void {
+    expect(page().querySelector(`section[data-stage="${stage}"] .count-badge`)?.textContent?.trim()).toBe(String(count));
   }
 
   function thenTheTaskLinksToItsPages(task: WorkflowTask, hrefs: string[]): void {

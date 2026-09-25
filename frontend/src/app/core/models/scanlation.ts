@@ -1,4 +1,4 @@
-import { PageAsset, PagePayload } from '@app/core/models/chapter';
+import { PagePayload } from '@app/core/models/chapter';
 
 
 export type ScanlationRole = 'LEADER' | 'CLEANER_REDRAWER' | 'TRANSLATOR' | 'TYPESETTER' | 'PROOFREADER' | 'QUALITY_CHECKER';
@@ -43,9 +43,8 @@ export interface WorkflowTask {
   assigneeId: string | null;
   /** Who holds the task, by username; `null` when nobody does (or the account is gone). */
   assigneeUsername: string | null;
+  /** The pages themselves (as the last stage left them) come from `ScanlationApi.taskPagesResource`, on request. */
   pageCount: number;
-  /** The pages as the last stage left them (the raw pages at first); the next stage starts from them. */
-  pages: PageAsset[];
   updatedAt: string;
 }
 

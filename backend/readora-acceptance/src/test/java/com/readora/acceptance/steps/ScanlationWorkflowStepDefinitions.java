@@ -1,18 +1,23 @@
 package com.readora.acceptance.steps;
 
+import com.readora.acceptance.fakes.InMemoryChapterReadRepository;
 import com.readora.acceptance.fakes.InMemoryChapterRepository;
 import com.readora.acceptance.fakes.InMemoryCommentRepository;
+import com.readora.acceptance.fakes.InMemoryCommunity;
 import com.readora.acceptance.fakes.InMemoryLibraryRepository;
 import com.readora.acceptance.fakes.InMemoryNotificationRepository;
 import com.readora.acceptance.fakes.InMemoryTeamInvitationRepository;
 import com.readora.acceptance.fakes.InMemoryTeamRepository;
+import com.readora.acceptance.fakes.InMemoryUserAccounts;
 import com.readora.acceptance.fakes.InMemoryWorkRepository;
 import com.readora.acceptance.fakes.NoUserAccounts;
 import com.readora.application.port.out.ChapterRepositoryPort;
 import com.readora.application.port.out.EventPublisherPort;
 import com.readora.application.port.out.ScanlationProjectRepositoryPort;
+import com.readora.application.service.CatalogService;
 import com.readora.application.service.NotificationService;
 import com.readora.application.service.ScanlationTaskService;
+import com.readora.domain.common.AccessDeniedDomainException;
 import com.readora.domain.common.DomainEvent;
 import com.readora.domain.common.DomainValidationException;
 import com.readora.domain.common.ErrorCodes;
@@ -31,6 +36,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class ScanlationWorkflowStepDefinitions {
 
@@ -39,6 +45,7 @@ public class ScanlationWorkflowStepDefinitions {
     private final List<DomainEvent> emittedEvents = new ArrayList<>();
 
     private ScanlationTaskService scanlationTaskService;
+    private CatalogService catalog;
     private NotificationService notifications;
     private final InMemoryWorkRepository works = new InMemoryWorkRepository();
     private final InMemoryTeamRepository teams = new InMemoryTeamRepository();
@@ -121,6 +128,8 @@ public class ScanlationWorkflowStepDefinitions {
             }
         };
         scanlationTaskService = new ScanlationTaskService(projectRepo, teams, chapterRepo, eventPublisher, new NoUserAccounts());
+        catalog = new CatalogService(works, chapterRepo, projectRepo, teams, new NoUserAccounts(), new InMemoryCommunity(works,
+                new InMemoryChapterReadRepository(readerChapters), new InMemoryLibraryRepository(), new InMemoryUserAccounts(), readerChapters));
     }
 
     @Given("a scanlation team {string} exists")
@@ -244,6 +253,28 @@ public class ScanlationWorkflowStepDefinitions {
         String num = chapterName.replaceAll("[^0-9.]", "");
         currentTask = currentProject.addChapterTask(ChapterNumber.of(num.isEmpty() ? "10" : num), pages("final", pageCount), UserId.of("LeaderBob"));
         currentTask.advanceStage(WorkflowStage.valueOf(stageStr));
+    }
+
+    @Given("{string} workflow task is in stage {string} with {int} pages")
+    public void taskWithPages(String chapterName, String stageStr, int pageCount) {
+        String num = chapterName.replaceAll("[^0-9.]", "");
+        currentTask = currentProject.addChapterTask(ChapterNumber.of(num), pages("raw", pageCount), UserId.of("LeaderBob"));
+        if (!stageStr.equals("RAW_UPLOADED")) {
+            currentTask.advanceStage(WorkflowStage.valueOf(stageStr));
+        }
+    }
+
+    @Then("{string} gets pages {int} to {int} of {string}")
+    public void getsThePagesOfTheTask(String member, int first, int last, String chapterName) {
+        assertThat(catalog.taskPages(currentProject.getId(), currentTask.getId(), UserId.of(member)))
+                .extracting(PageAsset::pageNumber)
+                .containsExactlyElementsOf(java.util.stream.IntStream.rangeClosed(first, last).boxed().toList());
+    }
+
+    @Then("{string}, who is not on the team, is refused the pages of {string}")
+    public void isRefusedThePagesOfTheTask(String outsider, String chapterName) {
+        assertThatThrownBy(() -> catalog.taskPages(currentProject.getId(), currentTask.getId(), UserId.of(outsider)))
+                .isInstanceOf(AccessDeniedDomainException.class);
     }
 
     @Given("{string} is in stage {string} with no pages uploaded")

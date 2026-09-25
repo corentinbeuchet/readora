@@ -55,6 +55,26 @@ Feature: Collaborative Scanlation Chapter Workflow Pipeline
     Given "Chapter 10" workflow task is assigned to "Bob" in stage "TRANSLATING"
     Then the task board shows the task is held by "@bob"
 
+  # A board keeps every chapter it published and every page of every task: it sends page counts, a task's pages load
+  # when a member opens them, and the published column shows the latest chapters first.
+  Scenario: Only the team opens the pages of a task
+    Given "Chapter 10" workflow task is in stage "RAW_UPLOADED" with 3 pages
+    Then "Alice" gets pages 1 to 3 of "Chapter 10"
+    And "Dana", who is not on the team, is refused the pages of "Chapter 10"
+
+  @ui
+  Scenario: A task's pages load when a member opens them
+    Given "Chapter 10" workflow task is in stage "RAW_UPLOADED" with 3 pages
+    When "Alice" opens the pages of "Chapter 10" on the task board
+    Then she sees links to pages 1 to 3
+
+  @ui
+  Scenario: The published column shows the latest 10 chapters, older ones on request
+    Given 14 chapters of "Solo Leveling" were published from the board
+    Then the published column shows the 10 latest
+    When a member asks for the older ones
+    Then all 14 are shown
+
   # Members hear when a chapter reaches their stage (in-app, US-10) instead of watching the board. Whoever acted is
   # not told about their own work; with nobody in the role, the leaders are, so no chapter waits unseen.
   Scenario: The members of the next stage are told a chapter is ready for them

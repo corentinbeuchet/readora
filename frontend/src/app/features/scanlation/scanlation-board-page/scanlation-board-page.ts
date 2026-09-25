@@ -6,15 +6,16 @@ import { ScanlationApi } from '@app/core/api/scanlation-api';
 import { AuthStore } from '@app/core/auth/auth-store';
 import { TASK_STATUS_LABELS, WorkflowTask, canClaim, canPublish, canSubmit, isAssignedTo } from '@app/core/models/scanlation';
 import { SeoService } from '@app/core/seo/seo.service';
-import { STAGES, tasksByStage, withTask, withTaskStage } from './scanlation-board';
+import { LATEST_PUBLISHED, STAGES, latestFirst, tasksByStage, withTask, withTaskStage } from './scanlation-board';
 import { PageReportsPanel } from './page-reports-panel/page-reports-panel';
 import { asyncAction } from '@app/core/utils/async-action';
 import { LoadError } from '@app/shared/ui/load-error';
 import { SubmitWorkDialog } from './submit-work-dialog/submit-work-dialog';
+import { TaskPages } from './task-pages/task-pages';
 
 @Component({
   selector: 'app-scanlation-board-page',
-  imports: [Icon, RouterLink, PageReportsPanel, LoadError, SubmitWorkDialog],
+  imports: [Icon, RouterLink, PageReportsPanel, LoadError, SubmitWorkDialog, TaskPages],
   templateUrl: './scanlation-board-page.html',
   styleUrl: './scanlation-board-page.scss'
 })
@@ -41,27 +42,50 @@ export class ScanlationBoardPage {
   /** My roles in the board's team: what I may claim and publish follows them. */
   private readonly myRoles = computed(() => this.currentProject()?.members.find((m) => m.userId === this.currentUserId())?.roles ?? []);
 
+  /** The tasks whose list of pages is open: their pages are asked for then, not with the board. */
+  protected readonly openPages = signal<ReadonlySet<string>>(new Set());
+  /** The published column shows the latest chapters until a member asks for the older ones. */
+  protected readonly showOlderPublished = signal(false);
+  protected readonly latestPublished = LATEST_PUBLISHED;
+
   /** One entry per column, with what the current user may do on each task (computed once, not per template call). */
   protected readonly columns = computed(() => {
     const byStage = tasksByStage(this.currentProject());
     const me = this.currentUserId();
     const roles = this.myRoles();
-    return STAGES.map((stage) => ({
-      ...stage,
-      tasks: byStage[stage.key].map((task) => {
-        return {
+    return STAGES.map((stage) => {
+      const published = stage.key === 'PUBLISHED';
+      const all = published ? latestFirst(byStage[stage.key]) : byStage[stage.key];
+      const shown = published && !this.showOlderPublished() ? all.slice(0, LATEST_PUBLISHED) : all;
+      return {
+        ...stage,
+        total: all.length,
+        olderCount: published ? Math.max(0, all.length - LATEST_PUBLISHED) : 0,
+        tasks: shown.map((task) => ({
           task,
           mine: isAssignedTo(task, me),
           canClaim: canClaim(task, roles),
           canSubmit: canSubmit(task, me),
           canPublish: canPublish(task, roles)
-        };
-      })
-    }));
+        }))
+      };
+    });
   });
 
   constructor() {
     this.seo.private_($localize`:@@scanlation.board.seoTitle:Task board`);
+  }
+
+  protected showPages(taskId: string, open: boolean): void {
+    this.openPages.update((ids) => {
+      const next = new Set(ids);
+      if (open) {
+        next.add(taskId);
+      } else {
+        next.delete(taskId);
+      }
+      return next;
+    });
   }
 
   protected async claim(task: WorkflowTask): Promise<void> {

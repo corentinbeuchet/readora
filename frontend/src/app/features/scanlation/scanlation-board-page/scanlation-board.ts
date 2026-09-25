@@ -15,6 +15,14 @@ export function tasksByStage(project: ScanlationProject | null): Record<Workflow
   return map;
 }
 
+/** How many published chapters the last column shows before "Show older chapters". */
+export const LATEST_PUBLISHED = 10;
+
+/** Published tasks, the most recently published first: the column keeps every chapter the board ever published. */
+export function latestFirst(tasks: readonly WorkflowTask[]): WorkflowTask[] {
+  return [...tasks].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
 /** The project with `task` replaced by the version the API returned (appended if new). */
 export function withTask(project: ScanlationProject, task: WorkflowTask): ScanlationProject {
   const exists = project.tasks.some((t) => t.id === task.id);

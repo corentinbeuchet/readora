@@ -1,5 +1,5 @@
 import { ScanlationProject, TaskStatus, WorkflowStage, WorkflowTask } from '@app/core/models/scanlation';
-import { STAGES, tasksByStage, withTask, withTaskStage } from '@app/features/scanlation/scanlation-board-page/scanlation-board';
+import { STAGES, latestFirst, tasksByStage, withTask, withTaskStage } from '@app/features/scanlation/scanlation-board-page/scanlation-board';
 
 const PROJECT: ScanlationProject = {
   id: 'proj-1-uuid',
@@ -10,14 +10,15 @@ const PROJECT: ScanlationProject = {
   boardEnabled: true,
   members: [{ userId: 'Alice', username: 'alice', roles: ['CLEANER_REDRAWER'] }],
   tasks: [
-    { id: 't1', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, assigneeUsername: null, pageCount: 22, pages: [], updatedAt: '2026-09-13T00:00:00Z' },
-    { id: 't2', chapterNumber: '11', stage: 'CLEANING', status: 'IN_PROGRESS', assigneeId: null, assigneeUsername: null, pageCount: 20, pages: [], updatedAt: '2026-09-13T00:00:00Z' }
+    { id: 't1', chapterNumber: '10', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, assigneeUsername: null, pageCount: 22, updatedAt: '2026-09-13T00:00:00Z' },
+    { id: 't2', chapterNumber: '11', stage: 'CLEANING', status: 'IN_PROGRESS', assigneeId: null, assigneeUsername: null, pageCount: 20, updatedAt: '2026-09-13T00:00:00Z' }
   ]
 };
 
 describe('scanlation board helpers', () => {
   let board: Record<WorkflowStage, WorkflowTask[]>;
   let project: ScanlationProject;
+  let ordered: WorkflowTask[];
 
   it('groups tasks by stage, with every stage present', () => {
     whenIGroupTheTasksOf(PROJECT);
@@ -37,7 +38,7 @@ describe('scanlation board helpers', () => {
     thenTheTaskInColumnIsAssignedTo('CLEANING', 't1', 'user-1');
     thenTheOriginalTaskIsUnassigned('t1');
 
-    whenTheApiReturnsTheTask(PROJECT, { id: 't3', chapterNumber: '12', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, assigneeUsername: null, pageCount: 18, pages: [], updatedAt: '' });
+    whenTheApiReturnsTheTask(PROJECT, { id: 't3', chapterNumber: '12', stage: 'RAW_UPLOADED', status: 'PENDING', assigneeId: null, assigneeUsername: null, pageCount: 18, updatedAt: '' });
 
     thenTheProjectTasksAre(['t1', 't2', 't3']);
   });
@@ -48,6 +49,31 @@ describe('scanlation board helpers', () => {
     thenTheTaskIs('t1', { stage: 'PUBLISHED', status: 'COMPLETED', updatedAt: '2026-09-19T10:00:00.000Z' });
     thenTheOriginalTaskStageIs('t1', 'RAW_UPLOADED');
   });
+
+  it('orders published tasks the most recently published first, without mutating', () => {
+    const tasks = [task('t-old', '2026-09-01T00:00:00Z'), task('t-new', '2026-09-20T00:00:00Z'), task('t-mid', '2026-09-10T00:00:00Z')];
+
+    whenIOrderTheLatestFirst(tasks);
+
+    thenTheOrderIs(['t-new', 't-mid', 't-old']);
+    thenTheTasksKeptTheirOrder(tasks, ['t-old', 't-new', 't-mid']);
+  });
+
+  function task(id: string, updatedAt: string): WorkflowTask {
+    return { id, chapterNumber: id, stage: 'PUBLISHED', status: 'COMPLETED', assigneeId: null, assigneeUsername: null, pageCount: 1, updatedAt };
+  }
+
+  function whenIOrderTheLatestFirst(tasks: WorkflowTask[]): void {
+    ordered = latestFirst(tasks);
+  }
+
+  function thenTheOrderIs(ids: string[]): void {
+    expect(ordered.map((t) => t.id)).toEqual(ids);
+  }
+
+  function thenTheTasksKeptTheirOrder(tasks: WorkflowTask[], ids: string[]): void {
+    expect(tasks.map((t) => t.id)).toEqual(ids);
+  }
 
   function whenIGroupTheTasksOf(source: ScanlationProject | null): void {
     board = tasksByStage(source);

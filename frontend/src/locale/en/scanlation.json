@@ -111,7 +111,6 @@
     "scanlation.board.off": "The team does not use a task board for this series: no new chapter goes on it. A leader turns it on from the Studio.",
     "scanlation.board.task.chapter": "Chapter {$INTERPOLATION}",
     "scanlation.board.task.pageCount": "{VAR_PLURAL, plural, =1 {1 page} other {{INTERPOLATION} pages}}",
-    "scanlation.board.task.page": "Page {$INTERPOLATION}",
     "scanlation.board.task.noPages": "No pages yet",
     "scanlation.board.task.assignedYou": "Assigned: you",
     "scanlation.board.task.assignedTo": "Assigned: @{$INTERPOLATION}",
@@ -120,6 +119,8 @@
     "scanlation.board.submitWork": " Submit work ",
     "scanlation.board.publish": " Publish ",
     "scanlation.board.columnEmpty": "No chapter at this stage",
+    "scanlation.board.showLatest": "Show only the latest {$INTERPOLATION}",
+    "scanlation.board.showOlder": "{VAR_PLURAL, plural, =1 {Show 1 older chapter} other {Show {INTERPOLATION} older chapters}}",
     "scanlation.submit.opening": "Opening…",
     "scanlation.board.actionError": "The action could not be completed",
     "scanlation.board.seoTitle": "Task board",
@@ -134,6 +135,9 @@
     "scanlation.submit.submit": "Submit & advance",
     "scanlation.submit.error": "The work could not be submitted. Please try again.",
     "scanlation.submit.noPages": "Add the pages of your stage first.",
-    "scanlation.submit.uploadFailed": "Pages not uploaded: {$count}. Submit again to send them."
+    "scanlation.submit.uploadFailed": "Pages not uploaded: {$count}. Submit again to send them.",
+    "scanlation.board.task.pagesLoading": "Loading the pages…",
+    "scanlation.board.task.pagesError": "Could not load the pages.",
+    "scanlation.board.task.page": "Page {$INTERPOLATION}"
   }
 }

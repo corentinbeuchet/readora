@@ -350,6 +350,8 @@ export async function publishAFirstChapterForReview(request: APIRequestContext):
 export interface BusyLeader {
   account: RegisteredAccount;
   title: string;
+  /** The series' task board. */
+  projectId: string;
 }
 
 /** A new reader starts a team, adds a series, turns its task board on and puts raw chapters 1 to `chapters` on it. */
@@ -377,7 +379,7 @@ export async function leadABusyTeam(request: APIRequestContext, chapters: number
       })
     );
   }
-  return { account, title };
+  return { account, title, projectId: project.id };
 }
 
 /** A team with many series and no chapter (US-12), started by a new reader. */

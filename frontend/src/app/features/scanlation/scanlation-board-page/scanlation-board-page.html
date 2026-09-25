@@ -50,10 +50,10 @@
         <section class="kanban-column" [attr.data-stage]="column.key" [attr.aria-label]="column.label">
           <div class="column-header">
             <span class="stage-label">{{ column.label }}</span>
-            <span class="count-badge">{{ column.tasks.length }}</span>
+            <span class="count-badge">{{ column.total }}</span>
           </div>
 
-          <div class="task-list">
+          <div class="task-list" [id]="`tasks-${column.key}`">
             @for (row of column.tasks; track row.task.id) {
               @let task = row.task;
               <article class="task-card" [class.task-mine]="row.mine">
@@ -61,16 +61,12 @@
                   <strong i18n="@@scanlation.board.task.chapter">Chapter {{ task.chapterNumber }}</strong>
                   <span class="status-pill" [class.status-in-progress]="task.status === 'IN_PROGRESS'" [class.status-completed]="task.status === 'COMPLETED'">{{ taskStatusLabels[task.status] }}</span>
                 </div>
-                @if (task.pages.length > 0) {
-                  <details class="task-pages">
+                @if (task.pageCount > 0) {
+                  <details class="task-pages" #pagesList (toggle)="showPages(task.id, pagesList.open)">
                     <summary i18n="@@scanlation.board.task.pageCount">{task.pageCount, plural, =1 {1 page} other {{{ task.pageCount }} pages}}</summary>
-                    <ul>
-                      @for (page of task.pages; track page.pageNumber) {
-                        @if (page.cdnUrl) {
-                          <li><a [href]="page.cdnUrl" target="_blank" rel="noopener" i18n="@@scanlation.board.task.page">Page {{ page.pageNumber }}</a></li>
-                        }
-                      }
-                    </ul>
+                    @if (openPages().has(task.id)) {
+                      <app-task-pages [projectId]="projectId()!" [taskId]="task.id" />
+                    }
                   </details>
                 } @else {
                   <p class="task-meta" i18n="@@scanlation.board.task.noPages">No pages yet</p>
@@ -110,6 +106,15 @@
               </article>
             } @empty {
               <p class="muted column-empty" i18n="@@scanlation.board.columnEmpty">No chapter at this stage</p>
+            }
+            @if (column.olderCount > 0) {
+              <button type="button" class="btn btn-sm show-older" [attr.aria-expanded]="showOlderPublished()" [attr.aria-controls]="`tasks-${column.key}`" (click)="showOlderPublished.set(!showOlderPublished())">
+                @if (showOlderPublished()) {
+                  <ng-container i18n="@@scanlation.board.showLatest">Show only the latest {{ latestPublished }}</ng-container>
+                } @else {
+                  <ng-container i18n="@@scanlation.board.showOlder">{column.olderCount, plural, =1 {Show 1 older chapter} other {Show {{ column.olderCount }} older chapters}}</ng-container>
+                }
+              </button>
             }
           </div>
         </section>

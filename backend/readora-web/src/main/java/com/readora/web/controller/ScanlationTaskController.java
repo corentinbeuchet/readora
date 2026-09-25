@@ -1,5 +1,6 @@
 package com.readora.web.controller;
 
+import com.readora.application.port.in.BrowseCatalogUseCase;
 import com.readora.application.port.in.ManageScanlationTaskUseCase;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.TaskId;
@@ -21,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -29,11 +31,22 @@ import java.util.UUID;
 public class ScanlationTaskController {
 
     private final ManageScanlationTaskUseCase scanlationTaskUseCase;
+    private final BrowseCatalogUseCase catalog;
     private final CurrentUserProvider currentUserProvider;
 
-    public ScanlationTaskController(ManageScanlationTaskUseCase scanlationTaskUseCase, CurrentUserProvider currentUserProvider) {
+    public ScanlationTaskController(ManageScanlationTaskUseCase scanlationTaskUseCase, BrowseCatalogUseCase catalog,
+                                    CurrentUserProvider currentUserProvider) {
         this.scanlationTaskUseCase = scanlationTaskUseCase;
+        this.catalog = catalog;
         this.currentUserProvider = currentUserProvider;
+    }
+
+    @GetMapping("/{taskId}/pages")
+    @PreAuthorize("hasAuthority('LIBRARY_USE')")
+    @Operation(summary = "The pages of a task as its last stage left them (the team's members)")
+    public ResponseEntity<ApiResponse<List<PageAssetDto>>> taskPages(@PathVariable UUID projectId, @PathVariable UUID taskId) {
+        return ResponseEntity.ok(ApiResponse.ok(catalog.taskPages(ProjectId.of(projectId), TaskId.of(taskId), currentUserProvider.requireUserId())
+                .stream().map(PageAssetDto::fromDomain).toList()));
     }
 
     @PostMapping

@@ -3,10 +3,12 @@ package com.readora.application.port.in;
 import com.readora.domain.common.UserId;
 import com.readora.domain.scanlation.ProjectId;
 import com.readora.domain.scanlation.ScanlationProject;
+import com.readora.domain.scanlation.TaskId;
 import com.readora.domain.scanlation.Team;
 import com.readora.domain.scanlation.TeamCredit;
 import com.readora.domain.work.ChapterSummary;
 import com.readora.domain.work.Demographic;
+import com.readora.domain.work.PageAsset;
 import com.readora.domain.work.Work;
 import com.readora.domain.work.WorkId;
 import com.readora.domain.work.WorkStatus;
@@ -84,6 +86,14 @@ public interface BrowseCatalogUseCase {
     /// @throws com.readora.domain.common.AccessDeniedDomainException if the viewer is not on the team
     @ReadOnly
     Optional<ProjectBoard> getProject(ProjectId projectId, UserId viewer);
+
+    /// The pages of one task of a board, as its last stage left them: the board sends page counts, and a member's
+    /// browser asks for a task's pages when they open it. Same access as [#getProject(ProjectId, UserId)].
+    ///
+    /// @throws com.readora.domain.common.NotFoundException if there is no such board or task
+    /// @throws com.readora.domain.common.AccessDeniedDomainException if the viewer is not on the team
+    @ReadOnly
+    List<PageAsset> taskPages(ProjectId projectId, TaskId taskId, UserId viewer);
 
     /// The task boards of a series that the viewer's teams run (every board for an admin).
     @ReadOnly

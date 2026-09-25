@@ -82,7 +82,30 @@ class ScanlationTaskControllerIntegrationTest extends AuthTestSupport {
                 .andExpect(jsonPath("$.data.stage").value("RAW_UPLOADED"))
                 .andExpect(jsonPath("$.data.status").value("PENDING"))
                 .andExpect(jsonPath("$.data.pageCount").value(1))
-                .andExpect(jsonPath("$.data.pages[0].storageKey").value("scans/solo/1/p1.webp"));
+                .andExpect(jsonPath("$.data.pages").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("A task's pages come on request, to the team's members only: an outsider gets 403, an unknown task 404")
+    void taskPagesAreForTheTeam() throws Exception {
+        Session member = register();
+        Session outsider = register();
+        team.addMember(TeamMember.of(UserId.of(member.userId()), ScanlationRole.CLEANER_REDRAWER));
+        teamRepository.save(team);
+        CreateTaskRequest request = new CreateTaskRequest(BigDecimal.valueOf(1), List.of(new PageAssetDto(1, "scans/solo/1/p1.webp", "https://cdn.test/p1.webp", 800, 1200)));
+        String taskId = json(mockMvc.perform(post("/api/v1/scanlation/projects/" + project.getId().value() + "/tasks")
+                        .header("Authorization", member.bearer()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated()).andReturn()).path("data").path("id").asString();
+        String pages = "/api/v1/scanlation/projects/" + project.getId().value() + "/tasks/" + taskId + "/pages";
+
+        mockMvc.perform(get(pages).header("Authorization", member.bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].storageKey").value("scans/solo/1/p1.webp"));
+        mockMvc.perform(get(pages).header("Authorization", outsider.bearer())).andExpect(status().isForbidden());
+        mockMvc.perform(get(pages)).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/scanlation/projects/" + project.getId().value() + "/tasks/" + java.util.UUID.randomUUID() + "/pages")
+                .header("Authorization", member.bearer())).andExpect(status().isNotFound());
     }
 
     @Test

@@ -1,0 +1,13 @@
+@if (pages.isLoading() && !pages.hasValue()) {
+  <p class="muted" role="status" i18n="@@scanlation.board.task.pagesLoading">Loading the pages…</p>
+} @else if (pages.error()) {
+  <app-load-error [error]="pages.error()" (retry)="pages.reload()" i18n="@@scanlation.board.task.pagesError">Could not load the pages.</app-load-error>
+} @else {
+  <ul>
+    @for (page of pages.value() ?? []; track page.pageNumber) {
+      @if (page.cdnUrl) {
+        <li><a [href]="page.cdnUrl" target="_blank" rel="noopener" i18n="@@scanlation.board.task.page">Page {{ page.pageNumber }}</a></li>
+      }
+    }
+  </ul>
+}
