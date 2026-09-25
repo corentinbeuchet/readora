@@ -41,7 +41,7 @@
       <label class="mode-card" [class.selected]="mode === 'DIRECT'">
         <input type="radio" name="publishing-mode" value="DIRECT" class="sr-only" [checked]="mode === 'DIRECT'" (change)="wizard.setPublishingMode('DIRECT')" />
         <span class="mode-card-header">
-          <span class="mode-badge live" i18n="@@upload.chapter.direct.badge">Instant Direct</span>
+          <span class="mode-badge live" i18n="@@upload.chapter.direct.modeBadge">Out at once</span>
           <span class="mode-title" i18n="@@upload.chapter.direct.title">Direct Live Release</span>
         </span>
         <span class="muted mode-desc" i18n="@@upload.chapter.direct.description">
@@ -52,7 +52,7 @@
       <label class="mode-card" [class.selected]="mode === 'SCANLATION'">
         <input type="radio" name="publishing-mode" value="SCANLATION" class="sr-only" [checked]="mode === 'SCANLATION'" (change)="wizard.setPublishingMode('SCANLATION')" />
         <span class="mode-card-header">
-          <span class="mode-badge workflow" i18n="@@upload.chapter.scanlation.badge">Scanlation Team</span>
+          <span class="mode-badge workflow" i18n="@@upload.chapter.scanlation.modeBadge">Team workflow</span>
           <span class="mode-title" i18n="@@upload.chapter.scanlation.title">Scanlation Workspace</span>
         </span>
         <span class="muted mode-desc" i18n="@@upload.chapter.scanlation.description">

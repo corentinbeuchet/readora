@@ -217,13 +217,13 @@ describe('ScanlationBoardPage (API-driven, gated by team roles)', () => {
     thenTheBoardSays("Chapter 9 is the team's first: a moderator checks it before readers see it.");
   });
 
-  it('Upload Studio link is rendered and points to /upload for every member', async () => {
+  it('the Publish a chapter link is rendered and points to /upload for every member', async () => {
     await givenIAmSignedInWith(['LIBRARY_USE']);
     await givenIOpenTheBoard(PROJECT);
 
     thenThereIsAnUploadStudioLink();
     thenTheUploadStudioLinkPointsTo('/upload');
-    thenTheUploadStudioLinkReads('Upload Studio');
+    thenTheUploadStudioLinkReads('Publish a chapter');
   });
 
   it('does not show the previous project while another one loads or when it fails', async () => {

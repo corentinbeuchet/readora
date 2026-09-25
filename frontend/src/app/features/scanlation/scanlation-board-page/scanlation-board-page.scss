@@ -1,9 +1,28 @@
+// Inside the page frame like every other page; only the columns scroll sideways.
 .kanban-container {
-  padding: 1.5rem;
-  background: var(--surface);
   color: var(--text);
-  min-height: 100vh;
-  min-height: 100dvh;
+}
+
+.board-loading {
+  display: flex;
+  gap: var(--space-4);
+  overflow: hidden;
+}
+
+.board-skeleton {
+  flex: 0 0 260px;
+  block-size: 16rem;
+  border-radius: var(--radius-md);
+}
+
+.board-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+}
+
+.column-empty {
+  font-size: var(--fs-sm);
 }
 
 .kanban-header {
@@ -11,37 +30,37 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: var(--space-4);
+  margin-block-end: var(--space-4);
 }
 
 .kanban-board {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-4);
   overflow-x: auto;
-  padding-bottom: 1rem;
+  padding-block-end: var(--space-4);
 }
 
 .kanban-column {
   flex: 0 0 260px;
   background: var(--surface-2);
-  border-radius: 0.5rem;
-  padding: 1rem;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
 }
 
 .column-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-block-end: var(--space-4);
   font-weight: var(--fw-semibold);
 }
 
 .task-card {
   background: var(--surface);
-  padding: 0.75rem;
-  border-radius: 0.375rem;
-  margin-bottom: 0.75rem;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  margin-block-end: var(--space-3);
   border-left: 3px solid var(--muted);
 }
 
@@ -52,11 +71,11 @@
 .task-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-top: 0.5rem;
+  gap: var(--space-2);
+  margin-block-start: var(--space-2);
 
   .btn {
-    padding: 0.3rem 0.6rem;
+    padding: var(--space-1) var(--space-2);
     font-size: var(--fs-sm);
   }
 }
@@ -64,8 +83,8 @@
 // Tasks per column.
 .count-badge {
   font-size: var(--fs-sm);
-  padding: 0.1rem 0.5rem;
-  border-radius: 999px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
   background: var(--surface);
   color: var(--muted);
 }
@@ -73,9 +92,8 @@
 .status-pill {
   font-size: var(--fs-xs);
   font-weight: var(--fw-semibold);
-  text-transform: uppercase;
-  padding: 0.1rem 0.45rem;
-  border-radius: 999px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
   background: var(--surface-2);
   color: var(--muted);
 

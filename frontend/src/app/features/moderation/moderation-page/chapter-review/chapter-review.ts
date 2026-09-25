@@ -1,3 +1,4 @@
+import { TimeAgoPipe } from '@app/shared/ui/time-ago.pipe';
 import { Component, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
@@ -9,7 +10,7 @@ import { LoadError } from '@app/shared/ui/load-error';
 /** A team's first chapter waits here before readers see it (US-11): the moderator looks through it, then publishes it or sends it back. */
 @Component({
   selector: 'app-chapter-review',
-  imports: [LoadError, DatePipe],
+  imports: [TimeAgoPipe, LoadError, DatePipe],
   templateUrl: './chapter-review.html',
   styleUrl: './chapter-review.scss'
 })

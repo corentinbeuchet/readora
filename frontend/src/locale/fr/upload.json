@@ -8,10 +8,8 @@
     "upload.chapter.chapterTitle": "Titre du chapitre (facultatif)",
     "upload.chapter.chapterTitle.placeholder": "ex. Prologue, Le commencement",
     "upload.chapter.pipeline": "Mode de publication",
-    "upload.chapter.direct.badge": "Direct",
     "upload.chapter.direct.title": "Publication directe",
     "upload.chapter.direct.description": " Publie immédiatement toutes les pages du chapitre dans le catalogue public. Idéal pour les auteurs indépendants et les sorties officielles. ",
-    "upload.chapter.scanlation.badge": "Équipe de scantrad",
     "upload.chapter.scanlation.title": "Espace de scantrad",
     "upload.chapter.scanlation.description": " Envoie le paquet RAW dans le tableau Kanban de votre équipe pour répartir le nettoyage, la traduction et le contrôle qualité. ",
     "upload.chapter.back": "← Retour",
@@ -108,8 +106,6 @@
     "upload.series.synopsis": "Synopsis",
     "upload.series.synopsis.placeholder": "Bref résumé de l'histoire, des personnages et de l'univers…",
     "upload.series.next": " Suivant : chapitre → ",
-    "upload.studio.title": "Studio de publication",
-    "upload.studio.intro": "Publiez de nouveaux mangas, manhwas et comics, ou lancez un flux de scantrad.",
     "upload.studio.seoTitle": "Studio de publication — Readora",
     "upload.studio.seoDescription": "Créez une série, envoyez les pages d'un chapitre et publiez directement ou via le flux de scantrad.",
     "upload.success.title": "Série et chapitre envoyés avec succès !",
@@ -172,6 +168,9 @@
     "upload.series.team.start": "Créer une équipe",
     "upload.series.team.required": "Choisissez l'équipe qui traduit la série",
     "upload.success.reviewTitle": "Chapitre envoyé pour examen",
-    "upload.success.reviewText": "Le premier chapitre d'une équipe est vérifié par un modérateur avant que les lecteurs le voient. Le chapitre {$INTERPOLATION} paraîtra dès qu'il sera approuvé, et les chapitres suivants de l'équipe paraîtront directement."
+    "upload.success.reviewText": "Le premier chapitre d'une équipe est vérifié par un modérateur avant que les lecteurs le voient. Le chapitre {$INTERPOLATION} paraîtra dès qu'il sera approuvé, et les chapitres suivants de l'équipe paraîtront directement.",
+    "upload.studio.publishTitle": "Publier un chapitre",
+    "upload.chapter.direct.modeBadge": "Publié tout de suite",
+    "upload.chapter.scanlation.modeBadge": "Travail d'équipe"
   }
 }

@@ -1,3 +1,4 @@
+import { Icon } from '@app/shared/ui/icon/icon';
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -13,7 +14,7 @@ import { SubmitWorkDialog } from './submit-work-dialog/submit-work-dialog';
 
 @Component({
   selector: 'app-scanlation-board-page',
-  imports: [RouterLink, PageReportsPanel, LoadError, SubmitWorkDialog],
+  imports: [Icon, RouterLink, PageReportsPanel, LoadError, SubmitWorkDialog],
   templateUrl: './scanlation-board-page.html',
   styleUrl: './scanlation-board-page.scss'
 })

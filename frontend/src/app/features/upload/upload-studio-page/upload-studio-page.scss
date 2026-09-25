@@ -1,17 +1,10 @@
+// Left-aligned in the page frame like the other Studio pages; the wizard keeps a readable width.
 .upload-studio {
   max-width: 900px;
-  margin: 0 auto;
-  padding: 1.5rem 1rem 3rem;
 }
 
 .studio-header {
-  margin-bottom: 2rem;
-  text-align: center;
-
-  h1 {
-    font-size: var(--fs-h1);
-    margin-bottom: 0.5rem;
-  }
+  margin-block-end: var(--space-5);
 }
 
 .studio-alert {

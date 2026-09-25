@@ -5,8 +5,6 @@
     "moderation.page.intro": "Les plus anciens d'abord. Masquer retire le commentaire pour tout le monde et clôt ses signalements.",
     "moderation.page.loading": "Chargement des signalements…",
     "moderation.page.loadError": "Impossible de charger les signalements.",
-    "moderation.page.empty": "Aucun signalement en attente. 🎉",
-    "moderation.page.reportedMeta": "signalé {$INTERPOLATION} · commentaire de {$START_TAG_STRONG}{$INTERPOLATION_1}{$CLOSE_TAG_STRONG}",
     "moderation.page.markedSpoiler": "marqué spoiler",
     "moderation.page.seeInContext": "Voir dans son contexte",
     "moderation.page.hide": "Masquer le commentaire{$START_TAG_SPAN} de {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
@@ -18,7 +16,6 @@
     "moderation.chapters.loadError": "Impossible de charger les chapitres à examiner.",
     "moderation.chapters.empty": "Aucun chapitre n'attend d'examen.",
     "moderation.chapters.number": "Chapitre {$INTERPOLATION}",
-    "moderation.chapters.submitted": "envoyé le {$INTERPOLATION}",
     "moderation.chapters.pageCount": "{VAR_PLURAL, plural, =0 {0 page} =1 {1 page} other {{INTERPOLATION} pages}}",
     "moderation.chapters.page": "Page {$INTERPOLATION}",
     "moderation.chapters.publish": "Publier{$START_TAG_SPAN} le chapitre {$INTERPOLATION} de {$INTERPOLATION_1}{$CLOSE_TAG_SPAN}",
@@ -29,7 +26,6 @@
     "admin.page.title": "Comptes",
     "admin.page.search": "Trouver un compte",
     "admin.page.searchHint": "Le début d'un nom d'utilisateur ou d'un e-mail, {$INTERPOLATION} caractères ou plus.",
-    "admin.page.prompt": "Saisissez le début d'un nom d'utilisateur ou d'un e-mail.",
     "admin.page.loading": "Recherche des comptes…",
     "admin.page.loadError": "Les comptes n'ont pas pu être chargés.",
     "admin.page.none": "Aucun compte ne commence ainsi.",
@@ -45,6 +41,10 @@
     "admin.page.banned": "{$username} est banni.",
     "admin.page.reinstated": "{$username} peut de nouveau utiliser son compte.",
     "admin.page.suspend": "Suspendre{$START_TAG_SPAN} {$INTERPOLATION}{$CLOSE_TAG_SPAN} pendant {$INTERPOLATION_1} jours",
-    "admin.page.reinstate": "Laisser revenir{$START_TAG_SPAN} {$INTERPOLATION}{$CLOSE_TAG_SPAN}"
+    "admin.page.reinstate": "Laisser revenir{$START_TAG_SPAN} {$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "moderation.chapters.sentWhen": "envoyé {$START_TAG_TIME}{$INTERPOLATION}{$CLOSE_TAG_TIME}",
+    "moderation.page.noReports": "Aucun signalement en attente.",
+    "moderation.page.reportedWhen": "signalé {$START_TAG_TIME}{$INTERPOLATION}{$CLOSE_TAG_TIME}",
+    "moderation.page.commentBy": "commentaire de {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}"
   }
 }

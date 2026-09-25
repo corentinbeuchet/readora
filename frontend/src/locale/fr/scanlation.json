@@ -4,7 +4,6 @@
     "scanlation.reports.title": "Pages signalées",
     "scanlation.reports.loading": "Chargement des signalements…",
     "scanlation.reports.loadError": "Impossible de charger les pages signalées.",
-    "scanlation.reports.empty": "Aucune page cassée signalée. 🎉",
     "scanlation.reports.item": "Chapitre {$INTERPOLATION} · page {$INTERPOLATION_1}",
     "scanlation.reports.openPage": "Ouvrir la page",
     "scanlation.reports.markFixed": " Marquer comme corrigée{$START_TAG_SPAN} : chapitre {$INTERPOLATION}, page {$INTERPOLATION_1}{$CLOSE_TAG_SPAN}",
@@ -17,7 +16,6 @@
     "scanlation.board.defaultTitle": "Espace de scantrad",
     "scanlation.board.memberCount": "{VAR_PLURAL, plural, =0 {0 membre} =1 {1 membre} other {{INTERPOLATION} membres}}",
     "scanlation.board.taskCount": "{VAR_PLURAL, plural, =0 {0 tâche} =1 {1 tâche} other {{INTERPOLATION} tâches}}",
-    "scanlation.board.uploadStudio": " + Studio de publication ",
     "scanlation.board.task.chapter": "Chapitre {$INTERPOLATION}",
     "scanlation.board.task.assignedYou": "Assignée : vous",
     "scanlation.board.task.assignedTo": "Assignée : @{$INTERPOLATION}",
@@ -129,6 +127,9 @@
     "scanlation.submit.uploadFailed": "Pages non envoyées : {$count}. Envoyez de nouveau pour les renvoyer.",
     "scanlation.board.task.assignedGone": "Assignée : un ancien compte",
     "scanlation.board.sentForReview": "Le chapitre {$number} est le premier de l'équipe : un modérateur le vérifie avant que les lecteurs le voient.",
-    "scanlation.board.publishedNow": "Le chapitre {$number} est paru."
+    "scanlation.board.publishedNow": "Le chapitre {$number} est paru.",
+    "scanlation.reports.none": "Aucune page cassée signalée.",
+    "scanlation.board.publishChapter": "Publier un chapitre",
+    "scanlation.board.columnEmpty": "Aucun chapitre à cette étape"
   }
 }

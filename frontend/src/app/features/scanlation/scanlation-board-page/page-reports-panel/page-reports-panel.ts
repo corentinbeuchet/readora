@@ -1,3 +1,4 @@
+import { TimeAgoPipe } from '@app/shared/ui/time-ago.pipe';
 import { Component, inject, input } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -10,7 +11,7 @@ import { LoadError } from '@app/shared/ui/load-error';
 /** Pages readers reported as broken on this project's chapters (US-06), with "Mark fixed". */
 @Component({
   selector: 'app-page-reports-panel',
-  imports: [LoadError, RouterLink, DatePipe],
+  imports: [TimeAgoPipe, LoadError, RouterLink, DatePipe],
   templateUrl: './page-reports-panel.html',
   styleUrl: './page-reports-panel.scss'
 })

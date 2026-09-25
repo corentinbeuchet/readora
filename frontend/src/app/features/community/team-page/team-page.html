@@ -66,7 +66,9 @@
         @for (row of latestChapters(); track row.chapter.id) {
           <li class="latest-chapter">
             <a [routerLink]="['/read', row.chapter.id]" i18n="@@community.team.seriesChapter">{{ row.seriesTitle }}, chapter {{ row.chapter.chapterNumber }}</a>
-            <span class="muted">{{ row.chapter.title }}</span>
+            @if (row.title) {
+              <span class="muted">{{ row.title }}</span>
+            }
           </li>
         }
       </ul>

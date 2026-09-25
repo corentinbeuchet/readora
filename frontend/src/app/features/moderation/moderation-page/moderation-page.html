@@ -15,14 +15,15 @@
   } @else if (queue.error()) {
     <app-load-error (retry)="queue.reload()" i18n="@@moderation.page.loadError">Could not load the reports.</app-load-error>
   } @else if (queue.hasValue() && queue.value().length === 0) {
-    <p class="muted" i18n="@@moderation.page.empty">No open reports. 🎉</p>
+    <p class="muted" i18n="@@moderation.page.noReports">No open reports.</p>
   } @else if (queue.hasValue()) {
     <ul class="queue">
       @for (item of queue.value(); track item.reportId) {
         <li class="card queue-item">
           <p class="queue-meta">
             <span class="badge">{{ labels[item.reason] }}</span>
-            <span class="muted" i18n="@@moderation.page.reportedMeta">reported {{ item.reportedAt | date: 'medium' }} · comment by <strong>{{ item.authorUsername }}</strong></span>
+            <span class="muted" i18n="@@moderation.page.reportedWhen">reported <time [attr.datetime]="item.reportedAt" [attr.title]="item.reportedAt | date: 'medium'">{{ item.reportedAt | timeAgo }}</time></span>
+            <span class="muted" i18n="@@moderation.page.commentBy">comment by <strong>{{ item.authorUsername }}</strong></span>
             @if (item.spoiler) {
               <span class="badge" i18n="@@moderation.page.markedSpoiler">marked spoiler</span>
             }

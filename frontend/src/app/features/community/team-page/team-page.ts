@@ -1,3 +1,4 @@
+import { isDefaultChapterTitle } from '@app/core/models/chapter';
 import { Component, computed, effect, inject, input, linkedSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -35,7 +36,12 @@ export class TeamPage {
   protected readonly latestChapters = computed(() => {
     const loaded = this.team.hasValue() ? this.team.value() : undefined;
     const titles = new Map((loaded?.series ?? []).map((entry) => [entry.work.id, entry.work.title]));
-    return (loaded?.latestChapters ?? []).map((chapter) => ({ chapter, seriesTitle: titles.get(chapter.workId) ?? '' }));
+    return (loaded?.latestChapters ?? []).map((chapter) => ({
+      chapter,
+      seriesTitle: titles.get(chapter.workId) ?? '',
+      // Its own title, or nothing when it only repeats "Chapter N" (the link already says the number).
+      title: isDefaultChapterTitle(chapter.title, chapter.chapterNumber) ? null : chapter.title
+    }));
   });
   protected readonly follow = asyncAction();
 

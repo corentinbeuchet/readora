@@ -14,7 +14,7 @@
   }
 
   @if (query().length < searchMin) {
-    <p class="muted" i18n="@@admin.page.prompt">Type the start of a username or an email.</p>
+    <!-- The hint under the field already says what to type. -->
   } @else if (accounts.isLoading() && !accounts.hasValue()) {
     <p class="muted" role="status" i18n="@@admin.page.loading">Looking for accounts…</p>
   } @else if (accounts.error()) {

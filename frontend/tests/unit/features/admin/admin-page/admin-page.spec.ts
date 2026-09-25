@@ -45,7 +45,7 @@ describe('AdminPage (US-16)', () => {
     await whenITypeAndPause('k');
 
     thenNothingWasSearched();
-    thenICanSee('Type the start of a username or an email.');
+    thenICanSee('The start of a username or an email');
   });
 
   it('finds accounts by the start of a username or an email, with their role', async () => {

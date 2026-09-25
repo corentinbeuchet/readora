@@ -21,7 +21,7 @@
             <strong>{{ chapter.work.title }}</strong>
             <span i18n="@@moderation.chapters.number">Chapter {{ chapter.chapterNumber }}</span>
             <span class="badge">{{ chapter.team.name }}</span>
-            <span class="muted" i18n="@@moderation.chapters.submitted">sent {{ chapter.submittedAt | date: 'medium' }}</span>
+            <span class="muted" i18n="@@moderation.chapters.sentWhen">sent <time [attr.datetime]="chapter.submittedAt" [attr.title]="chapter.submittedAt | date: 'medium'">{{ chapter.submittedAt | timeAgo }}</time></span>
           </p>
           <details class="waiting-pages">
             <summary i18n="@@moderation.chapters.pageCount">{chapter.pages.length, plural, =1 {1 page} other {{{ chapter.pages.length }} pages}}</summary>

@@ -1,3 +1,4 @@
+import { Icon } from '@app/shared/ui/icon/icon';
 import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PublishFlow } from '@app/features/upload/upload-studio-page/publish-flow';
@@ -6,7 +7,7 @@ import { ExistingSeries, UploadWizard } from '@app/features/upload/upload-studio
 /** After publishing: links to what was created, or start over with another chapter or series. */
 @Component({
   selector: 'app-upload-success',
-  imports: [RouterLink],
+  imports: [Icon, RouterLink],
   templateUrl: './upload-success.html',
   styleUrl: './upload-success.scss'
 })

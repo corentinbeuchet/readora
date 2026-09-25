@@ -1,3 +1,4 @@
+import { TimeAgoPipe } from '@app/shared/ui/time-ago.pipe';
 import { Component, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -12,7 +13,7 @@ import { ChapterReview } from './chapter-review/chapter-review';
 /** Moderation (US-11): a team's first chapters waiting for review, then reported comments (hide the comment or dismiss the report). */
 @Component({
   selector: 'app-moderation-page',
-  imports: [LoadError, RouterLink, DatePipe, ChapterReview],
+  imports: [TimeAgoPipe, LoadError, RouterLink, DatePipe, ChapterReview],
   templateUrl: './moderation-page.html',
   styleUrl: './moderation-page.scss'
 })

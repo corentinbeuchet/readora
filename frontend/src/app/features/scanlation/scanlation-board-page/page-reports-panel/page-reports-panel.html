@@ -15,14 +15,14 @@
   } @else if (reports.error()) {
     <app-load-error (retry)="reports.reload()" i18n="@@scanlation.reports.loadError">Could not load the reported pages.</app-load-error>
   } @else if (reports.hasValue() && reports.value().length === 0) {
-    <p class="muted" i18n="@@scanlation.reports.empty">No broken pages reported. 🎉</p>
+    <p class="muted" i18n="@@scanlation.reports.none">No broken pages reported.</p>
   } @else if (reports.hasValue()) {
     <ul class="report-list">
       @for (report of reports.value(); track report.id) {
         <li class="card report-item">
           <div>
             <strong i18n="@@scanlation.reports.item">Chapter {{ report.chapterNumber }} · page {{ report.pageNumber }}</strong>
-            <p class="muted">{{ labels[report.reason] }} · {{ report.createdAt | date: 'medium' }}</p>
+            <p class="muted report-meta"><span class="badge">{{ labels[report.reason] }}</span><time [attr.datetime]="report.createdAt" [attr.title]="report.createdAt | date: 'medium'">{{ report.createdAt | timeAgo }}</time></p>
           </div>
           <div class="report-actions">
             <a class="btn btn-sm" [routerLink]="['/read', report.chapterId]" [queryParams]="{ page: report.pageNumber }" i18n="@@scanlation.reports.openPage">Open page</a>

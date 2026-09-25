@@ -48,11 +48,10 @@
 
 .mode-badge {
   align-self: flex-start;
-  padding: 0.2rem 0.5rem;
-  border-radius: 0.25rem;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
   font-size: var(--fs-xs);
   font-weight: var(--fw-bold);
-  text-transform: uppercase;
   background: var(--surface-2);
 
   &.live {
@@ -60,7 +59,7 @@
   }
 
   &.workflow {
-    color: var(--violet);
+    color: var(--accent);
   }
 }
 

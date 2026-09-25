@@ -1,6 +1,6 @@
 @let draft = wizard.draft();
 <div class="card wizard-card success-card">
-  <div class="success-icon" aria-hidden="true">🎉</div>
+  <app-icon class="success-icon" name="circle-check" />
   @if (flow.createdChapterWaits()) {
     <h2 i18n="@@upload.success.reviewTitle">Chapter sent for review</h2>
     <p class="muted" i18n="@@upload.success.reviewText">A team's first chapter is checked by a moderator before readers see it. Chapter {{ draft.chapterNumber }} goes out as soon as it is approved, and the team's next chapters go out straight away.</p>

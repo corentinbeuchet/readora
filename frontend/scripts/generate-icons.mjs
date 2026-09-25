@@ -15,6 +15,7 @@ const ICONS = [
   'arrow-big-up',
   'bell',
   'check',
+  'circle-check',
   'chevron-left',
   'chevron-right',
   'clock',

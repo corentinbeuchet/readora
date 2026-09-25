@@ -58,6 +58,15 @@ describe('TeamPage (US-12)', () => {
     thenThereIsALinkTo('/read/c-9');
   });
 
+  it('leaves out a chapter title that only repeats its number', async () => {
+    await givenIAmOnTheTeamPageOf({
+      ...TEAM,
+      latestChapters: [{ id: 'c-3', workId: 'w-1', chapterNumber: '3', title: 'Chapter 3', status: 'PUBLISHED', pageCount: 20, publishedAt: null, team: SHADOW_SCANS }]
+    });
+
+    thenTheLatestChapterTitlesAre([]);
+  });
+
   it('The team page lists every series as a card', async () => {
     await givenIAmOnTheTeamPageOf(TEAM);
 
@@ -113,6 +122,11 @@ describe('TeamPage (US-12)', () => {
   function thenThereIsALinkTo(href: string): void {
     const links = Array.from(fixture.nativeElement.querySelectorAll('a') as NodeListOf<HTMLAnchorElement>).map((a) => a.getAttribute('href'));
     expect(links).toContain(href);
+  }
+
+  function thenTheLatestChapterTitlesAre(titles: string[]): void {
+    const shown: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.latest-chapter .muted'));
+    expect(shown.map((span) => span.textContent!.trim())).toEqual(titles);
   }
 
   function thenTheLatestChaptersAre(labels: string[]): void {
