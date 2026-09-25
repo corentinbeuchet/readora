@@ -15,8 +15,19 @@
   @if (team().boards.length === 0) {
     <p class="muted" i18n="@@scanlation.teams.boardsNone">No series yet. A leader adds the first one.</p>
   } @else {
+    @if (team().boards.length > seriesPerPage) {
+      <div class="field series-filter">
+        <label [for]="`series-filter-${team().id}`" i18n="@@scanlation.teams.filter.label">Find a series by its title</label>
+        <input [id]="`series-filter-${team().id}`" type="search" [formField]="filterForm.text" />
+      </div>
+      <p class="muted" role="status">
+        @if (filterModel().text.trim()) {
+          <ng-container i18n="@@scanlation.teams.filter.count">{matching().length, plural, =0 {No series matches} =1 {1 series matches} other {{{ matching().length }} series match}}</ng-container>
+        }
+      </p>
+    }
     <ul class="board-list">
-      @for (board of team().boards; track board.projectId) {
+      @for (board of shownBoards(); track board.projectId) {
         <li class="board">
           <a [routerLink]="['/works', board.work.id]">{{ board.work.title }}</a>
           <div class="board-actions">
@@ -45,6 +56,13 @@
         </li>
       }
     </ul>
+    @if (pageCount() > 1) {
+      <nav class="pager" [attr.aria-label]="seriesPagerLabel()">
+        <button type="button" class="btn btn-sm" (click)="showSeriesPage(seriesPage() - 1)" [disabled]="seriesPage() === 0"><app-icon name="chevron-left" /><span i18n="@@scanlation.teams.pager.previous">Previous</span></button>
+        <span class="muted" i18n="@@scanlation.teams.pager.page">Page {{ seriesPage() + 1 }} / {{ pageCount() }}</span>
+        <button type="button" class="btn btn-sm" (click)="showSeriesPage(seriesPage() + 1)" [disabled]="seriesPage() + 1 >= pageCount()"><span i18n="@@scanlation.teams.pager.next">Next</span><app-icon name="chevron-right" /></button>
+      </nav>
+    }
     @if (switching.error(); as message) {
       <p class="form-error" role="alert">{{ message }}</p>
     }

@@ -19,6 +19,15 @@ function waitingTask(overrides: Partial<WaitingTask> = {}): WaitingTask {
   return { projectId: 'p-1', work: { id: 'w-1', title: 'Solo Leveling' }, team: { id: 't-1', name: 'Moon Scans' }, taskId: 'task-1', chapterNumber: '1', stage: 'TRANSLATING', mine: false, ...overrides };
 }
 
+/** Boards of "Saga 1" to "Saga <count>". */
+function sagas(count: number): MyTeam['boards'] {
+  return Array.from({ length: count }, (_, i) => ({ projectId: `p-s${i + 1}`, work: { ...SOLO, id: `w-s${i + 1}`, title: `Saga ${i + 1}` }, boardEnabled: true }));
+}
+
+function sagaTitles(first: number, last: number): string[] {
+  return Array.from({ length: last - first + 1 }, (_, i) => `Saga ${first + i}`);
+}
+
 function team(overrides: Partial<MyTeam> = {}): MyTeam {
   return { id: 't-1', name: 'Moon Scans', description: 'We translate action series.', myRoles: ['LEADER'], boards: [{ projectId: 'p-1', work: SOLO, boardEnabled: true }], ...overrides };
 }
@@ -232,6 +241,23 @@ describe('MyTeamsPage (US-12)', () => {
   it('shows no pager when what waits fits on one page', async () => {
     await givenIAmOnMyTeams({ teams: [team({ myRoles: ['TRANSLATOR'] })], waitingForMe: [waitingTask()] });
 
+    thenICannotSee('Page 1 /');
+  });
+
+  it("The Studio lists a team's series 20 at a time, with a title filter", async () => {
+    await givenIAmOnMyTeams({ teams: [team({ boards: sagas(30) })] });
+
+    thenTheListedSeriesAre(sagaTitles(1, 20));
+    thenICanSee('Page 1 / 2');
+
+    await whenIClick('Next');
+
+    thenTheListedSeriesAre(sagaTitles(21, 30));
+
+    await whenIFilterTheSeriesBy('saga 2');
+
+    thenTheListedSeriesAre(['Saga 2', ...sagaTitles(20, 29)]);
+    thenICanSee('11 series match');
     thenICannotSee('Page 1 /');
   });
 
@@ -468,6 +494,21 @@ describe('MyTeamsPage (US-12)', () => {
 
   function thenISeeTheAlert(text: string): void {
     expect(fixture.nativeElement.querySelector('[role="alert"]')?.textContent).toContain(text);
+  }
+
+  async function whenIClick(label: string): Promise<void> {
+    button(label).click();
+    await settle(fixture);
+  }
+
+  async function whenIFilterTheSeriesBy(text: string): Promise<void> {
+    type(fixture.nativeElement.querySelector('input[id^="series-filter-"]'), text);
+    await settle(fixture);
+  }
+
+  function thenTheListedSeriesAre(titles: string[]): void {
+    const rows: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.board-list .board'));
+    expect(rows.map((row) => row.querySelector('a')!.textContent!.trim())).toEqual(titles);
   }
 
   function thenThereIsALinkTo(href: string): void {

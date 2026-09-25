@@ -40,6 +40,10 @@ h3 {
   gap: var(--space-1);
 }
 
+.series-filter {
+  max-inline-size: 28rem;
+}
+
 .board-actions {
   display: flex;
   flex-wrap: wrap;

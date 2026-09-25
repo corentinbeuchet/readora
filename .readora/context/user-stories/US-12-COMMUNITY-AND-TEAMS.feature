@@ -249,6 +249,15 @@ Feature: Community and scanlation teams
     Then chapter 2 is listed first, as claimed by him, and chapter 3 after it
     And each links to the task board of "Solo Leveling"
 
+  # A team can run a hundred series: its Studio panel shows them a page at a time and finds one by its title.
+  @should @ui
+  Scenario: The Studio lists a team's series 20 at a time, with a title filter
+    Given "Mina" leads "Moon Scans", which translates 30 series
+    When she opens the Studio
+    Then the panel of "Moon Scans" lists 20 series and a pager to the other 10
+    When she types "saga 2" in the series filter of "Moon Scans"
+    Then only the series whose title contains "saga 2" are listed, on one page
+
   @should @ui
   Scenario: Inviting finds a reader by the start of their name
     Given reader "Mina" leads the team "Moon Scans"
