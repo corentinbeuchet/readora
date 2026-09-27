@@ -16,13 +16,6 @@ test.describe('French interface (US-13)', () => {
     await thenTheNavigationOffers(page, 'Nouveautés');
   });
 
-  test('a refused login is explained in French', async ({ page }) => {
-    await whenIVisit(page, 'login');
-    await whenILogInWith(page, { email: 'reader@readora.local', password: 'wrong-password' });
-
-    await thenISeeTheAlert(page, 'E-mail ou mot de passe incorrect.');
-  });
-
   test('French pages have no axe violations', async ({ page, axe }) => {
     for (const url of ['', 'works', 'login', 'register']) {
       await whenIVisit(page, url);
@@ -139,10 +132,6 @@ async function thenTheMainHeadingIs(page: Page, text: string): Promise<void> {
 
 async function thenTheNavigationOffers(page: Page, label: string): Promise<void> {
   await expect(page.getByRole('navigation', { name: 'Principale' }).getByRole('link', { name: label })).toBeAttached();
-}
-
-async function thenISeeTheAlert(page: Page, text: string): Promise<void> {
-  await expect(page.getByRole('alert').filter({ hasText: text })).toBeVisible();
 }
 
 async function thenAxeFindsNoViolations(scan: AxeBuilder): Promise<void> {

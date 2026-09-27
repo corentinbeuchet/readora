@@ -641,3 +641,8 @@ export async function createAList(request: APIRequestContext, account: Registere
   );
   return list.id;
 }
+
+/** When the reader joined, as their public profile says. */
+export async function joinedAt(request: APIRequestContext, username: string): Promise<Date> {
+  return new Date((await data<{ joinedAt: string }>(await request.get(`${API_URL}/users/${username}/profile`))).joinedAt);
+}

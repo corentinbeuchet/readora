@@ -1,9 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 import { cucumberReporter, defineBddConfig } from 'playwright-bdd';
+import { DEPLOYED_URL, FRENCH_URL } from './tests/e2e/support/sites';
 
-const DEPLOYED_URL = process.env['PLAYWRIGHT_BASE_URL'];
-/** The French build (US-13): /fr/ when deployed; locally `npm run start:fr` serves it at the root of :4201. */
-const FRENCH_URL = DEPLOYED_URL ? `${DEPLOYED_URL.replace(/\/+$/, '')}/fr/` : 'http://localhost:4201/';
 const FRENCH_SPECS = /i18n-fr\.spec\.ts/;
 /**
  * Playwright's WebKit build for Windows crashes pages that Safari and WebKit on Linux render fine (frontend AGENTS.md
