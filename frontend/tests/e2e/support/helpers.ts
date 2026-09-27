@@ -585,3 +585,13 @@ export async function resetLinkSentTo(request: APIRequestContext, email: string)
   }).toPass({ timeout: 10_000 });
   return link!;
 }
+
+/** The reader adds the series to their library. */
+export async function addToLibrary(request: APIRequestContext, account: RegisteredAccount, workId: string): Promise<void> {
+  await data(await request.put(`${API_URL}/library/${workId}`, { headers: { Authorization: `Bearer ${account.accessToken}` }, data: { status: 'READING' } }));
+}
+
+/** The reader opened the chapter (`finished`: and read it to the end). */
+export async function recordARead(request: APIRequestContext, account: RegisteredAccount, chapterId: string, finished: boolean): Promise<void> {
+  await data(await request.put(`${API_URL}/reading/chapters/${chapterId}`, { headers: { Authorization: `Bearer ${account.accessToken}` }, data: { finished } }));
+}

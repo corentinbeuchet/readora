@@ -3,25 +3,26 @@
 # navigation is a bar at the bottom of the screen (which of the two is shown is a matter of layout, checked by the
 # end-to-end tests).
 # @ui = frontend-only, verified by a Vitest test named after the scenario (not run by Cucumber).
+# @e2e = also run in a browser against the real stack (playwright-bdd, `npm run e2e:stories`).
 
 Feature: Home and navigation
   As a reader
   I want the main sections one tap away and a home page that starts from what I read
   So that I get to my next chapter without searching for it
 
-  @ui @must
+  @ui @must @e2e
   Scenario: The main sections are always one tap away
     When a visitor opens Readora
     Then the navigation offers "Home", "Browse", "Updates", "Rankings" and "Lists"
     And each of them is a link, not an entry hidden behind a menu button
 
-  @ui @must
+  @ui @must @e2e
   Scenario: My library is in the navigation once I am signed in
     Given a visitor sees no "Library" entry in the navigation
     When reader "Camille" signs in
     Then the navigation offers "Library"
 
-  @ui @should
+  @ui @should @e2e
   Scenario: Team tools live in the account menu
     Given reader "Camille" is signed in
     When they open the account menu
@@ -29,32 +30,33 @@ Feature: Home and navigation
     But the navigation does not
     And only a moderator's account menu also offers "Moderation"
 
-  @ui @must
+  @ui @must @e2e
   Scenario: A visitor sees what is read this week
+    Given at least five series were read this week
     When a visitor opens the home page
     Then the most read series of the week is featured with its cover
     And the next four follow as a numbered list with a link to the full ranking
 
-  @ui @must
+  @ui @must @e2e
   Scenario: I can continue reading from the home page
     Given reader "Camille" last read chapter 12 of "Solo Leveling" without finishing it
     When she opens the home page
     Then "Continue reading" offers "Solo Leveling" with a link straight to chapter 12
 
-  @ui @should
+  @ui @should @e2e
   Scenario: New chapters of my library are on the home page
     Given a new chapter of a series in the library of reader "Camille" is out
     When she opens the home page
     Then "New in your library" shows that chapter with a link to read it
 
-  @ui @should
+  @ui @should @e2e
   Scenario: Several new chapters of one series make one tile
     Given chapters 6, 7 and 8 of "Solo Leveling" are new in the library of reader "Camille"
     When she opens the home page
     Then "New in your library" shows "Solo Leveling" once, marked "3 new"
     And its link opens chapter 6, the first she has not read
 
-  @ui @should
+  @ui @should @e2e
   Scenario: A visitor is invited to create an account after seeing the content
     When a visitor opens the home page
     Then a prompt to create a free account comes after the first sections, not before them
