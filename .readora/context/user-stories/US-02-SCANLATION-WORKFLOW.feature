@@ -50,7 +50,7 @@ Feature: Collaborative Scanlation Chapter Workflow Pipeline
     Then the publication is refused because the chapter has no pages
 
   # Members see who holds a task by username, never by account id (review-2026-09-19/R18).
-  @ui
+  @ui @e2e
   Scenario: The task board names who holds each task
     Given "Chapter 10" workflow task is assigned to "Bob" in stage "TRANSLATING"
     Then the task board shows the task is held by "@bob"
@@ -62,13 +62,13 @@ Feature: Collaborative Scanlation Chapter Workflow Pipeline
     Then "Alice" gets pages 1 to 3 of "Chapter 10"
     And "Dana", who is not on the team, is refused the pages of "Chapter 10"
 
-  @ui
+  @ui @e2e
   Scenario: A task's pages load when a member opens them
     Given "Chapter 10" workflow task is in stage "RAW_UPLOADED" with 3 pages
     When "Alice" opens the pages of "Chapter 10" on the task board
     Then she sees links to pages 1 to 3
 
-  @ui
+  @ui @e2e
   Scenario: The published column shows the latest 10 chapters, older ones on request
     Given 14 chapters of "Solo Leveling" were published from the board
     Then the published column shows the 10 latest

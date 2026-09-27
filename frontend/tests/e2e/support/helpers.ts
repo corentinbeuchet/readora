@@ -434,8 +434,15 @@ export interface TaskBoard {
   taskIds: Record<string, string>;
 }
 
-/** Turns on the task board of the team for the series and puts one raw one-page chapter per number on it. */
-export async function putRawChaptersOnTheBoard(request: APIRequestContext, headers: Headers, workId: string, teamId: string, chapterNumbers: string[]): Promise<TaskBoard> {
+/** Turns on the task board of the team for the series and puts one raw chapter per number on it (`pageCount` pages each). */
+export async function putRawChaptersOnTheBoard(
+  request: APIRequestContext,
+  headers: Headers,
+  workId: string,
+  teamId: string,
+  chapterNumbers: string[],
+  pageCount = 1
+): Promise<TaskBoard> {
   const projects = await data<{ id: string; teamId: string }[]>(await request.get(`${API_URL}/works/${workId}/projects`, { headers }));
   const project = projects.find((candidate) => candidate.teamId === teamId)!;
   await data(await request.put(`${API_URL}/scanlation/projects/${project.id}/board`, { headers, data: { enabled: true } }));
@@ -450,7 +457,7 @@ export async function putRawChaptersOnTheBoard(request: APIRequestContext, heade
     const task = await data<{ id: string }>(
       await request.post(`${API_URL}/scanlation/projects/${project.id}/tasks`, {
         headers,
-        data: { chapterNumber, pages: [{ pageNumber: 1, storageKey: raw.storageKey, cdnUrl: raw.cdnUrl, width: 1, height: 1 }] }
+        data: { chapterNumber, pages: Array.from({ length: pageCount }, (_, index) => ({ pageNumber: index + 1, storageKey: raw.storageKey, cdnUrl: raw.cdnUrl, width: 1, height: 1 })) }
       })
     );
     taskIds[chapterNumber] = task.id;
@@ -463,6 +470,19 @@ export async function submitTheTask(request: APIRequestContext, headers: Headers
   const taskUrl = `${API_URL}/scanlation/projects/${board.projectId}/tasks/${board.taskIds[chapterNumber]}`;
   const pages = await data<{ pageNumber: number; storageKey: string; cdnUrl: string; width: number; height: number }[]>(await request.get(`${taskUrl}/pages`, { headers }));
   await data(await request.post(`${taskUrl}/submit`, { headers, data: { pages } }));
+}
+
+/** QC approves the task: the chapter is published (a team's first chapter waits for a moderator). Returns its id. */
+export async function publishTheTask(request: APIRequestContext, headers: Headers, board: TaskBoard, chapterNumber: string): Promise<string> {
+  const chapter = await data<{ chapterId: string }>(
+    await request.post(`${API_URL}/scanlation/projects/${board.projectId}/tasks/${board.taskIds[chapterNumber]}/publish`, { headers })
+  );
+  return chapter.chapterId;
+}
+
+/** A moderator (the publisher account may moderate) approves a team's first chapter. */
+export async function approveTheChapter(request: APIRequestContext, chapterId: string): Promise<void> {
+  await data(await request.post(`${API_URL}/moderation/chapters/${chapterId}/approve`, { headers: await givenIAmThePublisher(request) }));
 }
 
 export async function claimTheTask(request: APIRequestContext, headers: Headers, board: TaskBoard, chapterNumber: string): Promise<void> {
@@ -497,16 +517,18 @@ export async function startATeamWithSeries(
   const workIds: string[] = [];
   for (let n = 1; n <= count; n++) {
     const title = titleOf(n);
-    const work = await data<{ id: string }>(
-      await request.post(`${API_URL}/works`, {
-        headers,
-        data: { title, synopsis: 'Created by the e2e suite.', type: 'MANGA', status: 'ONGOING', genres: ['Action'], teamId }
-      })
-    );
     titles.push(title);
-    workIds.push(work.id);
+    workIds.push(await createTeamSeries(request, headers, teamId, title));
   }
   return { teamId, name, leader, titles, workIds };
+}
+
+/** A new series brought in by a team (headers of its leader), with its task board (off). Returns its id. */
+export async function createTeamSeries(request: APIRequestContext, headers: Headers, teamId: string, title: string): Promise<string> {
+  const work = await data<{ id: string }>(
+    await request.post(`${API_URL}/works`, { headers, data: { title, synopsis: 'Created by the e2e suite.', type: 'MANGA', status: 'ONGOING', genres: ['Action'], teamId } })
+  );
+  return work.id;
 }
 
 /** A team with no series yet, started by `leader`. */

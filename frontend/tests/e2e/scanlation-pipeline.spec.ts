@@ -46,15 +46,6 @@ test.describe('Scanlation Collaborative Multi-Role Pipeline Suite', () => {
     await thenICanSee(page, 'Page 2 / 2');
   });
 
-  test("a task's pages load on the board when I open them", async ({ page, busyLeader }) => {
-    await givenIAmLoggedInAs(page, busyLeader.account);
-
-    await whenIVisit(page, `/scanlation/${busyLeader.projectId}`);
-    await whenIOpenThePagesOfChapter(page, 21);
-
-    await thenTheTaskOfChapterLinksToPage(page, 21, 1);
-  });
-
   test('two collaborators have isolated sessions (one browser context each)', async ({ page, otherSession }) => {
     const cleanerName = await givenIAmSignedUpAs(page, 'cleaner');
 
@@ -82,18 +73,6 @@ async function whenIVisit(page: Page, url: string): Promise<void> {
 
 async function whenIShowTheNextPageOfWhatWaits(page: Page): Promise<void> {
   await whatWaitsForMe(page).getByRole('button', { name: 'Next' }).click();
-}
-
-function taskOfChapter(page: Page, chapter: number): Locator {
-  return page.getByRole('article').filter({ has: page.getByText(`Chapter ${chapter}`, { exact: true }) });
-}
-
-async function whenIOpenThePagesOfChapter(page: Page, chapter: number): Promise<void> {
-  await taskOfChapter(page, chapter).getByText('1 page', { exact: true }).click();
-}
-
-async function thenTheTaskOfChapterLinksToPage(page: Page, chapter: number, pageNumber: number): Promise<void> {
-  await expect(taskOfChapter(page, chapter).getByRole('link', { name: `Page ${pageNumber}` })).toBeVisible();
 }
 
 async function whenIReload(page: Page): Promise<void> {
