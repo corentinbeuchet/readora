@@ -2,6 +2,7 @@
 // Checks that every user-story scenario is really verified:
 //  - a scenario without @wip/@ui passed in the last Cucumber run (readora-acceptance surefire XML);
 //  - a @ui scenario has a frontend Vitest `it(...)` whose name is the exact scenario title;
+//  - a @e2e scenario passed in the last playwright-bdd run (frontend `npm run e2e:stories`, Cucumber JSON report);
 //  - a @wip scenario is listed so it isn't forgotten.
 // Usage: node .claude/skills/story-check/scripts/story-check.mjs   (exit 1 when something is unverified)
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
@@ -12,6 +13,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../.
 const STORIES = path.join(ROOT, '.readora/context/user-stories');
 const REPORT = path.join(ROOT, 'backend/readora-acceptance/target/surefire-reports/TEST-com.readora.acceptance.CucumberAcceptanceTest.xml');
 const SPECS = path.join(ROOT, 'frontend/tests/unit');
+const E2E_REPORT = path.join(ROOT, 'frontend/e2e-reports/user-stories.json');
 
 /** Scenarios with their tags (feature-level tags apply to every scenario). */
 function scenarios() {
@@ -52,6 +54,21 @@ function cucumberResults() {
   return results;
 }
 
+/** playwright-bdd results by scenario title: passed when every step passed, else failed | skipped. */
+function e2eResults() {
+  const results = new Map();
+  if (!existsSync(E2E_REPORT)) return null;
+  for (const feature of JSON.parse(readFileSync(E2E_REPORT, 'utf8'))) {
+    for (const scenario of feature.elements ?? []) {
+      const statuses = scenario.steps.map((step) => step.result?.status);
+      const status = statuses.every((s) => s === 'passed') ? 'passed' : statuses.includes('failed') ? 'failed' : 'skipped';
+      // Outlines and projects produce one entry per run: any failure wins.
+      if (results.get(scenario.name) !== 'failed') results.set(scenario.name, status);
+    }
+  }
+  return results;
+}
+
 /** All Vitest test names (it / test), unescaped. */
 function vitestNames() {
   const names = new Set();
@@ -74,18 +91,27 @@ function vitestNames() {
 const all = scenarios();
 const cucumber = cucumberResults();
 const vitest = vitestNames();
+const e2e = e2eResults();
 const problems = [];
 const wip = [];
 let backendOk = 0;
 let uiOk = 0;
+let e2eOk = 0;
 
 for (const s of all) {
   const where = `${s.file}: "${s.title}"`;
   if (s.tags.has('@wip')) {
     wip.push(where);
-  } else if (s.tags.has('@ui')) {
-    if (vitest.has(s.title)) uiOk++;
-    else problems.push(`@ui without a Vitest it('${s.title}')  (${s.file})`);
+  } else if (s.tags.has('@ui') || s.tags.has('@e2e')) {
+    if (s.tags.has('@ui')) {
+      if (vitest.has(s.title)) uiOk++;
+      else problems.push(`@ui without a Vitest it('${s.title}')  (${s.file})`);
+    }
+    if (s.tags.has('@e2e') && e2e) {
+      const status = e2e.get(s.title);
+      if (status === 'passed') e2eOk++;
+      else problems.push(`playwright-bdd ${status ?? 'did not run'}: ${where}`);
+    }
   } else if (cucumber) {
     const status = cucumber.get(s.title);
     if (status === 'passed') backendOk++;
@@ -93,7 +119,7 @@ for (const s of all) {
   }
 }
 
-console.log(`Scenarios: ${all.length} (${backendOk} passed in Cucumber, ${uiOk} @ui with a Vitest test, ${wip.length} @wip)`);
+console.log(`Scenarios: ${all.length} (${backendOk} passed in Cucumber, ${uiOk} @ui with a Vitest test, ${e2eOk} @e2e passed in playwright-bdd, ${wip.length} @wip)`);
 if (!cucumber) {
   problems.push(`No Cucumber report at ${path.relative(ROOT, REPORT)}: run the backend verify first`);
 } else {
@@ -101,6 +127,12 @@ if (!cucumber) {
   if (statSync(REPORT).mtimeMs < newestFeature) {
     console.log('WARN  the Cucumber report is older than a .feature file: re-run the backend verify for current results');
   }
+}
+const e2eScenarios = all.filter((s) => s.tags.has('@e2e') && !s.tags.has('@wip')).length;
+if (e2eScenarios > 0 && !e2e) {
+  problems.push(`No playwright-bdd report at ${path.relative(ROOT, E2E_REPORT)}: run \`npm run e2e:stories\` in frontend/ (stack up)`);
+} else if (e2e && statSync(E2E_REPORT).mtimeMs < Math.max(...readdirSync(STORIES).map((f) => statSync(path.join(STORIES, f)).mtimeMs))) {
+  console.log('WARN  the playwright-bdd report is older than a .feature file: re-run `npm run e2e:stories` for current results');
 }
 for (const w of wip) console.log(`WIP   ${w}`);
 for (const p of problems) console.log(`FAIL  ${p}`);

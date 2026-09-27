@@ -45,7 +45,9 @@ series; teams take chapters from RAW to published). Monorepo:
 ## Cross-cutting rules
 - `.feature` files in `.readora/context/user-stories/` are the source of truth for behaviour. New behaviour → scenario first.
   Scenario tags: `@must`/`@should`/`@could` (priority), `@wip` (not built yet, skipped), `@ui` (frontend-only: not run by
-  Cucumber; a frontend Vitest `it(...)` carries the exact scenario title). Everything else runs as a Cucumber test.
+  Cucumber; a frontend Vitest `it(...)` carries the exact scenario title), `@e2e` (not run by Cucumber; playwright-bdd
+  runs the scenario's own steps in a browser against the real stack, `npm run e2e:stories`; may be combined with `@ui`).
+  Everything else runs as a Cucumber test.
 - Identity comes **only** from the JWT. Never accept `userId` / `authorId` / `publisherId` in a request body;
   tests on both sides assert this, keep it that way.
 - One API envelope: backend `ApiResponse.ok/error` ↔ frontend `ApiClient` unwraps it into typed values / `ApiError`.

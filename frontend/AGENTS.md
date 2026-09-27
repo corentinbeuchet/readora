@@ -345,6 +345,10 @@ Checklists per test type: skills `frontend-unit-tests` (services, stores, pure f
   `vi.advanceTimersByTimeAsync(0)`). `tests/**` is linted by `npm run lint` (CI too); `.only` is a lint error.
 - A user-story scenario tagged `@ui` (`.readora/context/user-stories/*.feature`) is verified here: one `it(...)` whose
   name is the exact scenario title, driving the real DOM.
+- A scenario tagged `@e2e` runs as written through playwright-bdd (Playwright project `user-stories`, steps in
+  `tests/e2e/bdd/steps/`, `npm run e2e:stories`): for journeys that need the real backend. Steps create their data like
+  fixtures do and map the scenario's names to it through the `story` fixture (`tests/e2e/bdd/fixtures.ts`). Detail
+  that needs faked time or network (preloading, keyboard handling) stays a Vitest `@ui` test.
 - Cover failure and retry paths, not only the happy path. No placeholder e2e tests; no `test.skip` on missing data.
 
 ## Open review items — don't reintroduce what was fixed

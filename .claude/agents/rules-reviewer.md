@@ -43,7 +43,8 @@ Frontend
 - a11y: every control labelled, no static ids inside `@for`, dialogs trap focus and handle Escape.
 
 Stories and commits
-- New behaviour has a scenario; a removed `@wip` has Cucumber steps (or a Vitest `it` with the exact title for `@ui`).
+- New behaviour has a scenario; a removed `@wip` has Cucumber steps (or a Vitest `it` with the exact title for `@ui`,
+  playwright-bdd steps in `frontend/tests/e2e/bdd/steps/` for `@e2e`).
 - Commit messages (if reviewing commits): Conventional Commit subject ≤72 chars, `Why:/What:/Verify:/Refs:` body,
   one logical change per commit.
 

@@ -208,8 +208,9 @@ in place to keep row identity (model: `ChapterRepositoryAdapter`). No `default` 
 ## Tests
 - `@DisplayName("Full sentence describing behaviour")` + camelCase method name.
 - User stories (`.readora/context/user-stories/*.feature`) run as Cucumber acceptance tests, filtered by
-  `CucumberAcceptanceTest` with `not @wip and not @ui`. `@wip` = not built yet (remove it when implementing);
-  `@ui` = frontend-only behaviour, verified by a frontend Vitest test whose name is the scenario title.
+  `CucumberAcceptanceTest` with `not @wip and not @ui and not @e2e`. `@wip` = not built yet (remove it when implementing);
+  `@ui` = frontend-only behaviour, verified by a frontend Vitest test whose name is the scenario title; `@e2e` = run in
+  a browser against the real stack by the frontend's playwright-bdd project.
   Step classes don't share state (no DI container): each feature's steps live in one class, with Background
   wording unique to that feature.
 - Web integration tests go through real HTTP and real auth (`AuthTestSupport`); assert JSON error bodies and status codes.
