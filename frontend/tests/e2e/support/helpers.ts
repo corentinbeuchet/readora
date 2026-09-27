@@ -1,4 +1,5 @@
 import { APIRequestContext, Page, expect } from '@playwright/test';
+import { crc32, deflateSync } from 'node:zlib';
 
 /** Backend API root; defaults to the local docker compose backend. */
 export const API_URL = (process.env['E2E_API_URL'] ?? 'http://localhost:8080/api/v1').replace(/\/+$/, '');
@@ -97,6 +98,35 @@ async function data<T>(response: Awaited<ReturnType<APIRequestContext['get']>>):
 
 /** 1×1 transparent PNG: the smallest page image the upload endpoint accepts. */
 export const PAGE_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
+
+/** A page the size of a real one (a few KB: one grey colour), for tests of how the reader draws and turns pages. */
+export const PAGE_SIZE = { width: 800, height: 1200 };
+export const FULL_PAGE_PNG = solidPng(PAGE_SIZE.width, PAGE_SIZE.height);
+
+/** An opaque grey PNG of this size (8-bit greyscale, one byte per pixel). */
+function solidPng(width: number, height: number): Buffer {
+  const chunk = (type: string, body: Buffer): Buffer => {
+    const length = Buffer.alloc(4);
+    length.writeUInt32BE(body.length);
+    const typed = Buffer.concat([Buffer.from(type, 'ascii'), body]);
+    const crc = Buffer.alloc(4);
+    crc.writeUInt32BE(crc32(typed));
+    return Buffer.concat([length, typed, crc]);
+  };
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(width, 0);
+  header.writeUInt32BE(height, 4);
+  header.writeUInt8(8, 8); // bit depth
+  header.writeUInt8(0, 9); // greyscale
+  const row = Buffer.concat([Buffer.from([0]), Buffer.alloc(width, 0x88)]); // filter "none", then the pixels
+  const pixels = Buffer.concat(Array.from({ length: height }, () => row));
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk('IHDR', header),
+    chunk('IDAT', deflateSync(pixels)),
+    chunk('IEND', Buffer.alloc(0))
+  ]);
+}
 
 export type Headers = Record<string, string>;
 
@@ -198,23 +228,69 @@ export async function describeSeries(request: APIRequestContext, headers: Header
   await data(await request.put(`${API_URL}/works/${workId}`, { headers, data: description }));
 }
 
-/** Publishes a two-page chapter of the series for one team (a chapter always belongs to a team). */
-export async function publishChapterFor(request: APIRequestContext, headers: Headers, workId: string, team: PublishingTeam, chapterNumber: string, title: string): Promise<string> {
-  const pages = [];
-  for (const pageNumber of [1, 2]) {
-    const stored = await data<{ storageKey: string; cdnUrl: string }>(
-      await request.post(`${API_URL}/storage/upload?folder=${encodeURIComponent(`scans/${workId}/${team.id}/c${chapterNumber}`)}`, {
-        headers,
-        multipart: { file: { name: `${pageNumber}.png`, mimeType: 'image/png', buffer: PAGE_PNG } }
-      })
-    );
-    pages.push({ pageNumber, storageKey: stored.storageKey, cdnUrl: stored.cdnUrl, width: 1, height: 1 });
+/**
+ * How a published chapter's pages are made: how many, full-size or 1×1 (the default), their descriptions (by page
+ * number), and data-saver copies.
+ */
+export interface ChapterPages {
+  count?: number;
+  fullSize?: boolean;
+  descriptions?: Record<number, string>;
+  withLiteCopies?: boolean;
+}
+
+/** Publishes a chapter of the series for one team (a chapter always belongs to a team): two pages unless `pages` says. */
+export async function publishChapterFor(
+  request: APIRequestContext,
+  headers: Headers,
+  workId: string,
+  team: PublishingTeam,
+  chapterNumber: string,
+  title: string,
+  pages: ChapterPages = {}
+): Promise<string> {
+  const folder = `scans/${workId}/${team.id}/c${chapterNumber}`;
+  const assets = [];
+  for (let pageNumber = 1; pageNumber <= (pages.count ?? 2); pageNumber++) {
+    const image = pages.fullSize ? FULL_PAGE_PNG : PAGE_PNG;
+    const stored = await uploadPage(request, headers, folder, `${pageNumber}.png`, image);
+    const lite = pages.withLiteCopies ? await uploadPage(request, headers, `${folder}/lite`, `${pageNumber}.png`, image) : undefined;
+    assets.push({
+      pageNumber,
+      storageKey: stored.storageKey,
+      cdnUrl: stored.cdnUrl,
+      width: pages.fullSize ? PAGE_SIZE.width : 1,
+      height: pages.fullSize ? PAGE_SIZE.height : 1,
+      description: pages.descriptions?.[pageNumber] ?? null,
+      liteCdnUrl: lite?.cdnUrl ?? null
+    });
   }
   const chapter = await data<{ id: string }>(
-    await request.post(`${API_URL}/works/${workId}/chapters/direct`, { headers, data: { teamId: team.id, chapterNumber, title, pages } })
+    await request.post(`${API_URL}/works/${workId}/chapters/direct`, { headers, data: { teamId: team.id, chapterNumber, title, pages: assets } })
   );
   team.chapterIds[chapterNumber] = chapter.id;
   return chapter.id;
+}
+
+async function uploadPage(request: APIRequestContext, headers: Headers, folder: string, name: string, image: Buffer): Promise<{ storageKey: string; cdnUrl: string }> {
+  return data<{ storageKey: string; cdnUrl: string }>(
+    await request.post(`${API_URL}/storage/upload?folder=${encodeURIComponent(folder)}`, {
+      headers,
+      multipart: { file: { name, mimeType: 'image/png', buffer: image } }
+    })
+  );
+}
+
+/** The pages of a published chapter as readers get them. */
+export async function pagesOf(request: APIRequestContext, chapterId: string): Promise<{ pageNumber: number; cdnUrl: string; liteCdnUrl: string | null }[]> {
+  return (await data<{ pages: { pageNumber: number; cdnUrl: string; liteCdnUrl: string | null }[] }>(await request.get(`${API_URL}/chapters/${chapterId}`))).pages;
+}
+
+/** The reader's saved place in a series (their bookmark): a page of a chapter. */
+export async function saveMyPlace(request: APIRequestContext, account: { accessToken?: string }, workId: string, chapterId: string, pageIndex: number): Promise<void> {
+  await data(
+    await request.put(`${API_URL}/bookmarks/${workId}/progress`, { headers: { Authorization: `Bearer ${account.accessToken}` }, data: { chapterId, pageIndex } })
+  );
 }
 
 /**

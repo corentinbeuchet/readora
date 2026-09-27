@@ -1,14 +1,11 @@
 import { APIRequestContext, Browser, Locator, Page, expect } from '@playwright/test';
 import { createBdd } from 'playwright-bdd';
 import { test } from '../fixtures';
-import { Story } from '../story';
+import { ITS_TEAM, Story } from '../story';
 import { MODERATOR, addToLibrary, givenIAmLoggedInAs, logIn, recordARead, registerAccount } from '../../support/helpers';
 
 /** US-14 home and navigation. The desktop layout: the navigation sits in the header and the logo is the way home. */
 const { Given, When, Then } = createBdd(test);
-
-/** The team that publishes a series when the scenario doesn't say which. */
-const ITS_TEAM = 'its team';
 
 Given('a visitor sees no {string} entry in the navigation', async ({ page }, entry: string) => {
   await whenIOpen(page, '/');

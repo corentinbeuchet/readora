@@ -1,5 +1,6 @@
 import { APIRequestContext } from '@playwright/test';
 import {
+  ChapterPages,
   E2E_TEAMS,
   PASSWORD,
   PUBLISHER,
@@ -17,6 +18,9 @@ import {
   registerAccountNamed,
   uniqueSuffix
 } from '../support/helpers';
+
+/** The team that publishes a series when the scenario doesn't say which. */
+export const ITS_TEAM = 'its team';
 
 /** Who a scenario's person logs in as. */
 export interface Account {
@@ -43,6 +47,8 @@ export class Story {
   private readonly suffix = uniqueSuffix();
   private readonly seriesByName = new Map<string, { workId: string; title: string; description: SeriesDescription }>();
   private readonly publishedNumbers = new Map<string, Set<number>>();
+  /** `series|number` → the chapter's id (the first version published, when several teams published it). */
+  private readonly chapterIdsByNumber = new Map<string, string>();
   private readonly publishers = new Map<string, PublishingTeam>();
   /** `teamId|workId` of the teams known to work on a series. */
   private readonly onSeries = new Set<string>();
@@ -132,16 +138,31 @@ export class Story {
     }
   }
 
-  async publish(teamName: string, seriesName: string, chapterNumbers: number[]): Promise<void> {
+  async publish(teamName: string, seriesName: string, chapterNumbers: number[], pages: ChapterPages = {}): Promise<void> {
     await this.teamWorksOn(teamName, seriesName);
     const team = this.team(teamName);
     const series = await this.series(seriesName);
     const published = this.publishedNumbers.get(seriesName) ?? new Set<number>();
     for (const chapterNumber of chapterNumbers) {
-      await publishChapterFor(this.request, await givenIAmThePublisher(this.request), series.workId, team, String(chapterNumber), `Chapter ${chapterNumber}`);
+      const id = await publishChapterFor(this.request, await givenIAmThePublisher(this.request), series.workId, team, String(chapterNumber), `Chapter ${chapterNumber}`, pages);
       published.add(chapterNumber);
+      if (!this.chapterIdsByNumber.has(`${seriesName}|${chapterNumber}`)) {
+        this.chapterIdsByNumber.set(`${seriesName}|${chapterNumber}`, id);
+      }
     }
     this.publishedNumbers.set(seriesName, published);
+  }
+
+  /**
+   * The id of chapter `chapterNumber` of the series, published by `ITS_TEAM` the first time a step needs it (a series
+   * "in the catalog" has its chapters): five full-size pages unless `pages` says otherwise.
+   */
+  async chapter(seriesName: string, chapterNumber: number, pages: ChapterPages = {}): Promise<string> {
+    if (!this.chapterIdsByNumber.has(`${seriesName}|${chapterNumber}`)) {
+      await this.publishingTeam(ITS_TEAM);
+      await this.publish(ITS_TEAM, seriesName, [chapterNumber], { count: 5, fullSize: true, ...pages });
+    }
+    return this.chapterIdsByNumber.get(`${seriesName}|${chapterNumber}`)!;
   }
 
   /** Every chapter number published in the series, by any team, smallest first. */

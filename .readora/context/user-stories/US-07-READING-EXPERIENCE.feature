@@ -2,6 +2,7 @@
 # MangaDex, MANGA Plus, Mihon (Tachiyomi successor), Shonen Jump, Tapas.
 # Priority tags: @must / @should / @could.
 # @ui = frontend-only, verified by a Vitest test named after the scenario (not run by Cucumber).
+# @e2e = also run in a browser against the real stack (playwright-bdd, `npm run e2e:stories`).
 # @wip = not built yet. Offline reading needs a service worker and downloaded chapters: left for later.
 # Untagged scenarios (next chapter, read markers, history, new-chapter badges) run as Cucumber acceptance tests.
 
@@ -25,7 +26,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     Then chapter 5 opens on its first page
 
   # Inspired by: MANGA Plus, Mihon
-  @must @ui
+  @must @ui @e2e
   Scenario: Reading manga right to left
     Given "Kenji" reads "One Piece" in paged mode
     When he chooses "Right to left"
@@ -33,7 +34,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     And the page order follows the Japanese reading direction
 
   # Inspired by: Mihon, MangaDex
-  @must @ui
+  @must @ui @e2e
   Scenario: The reader opens in the right mode for the format
     When "Kenji" opens a chapter of the manhwa "Solo Leveling"
     Then it opens in vertical mode
@@ -41,7 +42,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     Then it opens in paged right-to-left mode
 
   # Inspired by: Mihon
-  @must @ui
+  @must @ui @e2e
   Scenario: The reader remembers my mode for each series
     Given "Kenji" switched "One Piece" to vertical mode
     When he opens another chapter of "One Piece"
@@ -49,7 +50,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     And "Solo Leveling" keeps its own mode
 
   # Inspired by: MangaDex, Mihon
-  @must @ui
+  @must @ui @e2e
   Scenario: Turning pages with the keyboard or a click
     Given "Kenji" reads a chapter in paged mode
     When he presses the right arrow, Space or Page Down
@@ -57,14 +58,14 @@ Feature: A reading experience as good as the best manga and webtoon apps
     And clicking the left or right third of the page also turns it
 
   # Inspired by: all major reading apps
-  @must @ui
+  @must @ui @e2e
   Scenario: Pages turn instantly
     Given "Kenji" is on page 3 of a chapter
     Then pages 4 and 5 are already loaded
     And turning the page shows the next image without waiting
 
   # Inspired by: Mihon, MangaDex
-  @must @ui
+  @must @ui @e2e
   Scenario: Fitting the page to my screen
     When "Kenji" chooses "Fit width", "Fit height" or "Original size"
     Then the page is resized that way
@@ -78,16 +79,17 @@ Feature: A reading experience as good as the best manga and webtoon apps
     Then chapters 1 to 4 are dimmed
     And chapter 5 is highlighted as the next one to read
 
-  @must @ui
+  @must @ui @e2e
   Scenario: Having read every chapter, the series page offers to read it again
     Given "Kenji" finished every published chapter of "Horimiya"
     When he opens the page of "Horimiya"
     Then he is told he is up to date
     And the main button is "Read again", which opens chapter 1
 
-  @should @ui
+  @should @ui @e2e
   Scenario: A saved page in a chapter I already finished does not hide the next chapter
-    Given "Kenji"'s saved page is in chapter 2 of "Solo Leveling"
+    Given "Solo Leveling" has chapters 1, 2 and 3
+    And "Kenji"'s saved page is in chapter 2 of "Solo Leveling"
     And he finished chapters 1 and 2
     When he opens the page of "Solo Leveling"
     Then the main button is "Continue with chapter 3"
@@ -103,7 +105,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
   # ---------------------------------------------------------------- @should
 
   # Inspired by: MangaDex
-  @should @ui
+  @should @ui @e2e
   Scenario: Seeing where I am and jumping to a page
     Given "Kenji" is on page 8 of 20
     Then a thin progress bar shows he is 40% through the chapter
@@ -111,14 +113,15 @@ Feature: A reading experience as good as the best manga and webtoon apps
     Then page 20 is shown
 
   # Inspired by: Shonen Jump, MangaDex
-  @should @ui
+  @should @ui @e2e
   Scenario: Reading two pages side by side
     Given "Kenji" reads "One Piece" on a wide screen
     When he turns on "Double page"
+    And he turns the page
     Then two pages are shown side by side like a printed book
 
   # Inspired by: most-requested missing feature in WEBTOON and Tachiyomi forks
-  @should @ui
+  @should @ui @e2e
   Scenario: Letting a webtoon scroll by itself
     Given "Kenji" reads "Solo Leveling" in vertical mode
     When he turns on auto-scroll at medium speed
@@ -126,7 +129,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     And it stops as soon as he touches or scrolls the page
 
   # Inspired by: Mihon
-  @should @ui
+  @should @ui @e2e
   Scenario: Changing the background colour
     When "Kenji" picks a black, gray or white background
     Then the space around the pages uses that colour
@@ -159,7 +162,7 @@ Feature: A reading experience as good as the best manga and webtoon apps
     Then chapters load lighter, lower-quality images
 
   # Inspired by: the Save-Data client hint (browsers' "Lite mode" / data saver setting)
-  @should @ui
+  @should @ui @e2e
   Scenario: The data saver follows the browser's data-saving mode until I choose
     Given Kenji's browser asks sites to save data
     And "Kenji" never turned "Data saver" on or off
@@ -176,9 +179,10 @@ Feature: A reading experience as good as the best manga and webtoon apps
     And chapter 50 is highlighted as the next one to read
 
   # Inspired by: MangaDex reader side panel (from docs/use-cases UC-08)
-  @should @ui
+  @should @ui @e2e
   Scenario: Opening the chapter list inside the reader
     Given "Kenji" is reading chapter 5 of "Solo Leveling"
+    And he finished chapters 1 and 2
     When he opens the chapter list from the reader
     Then he sees every chapter with the ones he read marked
     And choosing chapter 2 opens it without leaving the reader
@@ -200,9 +204,10 @@ Feature: A reading experience as good as the best manga and webtoon apps
     Then the three most-upvoted comments without spoilers are shown under it
 
   # Differentiator: no major platform does this well
-  @could @ui
+  @could @ui @e2e
   Scenario: Reading with a screen reader
     Given "Aiko" uses a screen reader
+    And she is on page 2 of 20 of a chapter whose uploader described page 3 as "Jin-Woo opens the gate"
     When she turns a page
     Then she hears "Page 3 of 20"
-    And she hears the page description if the uploader wrote one
+    And she hears the page description the uploader wrote

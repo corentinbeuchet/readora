@@ -10,7 +10,7 @@ Feature: Distraction-free reading and broken pages
   Background:
     Given reader "Kenji" is reading chapter 1 of "Solo Leveling", translated by the team "Shadow Scans"
 
-  @ui
+  @ui @e2e
   Scenario: Reading in zen mode
     When "Kenji" turns on zen mode
     Then the site header and the reader toolbar are hidden
