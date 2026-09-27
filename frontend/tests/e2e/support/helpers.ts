@@ -98,7 +98,7 @@ async function data<T>(response: Awaited<ReturnType<APIRequestContext['get']>>):
 /** 1×1 transparent PNG: the smallest page image the upload endpoint accepts. */
 export const PAGE_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
 
-type Headers = Record<string, string>;
+export type Headers = Record<string, string>;
 
 /** A team of a series and the chapters it published there, by chapter number. */
 export interface PublishingTeam {
@@ -107,8 +107,25 @@ export interface PublishingTeam {
   chapterIds: Record<string, string>;
 }
 
-async function givenIAmThePublisher(request: APIRequestContext): Promise<Headers> {
-  const { accessToken } = await data<{ accessToken: string }>(await request.post(`${API_URL}/auth/login`, { data: PUBLISHER }));
+/**
+ * The publisher's login, shared by the tests of a worker (module state) for less than the access token's 15 minutes:
+ * logins are rate-limited per IP, and a login per helper call used most of the limit.
+ */
+let publisherLogin: { headers: Promise<Headers>; at: number } | undefined;
+const PUBLISHER_LOGIN_REUSE_MS = 10 * 60 * 1000;
+
+/** API headers of the publisher account: it leads both e2e teams and may moderate, so its chapters go out at once. */
+export async function givenIAmThePublisher(request: APIRequestContext): Promise<Headers> {
+  if (!publisherLogin || Date.now() - publisherLogin.at > PUBLISHER_LOGIN_REUSE_MS) {
+    const headers = logInThroughTheApi(request, PUBLISHER);
+    publisherLogin = { headers, at: Date.now() };
+    headers.catch(() => (publisherLogin = undefined));
+  }
+  return publisherLogin.headers;
+}
+
+async function logInThroughTheApi(request: APIRequestContext, account: { email: string; password: string }): Promise<Headers> {
+  const { accessToken } = await data<{ accessToken: string }>(await request.post(`${API_URL}/auth/login`, { data: account }));
   return { Authorization: `Bearer ${accessToken}` };
 }
 
@@ -121,7 +138,7 @@ export const E2E_TEAMS = { first: 'E2E Publishers', second: 'E2E Second Team' } 
 /** Found or created once per worker (module state), then reused. */
 const e2eTeams = new Map<string, Promise<{ id: string; name: string }>>();
 
-async function e2eTeam(request: APIRequestContext, headers: Headers, name: string): Promise<{ id: string; name: string }> {
+export async function e2eTeam(request: APIRequestContext, headers: Headers, name: string): Promise<{ id: string; name: string }> {
   let team = e2eTeams.get(name);
   if (!team) {
     team = findOrCreateTeam(request, headers, name);
@@ -153,8 +170,12 @@ export async function givenThePublisherLeadsTheE2eTeam(request: APIRequestContex
 }
 
 /** A new series, published by the first e2e team (its task board is created with it). */
-async function createSeries(request: APIRequestContext, headers: Headers, facts?: object): Promise<{ workId: string; title: string; team: PublishingTeam }> {
-  const title = `E2E Series ${uniqueSuffix()}`;
+export async function createSeries(
+  request: APIRequestContext,
+  headers: Headers,
+  facts?: object,
+  title = `E2E Series ${uniqueSuffix()}`
+): Promise<{ workId: string; title: string; team: PublishingTeam }> {
   const team = await e2eTeam(request, headers, E2E_TEAMS.first);
   const work = await data<{ id: string }>(
     await request.post(`${API_URL}/works`, {
@@ -166,7 +187,7 @@ async function createSeries(request: APIRequestContext, headers: Headers, facts?
 }
 
 /** Publishes a two-page chapter of the series for one team (a chapter always belongs to a team). */
-async function publishChapterFor(request: APIRequestContext, headers: Headers, workId: string, team: PublishingTeam, chapterNumber: string, title: string): Promise<string> {
+export async function publishChapterFor(request: APIRequestContext, headers: Headers, workId: string, team: PublishingTeam, chapterNumber: string, title: string): Promise<string> {
   const pages = [];
   for (const pageNumber of [1, 2]) {
     const stored = await data<{ storageKey: string; cdnUrl: string }>(
@@ -249,7 +270,8 @@ export async function givenIAmLoggedInAsTheModerator(page: Page): Promise<void> 
   await logIn(page, MODERATOR);
 }
 
-async function logIn(page: Page, account: { email: string; password: string }): Promise<void> {
+/** Logs in through the UI with any account. */
+export async function logIn(page: Page, account: { email: string; password: string }): Promise<void> {
   await page.goto('/login');
   await page.getByLabel('Email').fill(account.email);
   await page.getByLabel('Password').fill(account.password);
@@ -386,23 +408,49 @@ export async function leadABusyTeam(request: APIRequestContext, chapters: number
   const work = await data<{ id: string }>(
     await request.post(`${API_URL}/works`, { headers, data: { title, synopsis: 'Created by the e2e suite.', type: 'MANGA', status: 'ONGOING', genres: ['Action'], teamId: team.id } })
   );
-  const [project] = await data<{ id: string }[]>(await request.get(`${API_URL}/works/${work.id}/projects`, { headers }));
+  const board = await putRawChaptersOnTheBoard(request, headers, work.id, team.id, Array.from({ length: chapters }, (_, index) => String(index + 1)));
+  return { account, title, projectId: board.projectId };
+}
+
+/** The task board of a team's series, turned on, and the task of each raw chapter put on it (by chapter number). */
+export interface TaskBoard {
+  projectId: string;
+  taskIds: Record<string, string>;
+}
+
+/** Turns on the task board of the team for the series and puts one raw one-page chapter per number on it. */
+export async function putRawChaptersOnTheBoard(request: APIRequestContext, headers: Headers, workId: string, teamId: string, chapterNumbers: string[]): Promise<TaskBoard> {
+  const projects = await data<{ id: string; teamId: string }[]>(await request.get(`${API_URL}/works/${workId}/projects`, { headers }));
+  const project = projects.find((candidate) => candidate.teamId === teamId)!;
   await data(await request.put(`${API_URL}/scanlation/projects/${project.id}/board`, { headers, data: { enabled: true } }));
   const raw = await data<{ storageKey: string; cdnUrl: string }>(
-    await request.post(`${API_URL}/storage/upload?folder=${encodeURIComponent(`scans/${work.id}/${team.id}/raw`)}`, {
+    await request.post(`${API_URL}/storage/upload?folder=${encodeURIComponent(`scans/${workId}/${teamId}/raw`)}`, {
       headers,
       multipart: { file: { name: '1.png', mimeType: 'image/png', buffer: PAGE_PNG } }
     })
   );
-  for (let chapter = 1; chapter <= chapters; chapter++) {
-    await data(
+  const taskIds: Record<string, string> = {};
+  for (const chapterNumber of chapterNumbers) {
+    const task = await data<{ id: string }>(
       await request.post(`${API_URL}/scanlation/projects/${project.id}/tasks`, {
         headers,
-        data: { chapterNumber: String(chapter), pages: [{ pageNumber: 1, storageKey: raw.storageKey, cdnUrl: raw.cdnUrl, width: 1, height: 1 }] }
+        data: { chapterNumber, pages: [{ pageNumber: 1, storageKey: raw.storageKey, cdnUrl: raw.cdnUrl, width: 1, height: 1 }] }
       })
     );
+    taskIds[chapterNumber] = task.id;
   }
-  return { account, title, projectId: project.id };
+  return { projectId: project.id, taskIds };
+}
+
+/** Hands in the task's pages for its stage: a raw chapter submitted by a leader goes straight to translation. */
+export async function submitTheTask(request: APIRequestContext, headers: Headers, board: TaskBoard, chapterNumber: string): Promise<void> {
+  const taskUrl = `${API_URL}/scanlation/projects/${board.projectId}/tasks/${board.taskIds[chapterNumber]}`;
+  const pages = await data<{ pageNumber: number; storageKey: string; cdnUrl: string; width: number; height: number }[]>(await request.get(`${taskUrl}/pages`, { headers }));
+  await data(await request.post(`${taskUrl}/submit`, { headers, data: { pages } }));
+}
+
+export async function claimTheTask(request: APIRequestContext, headers: Headers, board: TaskBoard, chapterNumber: string): Promise<void> {
+  await data(await request.post(`${API_URL}/scanlation/projects/${board.projectId}/tasks/${board.taskIds[chapterNumber]}/claim`, { headers }));
 }
 
 /** A team with many series and no chapter (US-12), started by a new reader. */
@@ -413,26 +461,70 @@ export interface TeamWithSeries {
   leader: RegisteredAccount;
   /** The series' titles, in the order they were created. */
   titles: string[];
+  /** The series' ids, in the same order. */
+  workIds: string[];
 }
 
-/** A new reader starts a team and creates `count` series for it ("… 01", "… 02", …), each with its task board. */
-export async function startATeamWithSeries(request: APIRequestContext, count: number): Promise<TeamWithSeries> {
-  const leader = await registerAccount(request, 'many');
+/**
+ * A new reader starts a team and creates `count` series for it ("… 01", "… 02", …), each with its task board.
+ * `options` names the team and its series otherwise (`titleOf(n)`, n from 1) and may give the leader.
+ */
+export async function startATeamWithSeries(
+  request: APIRequestContext,
+  count: number,
+  options: { name?: string; titleOf?: (n: number) => string; leader?: RegisteredAccount } = {}
+): Promise<TeamWithSeries> {
+  const { teamId, name, leader } = await startATeam(request, options.name ?? `Many Series Team ${uniqueSuffix()}`, options.leader ?? (await registerAccount(request, 'many')));
   const headers = { Authorization: `Bearer ${leader.accessToken}` };
-  const name = `Many Series Team ${uniqueSuffix()}`;
-  const team = await data<{ id: string }>(await request.post(`${API_URL}/teams`, { headers, data: { name } }));
+  const titleOf = options.titleOf ?? ((n: number) => `E2E Team Series ${uniqueSuffix()} ${String(n).padStart(2, '0')}`);
   const titles: string[] = [];
+  const workIds: string[] = [];
   for (let n = 1; n <= count; n++) {
-    const title = `E2E Team Series ${uniqueSuffix()} ${String(n).padStart(2, '0')}`;
-    await data(
+    const title = titleOf(n);
+    const work = await data<{ id: string }>(
       await request.post(`${API_URL}/works`, {
         headers,
-        data: { title, synopsis: 'Created by the e2e suite.', type: 'MANGA', status: 'ONGOING', genres: ['Action'], teamId: team.id }
+        data: { title, synopsis: 'Created by the e2e suite.', type: 'MANGA', status: 'ONGOING', genres: ['Action'], teamId }
       })
     );
     titles.push(title);
+    workIds.push(work.id);
   }
-  return { teamId: team.id, name, leader, titles };
+  return { teamId, name, leader, titles, workIds };
+}
+
+/** A team with no series yet, started by `leader`. */
+export async function startATeam(request: APIRequestContext, name: string, leader: RegisteredAccount): Promise<{ teamId: string; name: string; leader: RegisteredAccount }> {
+  const team = await data<{ id: string }>(await request.post(`${API_URL}/teams`, { headers: { Authorization: `Bearer ${leader.accessToken}` }, data: { name } }));
+  return { teamId: team.id, name, leader };
+}
+
+/** The leader invites the reader with these roles (`TRANSLATOR`, …) and the reader accepts: they are on the team. */
+export async function joinTheTeam(request: APIRequestContext, team: { teamId: string; leader: RegisteredAccount }, member: RegisteredAccount, roles: string[]): Promise<void> {
+  const invitation = await data<{ id: string }>(
+    await request.post(`${API_URL}/teams/${team.teamId}/invitations`, {
+      headers: { Authorization: `Bearer ${team.leader.accessToken}` },
+      data: { username: member.username, roles }
+    })
+  );
+  await data(await request.post(`${API_URL}/invitations/${invitation.id}/accept`, { headers: { Authorization: `Bearer ${member.accessToken}` } }));
+}
+
+/** Gives the reader a display name (their profile). */
+export async function nameTheReader(request: APIRequestContext, account: RegisteredAccount, displayName: string): Promise<void> {
+  await data(await request.put(`${API_URL}/profile`, { headers: { Authorization: `Bearer ${account.accessToken}` }, data: { displayName } }));
+}
+
+/** Adds a series already in the catalog to a team (headers of one of its leaders). */
+export async function addSeriesToTeam(request: APIRequestContext, headers: Headers, teamId: string, workId: string): Promise<void> {
+  await data(await request.post(`${API_URL}/teams/${teamId}/series`, { headers, data: { workId } }));
+}
+
+/** The ids of the teams that work on the series (have a project on it). */
+export async function teamsWorkingOn(request: APIRequestContext, workId: string): Promise<string[]> {
+  const headers = await givenIAmThePublisher(request);
+  const projects = await data<{ teamId: string }[]>(await request.get(`${API_URL}/works/${workId}/projects`, { headers }));
+  return projects.map((project) => project.teamId);
 }
 
 /** Logs in through the UI as an account a test created. */
@@ -461,7 +553,11 @@ export interface RegisteredAccount {
 }
 
 export async function registerAccount(request: APIRequestContext, prefix = 'e2e'): Promise<RegisteredAccount> {
-  const username = `${prefix}_${uniqueSuffix()}`;
+  return registerAccountNamed(request, `${prefix}_${uniqueSuffix()}`);
+}
+
+/** A reader account with exactly this username (password `PASSWORD`). */
+export async function registerAccountNamed(request: APIRequestContext, username: string): Promise<RegisteredAccount> {
   const email = `${username}@readora.test`;
   const { accessToken } = await data<{ accessToken: string }>(
     await request.post(`${API_URL}/auth/register`, { data: { email, username, password: PASSWORD } })

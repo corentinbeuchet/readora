@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 import { test as base, expect } from './support/fixtures';
-import { TeamWithSeries, givenIAmLoggedInAs, signUp, thenTheAccountMenuOffersTeamToolsButNotModeration } from './support/helpers';
+import { givenIAmLoggedInAs, signUp, thenTheAccountMenuOffersTeamToolsButNotModeration } from './support/helpers';
 
 const test = base.extend<{
   /** A second, independent browser session (its own context: cookies and storage are not shared with `page`). */
@@ -55,20 +55,6 @@ test.describe('Scanlation Collaborative Multi-Role Pipeline Suite', () => {
     await thenTheTaskOfChapterLinksToPage(page, 21, 1);
   });
 
-  test("the Studio lists a team's series 20 at a time, and finds one by its title", async ({ page, teamWithManySeries }) => {
-    await givenIAmLoggedInAs(page, teamWithManySeries.leader);
-
-    await whenIVisit(page, '/scanlation');
-
-    await thenTheSeriesListedForTheTeamAre(page, teamWithManySeries, 20);
-    await thenICanSee(page, 'Page 1 / 2');
-
-    await whenIFindTheSeries(page, teamWithManySeries, teamWithManySeries.titles[24]);
-
-    await thenTheSeriesListedForTheTeamAre(page, teamWithManySeries, 1);
-    await thenICanSee(page, '1 series matches');
-  });
-
   test('two collaborators have isolated sessions (one browser context each)', async ({ page, otherSession }) => {
     const cleanerName = await givenIAmSignedUpAs(page, 'cleaner');
 
@@ -108,18 +94,6 @@ async function whenIOpenThePagesOfChapter(page: Page, chapter: number): Promise<
 
 async function thenTheTaskOfChapterLinksToPage(page: Page, chapter: number, pageNumber: number): Promise<void> {
   await expect(taskOfChapter(page, chapter).getByRole('link', { name: `Page ${pageNumber}` })).toBeVisible();
-}
-
-function panelOf(page: Page, team: TeamWithSeries): Locator {
-  return page.getByRole('article', { name: team.name });
-}
-
-async function whenIFindTheSeries(page: Page, team: TeamWithSeries, title: string): Promise<void> {
-  await panelOf(page, team).getByLabel('Find a series by its title').fill(title);
-}
-
-async function thenTheSeriesListedForTheTeamAre(page: Page, team: TeamWithSeries, count: number): Promise<void> {
-  await expect(panelOf(page, team).getByRole('link', { name: /^E2E Team Series / })).toHaveCount(count);
 }
 
 async function whenIReload(page: Page): Promise<void> {

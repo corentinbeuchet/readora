@@ -24,13 +24,20 @@ Support: `tests/e2e/support/fixtures.ts` (`test` with fixtures) and `tests/e2e/s
 ## User-story scenarios (`@e2e`, playwright-bdd)
 A scenario tagged `@e2e` in `.readora/context/user-stories/*.feature` runs as written: `bddgen` turns it into a
 Playwright test in `.features-gen/` (git-ignored), the project `user-stories` runs it (`npm run e2e:stories`), and
-`story-check` reads `e2e-reports/user-stories.json`. Model: `tests/e2e/bdd/steps/chapter-versions.steps.ts`.
+`story-check` reads `e2e-reports/user-stories.json`. Models: `tests/e2e/bdd/steps/chapter-versions.steps.ts`, `teams.steps.ts`.
 - `bddgen` fails on a step without a definition and prints a snippet: paste it into the feature's steps file in
   `tests/e2e/bdd/steps/` (one file per feature area), built with `createBdd(test)` from `tests/e2e/bdd/fixtures.ts`.
-- A step body is only `given…`/`when…`/`then…` calls, like a test body; shared methods live in `support/helpers.ts`.
-- The scenario's names ("Solo Leveling", "Moon Scans") are labels: a `Given` creates fresh data (never seed data)
-  and records it in the `story` fixture (`story.addSeries`, `story.addTeam`); later steps look it up by name.
+- A step body is only `given…`/`when…`/`then…` calls, like a test body. Page methods shared with the specs live in
+  `support/` (`series-page.ts`, `upload-studio.ts`, `helpers.ts` for data and logins).
+- The scenario's names ("Solo Leveling", "Moon Scans", "Bob") are labels. The `story` fixture (`tests/e2e/bdd/story.ts`)
+  maps them to fresh data (never seed data): `story.series(name)` creates the series the first time it is named,
+  titled `story.title(name)` (a prefix unique to the scenario, so typed text is `story.title("solo")`);
+  `story.publishingTeam(name)` is one of the two e2e teams led by the publisher (a new team's first chapter would
+  wait for a moderator); `story.newReader(name)` registers `story.username(name)`; teams of readers, task boards and
+  who leads what are recorded with `addTeam`, `addBoard`, `leads`. "He"/"she" is `story.actor()`, set by `follow`.
   Premises the scenario relies on belong in a `Given` of the scenario, not hidden inside another step.
+- Logins are rate-limited per IP (200/min in the local stack): the publisher's login is shared per worker
+  (`givenIAmThePublisher`), and a step logs in through the UI only as the person the scenario follows.
 - Keep `@ui` Vitest tests for detail that needs faked time or network; `@e2e` is for journeys through the real stack.
 
 ## Test data and isolation

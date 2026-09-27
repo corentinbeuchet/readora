@@ -35,7 +35,7 @@ Feature: Community and scanlation teams
     Then the first page of its series starts with "Solo Leveling" and "Omniscient Reader" and holds 24 of 27
     And the second page of its series holds the other 3
 
-  @could @ui
+  @could @ui @e2e
   Scenario: The team page lists its series as cards, 24 per page
     Given the team "Shadow Scans" translates 30 series
     When a reader opens the page of the team "Shadow Scans"
@@ -44,30 +44,31 @@ Feature: Community and scanlation teams
 
   # Inspired by: comix.to and MangaDex chapter lists. One row per chapter number, the teams inside (decided 2026-09-20):
   # read marks and "Next up" are per number, so a flat list of versions would show one chapter as read and unread.
-  @should @ui
+  @should @ui @e2e
   Scenario: Each chapter of a series names the team that translated it
     Given "Shadow Scans" published chapter 5 of "Solo Leveling"
     When a reader opens the series "Solo Leveling"
     Then the row of chapter 5 names the team "Shadow Scans"
 
-  @should @ui
+  @should @ui @e2e
   Scenario: One row per chapter number with its versions
     Given "Shadow Scans" and "Moon Scans" both published chapter 5 of "Solo Leveling"
     When a reader opens the series "Solo Leveling"
     Then chapter 5 appears once, by "Shadow Scans", with a link to the version by "Moon Scans"
 
-  @should @ui
+  @should @ui @e2e
   Scenario: Filtering the chapter list by team
     Given "Shadow Scans" published chapters 5 and 6 of "Solo Leveling" and "Moon Scans" only chapter 5
     When a reader filters the chapters by "Moon Scans"
     Then only chapter 5 is listed, in the version by "Moon Scans"
 
-  @could @ui
+  @could @ui @e2e
   Scenario: Sorting chapters newest or oldest first
+    Given "Shadow Scans" published chapters 1, 2 and 3 of "Solo Leveling"
     When a reader chooses "Newest first" on the series "Solo Leveling"
     Then the last chapter comes first
 
-  @should @ui
+  @should @ui @e2e
   Scenario: Translated by lists each team
     Given "Shadow Scans" published 2 chapters of "Solo Leveling" and "Moon Scans" 1
     When a reader opens the series "Solo Leveling"
@@ -81,16 +82,18 @@ Feature: Community and scanlation teams
     When he switches to the version by "Moon Scans"
     Then "Next chapter" opens chapter 6 by "Moon Scans"
 
-  @should @ui
+  @should @ui @e2e
   Scenario: The series page opens the chapters in the versions by my team
     Given "Kenji" prefers "Moon Scans" for "Solo Leveling"
     And "Shadow Scans" and "Moon Scans" both published chapter 5 of "Solo Leveling"
     When he opens the series "Solo Leveling"
     Then chapter 5 opens in the version by "Moon Scans", with a link to the version by "Shadow Scans"
 
-  @should @ui
+  @should @ui @e2e
   Scenario: The next chapter falls back when my team has not released it
-    Given "Kenji" prefers "Moon Scans" for "Solo Leveling" and only "Shadow Scans" published chapter 6
+    Given "Kenji" prefers "Moon Scans" for "Solo Leveling"
+    And "Shadow Scans" and "Moon Scans" both published chapter 5 of "Solo Leveling"
+    And only "Shadow Scans" published chapter 6 of "Solo Leveling"
     When he reaches the end of chapter 5
     Then "Next chapter" opens chapter 6 by "Shadow Scans"
 
@@ -146,14 +149,14 @@ Feature: Community and scanlation teams
 
   # The upload studio starts from the catalog, so a series is not created twice and a team knows it adds its own
   # version of a series that other teams may already translate.
-  @should @ui
+  @should @ui @e2e
   Scenario: Uploading starts by finding the series
     Given "Solo Leveling" is in the catalog
     When scanlator "Mina" opens the upload studio and searches for "solo"
     Then she sees "Solo Leveling" among the results
     And she can choose to create a new series instead
 
-  @should @ui
+  @should @ui @e2e
   Scenario: A leader publishes a chapter of a series already in the catalog
     Given "Solo Leveling" is already translated by the team "Shadow Scans"
     And scanlator "Mina" leads the team "Moon Scans"
@@ -161,13 +164,13 @@ Feature: Community and scanlation teams
     Then "Solo Leveling" is added to "Moon Scans"
     And she publishes the chapter into "Solo Leveling" as the version of "Moon Scans"
 
-  @should @ui
+  @should @ui @e2e
   Scenario: A similar title is flagged before creating a series
     Given "Solo Leveling" is in the catalog
     When scanlator "Mina" types the title "Solo Leveling" for a new series
     Then she is told Readora already has "Solo Leveling"
 
-  @should @ui
+  @should @ui @e2e
   Scenario: The upload shows the other teams' versions of the chapter
     Given "Shadow Scans" published chapter 5 of "Solo Leveling"
     And scanlator "Mina" leads the team "Moon Scans", which works on "Solo Leveling"
@@ -243,7 +246,7 @@ Feature: Community and scanlation teams
     Then the first page of what waits for "Mina" holds chapters 1 to 20, of 25 in all
     And the second page holds chapters 21 to 25
 
-  @should @ui
+  @should @ui @e2e
   Scenario: The Studio lists what waits for me, first what I claimed
     Given "Bob" claimed chapter 2 of "Solo Leveling" and chapter 3 waits for a translator
     When he opens the Studio
@@ -251,7 +254,7 @@ Feature: Community and scanlation teams
     And each links to the task board of "Solo Leveling"
 
   # A team can run a hundred series: its Studio panel shows them a page at a time and finds one by its title.
-  @should @ui
+  @should @ui @e2e
   Scenario: The Studio lists a team's series 20 at a time, with a title filter
     Given "Mina" leads "Moon Scans", which translates 30 series
     When she opens the Studio
@@ -259,13 +262,14 @@ Feature: Community and scanlation teams
     When she types "saga 2" in the series filter of "Moon Scans"
     Then only the series whose title contains "saga 2" are listed, on one page
 
-  @should @ui
+  @should @ui @e2e
   Scenario: Inviting finds a reader by the start of their name
     Given reader "Mina" leads the team "Moon Scans"
+    And there is a reader "bob" called "Bob Martin"
     When she types "bo" to invite someone to "Moon Scans"
     Then "bob" is suggested, with their display name
 
-  @should @ui
+  @should @ui @e2e
   Scenario: A leader changes the roles of a member, or removes them
     Given reader "Mina" leads "Moon Scans", where "bob" is a translator
     When she gives "bob" the roles Translator and Proofreader
@@ -273,7 +277,7 @@ Feature: Community and scanlation teams
     When she removes "bob" from the team
     Then "bob" is no longer in the roster
 
-  @should @ui
+  @should @ui @e2e
   Scenario: A member leaves a team
     Given reader "Bob" is a translator in "Moon Scans"
     When he leaves "Moon Scans"

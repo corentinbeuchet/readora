@@ -58,7 +58,14 @@ function cucumberResults() {
 function e2eResults() {
   const results = new Map();
   if (!existsSync(E2E_REPORT)) return null;
-  for (const feature of JSON.parse(readFileSync(E2E_REPORT, 'utf8'))) {
+  let features;
+  try {
+    features = JSON.parse(readFileSync(E2E_REPORT, 'utf8'));
+  } catch {
+    // Playwright opens the report when a run starts and fills it at the end.
+    return 'unreadable';
+  }
+  for (const feature of features) {
     for (const scenario of feature.elements ?? []) {
       const statuses = scenario.steps.map((step) => step.result?.status);
       const status = statuses.every((s) => s === 'passed') ? 'passed' : statuses.includes('failed') ? 'failed' : 'skipped';
@@ -107,7 +114,7 @@ for (const s of all) {
       if (vitest.has(s.title)) uiOk++;
       else problems.push(`@ui without a Vitest it('${s.title}')  (${s.file})`);
     }
-    if (s.tags.has('@e2e') && e2e) {
+    if (s.tags.has('@e2e') && e2e instanceof Map) {
       const status = e2e.get(s.title);
       if (status === 'passed') e2eOk++;
       else problems.push(`playwright-bdd ${status ?? 'did not run'}: ${where}`);
@@ -131,6 +138,8 @@ if (!cucumber) {
 const e2eScenarios = all.filter((s) => s.tags.has('@e2e') && !s.tags.has('@wip')).length;
 if (e2eScenarios > 0 && !e2e) {
   problems.push(`No playwright-bdd report at ${path.relative(ROOT, E2E_REPORT)}: run \`npm run e2e:stories\` in frontend/ (stack up)`);
+} else if (e2e === 'unreadable') {
+  problems.push(`The playwright-bdd report ${path.relative(ROOT, E2E_REPORT)} is not complete JSON: a run is still going, or it stopped early`);
 } else if (e2e && statSync(E2E_REPORT).mtimeMs < Math.max(...readdirSync(STORIES).map((f) => statSync(path.join(STORIES, f)).mtimeMs))) {
   console.log('WARN  the playwright-bdd report is older than a .feature file: re-run `npm run e2e:stories` for current results');
 }
