@@ -74,9 +74,10 @@ Feature: Community and scanlation teams
     Then "Translated by" lists "Shadow Scans" with 2 chapters and "Moon Scans" with 1 chapter, each linking to its team page
 
   # The reader's choice of team lives in the browser (guests too); the server already stays with the team being read.
-  @should @ui
+  @should @ui @e2e
   Scenario: Switching version in the reader keeps my team for the next chapters
-    Given "Kenji" reads chapter 5 of "Solo Leveling" by "Shadow Scans"
+    Given "Shadow Scans" and "Moon Scans" both published chapters 5 and 6 of "Solo Leveling"
+    And "Kenji" reads chapter 5 of "Solo Leveling" by "Shadow Scans"
     When he switches to the version by "Moon Scans"
     Then "Next chapter" opens chapter 6 by "Moon Scans"
 

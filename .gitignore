@@ -26,6 +26,9 @@ Thumbs.db
 # Playwright & Test reports
 playwright-report/
 test-results/
+# playwright-bdd: tests generated from the user stories, and their report
+.features-gen/
+e2e-reports/
 coverage/
 **/coverage/
 # Playwright MCP captures and audit screenshots (local only)

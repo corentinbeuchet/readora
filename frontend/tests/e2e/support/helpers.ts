@@ -57,6 +57,26 @@ export async function thenTheAccountMenuOffersTeamToolsButNotModeration(page: Pa
   await page.keyboard.press('Escape');
 }
 
+/** A manga opens page by page, where the end of the chapter only shows on the last page: a strip always has it. */
+export async function whenIChooseTheReadingMode(page: Page, mode: 'Vertical' | 'Paged'): Promise<void> {
+  await page.getByRole('button', { name: mode }).click();
+  await expect(page.getByRole('button', { name: mode })).toHaveAttribute('aria-pressed', 'true');
+}
+
+export async function whenISwitchToTheVersionBy(page: Page, team: PublishingTeam): Promise<void> {
+  await page.getByRole('link', { name: `Read this chapter by ${team.name}` }).click();
+}
+
+export async function whenIGoToTheNextChapter(page: Page): Promise<void> {
+  await page.getByRole('link', { name: 'Next chapter' }).click();
+}
+
+/** The chapter's page and its team: the address says which version it is, the toolbar names the team. */
+export async function thenIReadTheVersionBy(page: Page, team: PublishingTeam, chapterNumber: string): Promise<void> {
+  await expect(page).toHaveURL(new RegExp(`/read/${team.chapterIds[chapterNumber]}$`));
+  await expect(page.getByRole('link', { name: `Translated by ${team.name}` })).toBeVisible();
+}
+
 /** Signs up a fresh reader through the UI and waits for the profile page. Returns the username. */
 export async function signUp(page: Page, prefix = 'e2e'): Promise<string> {
   const username = `${prefix}_${uniqueSuffix()}`;
@@ -302,20 +322,23 @@ export async function visibleCommentsOf(request: APIRequestContext, chapterId: s
 }
 
 /**
- * A series translated by two teams (US-12): the first team published chapters 1, 2 and 3, the second team, which
- * added the series to its own, chapters 1 and 2. So chapters 1 and 2 have two versions and chapter 3 only one.
+ * A series translated by two teams (US-12): the first team publishes `chapters.first`, the second team, which added
+ * the series to its own, `chapters.second`. By default chapters 1 and 2 have two versions and chapter 3 only one.
  */
-export async function publishSeriesByTwoTeams(request: APIRequestContext): Promise<{ workId: string; title: string; firstTeam: PublishingTeam; secondTeam: PublishingTeam }> {
+export async function publishSeriesByTwoTeams(
+  request: APIRequestContext,
+  chapters: { first: string[]; second: string[] } = { first: ['1', '2', '3'], second: ['1', '2'] }
+): Promise<{ workId: string; title: string; firstTeam: PublishingTeam; secondTeam: PublishingTeam }> {
   const headers = await givenIAmThePublisher(request);
   const series = await createSeries(request, headers);
   const second = await e2eTeam(request, headers, E2E_TEAMS.second);
   const secondTeam: PublishingTeam = { id: second.id, name: second.name, chapterIds: {} };
   await data(await request.post(`${API_URL}/teams/${secondTeam.id}/series`, { headers, data: { workId: series.workId } }));
 
-  for (const chapterNumber of ['1', '2', '3']) {
+  for (const chapterNumber of chapters.first) {
     await publishChapterFor(request, headers, series.workId, series.team, chapterNumber, `Chapter ${chapterNumber}`);
   }
-  for (const chapterNumber of ['1', '2']) {
+  for (const chapterNumber of chapters.second) {
     await publishChapterFor(request, headers, series.workId, secondTeam, chapterNumber, `Chapter ${chapterNumber}`);
   }
   return { workId: series.workId, title: series.title, firstTeam: series.team, secondTeam };

@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
 import { test, expect } from './support/fixtures';
-import { PublishingTeam } from './support/helpers';
+import { PublishingTeam, thenIReadTheVersionBy, whenIChooseTheReadingMode, whenIGoToTheNextChapter, whenISwitchToTheVersionBy } from './support/helpers';
 
 /** US-12: several teams translate the same series. The fixture's first team published chapters 1 to 3, the second 1 and 2. */
 test.describe('A series translated by several teams', () => {
@@ -77,12 +77,6 @@ async function whenIOpenTheChapter(page: Page, chapterNumber: number): Promise<v
   await chapterLink(page, chapterNumber).click();
 }
 
-/** A manga opens page by page, where the end of the chapter only shows on the last page: a strip always has it. */
-async function whenIChooseTheReadingMode(page: Page, mode: 'Vertical' | 'Paged'): Promise<void> {
-  await page.getByRole('button', { name: mode }).click();
-  await expect(page.getByRole('button', { name: mode })).toHaveAttribute('aria-pressed', 'true');
-}
-
 async function whenIFilterTheChaptersBy(page: Page, team: PublishingTeam): Promise<void> {
   await page.getByRole('combobox', { name: 'Show chapters by' }).selectOption({ label: team.name });
   await expect(page).toHaveURL(new RegExp(`team=${team.id}`));
@@ -94,14 +88,6 @@ async function whenIChooseTheOrder(page: Page, order: 'Oldest first' | 'Newest f
 
 async function whenIReloadThePage(page: Page): Promise<void> {
   await page.reload();
-}
-
-async function whenISwitchToTheVersionBy(page: Page, team: PublishingTeam): Promise<void> {
-  await page.getByRole('link', { name: `Read this chapter by ${team.name}` }).click();
-}
-
-async function whenIGoToTheNextChapter(page: Page): Promise<void> {
-  await page.getByRole('link', { name: 'Next chapter' }).click();
 }
 
 async function thenTheChaptersListedAre(page: Page, chapterNumbers: number[]): Promise<void> {
@@ -129,12 +115,6 @@ async function thenTheSeriesIsTranslatedBy(page: Page, team: PublishingTeam, cha
 
 async function thenTheOrderIs(page: Page, order: 'Oldest first' | 'Newest first'): Promise<void> {
   await expect(page.getByRole('button', { name: order })).toHaveAttribute('aria-pressed', 'true');
-}
-
-/** The chapter's page and its team: the address says which version it is, the toolbar names the team. */
-async function thenIReadTheVersionBy(page: Page, team: PublishingTeam, chapterNumber: string): Promise<void> {
-  await expect(page).toHaveURL(new RegExp(`/read/${team.chapterIds[chapterNumber]}$`));
-  await expect(page.getByRole('link', { name: `Translated by ${team.name}` })).toBeVisible();
 }
 
 function chapterLink(page: Page, chapterNumber: number) {

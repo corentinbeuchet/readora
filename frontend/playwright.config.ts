@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { cucumberReporter, defineBddConfig } from 'playwright-bdd';
 
 const DEPLOYED_URL = process.env['PLAYWRIGHT_BASE_URL'];
 /** The French build (US-13): /fr/ when deployed; locally `npm run start:fr` serves it at the root of :4201. */
@@ -9,6 +10,17 @@ const FRENCH_SPECS = /i18n-fr\.spec\.ts/;
  * R27), so the WebKit projects run off Windows (CI, WSL, macOS) unless E2E_WEBKIT=1 asks for them anyway.
  */
 const WEBKIT = process.platform !== 'win32' || process.env['E2E_WEBKIT'] === '1';
+/**
+ * User-story scenarios tagged @e2e run here, from the .feature files themselves (Cucumber runs the untagged ones, a
+ * Vitest test checks each @ui one). `bddgen` writes a Playwright test per scenario into `.features-gen/` and fails
+ * when a step has no definition. `story-check` reads the JSON report.
+ */
+const BDD_SCENARIOS = defineBddConfig({
+  features: '../.readora/context/user-stories/*.feature',
+  featuresRoot: '../.readora/context/user-stories',
+  steps: 'tests/e2e/bdd/**/*.ts',
+  tags: '@e2e and not @wip'
+});
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -25,7 +37,8 @@ export default defineConfig({
   outputDir: 'test-results',
   reporter: [
     ['html', { outputFolder: 'playwright-report', open: 'never' }],
-    ['list']
+    ['list'],
+    cucumberReporter('json', { outputFile: 'e2e-reports/user-stories.json' })
   ],
   use: {
     baseURL: DEPLOYED_URL || 'http://localhost:4200',
@@ -36,6 +49,11 @@ export default defineConfig({
   // The French specs run once, in their own project; every other project runs the rest.
   testIgnore: FRENCH_SPECS,
   projects: [
+    {
+      name: 'user-stories',
+      testDir: BDD_SCENARIOS,
+      use: { ...devices['Desktop Chrome'] }
+    },
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] }

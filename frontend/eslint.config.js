@@ -51,7 +51,7 @@ const featureBlocks = readdirSync(`${__dirname}/src/app/features`, { withFileTyp
   }));
 
 module.exports = defineConfig([
-  globalIgnores(["dist/**", ".angular/**", "playwright-report/**", "test-results/**", "node_modules/**"]),
+  globalIgnores(["dist/**", ".angular/**", "playwright-report/**", "test-results/**", ".features-gen/**", "e2e-reports/**", "node_modules/**"]),
   {
     files: ["**/*.ts"],
     extends: [

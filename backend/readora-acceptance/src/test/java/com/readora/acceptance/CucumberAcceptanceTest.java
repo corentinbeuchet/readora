@@ -14,7 +14,8 @@ import static io.cucumber.junit.platform.engine.Constants.PLUGIN_PROPERTY_NAME;
 @SelectClasspathResource("features")
 @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "com.readora.acceptance.steps")
 @ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty, html:target/cucumber-report.html")
-// @wip = not built yet; @ui = frontend-only, verified by a Vitest test named after the scenario.
-@ConfigurationParameter(key = FILTER_TAGS_PROPERTY_NAME, value = "not @wip and not @ui")
+// @wip = not built yet; @ui = frontend-only, verified by a Vitest test named after the scenario;
+// @e2e = run in a browser against the real stack by playwright-bdd (frontend `npm run e2e:stories`).
+@ConfigurationParameter(key = FILTER_TAGS_PROPERTY_NAME, value = "not @wip and not @ui and not @e2e")
 public class CucumberAcceptanceTest {
 }
