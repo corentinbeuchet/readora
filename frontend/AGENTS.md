@@ -368,6 +368,13 @@ lessons.
 - F49 (flaky, 2026-09-24) e2e `upload-studio.spec.ts` "a new series is published with its facts, and its page shows
   them" failed once in a full parallel chromium + chromium-fr run; its report was overwritten before it was read. Not
   reproduced since: 40/40 alone (`--repeat-each=8`), 79/79 in two full runs. Next failure: keep the trace, find the cause.
+- F50 (flaky, 2026-09-27) Three one-off e2e failures while the user stories moved to playwright-bdd, each gone on
+  rerun, each report overwritten by the next run before it was read: `responsive.spec.ts` "no page scrolls sideways
+  on a phone (375px)" (no `main h1`: a blank page) in a full parallel run; US-14 "I can continue reading from the
+  home page" (a blank `/login`) in repeat 4 of 5; US-02 "A task's pages load when a member opens them" (`toHaveText`
+  on the page links) in repeat 3 of 5. Not reproduced since: 104/104, 40/40 and 40/40 reruns, full runs 240/240 and
+  267/267. The blank pages came under the heaviest load on `ng serve` (see F17). Next failure: keep the report
+  (`--trace=retain-on-failure`, and no other run into `test-results/` before reading it).
 
 Whole-project review (2026-09-19, refs `review-2026-09-19/<n>`; "survey" = reported with path:line, re-check before acting):
 - R15 `shared/pages/file-utils.ts` zip-bomb guard uses JSZip private `_data` / `internalStream` and has no spec; `jszip` is a static import.
