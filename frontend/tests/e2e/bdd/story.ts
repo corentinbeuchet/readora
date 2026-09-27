@@ -5,10 +5,12 @@ import {
   PUBLISHER,
   PublishingTeam,
   RegisteredAccount,
+  SeriesDescription,
   TaskBoard,
   TeamWithSeries,
   addSeriesToTeam,
   createSeries,
+  describeSeries,
   e2eTeam,
   givenIAmThePublisher,
   publishChapterFor,
@@ -39,7 +41,7 @@ export interface Account {
  */
 export class Story {
   private readonly suffix = uniqueSuffix();
-  private readonly seriesByName = new Map<string, { workId: string; title: string }>();
+  private readonly seriesByName = new Map<string, { workId: string; title: string; description: SeriesDescription }>();
   private readonly publishedNumbers = new Map<string, Set<number>>();
   private readonly publishers = new Map<string, PublishingTeam>();
   /** `teamId|workId` of the teams known to work on a series. */
@@ -48,6 +50,7 @@ export class Story {
   private readonly boards = new Map<string, TaskBoard>();
   private readonly ledTeams = new Map<string, string>();
   private readonly accounts = new Map<string, Account>();
+  private readonly memory = new Map<string, string>();
   /** The person the scenario follows ("he", "she"): the last one a Given introduced. */
   private actorName?: string;
 
@@ -61,16 +64,30 @@ export class Story {
     return `${this.suffix}_${name.toLowerCase()}`;
   }
 
-  /** The series the scenario calls `name`, created by the first e2e team the first time it is named. */
-  async series(name: string): Promise<{ workId: string; title: string }> {
+  /**
+   * The series the scenario calls `name`, created by the first e2e team the first time it is named (with
+   * `description`, when the scenario describes it, over the defaults).
+   */
+  async series(name: string, description: Partial<SeriesDescription> = {}): Promise<{ workId: string; title: string }> {
     let series = this.seriesByName.get(name);
     if (!series) {
-      const created = await createSeries(this.request, await givenIAmThePublisher(this.request), undefined, this.title(name));
-      series = { workId: created.workId, title: created.title };
+      const created = await createSeries(this.request, await givenIAmThePublisher(this.request), { ...description, title: this.title(name) });
+      series = { workId: created.workId, title: created.title, description: created.description };
       this.seriesByName.set(name, series);
       this.onSeries.add(`${created.team.id}|${created.workId}`);
     }
     return series;
+  }
+
+  /** Gives the series these facts (other titles, artist, …), keeping the rest of its description. */
+  async giveFacts(name: string, facts: NonNullable<SeriesDescription['facts']>): Promise<void> {
+    const series = this.named(this.seriesByName, name, 'series');
+    series.description = { ...series.description, facts };
+    await describeSeries(this.request, await givenIAmThePublisher(this.request), series.workId, series.description);
+  }
+
+  facts(name: string): NonNullable<SeriesDescription['facts']> {
+    return this.named(this.seriesByName, name, 'series').description.facts ?? {};
   }
 
   /** The only series of the scenario, for steps that don't name it ("the end of chapter 5"). */
@@ -186,6 +203,15 @@ export class Story {
 
   account(name: string): Account {
     return this.named(this.accounts, name, 'person');
+  }
+
+  /** Anything else a later step needs by name: a list's id, the genre "it" refers to. */
+  remember(key: string, value: string): void {
+    this.memory.set(key, value);
+  }
+
+  recall(key: string): string {
+    return this.named(this.memory, key, 'remembered');
   }
 
   follow(name: string): void {

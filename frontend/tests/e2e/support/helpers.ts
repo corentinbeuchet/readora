@@ -169,21 +169,33 @@ export async function givenThePublisherLeadsTheE2eTeam(request: APIRequestContex
   return (await e2eTeam(request, await givenIAmThePublisher(request), E2E_TEAMS.first)).name;
 }
 
-/** A new series, published by the first e2e team (its task board is created with it). */
+/** What `POST /works` and `PUT /works/{id}` take (codes: `MANHWA`, `COMPLETED`, `SHOUNEN`, …). */
+export interface SeriesDescription {
+  title: string;
+  synopsis: string;
+  type: string;
+  status: string;
+  author?: string;
+  demographic?: string;
+  genres: string[];
+  facts?: { alternativeTitles?: string[]; artist?: string; releaseYear?: number; originalLanguage?: string; contentRating?: string };
+}
+
+/** A new series, published by the first e2e team (its task board is created with it); `description` overrides the defaults. */
 export async function createSeries(
   request: APIRequestContext,
   headers: Headers,
-  facts?: object,
-  title = `E2E Series ${uniqueSuffix()}`
-): Promise<{ workId: string; title: string; team: PublishingTeam }> {
+  description: Partial<SeriesDescription> = {}
+): Promise<{ workId: string; title: string; team: PublishingTeam; description: SeriesDescription }> {
   const team = await e2eTeam(request, headers, E2E_TEAMS.first);
-  const work = await data<{ id: string }>(
-    await request.post(`${API_URL}/works`, {
-      headers,
-      data: { title, synopsis: 'Created by the e2e suite.', type: 'MANGA', status: 'ONGOING', genres: ['Action'], facts, teamId: team.id }
-    })
-  );
-  return { workId: work.id, title, team: { id: team.id, name: team.name, chapterIds: {} } };
+  const full: SeriesDescription = { title: `E2E Series ${uniqueSuffix()}`, synopsis: 'Created by the e2e suite.', type: 'MANGA', status: 'ONGOING', genres: ['Action'], ...description };
+  const work = await data<{ id: string }>(await request.post(`${API_URL}/works`, { headers, data: { ...full, teamId: team.id } }));
+  return { workId: work.id, title: full.title, team: { id: team.id, name: team.name, chapterIds: {} }, description: full };
+}
+
+/** Replaces the whole description of the series (a field left out is emptied). */
+export async function describeSeries(request: APIRequestContext, headers: Headers, workId: string, description: SeriesDescription): Promise<void> {
+  await data(await request.put(`${API_URL}/works/${workId}`, { headers, data: description }));
 }
 
 /** Publishes a two-page chapter of the series for one team (a chapter always belongs to a team). */
@@ -225,6 +237,10 @@ export async function thenTheFactIs(page: Page, label: string, values: string[])
   await expect(group.getByRole('definition')).toHaveText(values);
 }
 
+export async function thenTheFactIsNotListed(page: Page, label: string): Promise<void> {
+  await expect(page.getByRole('term').filter({ hasText: new RegExp(`^${label}$`) })).toHaveCount(0);
+}
+
 /**
  * A series created with facts (US-04) and one published chapter, led by the publisher account. The content rating
  * is left out on purpose, and the first other title is unique, so a search for it finds this series only.
@@ -232,7 +248,7 @@ export async function thenTheFactIs(page: Page, label: string, values: string[])
 export async function publishSeriesWithFacts(request: APIRequestContext): Promise<{ workId: string; title: string; otherTitles: string[] }> {
   const headers = await givenIAmThePublisher(request);
   const otherTitles = [`Shin no Nakama ${uniqueSuffix()}`, 'The True Companion'];
-  const series = await createSeries(request, headers, { alternativeTitles: otherTitles, artist: 'E2E Artist', releaseYear: 2019, originalLanguage: 'JAPANESE' });
+  const series = await createSeries(request, headers, { facts: { alternativeTitles: otherTitles, artist: 'E2E Artist', releaseYear: 2019, originalLanguage: 'JAPANESE' } });
   await publishChapterFor(request, headers, series.workId, series.team, '1', 'The beginning');
   return { workId: series.workId, title: series.title, otherTitles };
 }
@@ -594,4 +610,12 @@ export async function addToLibrary(request: APIRequestContext, account: Register
 /** The reader opened the chapter (`finished`: and read it to the end). */
 export async function recordARead(request: APIRequestContext, account: RegisteredAccount, chapterId: string, finished: boolean): Promise<void> {
   await data(await request.put(`${API_URL}/reading/chapters/${chapterId}`, { headers: { Authorization: `Bearer ${account.accessToken}` }, data: { finished } }));
+}
+
+/** A reading list of the reader's, empty and not published. */
+export async function createAList(request: APIRequestContext, account: RegisteredAccount, title: string): Promise<string> {
+  const list = await data<{ id: string }>(
+    await request.post(`${API_URL}/lists`, { headers: { Authorization: `Bearer ${account.accessToken}` }, data: { title, description: null, published: false, items: [] } })
+  );
+  return list.id;
 }

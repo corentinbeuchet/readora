@@ -43,7 +43,7 @@ Feature: My library
     When "Kenji" publishes the list "Peak Webtoons" with "Solo Leveling" and "Omniscient Reader"
     Then other readers can see and upvote "Peak Webtoons"
 
-  @could @ui
+  @could @ui @e2e
   Scenario: Adding a series to one of my lists from its page
     Given "Kenji" has the lists "Peak Webtoons" and "Comfort reads"
     When "Kenji" opens "Add to a list" on the page of "Solo Leveling" and adds it to "Comfort reads" with the note "Cozy"

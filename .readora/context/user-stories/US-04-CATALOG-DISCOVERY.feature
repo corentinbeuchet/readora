@@ -45,7 +45,7 @@ Feature: Finding a series in the catalog
     When a reader types "honjaman" in the search box
     Then the suggestions show "Solo Leveling" by "Chugong"
 
-  @ui
+  @ui @e2e
   Scenario: Clicking a genre cycles between wanted, excluded and ignored
     When a reader clicks the "Action" genre once
     Then "Action" is marked as wanted
@@ -79,7 +79,7 @@ Feature: Finding a series in the catalog
     When "Mina" gives "Solo Leveling" 11 other titles
     Then the edit is refused because a series has at most 10 other titles
 
-  @should @ui
+  @should @ui @e2e
   Scenario: Series facts on the series page
     Given "Solo Leveling" has the artist "DUBU", the year 2018, the language Korean and the other title "Na Honjaman Level Up"
     And nobody filled in its content rating
@@ -87,7 +87,7 @@ Feature: Finding a series in the catalog
     Then the page lists the artist, the year, the language and the other title
     And no content rating is shown
 
-  @should @ui
+  @should @ui @e2e
   Scenario: A team leader edits the series from the team workspace
     Given "Mina" leads a team that translates "Solo Leveling"
     When she opens "Edit series" for "Solo Leveling" in her team workspace and saves the artist "DUBU"

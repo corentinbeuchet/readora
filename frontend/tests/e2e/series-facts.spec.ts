@@ -2,18 +2,11 @@ import { Page } from '@playwright/test';
 import { test, expect } from './support/fixtures';
 import { givenIAmLoggedInAsThePublisher, thenTheFactIs } from './support/helpers';
 
-/** US-04: what a series page says beside the synopsis, and the team leaders who keep it right. */
+/**
+ * US-04: what a series page says beside the synopsis, and the team leaders who keep it right. The facts shown on the
+ * page and a leader's edit are scenarios of US-04 (`@e2e`); this spec keeps the rest.
+ */
 test.describe('Series facts', () => {
-  test('the series page lists the facts that were filled in, and only those', async ({ page, seriesWithFacts }) => {
-    await whenIOpenTheSeries(page, seriesWithFacts);
-
-    await thenTheFactIs(page, 'Other titles', seriesWithFacts.otherTitles);
-    await thenTheFactIs(page, 'Artist', ['E2E Artist']);
-    await thenTheFactIs(page, 'First published', ['2019']);
-    await thenTheFactIs(page, 'Original language', ['Japanese']);
-    await thenTheFactIsNotListed(page, 'Content rating');
-  });
-
   test('a leader of the team corrects the facts, and readers see them on the series page', async ({ page, seriesWithFacts }) => {
     await givenIAmLoggedInAsThePublisher(page);
     await givenIEditTheSeries(page, seriesWithFacts);
@@ -90,11 +83,6 @@ async function thenTheCatalogListsOnly(page: Page, title: string): Promise<void>
   await expect(page.getByRole('main').getByRole('link', { name: /^E2E Series / })).toHaveText([title]);
 }
 
-async function whenIOpenTheSeries(page: Page, series: { workId: string; title: string }): Promise<void> {
-  await page.goto(`/works/${series.workId}`);
-  await expect(page.getByRole('heading', { level: 1 })).toContainText(series.title);
-}
-
 async function whenIVisitTheEditPageOf(page: Page, series: { workId: string }): Promise<void> {
   await page.goto(`/scanlation/series/${series.workId}`);
 }
@@ -114,10 +102,6 @@ async function whenISaveTheSeries(page: Page): Promise<void> {
 async function thenIAmOnTheSeriesPage(page: Page, series: { workId: string; title: string }): Promise<void> {
   await expect(page).toHaveURL(new RegExp(`/works/${series.workId}$`));
   await expect(page.getByRole('heading', { level: 1 })).toContainText(series.title);
-}
-
-async function thenTheFactIsNotListed(page: Page, fact: string): Promise<void> {
-  await expect(page.getByRole('term').filter({ hasText: new RegExp(`^${fact}$`) })).toHaveCount(0);
 }
 
 async function thenTheFieldIsRefusedWith(page: Page, label: string, message: string): Promise<void> {
